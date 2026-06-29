@@ -32,13 +32,14 @@ type RateLimitRow = RowDataPacket & {
 
 const allowedServices = new Set(["롤 대리", "롤 듀오", "롤 계정"]);
 const maxImageLength = 1024 * 1024 * 3;
+const MAX_IMAGE_WIDTH = 1600;
+const MAX_IMAGE_HEIGHT = 1600;
 const reviewCooldownMs = 10 * 60 * 1000;
 const allowedImagePrefixes = [
   "data:image/jpeg;base64,",
   "data:image/jpg;base64,",
   "data:image/png;base64,",
   "data:image/webp;base64,",
-  "data:image/gif;base64,",
 ];
 
 function hashPassword(password: string) {
@@ -67,6 +68,102 @@ function isAllowedImageData(image: string | null) {
     image.length <= maxImageLength &&
     allowedImagePrefixes.some((prefix) => image.startsWith(prefix))
   );
+}
+
+function getPngSize(buffer: Buffer) {
+  if (buffer.length < 24) return null;
+
+  if (buffer[0] !== 0x89 || buffer.toString("ascii", 1, 4) !== "PNG") {
+    return null;
+  }
+
+  return {
+    width: buffer.readUInt32BE(16),
+    height: buffer.readUInt32BE(20),
+  };
+}
+
+function getJpegSize(buffer: Buffer) {
+  if (buffer[0] !== 0xff || buffer[1] !== 0xd8) return null;
+
+  let offset = 2;
+
+  while (offset < buffer.length) {
+    if (buffer[offset] !== 0xff) return null;
+
+    const marker = buffer[offset + 1];
+    const length = buffer.readUInt16BE(offset + 2);
+
+    if (marker >= 0xc0 && marker <= 0xc3) {
+      return {
+        width: buffer.readUInt16BE(offset + 7),
+        height: buffer.readUInt16BE(offset + 5),
+      };
+    }
+
+    offset += 2 + length;
+  }
+
+  return null;
+}
+
+function getWebpSize(buffer: Buffer) {
+  if (
+    buffer.toString("ascii", 0, 4) !== "RIFF" ||
+    buffer.toString("ascii", 8, 12) !== "WEBP"
+  ) {
+    return null;
+  }
+
+  const chunk = buffer.toString("ascii", 12, 16);
+
+  if (chunk === "VP8X") {
+    return {
+      width: buffer.readUIntLE(24, 3) + 1,
+      height: buffer.readUIntLE(27, 3) + 1,
+    };
+  }
+
+  return null;
+}
+
+function validateImage(image: string | null) {
+  if (!image) return null;
+
+  const match = image.match(
+    /^data:(image\/(?:jpeg|jpg|png|webp));base64,(.*)$/,
+  );
+
+  if (!match) {
+    return "지원하지 않는 이미지입니다.";
+  }
+
+  const mime = match[1];
+  const buffer = Buffer.from(match[2], "base64");
+
+  if (buffer.length > maxImageLength) {
+    return "이미지는 2MB 이하만 첨부할 수 있습니다.";
+  }
+
+  let size = null;
+
+  if (mime.includes("png")) {
+    size = getPngSize(buffer);
+  } else if (mime.includes("jpeg") || mime.includes("jpg")) {
+    size = getJpegSize(buffer);
+  } else if (mime.includes("webp")) {
+    size = getWebpSize(buffer);
+  }
+
+  if (!size) {
+    return "이미지를 읽을 수 없습니다.";
+  }
+
+  if (size.width > MAX_IMAGE_WIDTH || size.height > MAX_IMAGE_HEIGHT) {
+    return `이미지는 ${MAX_IMAGE_WIDTH}×${MAX_IMAGE_HEIGHT}px 이하만 업로드 가능합니다.`;
+  }
+
+  return null;
 }
 
 function canModifyReview(password: string, review: ReviewRow) {
@@ -193,7 +290,10 @@ export async function POST(request: Request) {
 
   if (!isAllowedImageData(image)) {
     return NextResponse.json(
-      { message: "이미지는 2MB 이하의 JPG, PNG, WEBP, GIF만 첨부할 수 있습니다." },
+      {
+        message:
+          "이미지는 2MB 이하의 JPG, PNG, WEBP, GIF만 첨부할 수 있습니다.",
+      },
       { status: 400 },
     );
   }
@@ -295,7 +395,10 @@ export async function PUT(request: Request) {
 
   if (!isAllowedImageData(image)) {
     return NextResponse.json(
-      { message: "이미지는 2MB 이하의 JPG, PNG, WEBP, GIF만 첨부할 수 있습니다." },
+      {
+        message:
+          "이미지는 2MB 이하의 JPG, PNG, WEBP, GIF만 첨부할 수 있습니다.",
+      },
       { status: 400 },
     );
   }

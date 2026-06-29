@@ -45,8 +45,10 @@ type EditForm = {
 };
 
 const MAX_IMAGE_SIZE = 1024 * 1024 * 2;
+const MAX_IMAGE_WIDTH = 1600;
+const MAX_IMAGE_HEIGHT = 1600;
 const REVIEWS_PER_PAGE = 10;
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const blankForm = {
   name: "",
@@ -185,21 +187,49 @@ export default function ReviewBoard({
     setError("");
 
     if (!file) return;
+
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      setError("JPG, PNG, WEBP, GIF 이미지만 첨부할 수 있습니다.");
+      setError("JPG, PNG, WEBP 이미지만 첨부할 수 있습니다.");
       return;
     }
+
     if (file.size > MAX_IMAGE_SIZE) {
       setError("이미지는 2MB 이하만 첨부할 수 있습니다.");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setForm((current) => ({ ...current, image: String(reader.result) }));
-      setImageName(file.name);
+    const img = new window.Image();
+
+    img.onload = () => {
+      if (img.width > MAX_IMAGE_WIDTH || img.height > MAX_IMAGE_HEIGHT) {
+        setError(
+          `이미지는 ${MAX_IMAGE_WIDTH}×${MAX_IMAGE_HEIGHT}px 이하만 업로드 가능합니다.`,
+        );
+        URL.revokeObjectURL(img.src);
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        setForm((current) => ({
+          ...current,
+          image: String(reader.result),
+        }));
+        setImageName(file.name);
+
+        URL.revokeObjectURL(img.src);
+      };
+
+      reader.readAsDataURL(file);
     };
-    reader.readAsDataURL(file);
+
+    img.onerror = () => {
+      setError("이미지를 읽을 수 없습니다.");
+      URL.revokeObjectURL(img.src);
+    };
+
+    img.src = URL.createObjectURL(file);
   };
 
   const removeImage = () => {
@@ -384,7 +414,9 @@ export default function ReviewBoard({
       });
     } catch (caught) {
       setError(
-        caught instanceof Error ? caught.message : "후기를 수정하지 못했습니다.",
+        caught instanceof Error
+          ? caught.message
+          : "후기를 수정하지 못했습니다.",
       );
     } finally {
       setEditingId("");
@@ -523,7 +555,7 @@ export default function ReviewBoard({
                 이미지 선택
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={handleImage}
                   className="sr-only"
                 />
@@ -587,12 +619,14 @@ export default function ReviewBoard({
             deleteForm={deleteForms[selectedReview.id] ?? blankDeleteForm}
             deleteOpen={deleteOpenId === selectedReview.id}
             deleting={deletingId === selectedReview.id}
-            editForm={editForms[selectedReview.id] ?? {
-              ...blankEditForm,
-              service: selectedReview.service,
-              rating: selectedReview.rating,
-              content: selectedReview.content,
-            }}
+            editForm={
+              editForms[selectedReview.id] ?? {
+                ...blankEditForm,
+                service: selectedReview.service,
+                rating: selectedReview.rating,
+                content: selectedReview.content,
+              }
+            }
             editOpen={editOpenId === selectedReview.id}
             editing={editingId === selectedReview.id}
             onDelete={() => void deleteReview(selectedReview.id)}
@@ -759,18 +793,6 @@ function ReviewDetail({
 }) {
   return (
     <article className="overflow-hidden rounded-[30px] border border-gold/15 bg-white/[.035]">
-      {review.image && (
-        <div className="relative h-64 bg-black sm:h-80">
-          <Image
-            src={review.image}
-            alt={`${review.name} 후기 이미지`}
-            fill
-            sizes="(max-width: 1024px) 100vw, 56vw"
-            className="object-cover"
-            unoptimized
-          />
-        </div>
-      )}
       <div className="p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -779,6 +801,7 @@ function ReviewDetail({
               {review.name}
             </h3>
           </div>
+
           <div className="flex shrink-0 flex-wrap justify-end gap-2">
             <button
               type="button"
@@ -868,7 +891,21 @@ function ReviewDetail({
           </div>
         ) : (
           <>
-            <p className="mt-5 whitespace-pre-wrap leading-8 text-zinc-300">
+            {review.image && (
+              <div className="mt-6 overflow-hidden rounded-3xl border border-gold/20 bg-black">
+                <Image
+                  src={review.image}
+                  alt={`${review.name} 후기 이미지`}
+                  width={1200}
+                  height={900}
+                  sizes="(max-width: 1024px) 100vw, 56vw"
+                  className="mx-auto h-auto max-h-[720px] max-w-full object-contain"
+                  unoptimized
+                />
+              </div>
+            )}
+
+            <p className="mt-6 whitespace-pre-wrap leading-8 text-zinc-300">
               {review.content}
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3 text-xs font-black uppercase tracking-[0.18em] text-zinc-500">
