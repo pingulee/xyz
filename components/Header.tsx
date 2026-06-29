@@ -8,7 +8,16 @@ import { useState } from "react";
 import clsx from "clsx";
 import { navItems, services, site } from "@/lib/site";
 
-const menuItems = navItems.map((item) =>
+type MenuItem = {
+  label: string;
+  href: string;
+  children?: Array<{
+    label: string;
+    href: string;
+  }>;
+};
+
+const menuItems: MenuItem[] = navItems.map((item) =>
   item.href === "/price"
     ? {
         ...item,
@@ -34,7 +43,7 @@ export default function Header() {
         >
           <Image
             src="/images/logo.webp"
-            alt="XYZ 프리미엄 롤 서비스"
+            alt="XYZ 롤 대리, 롤 듀오, 롤 계정"
             fill
             priority
             sizes="176px"

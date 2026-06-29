@@ -1,16 +1,16 @@
 export const site = {
   name: "XYZ",
-  url: "https://xyz.gg",
+  url: "https://롤대리.xyz",
   description:
     "검증된 상위 티어 기사와 체계적인 운영으로 진행하는 프리미엄 리그 오브 레전드 서비스입니다.",
-  kakaoUrl: "https://open.kakao.com/",
-  email: "contact@example.com",
+  kakaoUrl: "https://open.kakao.com/o/sKuEg9zi",
 };
 
 export const navItems = [
   { label: "메인", href: "/" },
   { label: "기사 라인업", href: "/lineup" },
   { label: "가격 안내", href: "/price" },
+  { label: "작업 후기", href: "/reviews" },
   { label: "기사 모집", href: "/recruit" },
 ];
 

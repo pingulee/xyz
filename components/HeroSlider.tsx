@@ -7,45 +7,40 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
-  MessageCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { site } from "@/lib/site";
 
 const slides = [
   {
-    eyebrow: "boosting service",
-    kicker: "Premium League Service",
-    title: "프리미엄 롤 대리 서비스",
+    eyebrow: "PREMIUM BOOSTING",
+    title: "프리미엄 롤 대리",
+    titlePrefix: "프리미엄 ",
+    titleHighlight: "롤 대리",
     desc: "검증된 상위 티어 기사와 체계적인 진행 리포트로 목표 티어까지 안정적으로 관리합니다.",
     image: "/images/hero/boosting.webp",
     alt: "롤 대리 서비스를 상징하는 프리미엄 게임 이미지",
-    primary: "상담하기",
-    primaryHref: site.kakaoUrl,
     secondary: "가격 보기",
     secondaryHref: "/price/boosting",
   },
   {
-    eyebrow: "duo queue",
-    kicker: "Verified Duo Partner",
-    title: "롤 듀오 서비스",
+    eyebrow: "PREMIUM DUO",
+    title: "프리미엄 롤 듀오",
+    titlePrefix: "프리미엄 ",
+    titleHighlight: "롤 듀오",
     desc: "기사와 함께 플레이하며 승률, 라인전 운영, 피드백까지 한 번에 챙기는 듀오 서비스입니다.",
     image: "/images/hero/duo.webp",
     alt: "롤 듀오 서비스를 상징하는 프리미엄 게임 이미지",
-    primary: "듀오 상담",
-    primaryHref: site.kakaoUrl,
     secondary: "듀오 가격",
     secondaryHref: "/price/duo",
   },
   {
-    eyebrow: "account service",
-    kicker: "Custom Account Care",
-    title: "롤 계정 상담",
+    eyebrow: "CUSTOM ACCOUNT",
+    title: "맞춤형 롤 계정",
+    titlePrefix: "맞춤형 ",
+    titleHighlight: "롤 계정",
     desc: "예산, 티어, 챔피언, 일정 조건에 맞춰 운영 가능한 계정 서비스를 섬세하게 안내합니다.",
     image: "/images/hero/account.webp",
     alt: "롤 계정 서비스를 상징하는 프리미엄 게임 이미지",
-    primary: "계정 문의",
-    primaryHref: site.kakaoUrl,
     secondary: "서비스 보기",
     secondaryHref: "/price/account",
   },
@@ -92,7 +87,7 @@ export default function HeroSlider() {
 
       <div className="relative mx-auto grid h-full max-w-7xl items-center gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:gap-10 lg:px-8 lg:py-14">
         <div className="flex h-full max-w-3xl flex-col justify-center">
-          <div className="h-97.5 sm:h-107.5 lg:h-113.75">
+          <div className="h-92 sm:h-100 lg:h-108">
             <AnimatePresence mode="wait">
               <motion.div
                 key={slide.title}
@@ -100,44 +95,37 @@ export default function HeroSlider() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -18 }}
                 transition={{ duration: 0.55, ease: [0.21, 0.47, 0.32, 0.98] }}
+                className="flex h-full w-full flex-col"
               >
-                <p className="inline-flex rounded-full border border-gold/25 bg-gold/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-gold">
-                  {slide.eyebrow}
-                </p>
-                <p className="mt-8 text-sm font-black uppercase tracking-[0.28em] text-zinc-400">
-                  XYZ
-                </p>
-                <h1 className="mt-3 text-4xl font-black leading-[1.02] tracking-[-0.04em] text-white sm:text-6xl lg:text-7xl xl:text-8xl">
-                  {slide.kicker}
-                  <span className="mt-4 block gold-text">{slide.title}</span>
-                </h1>
-                <p className="mt-7 max-w-2xl text-lg leading-9 text-zinc-300">
-                  {slide.desc}
-                </p>
+                <div className="flex flex-1 flex-col justify-center py-7">
+                  <p className="inline-flex w-fit rounded-full border border-gold/20 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-gold-soft/90">
+                    {slide.eyebrow}
+                  </p>
+                  <h1 className="mt-6 text-3xl font-bold leading-[1.16] text-zinc-50 sm:text-5xl lg:text-6xl">
+                    {slide.titlePrefix}
+                    <span className="text-gold-soft">
+                      {slide.titleHighlight}
+                    </span>
+                  </h1>
+                  <p className="mt-6 h-24 max-w-xl text-base leading-8 text-zinc-300/90 sm:h-28 sm:text-lg">
+                    {slide.desc}
+                  </p>
+                </div>
               </motion.div>
             </AnimatePresence>
           </div>
 
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <a
-              href={slide.primaryHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold transition hover:-translate-y-1"
-            >
-              <MessageCircle size={18} />
-              {slide.primary}
-            </a>
+          <div className="mt-7 flex">
             <Link
               href={slide.secondaryHref}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-gold/20 bg-white/4 px-7 py-4 font-bold text-white transition hover:border-gold/60"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/12 bg-white/5 px-6 py-3.5 font-bold text-zinc-100 transition hover:border-gold/45 hover:text-white"
             >
               {slide.secondary}
               <ArrowRight size={18} />
             </Link>
           </div>
 
-          <div className="mt-10 flex items-center gap-5">
+          <div className="mt-8 flex items-center gap-5">
             <div className="flex items-center gap-2">
               {slides.map((item, i) => (
                 <button

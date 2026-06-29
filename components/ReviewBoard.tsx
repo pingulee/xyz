@@ -1,0 +1,529 @@
+"use client";
+
+import Image from "next/image";
+import { ImagePlus, Loader2, Star, Trash2, X } from "lucide-react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+
+type Review = {
+  id: string;
+  name: string;
+  service: string;
+  rating: number;
+  content: string;
+  image?: string;
+  createdAt: string;
+};
+
+type ReviewsResponse = {
+  reviews: Review[];
+  message?: string;
+};
+
+type CreateReviewResponse = {
+  review: Review;
+  message?: string;
+};
+
+type DeleteForm = {
+  name: string;
+  password: string;
+  admin: boolean;
+};
+
+const MAX_IMAGE_SIZE = 1024 * 1024 * 2;
+
+const blankForm = {
+  name: "",
+  password: "",
+  service: "롤 대리",
+  rating: 5,
+  content: "",
+  image: "",
+};
+
+const blankDeleteForm = {
+  name: "",
+  password: "",
+  admin: false,
+};
+
+export default function ReviewBoard() {
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [form, setForm] = useState(blankForm);
+  const [deleteForms, setDeleteForms] = useState<Record<string, DeleteForm>>({});
+  const [deleteOpenId, setDeleteOpenId] = useState("");
+  const [imageName, setImageName] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState("");
+
+  useEffect(() => {
+    const loadReviews = async () => {
+      try {
+        const response = await fetch("/api/reviews", { cache: "no-store" });
+        const data = (await response.json()) as ReviewsResponse;
+
+        if (!response.ok) {
+          throw new Error(data.message ?? "후기를 불러오지 못했습니다.");
+        }
+
+        setReviews(data.reviews);
+      } catch (caught) {
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : "후기를 불러오지 못했습니다.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadReviews();
+  }, []);
+
+  const handleImage = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setError("");
+
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("이미지 파일만 첨부할 수 있습니다.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      setError("이미지는 2MB 이하만 첨부할 수 있습니다.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm((current) => ({ ...current, image: String(reader.result) }));
+      setImageName(file.name);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setForm((current) => ({ ...current, image: "" }));
+    setImageName("");
+  };
+
+  const updateDeleteForm = (
+    reviewId: string,
+    updates: Partial<DeleteForm>,
+  ) => {
+    setDeleteForms((current) => ({
+      ...current,
+      [reviewId]: {
+        ...(current[reviewId] ?? blankDeleteForm),
+        ...updates,
+      },
+    }));
+  };
+
+  const submitReview = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError("");
+
+    const name = form.name.trim();
+    const password = form.password.trim();
+    const content = form.content.trim();
+
+    if (!name || !password || !content) {
+      setError("닉네임, 비밀번호, 후기를 모두 입력해주세요.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const response = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          password,
+          service: form.service,
+          rating: form.rating,
+          content,
+          image: form.image || undefined,
+        }),
+      });
+      const data = (await response.json()) as CreateReviewResponse;
+
+      if (!response.ok) {
+        throw new Error(data.message ?? "후기를 저장하지 못했습니다.");
+      }
+
+      setReviews((current) => [data.review, ...current]);
+      setForm(blankForm);
+      setImageName("");
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "후기를 저장하지 못했습니다.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const deleteReview = async (reviewId: string) => {
+    const deleteForm = deleteForms[reviewId] ?? blankDeleteForm;
+    const name = deleteForm.name.trim();
+    const password = deleteForm.password.trim();
+
+    setError("");
+
+    if (!password || (!deleteForm.admin && !name)) {
+      setError("삭제하려면 이름과 비밀번호를 입력해주세요.");
+      return;
+    }
+
+    setDeletingId(reviewId);
+
+    try {
+      const response = await fetch("/api/reviews", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: reviewId,
+          name,
+          password,
+          admin: deleteForm.admin,
+        }),
+      });
+      const data = (await response.json()) as { message?: string };
+
+      if (!response.ok) {
+        throw new Error(data.message ?? "후기를 삭제하지 못했습니다.");
+      }
+
+      setReviews((current) =>
+        current.filter((review) => review.id !== reviewId),
+      );
+      setDeleteOpenId("");
+      setDeleteForms((current) => {
+        const next = { ...current };
+        delete next[reviewId];
+        return next;
+      });
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "후기를 삭제하지 못했습니다.",
+      );
+    } finally {
+      setDeletingId("");
+    }
+  };
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+      <form
+        onSubmit={submitReview}
+        className="card-premium rounded-[34px] p-6 sm:p-8"
+      >
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
+            write review
+          </p>
+          <h2 className="mt-3 text-2xl font-black text-white">후기 작성</h2>
+        </div>
+
+        <div className="mt-7 grid gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-2">
+              <span className="text-sm font-bold text-zinc-300">닉네임</span>
+              <input
+                value={form.name}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    name: event.target.value,
+                  }))
+                }
+                maxLength={20}
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
+                placeholder="예: 다이아 목표"
+              />
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-sm font-bold text-zinc-300">
+                삭제 비밀번호
+              </span>
+              <input
+                type="password"
+                value={form.password}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    password: event.target.value,
+                  }))
+                }
+                maxLength={40}
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
+                placeholder="후기 삭제 시 필요"
+              />
+            </label>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+            <label className="grid gap-2">
+              <span className="text-sm font-bold text-zinc-300">서비스</span>
+              <select
+                value={form.service}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    service: event.target.value,
+                  }))
+                }
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
+              >
+                <option>롤 대리</option>
+                <option>롤 듀오</option>
+                <option>롤 계정</option>
+              </select>
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-sm font-bold text-zinc-300">평점</span>
+              <select
+                value={form.rating}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    rating: Number(event.target.value),
+                  }))
+                }
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
+              >
+                {[5, 4, 3, 2, 1].map((rating) => (
+                  <option key={rating} value={rating}>
+                    {rating}점
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <label className="grid gap-2">
+            <span className="text-sm font-bold text-zinc-300">후기</span>
+            <textarea
+              value={form.content}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  content: event.target.value,
+                }))
+              }
+              maxLength={400}
+              rows={6}
+              className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
+              placeholder="진행 과정, 상담, 만족했던 점을 남겨주세요."
+            />
+          </label>
+
+          <div className="grid gap-3">
+            <span className="text-sm font-bold text-zinc-300">이미지 첨부</span>
+            {form.image ? (
+              <div className="relative overflow-hidden rounded-3xl border border-gold/20 bg-black">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={form.image}
+                  alt="첨부 이미지 미리보기"
+                  className="h-56 w-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white backdrop-blur transition hover:text-gold"
+                  aria-label="첨부 이미지 제거"
+                >
+                  <X size={18} />
+                </button>
+                <p className="px-4 py-3 text-sm text-zinc-400">{imageName}</p>
+              </div>
+            ) : (
+              <label className="flex cursor-pointer items-center justify-center gap-3 rounded-3xl border border-dashed border-gold/25 bg-white/[.03] px-5 py-8 text-sm font-bold text-zinc-300 transition hover:border-gold/50 hover:text-white">
+                <ImagePlus size={20} />
+                이미지 선택
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImage}
+                  className="sr-only"
+                />
+              </label>
+            )}
+          </div>
+
+          {error && (
+            <p className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-200">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {submitting && <Loader2 size={18} className="animate-spin" />}
+            후기 등록
+          </button>
+        </div>
+      </form>
+
+      <div className="space-y-5">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
+            reviews
+          </p>
+          <h2 className="mt-2 text-2xl font-black text-white">
+            전체 후기 {reviews.length}개
+          </h2>
+        </div>
+
+        {loading ? (
+          <div className="flex min-h-60 items-center justify-center rounded-[30px] border border-gold/15 bg-white/[.035] text-zinc-400">
+            <Loader2 size={22} className="mr-2 animate-spin text-gold" />
+            후기를 불러오는 중
+          </div>
+        ) : reviews.length === 0 ? (
+          <div className="rounded-[30px] border border-gold/15 bg-white/[.035] p-8 text-center text-zinc-400">
+            아직 등록된 후기가 없습니다.
+          </div>
+        ) : (
+          reviews.map((review) => {
+            const deleteForm = deleteForms[review.id] ?? blankDeleteForm;
+            const deleteOpen = deleteOpenId === review.id;
+
+            return (
+              <article
+                key={review.id}
+                className="overflow-hidden rounded-[30px] border border-gold/15 bg-white/[.035]"
+              >
+                {review.image && (
+                  <div className="relative aspect-video bg-black">
+                    <Image
+                      src={review.image}
+                      alt={`${review.name} 후기 이미지`}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 56vw"
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                )}
+                <div className="p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="flex gap-1 text-gold">
+                        {Array.from({ length: review.rating }).map((_, i) => (
+                          <Star key={i} size={17} fill="currentColor" />
+                        ))}
+                      </div>
+                      <h3 className="mt-3 text-xl font-black text-white">
+                        {review.name}
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDeleteOpenId((current) =>
+                          current === review.id ? "" : review.id,
+                        )
+                      }
+                      className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-red-400/40 hover:text-red-200"
+                      aria-label="후기 삭제"
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </div>
+
+                  <p className="mt-4 leading-8 text-zinc-300">
+                    {review.content}
+                  </p>
+                  <div className="mt-5 flex flex-wrap items-center gap-3 text-xs font-black uppercase tracking-[0.18em] text-zinc-500">
+                    <span className="rounded-full bg-gold/10 px-3 py-1 text-gold">
+                      {review.service}
+                    </span>
+                    <time dateTime={review.createdAt}>
+                      {new Intl.DateTimeFormat("ko-KR", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                      }).format(new Date(review.createdAt))}
+                    </time>
+                  </div>
+
+                  {deleteOpen && (
+                    <div className="mt-5 rounded-3xl border border-red-400/20 bg-red-500/8 p-4">
+                      <label className="flex items-center gap-2 text-sm font-bold text-zinc-300">
+                        <input
+                          type="checkbox"
+                          checked={deleteForm.admin}
+                          onChange={(event) =>
+                            updateDeleteForm(review.id, {
+                              admin: event.target.checked,
+                              name: event.target.checked ? "" : deleteForm.name,
+                            })
+                          }
+                          className="h-4 w-4 accent-gold"
+                        />
+                        관리자 비밀번호로 삭제
+                      </label>
+                      <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                        {!deleteForm.admin && (
+                          <input
+                            value={deleteForm.name}
+                            onChange={(event) =>
+                              updateDeleteForm(review.id, {
+                                name: event.target.value,
+                              })
+                            }
+                            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-red-300/50"
+                            placeholder="작성자 이름"
+                          />
+                        )}
+                        <input
+                          type="password"
+                          value={deleteForm.password}
+                          onChange={(event) =>
+                            updateDeleteForm(review.id, {
+                              password: event.target.value,
+                            })
+                          }
+                          className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-red-300/50"
+                          placeholder={
+                            deleteForm.admin
+                              ? "관리자 비밀번호"
+                              : "작성 시 입력한 비밀번호"
+                          }
+                        />
+                        <button
+                          type="button"
+                          onClick={() => void deleteReview(review.id)}
+                          disabled={deletingId === review.id}
+                          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-400 px-5 py-3 font-black text-black transition hover:bg-red-300 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {deletingId === review.id && (
+                            <Loader2 size={17} className="animate-spin" />
+                          )}
+                          삭제
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </article>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}

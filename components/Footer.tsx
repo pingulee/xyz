@@ -13,7 +13,7 @@ export default function Footer() {
             <div className="relative h-14 w-48">
               <Image
                 src="/images/logo.webp"
-                alt="XYZ 프리미엄 롤 서비스"
+                alt="XYZ 롤 대리, 롤 듀오, 롤 계정"
                 fill
                 sizes="192px"
                 className="object-contain object-left transition duration-300 group-hover:scale-105"
@@ -21,7 +21,8 @@ export default function Footer() {
             </div>
           </Link>
           <p className="mt-5 max-w-md text-sm leading-7 text-zinc-400">
-            검증된 기사, 체계적인 관리, 빠른 상담을 중심으로 운영하는 프리미엄 리그 오브 레전드 서비스입니다.
+            검증된 기사, 체계적인 관리, 빠른 상담을 중심으로 운영하는 프리미엄
+            리그 오브 레전드 서비스입니다.
           </p>
           <div className="mt-7 flex flex-wrap gap-2">
             {[ShieldCheck, Trophy, Sparkles].map((Icon, i) => (
@@ -30,7 +31,11 @@ export default function Footer() {
                 className="inline-flex items-center gap-2 rounded-full border border-gold/15 bg-white/3 px-4 py-2 text-xs font-bold text-zinc-300"
               >
                 <Icon size={15} className="text-gold" />
-                {i === 0 ? "안전 진행" : i === 1 ? "상위 기사" : "프리미엄 관리"}
+                {i === 0
+                  ? "안전 진행"
+                  : i === 1
+                  ? "상위 기사"
+                  : "프리미엄 관리"}
               </span>
             ))}
           </div>
@@ -62,7 +67,8 @@ export default function Footer() {
         <div>
           <h3 className="font-black text-white">문의</h3>
           <p className="mt-5 text-sm leading-7 text-zinc-400">
-            현재 티어, 목표 티어, 원하는 서비스를 알려주시면 빠르게 안내해드립니다.
+            현재 티어, 목표 티어, 원하는 서비스를 알려주시면 빠르게
+            안내해드립니다.
           </p>
           <a
             href={site.kakaoUrl}
