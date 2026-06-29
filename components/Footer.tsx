@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { MessageCircle, ShieldCheck, Trophy, Sparkles } from "lucide-react";
+import { MessageCircle, ShieldCheck, Sparkles, Trophy } from "lucide-react";
 import Container from "@/components/Container";
 import { navItems, services, site } from "@/lib/site";
 
@@ -13,7 +13,7 @@ export default function Footer() {
             <div className="relative h-14 w-48">
               <Image
                 src="/images/logo.webp"
-                alt="xyz 프리미엄 롤 대리"
+                alt="XYZ 프리미엄 롤 서비스"
                 fill
                 sizes="192px"
                 className="object-contain object-left transition duration-300 group-hover:scale-105"
@@ -21,8 +21,7 @@ export default function Footer() {
             </div>
           </Link>
           <p className="mt-5 max-w-md text-sm leading-7 text-zinc-400">
-            프리미엄 리그 오브 레전드 서비스. 검증된 기사, 체계적인 관리, 빠른
-            상담을 중심으로 운영합니다.
+            검증된 기사, 체계적인 관리, 빠른 상담을 중심으로 운영하는 프리미엄 리그 오브 레전드 서비스입니다.
           </p>
           <div className="mt-7 flex flex-wrap gap-2">
             {[ShieldCheck, Trophy, Sparkles].map((Icon, i) => (
@@ -30,12 +29,8 @@ export default function Footer() {
                 key={i}
                 className="inline-flex items-center gap-2 rounded-full border border-gold/15 bg-white/3 px-4 py-2 text-xs font-bold text-zinc-300"
               >
-                <Icon size={15} className="text-gold" />{" "}
-                {i === 0
-                  ? "안전 진행"
-                  : i === 1
-                  ? "상위 기사"
-                  : "프리미엄 관리"}
+                <Icon size={15} className="text-gold" />
+                {i === 0 ? "안전 진행" : i === 1 ? "상위 기사" : "프리미엄 관리"}
               </span>
             ))}
           </div>
@@ -43,10 +38,10 @@ export default function Footer() {
         <div>
           <h3 className="font-black text-white">메뉴</h3>
           <ul className="mt-5 space-y-3 text-sm text-zinc-400">
-            {navItems.map((n) => (
-              <li key={n.href}>
-                <Link className="hover:text-gold" href={n.href}>
-                  {n.label}
+            {navItems.map((item) => (
+              <li key={item.href}>
+                <Link className="hover:text-gold" href={item.href}>
+                  {item.label}
                 </Link>
               </li>
             ))}
@@ -55,10 +50,10 @@ export default function Footer() {
         <div>
           <h3 className="font-black text-white">서비스</h3>
           <ul className="mt-5 space-y-3 text-sm text-zinc-400">
-            {services.map((s) => (
-              <li key={s.href}>
-                <Link className="hover:text-gold" href={s.href}>
-                  {s.title}
+            {services.map((service) => (
+              <li key={service.href}>
+                <Link className="hover:text-gold" href={service.href}>
+                  {service.title}
                 </Link>
               </li>
             ))}
@@ -67,8 +62,7 @@ export default function Footer() {
         <div>
           <h3 className="font-black text-white">문의</h3>
           <p className="mt-5 text-sm leading-7 text-zinc-400">
-            현재 티어, 목표 티어, 원하는 서비스를 알려주시면 빠르게
-            안내드립니다.
+            현재 티어, 목표 티어, 원하는 서비스를 알려주시면 빠르게 안내해드립니다.
           </p>
           <a
             href={site.kakaoUrl}
@@ -76,12 +70,13 @@ export default function Footer() {
             rel="noopener noreferrer"
             className="mt-5 inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black"
           >
-            <MessageCircle size={17} /> 카카오톡 상담
+            <MessageCircle size={17} />
+            카카오톡 상담
           </a>
         </div>
       </Container>
       <div className="border-t border-gold/10 py-6 text-center text-xs text-zinc-600">
-        © 2025 xyz. All rights reserved.
+        © 2026 XYZ. All rights reserved.
       </div>
     </footer>
   );

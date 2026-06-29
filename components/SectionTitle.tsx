@@ -12,23 +12,14 @@ export default function SectionTitle({
   center?: boolean;
 }) {
   return (
-    <div className={clsx("mb-12", center && "text-center")}>
-      <p className="text-xs font-black uppercase tracking-[0.32em] text-gold">
+    <div className={clsx("mb-12", center ? "mx-auto max-w-3xl text-center" : "max-w-3xl")}> 
+      <span className="mb-4 inline-flex rounded-full border border-gold/20 bg-gold/8 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-gold">
         {eyebrow}
-      </p>
-      <h2 className="mt-4 text-4xl font-black tracking-tighter text-white sm:text-5xl lg:text-6xl">
+      </span>
+      <h2 className="text-3xl font-black tracking-[-0.06em] text-white sm:text-5xl lg:text-6xl">
         {title}
       </h2>
-      {desc && (
-        <p
-          className={clsx(
-            "mt-5 text-base leading-8 text-zinc-400 sm:text-lg",
-            center && "mx-auto max-w-2xl",
-          )}
-        >
-          {desc}
-        </p>
-      )}
+      {desc && <p className="mt-5 text-base leading-8 text-zinc-400 sm:text-lg">{desc}</p>}
     </div>
   );
 }

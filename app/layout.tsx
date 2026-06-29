@@ -9,24 +9,24 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "xyz | 프리미엄 롤 대리 서비스",
-    template: "%s | xyz",
+    default: "XYZ | 프리미엄 롤 서비스",
+    template: "%s | XYZ",
   },
   description: site.description,
   keywords: [
     "롤 대리",
     "롤 듀오",
     "롤 계정",
-    "롤대리 가격",
+    "롤 대리 가격",
     "기사 모집",
-    "리그오브레전드 대리",
-    "xyz",
+    "리그 오브 레전드 대리",
+    "XYZ",
   ],
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "xyz | 프리미엄 롤 대리 서비스",
+    title: "XYZ | 프리미엄 롤 서비스",
     description: site.description,
     url: site.url,
     siteName: site.name,
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "xyz | 프리미엄 롤 대리 서비스",
+    title: "XYZ | 프리미엄 롤 서비스",
     description: site.description,
   },
   robots: {

@@ -1,8 +1,15 @@
 import type { MetadataRoute } from "next";
-import { site } from "@/lib/site";
+import { navItems, services, site } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return ["", "/lineup", "/price", "/price/boosting", "/price/duo", "/price/account", "/recruit", "/contact"].map((path) => ({
+  const paths = [
+    "",
+    ...navItems.filter((item) => item.href !== "/").map((item) => item.href),
+    ...services.map((service) => service.href),
+    "/contact",
+  ];
+
+  return paths.map((path) => ({
     url: `${site.url}${path}`,
     lastModified: new Date(),
     changeFrequency: "weekly",

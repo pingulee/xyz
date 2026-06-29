@@ -1,10 +1,12 @@
 "use client";
-import { MessageCircle, X, Clock, Send } from "lucide-react";
+
+import { Clock, MessageCircle, Send, X } from "lucide-react";
 import { useState } from "react";
 import { site } from "@/lib/site";
 
 export default function FloatingContact() {
   const [open, setOpen] = useState(false);
+
   return (
     <div className="fixed bottom-5 right-5 z-80 flex flex-col items-end gap-3">
       {open && (
@@ -19,10 +21,11 @@ export default function FloatingContact() {
             </div>
           </div>
           <p className="mt-4 text-sm leading-6 text-zinc-300">
-            현재 티어, 목표 티어, 희망 서비스를 알려주시면 견적을 안내드립니다.
+            현재 티어, 목표 티어, 원하는 서비스를 알려주시면 견적을 안내해드립니다.
           </p>
           <div className="mt-4 flex items-center gap-2 rounded-2xl bg-white/4 px-4 py-3 text-xs text-zinc-400">
-            <Clock size={15} className="text-gold" /> 24시간 상담 접수
+            <Clock size={15} className="text-gold" />
+            24시간 상담 접수
           </div>
           <a
             href={site.kakaoUrl}
@@ -30,11 +33,13 @@ export default function FloatingContact() {
             rel="noopener noreferrer"
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gold-gradient px-4 py-3 text-sm font-black text-black"
           >
-            <Send size={16} /> 카카오톡 문의하기
+            <Send size={16} />
+            카카오톡 문의하기
           </a>
         </div>
       )}
       <button
+        type="button"
         onClick={() => setOpen((v) => !v)}
         className="grid h-16 w-16 place-items-center rounded-full bg-gold-gradient text-black shadow-gold transition hover:scale-105"
         aria-label="상담 버튼"

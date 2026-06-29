@@ -1,19 +1,22 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowRight,
   BadgeCheck,
+  MessageCircle,
   ShieldCheck,
+  Sparkles,
   Star,
   Trophy,
 } from "lucide-react";
 import Container from "@/components/Container";
+import HeroSlider from "@/components/HeroSlider";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import ServiceCard from "@/components/ServiceCard";
 import PriceTable from "@/components/PriceTable";
 import JsonLd from "@/components/JsonLd";
-import { services, site } from "@/lib/site";
+import { lineups, services, site } from "@/lib/site";
 
 const stats = [
   ["상위 티어", "검증 기사"],
@@ -24,28 +27,34 @@ const stats = [
 
 const process = [
   "상담 접수",
-  "견적 안내",
+  "조건 확인",
   "기사 배정",
-  "진행 보고",
+  "진행 리포트",
   "완료 확인",
+];
+
+const reviews = [
+  ["다이아 목표였는데 일정 맞춰서 깔끔하게 끝났어요.", "boosting"],
+  ["듀오로 하니까 피드백이 바로 와서 훨씬 편했습니다.", "duo"],
+  ["상담이 빠르고 조건 설명이 투명해서 믿고 진행했어요.", "account"],
 ];
 
 const faqs = [
   [
     "진행 방식은 어떻게 되나요?",
-    "현재 티어, 목표 티어, 선호 챔피언, 일정 확인 후 가장 적합한 기사로 배정합니다.",
+    "현재 티어, 목표 티어, 선호 챔피언, 일정 조건을 확인한 뒤 맞는 기사로 배정합니다.",
   ],
   [
     "가격은 고정인가요?",
-    "구간, mmr, 챔피언 제한, 진행 속도에 따라 달라질 수 있어 상담 후 정확히 안내합니다.",
+    "구간, MMR, 챔피언 제한, 진행 속도에 따라 달라져 상담 후 정확하게 안내합니다.",
   ],
   [
     "진행 상황을 볼 수 있나요?",
-    "진행 중 필요한 내용을 상담 채널에서 확인할 수 있도록 안내합니다.",
+    "진행 중 중요한 내용은 상담 채널에서 확인할 수 있도록 안내합니다.",
   ],
   [
-    "이미지는 어디에 넣나요?",
-    "public/images/hero.png, boosting.png, duo.png, account.png, lineup-1.png 파일을 교체하면 됩니다.",
+    "이미지는 어디서 교체하나요?",
+    "메인 슬라이드는 public/images/hero/boosting.webp, duo.webp, account.webp 파일을 교체하면 됩니다.",
   ],
 ];
 
@@ -53,77 +62,25 @@ export default function Home() {
   return (
     <>
       <JsonLd />
-      <section className="noise relative min-h-[calc(100vh-80px)] overflow-hidden">
-        <div className="grid-bg absolute inset-0" />
-        <div className="absolute left-1/2 top-8 h-130 w-130 -translate-x-1/2 rounded-full bg-gold/20 blur-[130px]" />
-        <Container className="relative grid gap-14 py-20 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:py-28">
+      <HeroSlider />
+
+      <section className="border-y border-gold/10 bg-black/24 py-10">
+        <Container>
           <Reveal>
-            <p className="inline-flex rounded-full border border-gold/25 bg-gold/10 px-4 py-2 text-xs font-black uppercase tracking-[.28em] text-gold">
-              premium league service
-            </p>
-            <h1 className="mt-7 text-5xl font-black leading-[.96] tracking-[-.07em] text-white sm:text-7xl lg:text-8xl">
-              프리미엄
-              <br />
-              <span className="gold-text">롤 대리</span>
-              <br />
-              서비스 xyz
-            </h1>
-            <p className="mt-7 max-w-2xl text-lg leading-9 text-zinc-300">
-              검증된 기사 라인업과 체계적인 운영으로 목표 티어까지 안정적으로
-              진행합니다. 상담부터 완료까지 깔끔하게 관리되는 프리미엄 서비스를
-              경험하세요.
-            </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <a
-                href={site.kakaoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold transition hover:-translate-y-1"
-              >
-                빠른 상담하기 <ArrowRight size={18} />
-              </a>
-              <Link
-                href="/price"
-                className="inline-flex items-center justify-center rounded-full border border-gold/20 bg-white/4 px-7 py-4 font-bold text-white transition hover:border-gold/60"
-              >
-                가격 안내 보기
-              </Link>
-            </div>
-            <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {stats.map(([a, b]) => (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {stats.map(([value, label]) => (
                 <div
-                  key={a}
-                  className="rounded-3xl border border-gold/12 bg-white/[.035] p-5"
+                  key={value}
+                  className="rounded-3xl border border-gold/12 bg-white/[.035] p-5 text-center"
                 >
-                  <b className="text-2xl font-black text-gold">{a}</b>
-                  <p className="mt-1 text-sm text-zinc-400">{b}</p>
+                  <b className="text-2xl font-black text-gold sm:text-3xl">
+                    {value}
+                  </b>
+                  <p className="mt-1 text-sm font-bold text-zinc-400">
+                    {label}
+                  </p>
                 </div>
               ))}
-            </div>
-          </Reveal>
-          <Reveal delay={0.15}>
-            <div className="relative mx-auto max-w-140">
-              <div className="absolute inset-8 rounded-full bg-gold/25 blur-[90px]" />
-              <div className="card-premium relative overflow-hidden rounded-[44px] p-4">
-                <div className="relative aspect-4/5 overflow-hidden rounded-[34px] bg-black">
-                  <Image
-                    src="/images/hero.png"
-                    alt="xyz 메인 히어로 이미지 위치"
-                    fill
-                    priority
-                    className="object-cover opacity-90"
-                  />
-                  <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-black/20" />
-                  <div className="absolute bottom-6 left-6 right-6 rounded-[28px] border border-gold/20 bg-black/55 p-5 backdrop-blur-xl">
-                    <p className="text-xs font-black uppercase tracking-[.28em] text-gold">
-                      challenger verified
-                    </p>
-                    <h2 className="mt-2 text-2xl font-black text-white">
-                      승률 중심 맞춤 진행
-                    </h2>
-                  </div>
-                </div>
-              </div>
             </div>
           </Reveal>
         </Container>
@@ -135,13 +92,13 @@ export default function Home() {
             <SectionTitle
               eyebrow="services"
               title="서비스 안내"
-              desc="대리, 듀오, 계정 상담까지 필요한 서비스를 빠르게 선택할 수 있습니다."
+              desc="대리, 듀오, 계정 상담까지 목적에 맞는 서비스를 빠르게 선택할 수 있습니다."
             />
           </Reveal>
           <div className="grid gap-6 lg:grid-cols-3">
-            {services.map((s, i) => (
-              <Reveal key={s.href} delay={i * 0.08}>
-                <ServiceCard {...s} />
+            {services.map((service, i) => (
+              <Reveal key={service.href} delay={i * 0.08}>
+                <ServiceCard {...service} />
               </Reveal>
             ))}
           </div>
@@ -150,26 +107,26 @@ export default function Home() {
 
       <section className="relative overflow-hidden py-20">
         <div className="absolute inset-x-0 top-1/2 h-56 -translate-y-1/2 bg-gold/10 blur-[120px]" />
-        <Container className="relative grid gap-10 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
+        <Container className="relative grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <Reveal>
             <SectionTitle
               center={false}
               eyebrow="process"
-              title="운영 가능한 수준의 진행 프로세스"
-              desc="상담, 견적, 기사 배정, 진행 보고, 완료 확인까지 실제 운영에 맞춘 구조입니다."
+              title="운영 가능한 진행 프로세스"
+              desc="상담부터 완료 확인까지 실제 서비스 운영에 맞춘 단계로 진행합니다."
             />
           </Reveal>
           <Reveal delay={0.12}>
             <div className="grid gap-3">
-              {process.map((p, i) => (
+              {process.map((item, i) => (
                 <div
-                  key={p}
+                  key={item}
                   className="flex items-center gap-5 rounded-3xl border border-gold/15 bg-white/[.035] p-5"
                 >
-                  <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gold-gradient font-black text-black">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gold-gradient font-black text-black">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <b className="text-lg text-white">{p}</b>
+                  <b className="text-lg text-white">{item}</b>
                 </div>
               ))}
             </div>
@@ -181,9 +138,60 @@ export default function Home() {
         <Container>
           <Reveal>
             <SectionTitle
+              eyebrow="lineup"
+              title="기사 라인업 미리보기"
+              desc="포지션과 티어 기준으로 검증된 기사 풀을 운영합니다."
+            />
+          </Reveal>
+          <div className="grid gap-6 lg:grid-cols-3">
+            {lineups.map(({ title, rank, image }, i) => (
+              <Reveal key={title} delay={i * 0.08}>
+                <article className="card-premium overflow-hidden rounded-[34px]">
+                  <div className="relative aspect-4/3 bg-black">
+                    <Image
+                      src={image}
+                      alt={`${title} 프로필 이미지`}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 33vw"
+                      className="object-cover opacity-90"
+                    />
+                    <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent" />
+                  </div>
+                  <div className="p-7">
+                    <span className="rounded-full bg-gold/10 px-3 py-1 text-xs font-black text-gold">
+                      {rank}
+                    </span>
+                    <h3 className="mt-5 text-2xl font-black text-white">
+                      {title}
+                    </h3>
+                    <p className="mt-3 leading-7 text-zinc-400">
+                      포지션별 숙련도와 진행 안정성을 기준으로 배정합니다.
+                    </p>
+                  </div>
+                </article>
+              </Reveal>
+            ))}
+          </div>
+          <Reveal>
+            <div className="mt-9 text-center">
+              <Link
+                href="/lineup"
+                className="inline-flex items-center gap-2 rounded-full border border-gold/20 px-6 py-3 font-bold text-white transition hover:border-gold/60"
+              >
+                기사 라인업 보기 <ArrowRight size={18} />
+              </Link>
+            </div>
+          </Reveal>
+        </Container>
+      </section>
+
+      <section className="py-20">
+        <Container>
+          <Reveal>
+            <SectionTitle
               eyebrow="price"
-              title="가격 안내"
-              desc="실제 가격은 상담 후 확정되며, 사이트에는 신뢰를 위한 안내 테이블을 배치했습니다."
+              title="가격 미리보기"
+              desc="실제 견적은 상담 후 확정되며, 아래 표는 구간별 안내 기준입니다."
             />
           </Reveal>
           <Reveal>
@@ -195,7 +203,7 @@ export default function Home() {
       <section className="py-20">
         <Container>
           <Reveal>
-            <SectionTitle eyebrow="why xyz" title="xyz가 신뢰를 만드는 방식" />
+            <SectionTitle eyebrow="why xyz" title="XYZ가 신뢰를 만드는 방식" />
           </Reveal>
           <div className="grid gap-5 lg:grid-cols-3">
             {[
@@ -237,6 +245,33 @@ export default function Home() {
       <section className="py-20">
         <Container>
           <Reveal>
+            <SectionTitle eyebrow="reviews" title="진행 후기" />
+          </Reveal>
+          <div className="grid gap-5 lg:grid-cols-3">
+            {reviews.map(([text, tag]) => (
+              <Reveal key={text}>
+                <article className="rounded-3xl border border-gold/15 bg-white/[.035] p-7">
+                  <div className="flex gap-1 text-gold">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} size={18} fill="currentColor" />
+                    ))}
+                  </div>
+                  <p className="mt-5 min-h-18 leading-7 text-zinc-300">
+                    {text}
+                  </p>
+                  <p className="mt-5 text-xs font-black uppercase tracking-[0.22em] text-gold">
+                    {tag}
+                  </p>
+                </article>
+              </Reveal>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      <section className="py-20">
+        <Container>
+          <Reveal>
             <SectionTitle eyebrow="faq" title="자주 묻는 질문" />
           </Reveal>
           <div className="mx-auto max-w-4xl space-y-4">
@@ -258,24 +293,24 @@ export default function Home() {
       <section className="py-20">
         <Container>
           <Reveal>
-            <div className="relative overflow-hidden rounded-[44px] border border-gold/25 bg-gold-gradient p-10 text-black sm:p-14 lg:p-16">
-              <Star
-                className="absolute right-10 top-10 opacity-30"
+            <div className="relative overflow-hidden rounded-[36px] border border-gold/25 bg-gold-gradient p-8 text-black sm:p-12 lg:p-16">
+              <Sparkles
+                className="absolute right-8 top-8 opacity-30"
                 size={120}
               />
               <h2 className="max-w-3xl text-4xl font-black tracking-tighter sm:text-6xl">
-                목표 티어까지, 지금 xyz에서 상담받으세요
+                목표 티어까지, 지금 XYZ에서 상담받으세요
               </h2>
               <p className="mt-5 max-w-2xl text-lg font-semibold text-black/70">
-                현재 티어와 목표 티어만 알려주면 가장 적합한 방식으로
-                안내드립니다.
+                현재 티어와 목표만 알려주면 가장 적합한 방식으로 안내해드립니다.
               </p>
               <a
                 href={site.kakaoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-8 inline-flex rounded-full bg-black px-7 py-4 font-black text-white"
+                className="mt-8 inline-flex items-center gap-2 rounded-full bg-black px-7 py-4 font-black text-white"
               >
+                <MessageCircle size={18} />
                 카카오톡 상담하기
               </a>
             </div>

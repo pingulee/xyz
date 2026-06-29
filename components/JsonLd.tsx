@@ -8,7 +8,17 @@ export default function JsonLd() {
     url: site.url,
     description: site.description,
     areaServed: "KR",
-    serviceType: ["League of Legends Boosting", "Duo Queue", "Account Consultation"],
+    serviceType: [
+      "League of Legends Boosting",
+      "League of Legends Duo Queue",
+      "League of Legends Account Consultation",
+    ],
   };
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }} />;
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }}
+    />
+  );
 }
