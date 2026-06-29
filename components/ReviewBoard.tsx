@@ -50,7 +50,9 @@ const blankDeleteForm = {
 export default function ReviewBoard() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [form, setForm] = useState(blankForm);
-  const [deleteForms, setDeleteForms] = useState<Record<string, DeleteForm>>({});
+  const [deleteForms, setDeleteForms] = useState<Record<string, DeleteForm>>(
+    {},
+  );
   const [deleteOpenId, setDeleteOpenId] = useState("");
   const [imageName, setImageName] = useState("");
   const [error, setError] = useState("");
@@ -110,10 +112,7 @@ export default function ReviewBoard() {
     setImageName("");
   };
 
-  const updateDeleteForm = (
-    reviewId: string,
-    updates: Partial<DeleteForm>,
-  ) => {
+  const updateDeleteForm = (reviewId: string, updates: Partial<DeleteForm>) => {
     setDeleteForms((current) => ({
       ...current,
       [reviewId]: {
@@ -162,7 +161,9 @@ export default function ReviewBoard() {
       setImageName("");
     } catch (caught) {
       setError(
-        caught instanceof Error ? caught.message : "후기를 저장하지 못했습니다.",
+        caught instanceof Error
+          ? caught.message
+          : "후기를 저장하지 못했습니다.",
       );
     } finally {
       setSubmitting(false);
@@ -211,7 +212,9 @@ export default function ReviewBoard() {
       });
     } catch (caught) {
       setError(
-        caught instanceof Error ? caught.message : "후기를 삭제하지 못했습니다.",
+        caught instanceof Error
+          ? caught.message
+          : "후기를 삭제하지 못했습니다.",
       );
     } finally {
       setDeletingId("");
@@ -232,7 +235,7 @@ export default function ReviewBoard() {
         </div>
 
         <div className="mt-7 grid gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4">
             <label className="grid gap-2">
               <span className="text-sm font-bold text-zinc-300">닉네임</span>
               <input
@@ -250,9 +253,7 @@ export default function ReviewBoard() {
             </label>
 
             <label className="grid gap-2">
-              <span className="text-sm font-bold text-zinc-300">
-                삭제 비밀번호
-              </span>
+              <span className="text-sm font-bold text-zinc-300">비밀번호</span>
               <input
                 type="password"
                 value={form.password}
@@ -347,7 +348,7 @@ export default function ReviewBoard() {
                 <p className="px-4 py-3 text-sm text-zinc-400">{imageName}</p>
               </div>
             ) : (
-              <label className="flex cursor-pointer items-center justify-center gap-3 rounded-3xl border border-dashed border-gold/25 bg-white/[.03] px-5 py-8 text-sm font-bold text-zinc-300 transition hover:border-gold/50 hover:text-white">
+              <label className="flex cursor-pointer items-center justify-center gap-3 rounded-3xl border border-dashed border-gold/25 bg-white/3 px-5 py-8 text-sm font-bold text-zinc-300 transition hover:border-gold/50 hover:text-white">
                 <ImagePlus size={20} />
                 이미지 선택
                 <input
