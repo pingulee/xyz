@@ -119,6 +119,7 @@ export default function ReviewBoard({
   const [deleteOpenId, setDeleteOpenId] = useState("");
   const [editOpenId, setEditOpenId] = useState("");
   const [selectedReviewId, setSelectedReviewId] = useState("");
+  const [writeOpen, setWriteOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [imageName, setImageName] = useState("");
   const [error, setError] = useState("");
@@ -424,161 +425,189 @@ export default function ReviewBoard({
   };
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-      <form
-        onSubmit={submitReview}
-        className="card-premium rounded-[34px] p-6 sm:p-8"
-      >
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
-            write review
-          </p>
-          <h2 className="mt-3 text-2xl font-black text-white">후기 작성</h2>
-        </div>
-
-        <div className="mt-7 grid gap-4">
-          <div className="grid gap-4">
-            <label className="grid gap-2">
-              <span className="text-sm font-bold text-zinc-300">닉네임</span>
-              <input
-                value={form.name}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    name: event.target.value,
-                  }))
-                }
-                maxLength={20}
-                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
-                placeholder="예: 다이아 목표"
-              />
-            </label>
-
-            <label className="grid gap-2">
-              <span className="text-sm font-bold text-zinc-300">비밀번호</span>
-              <input
-                type="password"
-                value={form.password}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    password: event.target.value,
-                  }))
-                }
-                maxLength={40}
-                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
-                placeholder="후기 삭제 시 필요"
-              />
-            </label>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-            <label className="grid gap-2">
-              <span className="text-sm font-bold text-zinc-300">서비스</span>
-              <select
-                value={form.service}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    service: event.target.value,
-                  }))
-                }
-                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
-              >
-                <option>롤 대리</option>
-                <option>롤 듀오</option>
-                <option>롤 계정</option>
-              </select>
-            </label>
-
-            <label className="grid gap-2">
-              <span className="text-sm font-bold text-zinc-300">평점</span>
-              <select
-                value={form.rating}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    rating: Number(event.target.value),
-                  }))
-                }
-                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
-              >
-                {[5, 4, 3, 2, 1].map((rating) => (
-                  <option key={rating} value={rating}>
-                    {rating}점
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <label className="grid gap-2">
-            <span className="text-sm font-bold text-zinc-300">후기</span>
-            <textarea
-              value={form.content}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  content: event.target.value,
-                }))
-              }
-              maxLength={400}
-              rows={6}
-              className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
-              placeholder="진행 과정, 상담, 만족했던 점을 남겨주세요."
-            />
-          </label>
-
-          <div className="grid gap-3">
-            <span className="text-sm font-bold text-zinc-300">이미지 첨부</span>
-            {form.image ? (
-              <div className="relative overflow-hidden rounded-3xl border border-gold/20 bg-black">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={form.image}
-                  alt="첨부 이미지 미리보기"
-                  className="h-32 w-full object-cover sm:h-40"
-                />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white backdrop-blur transition hover:text-gold"
-                  aria-label="첨부 이미지 제거"
-                >
-                  <X size={18} />
-                </button>
-                <p className="px-4 py-3 text-sm text-zinc-400">{imageName}</p>
+    <div className="grid gap-8">
+      {writeOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[34px] border border-gold/20 bg-[#111] p-6 shadow-2xl sm:p-8">
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
+                  write review
+                </p>
+                <h2 className="mt-3 text-2xl font-black text-white">
+                  후기 작성
+                </h2>
               </div>
-            ) : (
-              <label className="flex cursor-pointer items-center justify-center gap-3 rounded-3xl border border-dashed border-gold/25 bg-white/3 px-5 py-8 text-sm font-bold text-zinc-300 transition hover:border-gold/50 hover:text-white">
-                <ImagePlus size={20} />
-                이미지 선택
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleImage}
-                  className="sr-only"
-                />
-              </label>
-            )}
+
+              <button
+                type="button"
+                onClick={() => setWriteOpen(false)}
+                className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white"
+                aria-label="후기 작성 닫기"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={submitReview}>
+              <div className="grid gap-4">
+                <div className="grid gap-4">
+                  <label className="grid gap-2">
+                    <span className="text-sm font-bold text-zinc-300">
+                      닉네임
+                    </span>
+                    <input
+                      value={form.name}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          name: event.target.value,
+                        }))
+                      }
+                      maxLength={20}
+                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
+                      placeholder="예: 다이아 목표"
+                    />
+                  </label>
+
+                  <label className="grid gap-2">
+                    <span className="text-sm font-bold text-zinc-300">
+                      비밀번호
+                    </span>
+                    <input
+                      type="password"
+                      value={form.password}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          password: event.target.value,
+                        }))
+                      }
+                      maxLength={40}
+                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
+                      placeholder="후기 삭제 시 필요"
+                    />
+                  </label>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+                  <label className="grid gap-2">
+                    <span className="text-sm font-bold text-zinc-300">
+                      서비스
+                    </span>
+                    <select
+                      value={form.service}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          service: event.target.value,
+                        }))
+                      }
+                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
+                    >
+                      <option>롤 대리</option>
+                      <option>롤 듀오</option>
+                      <option>롤 계정</option>
+                    </select>
+                  </label>
+
+                  <label className="grid gap-2">
+                    <span className="text-sm font-bold text-zinc-300">
+                      평점
+                    </span>
+                    <select
+                      value={form.rating}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          rating: Number(event.target.value),
+                        }))
+                      }
+                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
+                    >
+                      {[5, 4, 3, 2, 1].map((rating) => (
+                        <option key={rating} value={rating}>
+                          {rating}점
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <label className="grid gap-2">
+                  <span className="text-sm font-bold text-zinc-300">후기</span>
+                  <textarea
+                    value={form.content}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        content: event.target.value,
+                      }))
+                    }
+                    maxLength={400}
+                    rows={6}
+                    className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
+                    placeholder="진행 과정, 상담, 만족했던 점을 남겨주세요."
+                  />
+                </label>
+
+                <div className="grid gap-3">
+                  <span className="text-sm font-bold text-zinc-300">
+                    이미지 첨부
+                  </span>
+                  {form.image ? (
+                    <div className="relative overflow-hidden rounded-3xl border border-gold/20 bg-black">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={form.image}
+                        alt="첨부 이미지 미리보기"
+                        className="h-32 w-full object-cover sm:h-40"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white backdrop-blur transition hover:text-gold"
+                        aria-label="첨부 이미지 제거"
+                      >
+                        <X size={18} />
+                      </button>
+                      <p className="px-4 py-3 text-sm text-zinc-400">
+                        {imageName}
+                      </p>
+                    </div>
+                  ) : (
+                    <label className="flex cursor-pointer items-center justify-center gap-3 rounded-3xl border border-dashed border-gold/25 bg-white/3 px-5 py-8 text-sm font-bold text-zinc-300 transition hover:border-gold/50 hover:text-white">
+                      <ImagePlus size={20} />
+                      이미지 선택
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleImage}
+                        className="sr-only"
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {error && (
+                  <p className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-200">
+                    {error}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {submitting && <Loader2 size={18} className="animate-spin" />}
+                  후기 등록
+                </button>
+              </div>
+            </form>
           </div>
-
-          {error && (
-            <p className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-200">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submitting && <Loader2 size={18} className="animate-spin" />}
-            후기 등록
-          </button>
         </div>
-      </form>
+      )}
 
       <div className="space-y-5">
         <div className="flex items-end justify-between gap-4">
@@ -590,19 +619,14 @@ export default function ReviewBoard({
               전체 후기 {reviews.length}개
             </h2>
           </div>
-          {selectedReview && (
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedReviewId("");
-                setDeleteOpenId("");
-                setEditOpenId("");
-              }}
-              className="rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white"
-            >
-              목록으로
-            </button>
-          )}
+
+          <button
+            type="button"
+            onClick={() => setWriteOpen(true)}
+            className="cursor-pointer rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black shadow-gold-sm transition"
+          >
+            후기 작성
+          </button>
         </div>
 
         {loading ? (
@@ -666,6 +690,7 @@ export default function ReviewBoard({
                   <span className="hidden text-center text-sm font-black text-zinc-500 sm:block">
                     {(currentPage - 1) * REVIEWS_PER_PAGE + i + 1}
                   </span>
+
                   <span className="grid gap-2">
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="text-base font-black text-white">
@@ -675,9 +700,11 @@ export default function ReviewBoard({
                         {review.service}
                       </span>
                     </span>
+
                     <span className="line-clamp-1 text-sm leading-6 text-zinc-400">
                       {review.content}
                     </span>
+
                     <span className="flex items-center gap-3">
                       <Stars rating={review.rating} />
                       <time
@@ -688,6 +715,7 @@ export default function ReviewBoard({
                       </time>
                     </span>
                   </span>
+
                   {review.image && (
                     <span className="relative hidden h-16 w-22 overflow-hidden rounded-2xl bg-black sm:block">
                       <Image
@@ -715,6 +743,7 @@ export default function ReviewBoard({
                   <ChevronLeft size={16} />
                   이전
                 </button>
+
                 {pageItems.map((item, i) =>
                   item === "..." ? (
                     <span
@@ -738,6 +767,7 @@ export default function ReviewBoard({
                     </button>
                   ),
                 )}
+
                 <button
                   type="button"
                   onClick={() => goToPage(currentPage + 1)}

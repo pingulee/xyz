@@ -52,8 +52,8 @@ export default async function ReviewsPage() {
         <Reveal>
           <SectionTitle
             eyebrow="reviews"
-            title="작업 후기 게시판"
-            desc="진행 경험을 직접 남기고, 이미지가 있다면 함께 첨부할 수 있습니다."
+            title="작업 후기"
+            desc="조작 없는 100% 리얼 후기를 맛보세요."
           />
         </Reveal>
         <Reveal>
