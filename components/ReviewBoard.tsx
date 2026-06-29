@@ -892,15 +892,12 @@ function ReviewDetail({
         ) : (
           <>
             {review.image && (
-              <div className="mt-6 overflow-hidden rounded-3xl border border-gold/20 bg-black">
-                <Image
+              <div className="mt-6">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={review.image}
                   alt={`${review.name} 후기 이미지`}
-                  width={1200}
-                  height={900}
-                  sizes="(max-width: 1024px) 100vw, 56vw"
-                  className="mx-auto h-auto max-h-[720px] max-w-full object-contain"
-                  unoptimized
+                  className="mx-auto block h-auto max-h-180 max-w-full"
                 />
               </div>
             )}
