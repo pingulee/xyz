@@ -13,3 +13,10 @@ CREATE TABLE IF NOT EXISTS reviews (
 
 ALTER TABLE reviews
   ADD COLUMN IF NOT EXISTS password_hash VARCHAR(200) NULL AFTER image_data;
+
+CREATE TABLE IF NOT EXISTS review_rate_limits (
+  ip_hash CHAR(64) NOT NULL,
+  last_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (ip_hash),
+  INDEX idx_review_rate_limits_last_created_at (last_created_at)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

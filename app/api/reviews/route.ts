@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { getReviews, toReview } from "@/lib/reviews";
@@ -26,8 +26,13 @@ type ReviewPayload = {
   password?: string;
 };
 
+type RateLimitRow = RowDataPacket & {
+  last_created_at: Date;
+};
+
 const allowedServices = new Set(["롤 대리", "롤 듀오", "롤 계정"]);
 const maxImageLength = 1024 * 1024 * 3;
+const reviewCooldownMs = 10 * 60 * 1000;
 const allowedImagePrefixes = [
   "data:image/jpeg;base64,",
   "data:image/jpg;base64,",
@@ -72,6 +77,52 @@ function canModifyReview(password: string, review: ReviewRow) {
     : false;
 
   return isAdmin || isOwner;
+}
+
+function isAdminPassword(password: string) {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  return Boolean(adminPassword && password === adminPassword);
+}
+
+function getClientIp(request: Request) {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+
+  return (
+    request.headers.get("cf-connecting-ip") ??
+    request.headers.get("x-real-ip") ??
+    forwardedFor?.split(",")[0]?.trim() ??
+    "unknown"
+  );
+}
+
+function hashClientIp(request: Request) {
+  return createHash("sha256").update(getClientIp(request)).digest("hex");
+}
+
+async function getReviewCooldown(request: Request) {
+  const ipHash = hashClientIp(request);
+  const [rows] = await getPool().execute<RateLimitRow[]>(
+    `SELECT last_created_at
+     FROM review_rate_limits
+     WHERE ip_hash = :ipHash
+     LIMIT 1`,
+    { ipHash },
+  );
+
+  const lastCreatedAt = rows[0]?.last_created_at;
+  if (!lastCreatedAt) return 0;
+
+  return Math.max(0, reviewCooldownMs - (Date.now() - lastCreatedAt.getTime()));
+}
+
+async function markReviewCreated(request: Request) {
+  const ipHash = hashClientIp(request);
+  await getPool().execute(
+    `INSERT INTO review_rate_limits (ip_hash, last_created_at)
+     VALUES (:ipHash, CURRENT_TIMESTAMP)
+     ON DUPLICATE KEY UPDATE last_created_at = CURRENT_TIMESTAMP`,
+    { ipHash },
+  );
 }
 
 export async function GET() {
@@ -148,6 +199,18 @@ export async function POST(request: Request) {
   }
 
   try {
+    const adminWrite = isAdminPassword(password);
+    if (!adminWrite) {
+      const cooldown = await getReviewCooldown(request);
+      if (cooldown > 0) {
+        const minutes = Math.ceil(cooldown / 60000);
+        return NextResponse.json(
+          { message: `후기는 ${minutes}분 뒤에 다시 작성할 수 있습니다.` },
+          { status: 429 },
+        );
+      }
+    }
+
     const passwordHash = hashPassword(password);
     const [result] = await getPool().execute<ResultSetHeader>(
       `INSERT INTO reviews (name, service, rating, content, image_data, password_hash)
@@ -161,6 +224,10 @@ export async function POST(request: Request) {
        WHERE id = :id`,
       { id: result.insertId },
     );
+
+    if (!adminWrite) {
+      await markReviewCreated(request);
+    }
 
     return NextResponse.json({ review: toReview(rows[0]) }, { status: 201 });
   } catch (error) {
