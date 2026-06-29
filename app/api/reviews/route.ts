@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
+import { getReviews, toReview } from "@/lib/reviews";
 
 export const runtime = "nodejs";
 
@@ -23,11 +24,17 @@ type ReviewPayload = {
   content?: string;
   image?: string;
   password?: string;
-  admin?: boolean;
 };
 
 const allowedServices = new Set(["롤 대리", "롤 듀오", "롤 계정"]);
 const maxImageLength = 1024 * 1024 * 3;
+const allowedImagePrefixes = [
+  "data:image/jpeg;base64,",
+  "data:image/jpg;base64,",
+  "data:image/png;base64,",
+  "data:image/webp;base64,",
+  "data:image/gif;base64,",
+];
 
 function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
@@ -48,28 +55,28 @@ function verifyPassword(password: string, stored: string) {
   );
 }
 
-function toReview(row: ReviewRow) {
-  return {
-    id: String(row.id),
-    name: row.name,
-    service: row.service,
-    rating: row.rating,
-    content: row.content,
-    image: row.image_data ?? undefined,
-    createdAt: row.created_at.toISOString(),
-  };
+function isAllowedImageData(image: string | null) {
+  if (!image) return true;
+
+  return (
+    image.length <= maxImageLength &&
+    allowedImagePrefixes.some((prefix) => image.startsWith(prefix))
+  );
+}
+
+function canModifyReview(password: string, review: ReviewRow) {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const isAdmin = Boolean(adminPassword && password === adminPassword);
+  const isOwner = review.password_hash
+    ? verifyPassword(password, review.password_hash)
+    : false;
+
+  return isAdmin || isOwner;
 }
 
 export async function GET() {
   try {
-    const [rows] = await getPool().query<ReviewRow[]>(
-      `SELECT id, name, service, rating, content, image_data, created_at
-       FROM reviews
-       ORDER BY created_at DESC
-       LIMIT 100`,
-    );
-
-    return NextResponse.json({ reviews: rows.map(toReview) });
+    return NextResponse.json({ reviews: await getReviews() });
   } catch (error) {
     console.error("Failed to load reviews", error);
     return NextResponse.json(
@@ -133,9 +140,9 @@ export async function POST(request: Request) {
     );
   }
 
-  if (image && (!image.startsWith("data:image/") || image.length > maxImageLength)) {
+  if (!isAllowedImageData(image)) {
     return NextResponse.json(
-      { message: "이미지는 2MB 이하의 이미지 파일만 첨부할 수 있습니다." },
+      { message: "이미지는 2MB 이하의 JPG, PNG, WEBP, GIF만 첨부할 수 있습니다." },
       { status: 400 },
     );
   }
@@ -165,6 +172,118 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PUT(request: Request) {
+  let payload: ReviewPayload & { id?: string };
+
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json(
+      { message: "요청 형식이 올바르지 않습니다." },
+      { status: 400 },
+    );
+  }
+
+  const id = Number(payload.id);
+  const service = payload.service?.trim() ?? "";
+  const content = payload.content?.trim() ?? "";
+  const rating = Number(payload.rating);
+  const image = payload.image?.trim() || null;
+  const password = payload.password?.trim() ?? "";
+
+  if (!Number.isInteger(id) || id < 1) {
+    return NextResponse.json(
+      { message: "수정할 후기를 찾을 수 없습니다." },
+      { status: 400 },
+    );
+  }
+
+  if (!password) {
+    return NextResponse.json(
+      { message: "비밀번호를 입력해주세요." },
+      { status: 400 },
+    );
+  }
+
+  if (!allowedServices.has(service)) {
+    return NextResponse.json(
+      { message: "서비스를 다시 선택해주세요." },
+      { status: 400 },
+    );
+  }
+
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return NextResponse.json(
+      { message: "평점은 1~5점으로 선택해주세요." },
+      { status: 400 },
+    );
+  }
+
+  if (content.length < 1 || content.length > 400) {
+    return NextResponse.json(
+      { message: "후기는 1~400자로 입력해주세요." },
+      { status: 400 },
+    );
+  }
+
+  if (!isAllowedImageData(image)) {
+    return NextResponse.json(
+      { message: "이미지는 2MB 이하의 JPG, PNG, WEBP, GIF만 첨부할 수 있습니다." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const [existingRows] = await getPool().execute<ReviewRow[]>(
+      `SELECT id, name, service, rating, content, image_data, password_hash, created_at
+       FROM reviews
+       WHERE id = :id
+       LIMIT 1`,
+      { id },
+    );
+
+    const existingReview = existingRows[0];
+    if (!existingReview) {
+      return NextResponse.json(
+        { message: "수정할 후기를 찾을 수 없습니다." },
+        { status: 404 },
+      );
+    }
+
+    if (!canModifyReview(password, existingReview)) {
+      return NextResponse.json(
+        { message: "비밀번호가 일치하지 않습니다." },
+        { status: 403 },
+      );
+    }
+
+    await getPool().execute(
+      `UPDATE reviews
+       SET service = :service,
+           rating = :rating,
+           content = :content,
+           image_data = :image
+       WHERE id = :id`,
+      { id, service, rating, content, image },
+    );
+
+    const [rows] = await getPool().execute<ReviewRow[]>(
+      `SELECT id, name, service, rating, content, image_data, created_at
+       FROM reviews
+       WHERE id = :id`,
+      { id },
+    );
+
+    return NextResponse.json({ review: toReview(rows[0]) });
+  } catch (error) {
+    console.error("Failed to update review", error);
+    return NextResponse.json(
+      { message: "후기를 수정하지 못했습니다." },
+      { status: 500 },
+    );
+  }
+}
+
 export async function DELETE(request: Request) {
   let payload: ReviewPayload & { id?: string };
 
@@ -178,7 +297,6 @@ export async function DELETE(request: Request) {
   }
 
   const id = Number(payload.id);
-  const name = payload.name?.trim() ?? "";
   const password = payload.password?.trim() ?? "";
 
   if (!Number.isInteger(id) || id < 1) {
@@ -212,17 +330,9 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const adminPassword = process.env.REVIEW_ADMIN_PASSWORD;
-    const isAdmin = Boolean(
-      payload.admin && adminPassword && password === adminPassword,
-    );
-    const isOwner = review.password_hash
-      ? name === review.name && verifyPassword(password, review.password_hash)
-      : false;
-
-    if (!isAdmin && !isOwner) {
+    if (!canModifyReview(password, review)) {
       return NextResponse.json(
-        { message: "이름 또는 비밀번호가 일치하지 않습니다." },
+        { message: "비밀번호가 일치하지 않습니다." },
         { status: 403 },
       );
     }

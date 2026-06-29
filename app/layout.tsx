@@ -9,24 +9,30 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "XYZ | 롤 대리, 롤 듀오, 롤 계정",
-    template: "%s | XYZ",
+    default: "롤대리.xyz | 롤대리 롤듀오 롤계정 상담",
+    template: "%s | 롤대리.xyz",
   },
   description: site.description,
   keywords: [
     "롤 대리",
+    "롤대리",
     "롤 듀오",
+    "롤듀오",
     "롤 계정",
     "롤 대리 가격",
+    "롤 듀오 가격",
+    "롤 계정 상담",
+    "롤 작업 후기",
+    "롤대리 후기",
     "기사 모집",
     "리그 오브 레전드 대리",
-    "XYZ",
+    "롤대리.xyz",
   ],
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "XYZ | 롤 대리, 롤 듀오, 롤 계정",
+    title: "롤대리.xyz | 롤대리 롤듀오 롤계정 상담",
     description: site.description,
     url: site.url,
     siteName: site.name,
@@ -35,7 +41,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "XYZ | 롤 대리, 롤 듀오, 롤 계정",
+    title: "롤대리.xyz | 롤대리 롤듀오 롤계정 상담",
     description: site.description,
   },
   robots: {
