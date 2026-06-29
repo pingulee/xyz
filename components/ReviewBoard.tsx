@@ -428,7 +428,7 @@ export default function ReviewBoard({
     <div className="grid gap-8">
       {writeOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[34px] border border-gold/20 bg-[#111] p-6 shadow-2xl sm:p-8">
+          <div className="w-full max-w-xl rounded-[34px] border border-gold/20 bg-[#111] p-6 shadow-2xl sm:p-8 max-md:max-h-[90dvh] max-md:overflow-y-auto">
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
