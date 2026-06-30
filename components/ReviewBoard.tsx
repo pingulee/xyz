@@ -11,7 +11,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 type Review = {
   id: string;
@@ -130,6 +130,7 @@ export default function ReviewBoard({
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState("");
   const [editingId, setEditingId] = useState("");
+  const mousedownOnOverlay = useRef(false);
 
   const totalPages = Math.max(1, Math.ceil(reviews.length / REVIEWS_PER_PAGE));
   const currentPage = Math.min(page, totalPages);
@@ -469,11 +470,11 @@ export default function ReviewBoard({
       {writeOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm"
-          onClick={() => setWriteOpen(false)}
+          onMouseDown={(e) => { mousedownOnOverlay.current = e.target === e.currentTarget; }}
+          onClick={(e) => { if (e.target === e.currentTarget && mousedownOnOverlay.current) setWriteOpen(false); }}
         >
           <div
             className="w-full max-w-xl rounded-[34px] border border-gold/20 bg-[#111] p-6 shadow-2xl sm:p-8 max-h-[90dvh] overflow-y-auto sm:max-h-[95dvh]"
-            onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
