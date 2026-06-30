@@ -38,11 +38,13 @@ export const metadata: Metadata = {
     siteName: site.name,
     locale: "ko_KR",
     type: "website",
+    images: [{ url: "/images/profile.webp" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "XYZ | 롤대리 롤듀오 롤계정",
     description: site.description,
+    images: ["/images/profile.webp"],
   },
   robots: {
     index: true,
