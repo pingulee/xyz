@@ -6,7 +6,7 @@ import Container from "@/components/Container";
 import Reveal from "@/components/Reveal";
 import ReviewDetailView from "@/components/ReviewDetailView";
 import { getLineups } from "@/lib/lineups";
-import { incrementReviewView } from "@/lib/reviews";
+import { getReviewNavigation, incrementReviewView } from "@/lib/reviews";
 import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSession";
 
 export const dynamic = "force-dynamic";
@@ -31,9 +31,10 @@ export default async function ReviewDetailPage({ params }: Props) {
     notFound();
   }
 
-  const [review, lineups] = await Promise.all([
+  const [review, lineups, navigation] = await Promise.all([
     incrementReviewView(reviewId),
     getLineups(true),
+    getReviewNavigation(reviewId),
   ]);
 
   if (!review) {
@@ -70,6 +71,8 @@ export default async function ReviewDetailPage({ params }: Props) {
             knightLineupId={knightLineupId}
             knightName={knightName}
             knightImage={lineup?.image ?? ""}
+            previousReview={navigation.previous}
+            nextReview={navigation.next}
           />
         </Reveal>
       </Container>

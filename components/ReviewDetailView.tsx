@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, Plus, Star, Trash2 } from "lucide-react";
 import { useState } from "react";
-import type { Review, ReviewReply, TierRecord } from "@/lib/reviews";
+import type { Review, ReviewNavItem, ReviewReply, TierRecord } from "@/lib/reviews";
 
 const TIER_OPTIONS = [
   "아이언",
@@ -57,6 +58,88 @@ function Stars({ rating }: { rating: number }) {
         />
       ))}
     </div>
+  );
+}
+
+function StarRating({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (rating: number) => void;
+}) {
+  const [hovered, setHovered] = useState(0);
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star)}
+          onMouseEnter={() => setHovered(star)}
+          onMouseLeave={() => setHovered(0)}
+          className="text-gold transition-transform hover:scale-110"
+          aria-label={`${star}점`}
+        >
+          <Star
+            size={26}
+            fill={(hovered || value) >= star ? "currentColor" : "none"}
+            strokeWidth={1.5}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function PostNav({
+  previousReview,
+  nextReview,
+}: {
+  previousReview?: ReviewNavItem;
+  nextReview?: ReviewNavItem;
+}) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+      <NavLink label="이전글" review={previousReview} align="left" />
+      <Link
+        href="/reviews"
+        className="rounded-full border border-white/10 px-6 py-3 text-center text-sm font-black text-zinc-300 transition hover:border-gold/40 hover:text-white"
+      >
+        목록
+      </Link>
+      <NavLink label="다음글" review={nextReview} align="right" />
+    </div>
+  );
+}
+
+function NavLink({
+  label,
+  review,
+  align,
+}: {
+  label: string;
+  review?: ReviewNavItem;
+  align: "left" | "right";
+}) {
+  if (!review) {
+    return (
+      <div className={`rounded-3xl border border-white/8 bg-black/15 p-4 opacity-50 ${align === "right" ? "sm:text-right" : ""}`}>
+        <p className="text-xs font-black text-zinc-500">{label}</p>
+        <p className="mt-1 text-sm font-bold text-zinc-500">이동할 글이 없습니다.</p>
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/reviews/${review.id}`}
+      className={`rounded-3xl border border-white/8 bg-white/[.035] p-4 transition hover:border-gold/30 hover:bg-white/[.055] ${align === "right" ? "sm:text-right" : ""}`}
+    >
+      <p className="text-xs font-black text-gold">{label}</p>
+      <p className="mt-1 line-clamp-1 text-sm font-black text-white">{review.name}</p>
+      <p className="mt-1 line-clamp-1 text-xs text-zinc-500">{review.content}</p>
+    </Link>
   );
 }
 
@@ -142,14 +225,26 @@ export default function ReviewDetailView({
   knightLineupId,
   knightName,
   knightImage,
+  previousReview,
+  nextReview,
 }: {
   initialReview: Review;
   knightLineupId: number | null;
   knightName: string;
   knightImage: string;
+  previousReview?: ReviewNavItem;
+  nextReview?: ReviewNavItem;
 }) {
   const router = useRouter();
   const [review, setReview] = useState(initialReview);
+  const [reviewEditOpen, setReviewEditOpen] = useState(false);
+  const [reviewDeleteOpen, setReviewDeleteOpen] = useState(false);
+  const [reviewPassword, setReviewPassword] = useState("");
+  const [reviewSaving, setReviewSaving] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+  const [editService, setEditService] = useState(review.service);
+  const [editRating, setEditRating] = useState(review.rating);
+  const [editContent, setEditContent] = useState(review.content);
   const [editingReply, setEditingReply] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -163,6 +258,85 @@ export default function ReviewDetailView({
   const isLoggedIn = knightLineupId !== null;
   const displayKnightName =
     review.reply?.knightName || knightName || "기사 답변";
+  const canModifyReview = !review.reply;
+
+  const openReviewEdit = () => {
+    setReviewError("");
+    setReviewDeleteOpen(false);
+    setEditService(review.service);
+    setEditRating(review.rating);
+    setEditContent(review.content);
+    setReviewPassword("");
+    setReviewEditOpen((current) => !current);
+  };
+
+  const updateReview = async () => {
+    const password = reviewPassword.trim();
+    const content = editContent.trim();
+    if (!password || !content) {
+      setReviewError("수정하려면 비밀번호와 후기 내용을 입력해주세요.");
+      return;
+    }
+    setReviewSaving(true);
+    setReviewError("");
+    try {
+      const response = await fetch("/api/reviews", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: review.id,
+          password,
+          service: editService,
+          rating: editRating,
+          content,
+        }),
+      });
+      const data = (await response.json()) as {
+        review?: Review;
+        message?: string;
+      };
+      if (!response.ok || !data.review) {
+        throw new Error(data.message ?? "후기를 수정하지 못했습니다.");
+      }
+      setReview(data.review);
+      setReviewEditOpen(false);
+      setReviewPassword("");
+    } catch (caught) {
+      setReviewError(
+        caught instanceof Error ? caught.message : "후기를 수정하지 못했습니다.",
+      );
+    } finally {
+      setReviewSaving(false);
+    }
+  };
+
+  const deleteReview = async () => {
+    const password = reviewPassword.trim();
+    if (!password) {
+      setReviewError("삭제하려면 비밀번호를 입력해주세요.");
+      return;
+    }
+    setReviewSaving(true);
+    setReviewError("");
+    try {
+      const response = await fetch("/api/reviews", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: review.id, password }),
+      });
+      const data = (await response.json()) as { message?: string };
+      if (!response.ok) {
+        throw new Error(data.message ?? "후기를 삭제하지 못했습니다.");
+      }
+      router.push("/reviews");
+    } catch (caught) {
+      setReviewError(
+        caught instanceof Error ? caught.message : "후기를 삭제하지 못했습니다.",
+      );
+    } finally {
+      setReviewSaving(false);
+    }
+  };
 
   const openReplyForm = () => {
     if (!isLoggedIn) {
@@ -220,72 +394,162 @@ export default function ReviewDetailView({
 
   return (
     <div className="mx-auto grid max-w-5xl gap-6">
-      <article className="overflow-hidden rounded-[30px] border border-gold/15 bg-white/[.035]">
-        <div className="border-b border-white/8 bg-black/20 px-6 py-5">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+      <PostNav previousReview={previousReview} nextReview={nextReview} />
+
+      <article className="overflow-hidden rounded-[18px] border border-white/10 bg-white/[.035]">
+        <div className="border-b border-white/8 bg-black/25 px-6 py-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
-                review
-              </p>
-              <h1 className="mt-2 text-2xl font-black text-white">
+              <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold text-zinc-500">
+                <span>{review.service}</span>
+                <span>/</span>
+                <span>{review.lineupName ?? review.reply?.knightName ?? "기사 선택 안 함"}</span>
+              </div>
+              <h1 className="text-2xl font-black text-white">
                 {review.name}님의 후기
               </h1>
+              <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-bold text-zinc-500">
+                <span>작성자 {review.name}</span>
+                <time dateTime={review.createdAt}>{formatDate(review.createdAt)}</time>
+                <span>조회 {review.viewCount}</span>
+                <span className="flex items-center gap-2">
+                  평점 <Stars rating={review.rating} />
+                </span>
+              </div>
             </div>
-            <span
-              className={`rounded-full border px-3 py-1 text-xs font-black ${
-                review.reply
-                  ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
-                  : "border-white/10 bg-white/5 text-zinc-500"
-              }`}
-            >
-              {review.reply ? "답변 완료" : "답변 대기"}
-            </span>
+            <div className="flex flex-wrap justify-end gap-2">
+              <span
+                className={`rounded-full border px-3 py-1 text-xs font-black ${
+                  review.reply
+                    ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
+                    : "border-white/10 bg-white/5 text-zinc-500"
+                }`}
+              >
+                {review.reply ? "답변 완료" : "답변 대기"}
+              </span>
+              {canModifyReview && (
+                <>
+                  <button
+                    type="button"
+                    onClick={openReviewEdit}
+                    className="rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white"
+                  >
+                    수정
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReviewError("");
+                      setReviewEditOpen(false);
+                      setReviewPassword("");
+                      setReviewDeleteOpen((current) => !current);
+                    }}
+                    className="rounded-full border border-red-400/25 px-3 py-1 text-xs font-bold text-red-200 transition hover:bg-red-400/10"
+                  >
+                    삭제
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="grid gap-6 p-6 lg:grid-cols-[1fr_16rem]">
-          <div className="grid gap-5">
-            <div className="grid gap-3 rounded-3xl border border-white/8 bg-black/15 p-4 sm:grid-cols-2">
-              <div>
-                <p className="text-xs font-black text-zinc-500">작업 기사</p>
-                <p className="mt-1 font-black text-white">
-                  {review.lineupName ?? review.reply?.knightName ?? "선택 안 함"}
-                </p>
+        <div className="grid gap-6 p-6">
+          {reviewEditOpen && canModifyReview && (
+            <div className="grid gap-4 rounded-3xl border border-gold/20 bg-black/20 p-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-2">
+                  <span className="text-sm font-bold text-zinc-300">서비스</span>
+                  <select
+                    value={editService}
+                    onChange={(event) => setEditService(event.target.value)}
+                    className={inputCls}
+                  >
+                    <option>롤 대리</option>
+                    <option>롤 듀오</option>
+                    <option>롤 계정</option>
+                  </select>
+                </label>
+                <label className="grid gap-2">
+                  <span className="text-sm font-bold text-zinc-300">비밀번호</span>
+                  <input
+                    type="password"
+                    value={reviewPassword}
+                    onChange={(event) => setReviewPassword(event.target.value)}
+                    className={inputCls}
+                    placeholder="작성 시 입력한 비밀번호"
+                  />
+                </label>
               </div>
-              <div>
-                <p className="text-xs font-black text-zinc-500">서비스</p>
-                <p className="mt-1 font-black text-white">{review.service}</p>
+              <div className="grid gap-2">
+                <span className="text-sm font-bold text-zinc-300">평점</span>
+                <StarRating value={editRating} onChange={setEditRating} />
+              </div>
+              <textarea
+                value={editContent}
+                onChange={(event) => setEditContent(event.target.value)}
+                rows={5}
+                maxLength={400}
+                className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition focus:border-gold/50"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setReviewEditOpen(false)}
+                  className="rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white"
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={updateReview}
+                  disabled={reviewSaving}
+                  className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-2.5 text-sm font-black text-black disabled:opacity-60"
+                >
+                  {reviewSaving && <Loader2 size={14} className="animate-spin" />}
+                  수정 저장
+                </button>
               </div>
             </div>
+          )}
 
+          {reviewDeleteOpen && canModifyReview && (
+            <div className="grid gap-3 rounded-3xl border border-red-400/20 bg-red-500/8 p-4">
+              <p className="text-sm font-bold text-zinc-300">
+                삭제하려면 작성 시 입력한 비밀번호를 입력해주세요.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                <input
+                  type="password"
+                  value={reviewPassword}
+                  onChange={(event) => setReviewPassword(event.target.value)}
+                  className={inputCls}
+                  placeholder="삭제 비밀번호"
+                />
+                <button
+                  type="button"
+                  onClick={deleteReview}
+                  disabled={reviewSaving}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-400 px-5 py-3 font-black text-black transition hover:bg-red-300 disabled:opacity-60"
+                >
+                  {reviewSaving && <Loader2 size={14} className="animate-spin" />}
+                  삭제
+                </button>
+              </div>
+            </div>
+          )}
+
+          {reviewError && (
+            <p className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-200">
+              {reviewError}
+            </p>
+          )}
+
+          <div className="min-h-60 border-y border-white/8 py-8">
             <p className="whitespace-pre-wrap text-base leading-8 text-zinc-200">
               {review.content}
             </p>
           </div>
-
-          <aside className="grid content-start gap-3 rounded-3xl border border-white/8 bg-black/15 p-4">
-            <div>
-              <p className="text-xs font-black text-zinc-500">평점</p>
-              <div className="mt-2">
-                <Stars rating={review.rating} />
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-black text-zinc-500">작성일</p>
-              <time
-                dateTime={review.createdAt}
-                className="mt-1 block text-sm font-bold text-zinc-300"
-              >
-                {formatDate(review.createdAt)}
-              </time>
-            </div>
-            <div>
-              <p className="text-xs font-black text-zinc-500">조회수</p>
-              <p className="mt-1 text-sm font-black text-white">
-                {review.viewCount}
-              </p>
-            </div>
-          </aside>
         </div>
       </article>
 
@@ -454,6 +718,8 @@ export default function ReviewDetailView({
           )}
         </div>
       </section>
+
+      <PostNav previousReview={previousReview} nextReview={nextReview} />
     </div>
   );
 }

@@ -281,8 +281,7 @@ export async function PUT(request: Request) {
 
   try {
     const [existingRows] = await getPool().execute<ReviewRow[]>(
-      `SELECT id, name, service, lineup_id, lineup_name, rating, content, view_count, password_hash, created_at
-       FROM reviews WHERE id = :id LIMIT 1`,
+      `${REVIEW_SELECT} WHERE r.id = :id LIMIT 1`,
       { id },
     );
 
@@ -298,6 +297,13 @@ export async function PUT(request: Request) {
       return NextResponse.json(
         { message: "비밀번호가 일치하지 않습니다." },
         { status: 403 },
+      );
+    }
+
+    if (existingReview.reply_id) {
+      return NextResponse.json(
+        { message: "기사 답변이 달린 후기는 수정할 수 없습니다." },
+        { status: 409 },
       );
     }
 
@@ -414,8 +420,7 @@ export async function DELETE(request: Request) {
 
   try {
     const [rows] = await getPool().execute<ReviewRow[]>(
-      `SELECT id, name, service, lineup_id, lineup_name, rating, content, view_count, password_hash, created_at
-       FROM reviews WHERE id = :id LIMIT 1`,
+      `${REVIEW_SELECT} WHERE r.id = :id LIMIT 1`,
       { id },
     );
 
@@ -431,6 +436,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json(
         { message: "비밀번호가 일치하지 않습니다." },
         { status: 403 },
+      );
+    }
+
+    if (review.reply_id) {
+      return NextResponse.json(
+        { message: "기사 답변이 달린 후기는 삭제할 수 없습니다." },
+        { status: 409 },
       );
     }
 

@@ -29,6 +29,13 @@ export type Review = {
   reply?: ReviewReply;
 };
 
+export type ReviewNavItem = {
+  id: string;
+  name: string;
+  content: string;
+  createdAt: string;
+};
+
 type ReviewRow = RowDataPacket & {
   id: number;
   name: string;
@@ -167,4 +174,26 @@ export async function incrementReviewView(id: number): Promise<Review | null> {
     { id },
   );
   return getReviewById(id);
+}
+
+export async function getReviewNavigation(id: number): Promise<{
+  previous?: ReviewNavItem;
+  next?: ReviewNavItem;
+}> {
+  await ensureReviewsSchema();
+  const reviews = await getReviews(500);
+  const index = reviews.findIndex((review) => review.id === String(id));
+  if (index < 0) return {};
+
+  const toNavItem = (review: Review): ReviewNavItem => ({
+    id: review.id,
+    name: review.name,
+    content: review.content,
+    createdAt: review.createdAt,
+  });
+
+  return {
+    previous: index > 0 ? toNavItem(reviews[index - 1]) : undefined,
+    next: index < reviews.length - 1 ? toNavItem(reviews[index + 1]) : undefined,
+  };
 }
