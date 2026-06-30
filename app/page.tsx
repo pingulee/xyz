@@ -273,7 +273,7 @@ export default async function Home() {
               center={true}
               eyebrow="process"
               title="작업 진행 과정"
-              desc="상담부터 결제, 작업, 완료 확인까지 한눈에 이해할 수 있도록 정리된 단계입니다."
+              desc="롤 대리 및 롤 듀오 서비스 작업 진행 과정입니다. 상담부터 결제, 작업, 완료 확인까지 한눈에 확인 해보세요."
             />
           </Reveal>
           <Reveal delay={0.12}>
