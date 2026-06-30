@@ -3,7 +3,6 @@
 import Image from "next/image";
 import {
   Clock,
-  Copy,
   EyeOff,
   Loader2,
   LogOut,
@@ -310,34 +309,6 @@ export default function AdminLineupBoard({
       setMessage(err instanceof Error ? err.message : "저장하지 못했습니다.");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const duplicateLineup = async (lineup: Lineup) => {
-    try {
-      const response = await fetch("/api/lineup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: `${lineup.name} (복사본)`,
-          positions: lineup.positions.join(","),
-          rank: lineup.rank,
-          tier: lineup.tier,
-          description: lineup.description,
-          weekdayHours: lineup.weekdayHours,
-          weekendHours: lineup.weekendHours,
-          champions: lineup.champions.join(","),
-          services: lineup.services.join(","),
-          image: lineup.image,
-          sortOrder: lineups.length,
-          active: false,
-        }),
-      });
-      const data = (await response.json()) as LineupResponse;
-      if (!response.ok) throw new Error(data.message ?? "복제하지 못했습니다.");
-      setLineups((cur) => [...cur, data.lineup]);
-    } catch {
-      // silently fail
     }
   };
 
@@ -673,14 +644,6 @@ export default function AdminLineupBoard({
             <div key={knight.id} className="relative">
               <KnightCard knight={knight} />
               <div className="absolute bottom-3 right-3 flex gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => void duplicateLineup(knight)}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-gold/40 hover:text-white"
-                  aria-label="복제"
-                >
-                  <Copy size={13} />
-                </button>
                 <button
                   type="button"
                   onClick={() => openEdit(knight)}
