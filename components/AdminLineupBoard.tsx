@@ -5,6 +5,7 @@ import {
   Clock,
   Copy,
   EyeOff,
+  GripVertical,
   Loader2,
   LogOut,
   Pencil,
@@ -15,6 +16,23 @@ import {
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Lineup } from "@/lib/lineups";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const MAX_IMAGE_SIZE = 1024 * 1024 * 5;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -219,9 +237,14 @@ export default function AdminLineupBoard({
   const [imagePreview, setImagePreview] = useState("");
   const [imageName, setImageName] = useState("");
   const [imageError, setImageError] = useState("");
+  const [activeLineup, setActiveLineup] = useState<Lineup | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mousedownOnOverlay = useRef(false);
   const router = useRouter();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
 
   useEffect(() => {
     if (modalOpen) {
@@ -469,6 +492,26 @@ export default function AdminLineupBoard({
     }
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const id = String(event.active.id);
+    setActiveLineup(lineups.find((l) => l.id === id) ?? null);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveLineup(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = lineups.findIndex((l) => l.id === String(active.id));
+    const newIdx = lineups.findIndex((l) => l.id === String(over.id));
+    const reordered = arrayMove(lineups, oldIdx, newIdx);
+    setLineups(reordered);
+    await fetch("/api/lineups", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: reordered.map((l) => l.id) }),
+    });
+  };
+
   const inputCls =
     "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
   const labelCls = "grid gap-2 text-sm font-bold text-zinc-300";
@@ -671,151 +714,144 @@ export default function AdminLineupBoard({
           </div>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {lineups.length === 0 && (
-            <p className="col-span-full text-sm text-zinc-500">
-              등록된 기사가 없습니다.
-            </p>
-          )}
-          {lineups.map((knight) => (
-            <article
-              key={knight.id}
-              className={`card-premium overflow-hidden rounded-[28px] ${
-                !knight.active ? "opacity-50" : ""
-              }`}
-            >
-              <div className="flex gap-4 p-5">
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-black">
-                  {knight.image && (
-                    <Image
-                      src={knight.image}
-                      alt={knight.name}
-                      fill
-                      className="object-cover opacity-90"
-                      unoptimized
-                    />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {knight.positions.map((pos) => (
-                      <span
-                        key={pos}
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-black ${
-                          positionColors[pos] ?? "bg-gold/10 text-gold"
-                        }`}
-                      >
-                        {pos}
-                      </span>
-                    ))}
-                    <div className="flex items-center gap-1">
-                      <Image
-                        src={knight.tier}
-                        alt={knight.rank}
-                        width={18}
-                        height={18}
-                        className="rounded-full bg-zinc-800"
-                      />
-                      <span className="text-xs font-black text-gold">
-                        {knight.rank}
-                      </span>
-                    </div>
-                    {!knight.active && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-zinc-700/50 px-2 py-0.5 text-[10px] font-bold text-zinc-400">
-                        <EyeOff size={10} />
-                        숨김
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1.5 font-black text-white">{knight.name}</p>
-                  <div className="mt-1 grid gap-0.5 text-xs text-zinc-500">
-                    <div className="flex items-center gap-1.5">
-                      <Clock size={10} />
-                      <span>평일 {knight.weekdayHours}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Clock size={10} />
-                      <span>주말 {knight.weekendHours}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={(e) => void handleDragEnd(e)}
+        >
+          <SortableContext items={lineups.map((l) => l.id)} strategy={rectSortingStrategy}>
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              {lineups.length === 0 && (
+                <p className="col-span-full text-sm text-zinc-500">등록된 기사가 없습니다.</p>
+              )}
+              {lineups.map((knight) => (
+                <SortableCard
+                  key={knight.id}
+                  knight={knight}
+                  deletingId={deletingId}
+                  onEdit={openEdit}
+                  onDuplicate={duplicateLineup}
+                  onDelete={deleteLineup}
+                />
+              ))}
+            </div>
+          </SortableContext>
 
-              <div className="border-t border-white/6 px-5 pb-5 pt-4">
-                <p className="text-sm leading-6 text-zinc-400">
-                  {knight.description}
-                </p>
-                <div className="mt-4 grid gap-2.5">
-                  {knight.champions && knight.champions.length > 0 && (
-                    <div className="flex items-start gap-2">
-                      <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">
-                        챔피언
-                      </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {knight.champions.map((c) => (
-                          <span
-                            key={c}
-                            className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300"
-                          >
-                            {c}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex items-start gap-2">
-                    <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">
-                      작업
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {knight.services.map((s) => (
-                        <span
-                          key={s}
-                          className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300"
-                        >
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void duplicateLineup(knight)}
-                    className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white"
-                    aria-label="복제"
-                  >
-                    <Copy size={15} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => openEdit(knight)}
-                    className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white"
-                    aria-label="수정"
-                  >
-                    <Pencil size={15} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void deleteLineup(knight)}
-                    disabled={deletingId === knight.id}
-                    className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-red-400/40 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60"
-                    aria-label="삭제"
-                  >
-                    {deletingId === knight.id ? (
-                      <Loader2 size={15} className="animate-spin" />
-                    ) : (
-                      <Trash2 size={15} />
-                    )}
-                  </button>
-                </div>
+          <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
+            {activeLineup && (
+              <div className="rotate-2 scale-105 opacity-90 shadow-2xl">
+                <KnightCard knight={activeLineup} isOverlay />
               </div>
-            </article>
-          ))}
-        </div>
+            )}
+          </DragOverlay>
+        </DndContext>
       </div>
     </>
+  );
+}
+
+const positionColorsExt: Record<string, string> = {
+  정글: "bg-emerald-500/15 text-emerald-400",
+  미드: "bg-blue-500/15 text-blue-400",
+  바텀: "bg-purple-500/15 text-purple-400",
+  서포터: "bg-pink-500/15 text-pink-400",
+  서폿: "bg-pink-500/15 text-pink-400",
+  탑: "bg-orange-500/15 text-orange-400",
+};
+
+function KnightCard({ knight, isOverlay = false }: { knight: Lineup; isOverlay?: boolean }) {
+  return (
+    <article className={`card-premium overflow-hidden rounded-[28px] ${!knight.active && !isOverlay ? "opacity-50" : ""}`}>
+      <div className="flex gap-4 p-5">
+        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-black">
+          {knight.image && (
+            <Image src={knight.image} alt={knight.name} fill className="object-cover opacity-90" unoptimized />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            {knight.positions.map((pos) => (
+              <span key={pos} className={`rounded-full px-2.5 py-0.5 text-xs font-black ${positionColorsExt[pos] ?? "bg-gold/10 text-gold"}`}>{pos}</span>
+            ))}
+            <div className="flex items-center gap-1">
+              <Image src={knight.tier} alt={knight.rank} width={18} height={18} className="rounded-full bg-zinc-800" />
+              <span className="text-xs font-black text-gold">{knight.rank}</span>
+            </div>
+            {!knight.active && !isOverlay && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-zinc-700/50 px-2 py-0.5 text-[10px] font-bold text-zinc-400"><EyeOff size={10} />숨김</span>
+            )}
+          </div>
+          <p className="mt-1.5 font-black text-white">{knight.name}</p>
+          <div className="mt-1 grid gap-0.5 text-xs text-zinc-500">
+            <div className="flex items-center gap-1.5"><Clock size={10} /><span>평일 {knight.weekdayHours}</span></div>
+            <div className="flex items-center gap-1.5"><Clock size={10} /><span>주말 {knight.weekendHours}</span></div>
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-white/6 px-5 pb-5 pt-4">
+        <p className="text-sm leading-6 text-zinc-400">{knight.description}</p>
+        <div className="mt-4 grid gap-2.5">
+          {knight.champions.length > 0 && (
+            <div className="flex items-start gap-2">
+              <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">챔피언</span>
+              <div className="flex flex-wrap gap-1.5">
+                {knight.champions.map((c) => <span key={c} className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300">{c}</span>)}
+              </div>
+            </div>
+          )}
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">작업</span>
+            <div className="flex flex-wrap gap-1.5">
+              {knight.services.map((s) => <span key={s} className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300">{s}</span>)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function SortableCard({
+  knight,
+  deletingId,
+  onEdit,
+  onDuplicate,
+  onDelete,
+}: {
+  knight: Lineup;
+  deletingId: string;
+  onEdit: (l: Lineup) => void;
+  onDuplicate: (l: Lineup) => Promise<void>;
+  onDelete: (l: Lineup) => Promise<void>;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: knight.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={`relative ${isDragging ? "opacity-40 scale-95" : ""} transition-transform`}>
+      <KnightCard knight={knight} />
+      {/* 드래그 핸들 */}
+      <button
+        type="button"
+        className="absolute right-3 top-3 grid h-8 w-8 cursor-grab place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-500 backdrop-blur-sm transition hover:border-gold/40 hover:text-gold active:cursor-grabbing"
+        aria-label="순서 변경"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical size={15} />
+      </button>
+      {/* 액션 버튼 */}
+      <div className="absolute bottom-3 right-3 flex gap-1.5">
+        <button type="button" onClick={() => void onDuplicate(knight)} className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-gold/40 hover:text-white" aria-label="복제"><Copy size={13} /></button>
+        <button type="button" onClick={() => onEdit(knight)} className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-gold/40 hover:text-white" aria-label="수정"><Pencil size={13} /></button>
+        <button type="button" onClick={() => void onDelete(knight)} disabled={deletingId === knight.id} className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-red-400/40 hover:text-red-200 disabled:opacity-60" aria-label="삭제">
+          {deletingId === knight.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+        </button>
+      </div>
+    </div>
   );
 }

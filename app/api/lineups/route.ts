@@ -136,6 +136,41 @@ export async function PUT(request: Request) {
   }
 }
 
+export async function PATCH(request: Request) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
+  }
+
+  let payload: { ids?: string[] };
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ message: "요청 형식이 올바르지 않습니다." }, { status: 400 });
+  }
+
+  const ids = payload.ids;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return NextResponse.json({ message: "순서 정보가 올바르지 않습니다." }, { status: 400 });
+  }
+
+  const pool = getPool();
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    for (let i = 0; i < ids.length; i++) {
+      await conn.execute(`UPDATE lineups SET sort_order = ? WHERE id = ?`, [i, Number(ids[i])]);
+    }
+    await conn.commit();
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    await conn.rollback();
+    console.error("Failed to reorder lineups", error);
+    return NextResponse.json({ message: "순서 저장에 실패했습니다." }, { status: 500 });
+  } finally {
+    conn.release();
+  }
+}
+
 export async function DELETE(request: Request) {
   if (!isAdminRequest(request)) {
     return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
