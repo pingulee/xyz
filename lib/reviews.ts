@@ -17,7 +17,7 @@ type ReviewRow = RowDataPacket & {
   service: string;
   rating: number;
   content: string;
-  image_data: string | null;
+  image_url: string | null;
   created_at: Date;
 };
 
@@ -28,14 +28,14 @@ export function toReview(row: ReviewRow): Review {
     service: row.service,
     rating: row.rating,
     content: row.content,
-    image: row.image_data ?? undefined,
+    image: row.image_url ?? undefined,
     createdAt: row.created_at.toISOString(),
   };
 }
 
 export async function getReviews(limit = 100) {
   const [rows] = await getPool().execute<ReviewRow[]>(
-    `SELECT id, name, service, rating, content, image_data, created_at
+    `SELECT id, name, service, rating, content, image_url, created_at
      FROM reviews
      ORDER BY created_at DESC
      LIMIT :limit`,

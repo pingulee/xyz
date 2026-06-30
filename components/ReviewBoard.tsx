@@ -44,9 +44,7 @@ type EditForm = {
   content: string;
 };
 
-const MAX_IMAGE_SIZE = 1024 * 1024 * 2;
-const MAX_IMAGE_WIDTH = 1600;
-const MAX_IMAGE_HEIGHT = 1600;
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const REVIEWS_PER_PAGE = 10;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
@@ -56,7 +54,6 @@ const blankForm = {
   service: "롤 대리",
   rating: 5,
   content: "",
-  image: "",
 };
 
 const blankDeleteForm = {
@@ -124,7 +121,10 @@ export default function ReviewBoard({
   const [selectedReviewId, setSelectedReviewId] = useState("");
   const [writeOpen, setWriteOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
   const [imageName, setImageName] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(initialReviews.length === 0);
   const [submitting, setSubmitting] = useState(false);
@@ -198,46 +198,20 @@ export default function ReviewBoard({
     }
 
     if (file.size > MAX_IMAGE_SIZE) {
-      setError("이미지는 2MB 이하만 첨부할 수 있습니다.");
+      setError("이미지는 5MB 이하만 첨부할 수 있습니다.");
       return;
     }
 
-    const img = new window.Image();
-
-    img.onload = () => {
-      if (img.width > MAX_IMAGE_WIDTH || img.height > MAX_IMAGE_HEIGHT) {
-        setError(
-          `이미지는 ${MAX_IMAGE_WIDTH}×${MAX_IMAGE_HEIGHT}px 이하만 업로드 가능합니다.`,
-        );
-        URL.revokeObjectURL(img.src);
-        return;
-      }
-
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        setForm((current) => ({
-          ...current,
-          image: String(reader.result),
-        }));
-        setImageName(file.name);
-
-        URL.revokeObjectURL(img.src);
-      };
-
-      reader.readAsDataURL(file);
-    };
-
-    img.onerror = () => {
-      setError("이미지를 읽을 수 없습니다.");
-      URL.revokeObjectURL(img.src);
-    };
-
-    img.src = URL.createObjectURL(file);
+    const objectUrl = URL.createObjectURL(file);
+    setImageFile(file);
+    setImagePreview(objectUrl);
+    setImageName(file.name);
   };
 
   const removeImage = () => {
-    setForm((current) => ({ ...current, image: "" }));
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview("");
     setImageName("");
   };
 
@@ -323,6 +297,19 @@ export default function ReviewBoard({
     setSubmitting(true);
 
     try {
+      let imageUrl: string | undefined;
+
+      if (imageFile) {
+        setUploading(true);
+        const fd = new FormData();
+        fd.append("image", imageFile);
+        const uploadRes = await fetch("/api/uploads/reviews", { method: "POST", body: fd });
+        const uploadData = (await uploadRes.json()) as { imageUrl?: string; message?: string };
+        setUploading(false);
+        if (!uploadRes.ok) throw new Error(uploadData.message ?? "이미지 업로드에 실패했습니다.");
+        imageUrl = uploadData.imageUrl;
+      }
+
       const response = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -332,7 +319,7 @@ export default function ReviewBoard({
           service: form.service,
           rating: form.rating,
           content,
-          image: form.image || undefined,
+          imageUrl,
         }),
       });
       const data = (await response.json()) as CreateReviewResponse;
@@ -343,11 +330,12 @@ export default function ReviewBoard({
 
       setReviews((current) => [data.review, ...current]);
       setForm(blankForm);
-      setImageName("");
+      removeImage();
       setPage(1);
       setSelectedReviewId(data.review.id);
       setWriteOpen(false);
     } catch (caught) {
+      setUploading(false);
       setError(
         caught instanceof Error
           ? caught.message
@@ -602,11 +590,11 @@ export default function ReviewBoard({
                   <span className="text-sm font-bold text-zinc-300">
                     이미지 첨부
                   </span>
-                  {form.image ? (
+                  {imagePreview ? (
                     <div className="relative overflow-hidden rounded-3xl border border-gold/20 bg-black">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={form.image}
+                        src={imagePreview}
                         alt="첨부 이미지 미리보기"
                         className="h-32 w-full object-cover sm:h-40"
                       />
@@ -644,11 +632,11 @@ export default function ReviewBoard({
 
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || uploading}
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {submitting && <Loader2 size={18} className="animate-spin" />}
-                  후기 등록
+                  {(submitting || uploading) && <Loader2 size={18} className="animate-spin" />}
+                  {uploading ? "이미지 업로드 중..." : "후기 등록"}
                 </button>
               </div>
             </form>

@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS reviews (
   rating TINYINT UNSIGNED NOT NULL,
   content TEXT NOT NULL,
   image_data LONGTEXT NULL,
+  image_url VARCHAR(255) NULL,
   password_hash VARCHAR(200) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -13,6 +14,9 @@ CREATE TABLE IF NOT EXISTS reviews (
 
 ALTER TABLE reviews
   ADD COLUMN IF NOT EXISTS password_hash VARCHAR(200) NULL AFTER image_data;
+
+ALTER TABLE reviews
+  ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL AFTER image_data;
 
 CREATE TABLE IF NOT EXISTS review_rate_limits (
   ip_hash CHAR(64) NOT NULL,

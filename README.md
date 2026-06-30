@@ -34,3 +34,42 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Hostinger 배포 설정
+
+### 환경 변수 (.env.local 또는 Hostinger 환경 변수 패널)
+
+```
+ADMIN_PASSWORD=your_admin_password
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_NAME=your_db_name
+UPLOAD_DIR=/home/username/public_html/uploads/reviews
+```
+
+### UPLOAD_DIR 설정
+
+후기 이미지는 Hostinger 서버 로컬 디스크에 저장됩니다.
+
+- `UPLOAD_DIR` 미설정 시 기본 경로: `{프로젝트 루트}/uploads/reviews`
+- 디렉터리는 앱 시작 시 자동 생성됩니다.
+- Hostinger에서는 웹 루트 외부 경로를 권장합니다.
+
+**Hostinger 설정 예시:**
+
+```
+UPLOAD_DIR=/home/u123456789/uploads/reviews
+```
+
+업로드된 이미지는 `/api/uploads/reviews/{filename}` 경로로 서빙됩니다.
+
+### DB 마이그레이션
+
+`database/reviews.sql`을 실행하면 `image_url` 컬럼이 추가됩니다. 기존 테이블이 있는 경우:
+
+```sql
+ALTER TABLE reviews
+  ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL AFTER image_data;
+```

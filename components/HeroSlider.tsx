@@ -34,7 +34,7 @@ const slides = [
     title: "맞춤형 롤 계정",
     titlePrefix: "맞춤형 ",
     titleHighlight: "롤 계정",
-    desc: "예산, 티어, 챔피언, 일정 조건에 맞춰 구매 가능한 계정을 안내합니다.",
+    desc: "예산, 티어, 챔피언, 스킨 등 여러 조건에 맞춰 구매 가능한 계정을 안내합니다.",
     image: "/images/hero/account.webp",
     alt: "롤 계정 서비스를 상징하는 프리미엄 게임 이미지",
     secondary: "서비스 보기",
