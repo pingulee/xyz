@@ -29,6 +29,7 @@ const menuItems: MenuItem[] = navItems.map((item) =>
 export default function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [mobileOpenItem, setMobileOpenItem] = useState("");
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -39,7 +40,10 @@ export default function Header() {
         <Link
           href="/"
           className="relative h-12 w-40 sm:w-44"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            setOpen(false);
+            setMobileOpenItem("");
+          }}
         >
           <Image
             src="/images/logo.webp"
@@ -143,33 +147,81 @@ export default function Header() {
 
       <div
         className={clsx(
-          "overflow-hidden border-gold/10 bg-void/95 transition-all duration-300 lg:hidden",
-          open ? "max-h-130 border-t" : "max-h-0",
+          "overflow-y-auto border-gold/10 bg-void/95 transition-all duration-300 lg:hidden",
+          open ? "max-h-[calc(100svh-80px)] border-t" : "hidden max-h-0",
         )}
       >
         <div className="space-y-2 px-5 py-5">
           {menuItems.map((item) => (
             <div key={item.href}>
-              <Link
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={clsx(
-                  "block rounded-2xl px-4 py-4 text-base font-bold",
-                  isActive(item.href)
-                    ? "bg-gold/12 text-gold"
-                    : "text-zinc-300 hover:bg-white/5",
-                )}
-              >
-                {item.label}
-              </Link>
+              {item.children ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMobileOpenItem((current) =>
+                      current === item.href ? "" : item.href,
+                    )
+                  }
+                  className={clsx(
+                    "flex w-full items-center justify-between rounded-2xl px-4 py-4 text-left text-base font-bold",
+                    isActive(item.href)
+                      ? "bg-gold/12 text-gold"
+                      : "text-zinc-300 hover:bg-white/5",
+                  )}
+                  aria-expanded={mobileOpenItem === item.href}
+                >
+                  {item.label}
+                  <ChevronDown
+                    size={18}
+                    className={clsx(
+                      "transition",
+                      mobileOpenItem === item.href && "rotate-180",
+                    )}
+                  />
+                </button>
+              ) : (
+                <Link
+                  href={item.href}
+                  onClick={() => {
+                    setOpen(false);
+                    setMobileOpenItem("");
+                  }}
+                  className={clsx(
+                    "block rounded-2xl px-4 py-4 text-base font-bold",
+                    isActive(item.href)
+                      ? "bg-gold/12 text-gold"
+                      : "text-zinc-300 hover:bg-white/5",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              )}
 
-              {item.children && (
+              {item.children && mobileOpenItem === item.href && (
                 <div className="ml-4 mt-1 space-y-1 border-l border-gold/10 pl-3">
+                  <Link
+                    href={item.href}
+                    onClick={() => {
+                      setOpen(false);
+                      setMobileOpenItem("");
+                    }}
+                    className={clsx(
+                      "block rounded-xl px-4 py-3 text-sm font-bold",
+                      pathname === item.href
+                        ? "bg-gold/12 text-gold"
+                        : "text-zinc-400 hover:bg-white/5 hover:text-white",
+                    )}
+                  >
+                    전체 보기
+                  </Link>
                   {item.children.map((child) => (
                     <Link
                       key={child.href}
                       href={child.href}
-                      onClick={() => setOpen(false)}
+                      onClick={() => {
+                        setOpen(false);
+                        setMobileOpenItem("");
+                      }}
                       className={clsx(
                         "block rounded-xl px-4 py-3 text-sm font-bold",
                         pathname === child.href
@@ -189,6 +241,10 @@ export default function Header() {
             href={site.kakaoUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => {
+              setOpen(false);
+              setMobileOpenItem("");
+            }}
             className="mt-4 block rounded-2xl bg-gold-gradient px-4 py-4 text-center font-black text-black"
           >
             빠른 상담
