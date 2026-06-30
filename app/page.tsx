@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  ArrowDown,
   ArrowRight,
   BadgeCheck,
   MessageCircle,
@@ -28,11 +29,11 @@ const stats = [
 ];
 
 const process = [
-  "상담 접수",
-  "조건 확인",
-  "기사 배정",
-  "진행 리포트",
-  "완료 확인",
+  { title: "상담 접수", image: "/images/process/01.webp" },
+  { title: "계정 분석", image: "/images/process/02.webp" },
+  { title: "기사 배정", image: "/images/process/03.webp" },
+  { title: "작업 진행", image: "/images/process/04.webp" },
+  { title: "작업 완료", image: "/images/process/05.webp" },
 ];
 
 const reviews = [
@@ -265,28 +266,50 @@ export default async function Home() {
         </Container>
       </section>
 
-      <section className="relative overflow-hidden py-20">
-        <div className="absolute inset-x-0 top-1/2 h-56 -translate-y-1/2 bg-gold/10 blur-[120px]" />
-        <Container className="relative grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+      <section className="py-20">
+        <Container>
           <Reveal>
             <SectionTitle
-              center={false}
+              center={true}
               eyebrow="process"
-              title="운영 가능한 진행 프로세스"
-              desc="상담부터 완료 확인까지 실제 서비스 운영에 맞춘 단계로 진행합니다."
+              title="작업 진행 과정"
+              desc="상담부터 결제, 작업, 완료 확인까지 한눈에 이해할 수 있도록 정리된 단계입니다."
             />
           </Reveal>
           <Reveal delay={0.12}>
-            <div className="grid gap-3">
-              {process.map((item, i) => (
+            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
+              {process.map(({ title, image }, i) => (
                 <div
-                  key={item}
-                  className="flex items-center gap-5 rounded-3xl border border-gold/15 bg-white/[.035] p-5"
+                  key={title}
+                  className="flex flex-col items-center gap-3 sm:flex-row"
                 >
-                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gold-gradient font-black text-black">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <b className="text-lg text-white">{item}</b>
+                  <div className="flex min-w-45 flex-col items-center gap-3 rounded-3xl border border-gold/15 bg-white/[.035] p-5 text-center">
+                    <div className="relative">
+                      <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[22px] bg-transparent">
+                        <Image
+                          src={image}
+                          alt={`${title} 아이콘`}
+                          width={96}
+                          height={96}
+                          className="h-20 w-20 object-contain"
+                        />
+                      </div>
+                      <span className="absolute -right-1 -top-1 rounded-full border border-black/10 bg-black px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-gold shadow-lg">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                    </div>
+                    <b className="text-lg text-white">{title}</b>
+                  </div>
+                  {i < process.length - 1 && (
+                    <div className="flex items-center text-gold sm:hidden">
+                      <ArrowDown size={32} strokeWidth={3} />
+                    </div>
+                  )}
+                  {i < process.length - 1 && (
+                    <div className="hidden items-center text-gold sm:flex">
+                      <ArrowRight size={32} strokeWidth={3} />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
