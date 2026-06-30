@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
-import { Clock, Medal, Shield } from "lucide-react";
+import { Clock, Medal, Shield, Star } from "lucide-react";
 import Container from "@/components/Container";
 import AdminLineupBoard from "@/components/AdminLineupBoard";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
-import { getLineups } from "@/lib/lineups";
+import { getLineups, getLineupPath } from "@/lib/lineups";
 import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
 
 export const dynamic = "force-dynamic";
@@ -67,7 +67,7 @@ export default async function LineupPage() {
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {lineups.map((knight, i) => (
             <Reveal key={knight.name} delay={i * 0.04}>
-              <Link href={`/lineup/${knight.id}`} className="block">
+              <Link href={getLineupPath(knight)} className="block">
                 <article className="card-premium overflow-hidden rounded-[28px] transition-transform duration-200 hover:-translate-y-1">
                   <div className="flex gap-4 p-5">
                     <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-black">
@@ -107,6 +107,17 @@ export default async function LineupPage() {
                       <p className="mt-1.5 font-black text-white">
                         {knight.name}
                       </p>
+                      <div className="mt-1 flex items-center gap-1.5 text-sm text-zinc-400">
+                        <Star size={14} className="fill-gold text-gold" />
+                        <span>
+                          {knight.averageRating
+                            ? knight.averageRating.toFixed(1)
+                            : "0.0"}
+                        </span>
+                        <span className="text-zinc-500">
+                          ({knight.reviewCount ?? 0}개 리뷰)
+                        </span>
+                      </div>
                       <div className="mt-1 grid gap-0.5 text-xs text-zinc-500">
                         <div className="flex items-center gap-1.5">
                           <Clock size={10} />

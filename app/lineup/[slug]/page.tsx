@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Clock } from "lucide-react";
+import { Clock, Star } from "lucide-react";
 import Container from "@/components/Container";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
-import { getLineupById } from "@/lib/lineups";
+import { getLineupBySlug, getLineupReviewStats } from "@/lib/lineups";
 
 export const dynamic = "force-dynamic";
 
@@ -20,12 +20,12 @@ const positionColors: Record<string, string> = {
 };
 
 type Props = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
-  const lineup = await getLineupById(Number(id));
+  const { slug } = await params;
+  const lineup = await getLineupBySlug(slug);
 
   if (!lineup) {
     return {
@@ -36,13 +36,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${lineup.name} | 기사 라인업`,
     description: lineup.description,
-    alternates: { canonical: `/lineup/${lineup.id}` },
+    alternates: { canonical: `/lineup/${slug}` },
   };
 }
 
 export default async function LineupDetailPage({ params }: Props) {
-  const { id } = await params;
-  const lineup = await getLineupById(Number(id));
+  const { slug } = await params;
+  const lineup = await getLineupBySlug(slug);
+  const stats = await getLineupReviewStats(Number(lineup?.id ?? 0));
 
   if (!lineup) {
     notFound();
@@ -126,6 +127,66 @@ export default async function LineupDetailPage({ params }: Props) {
                     <p className="mt-2 text-sm text-zinc-300">
                       {lineup.weekendHours}
                     </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 rounded-3xl border border-gold/15 bg-white/[.04] p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-black text-zinc-500">
+                        Average Rating
+                      </div>
+                      <div className="mt-2 flex items-end gap-2">
+                        <span className="text-4xl font-black text-white">
+                          {stats.averageRating.toFixed(1)}
+                        </span>
+                        <div className="flex items-center gap-1 pb-1 text-gold">
+                          <Star size={16} fill="currentColor" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-black text-zinc-500">
+                        Total Reviews
+                      </div>
+                      <div className="mt-2 text-3xl font-black text-white">
+                        {stats.reviewCount}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <div className="text-sm font-black text-zinc-500">
+                      Rating Distribution
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      {[5, 4, 3, 2, 1].map((value) => {
+                        const count =
+                          stats.ratingDistribution[
+                            value as keyof typeof stats.ratingDistribution
+                          ];
+                        const percentage =
+                          stats.reviewCount > 0
+                            ? (count / stats.reviewCount) * 100
+                            : 0;
+                        return (
+                          <div key={value} className="flex items-center gap-3">
+                            <span className="w-8 text-sm font-bold text-zinc-400">
+                              {value}★
+                            </span>
+                            <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/8">
+                              <div
+                                className="h-full rounded-full bg-gold"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                            <span className="w-10 text-right text-sm font-semibold text-zinc-400">
+                              {count}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 

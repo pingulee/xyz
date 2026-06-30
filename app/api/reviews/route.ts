@@ -3,7 +3,10 @@ import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { getReviews, toReview } from "@/lib/reviews";
-import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession";
+import {
+  getSessionTokenFromRequest,
+  validateSession,
+} from "@/lib/adminSession";
 
 export const runtime = "nodejs";
 
@@ -11,6 +14,8 @@ type ReviewRow = RowDataPacket & {
   id: number;
   name: string;
   service: string;
+  lineup_id: number | null;
+  lineup_name: string | null;
   rating: number;
   content: string;
   image_url: string | null;
@@ -21,6 +26,8 @@ type ReviewRow = RowDataPacket & {
 type ReviewPayload = {
   name?: string;
   service?: string;
+  lineupId?: string;
+  lineupName?: string;
   rating?: number;
   content?: string;
   imageUrl?: string;
@@ -108,7 +115,10 @@ export async function GET() {
     return NextResponse.json({ reviews: await getReviews() });
   } catch (error) {
     console.error("Failed to load reviews", error);
-    return NextResponse.json({ message: "후기를 불러오지 못했습니다." }, { status: 500 });
+    return NextResponse.json(
+      { message: "후기를 불러오지 못했습니다." },
+      { status: 500 },
+    );
   }
 }
 
@@ -117,38 +127,61 @@ export async function POST(request: Request) {
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ message: "요청 형식이 올바르지 않습니다." }, { status: 400 });
+    return NextResponse.json(
+      { message: "요청 형식이 올바르지 않습니다." },
+      { status: 400 },
+    );
   }
 
   const name = payload.name?.trim() ?? "";
   const service = payload.service?.trim() ?? "";
+  const lineupId = payload.lineupId ? Number(payload.lineupId) : null;
+  const lineupName = payload.lineupName?.trim() || null;
   const content = payload.content?.trim() ?? "";
   const rating = Number(payload.rating);
   const imageUrl = payload.imageUrl?.trim() || null;
   const password = payload.password?.trim() ?? "";
 
   if (name.length < 1 || name.length > 20) {
-    return NextResponse.json({ message: "닉네임은 1~20자로 입력해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "닉네임은 1~20자로 입력해주세요." },
+      { status: 400 },
+    );
   }
 
   if (!allowedServices.has(service)) {
-    return NextResponse.json({ message: "서비스를 다시 선택해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "서비스를 다시 선택해주세요." },
+      { status: 400 },
+    );
   }
 
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    return NextResponse.json({ message: "평점은 1~5점으로 선택해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "평점은 1~5점으로 선택해주세요." },
+      { status: 400 },
+    );
   }
 
   if (content.length < 1 || content.length > 400) {
-    return NextResponse.json({ message: "후기는 1~400자로 입력해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "후기는 1~400자로 입력해주세요." },
+      { status: 400 },
+    );
   }
 
   if (password.length < 4 || password.length > 40) {
-    return NextResponse.json({ message: "비밀번호는 4~40자로 입력해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "비밀번호는 4~40자로 입력해주세요." },
+      { status: 400 },
+    );
   }
 
   if (!isValidImageUrl(imageUrl)) {
-    return NextResponse.json({ message: "잘못된 이미지 경로입니다." }, { status: 400 });
+    return NextResponse.json(
+      { message: "잘못된 이미지 경로입니다." },
+      { status: 400 },
+    );
   }
 
   try {
@@ -166,13 +199,22 @@ export async function POST(request: Request) {
 
     const passwordHash = hashPassword(password);
     const [result] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO reviews (name, service, rating, content, image_url, password_hash)
-       VALUES (:name, :service, :rating, :content, :imageUrl, :passwordHash)`,
-      { name, service, rating, content, imageUrl, passwordHash },
+      `INSERT INTO reviews (name, service, lineup_id, lineup_name, rating, content, image_url, password_hash)
+       VALUES (:name, :service, :lineupId, :lineupName, :rating, :content, :imageUrl, :passwordHash)`,
+      {
+        name,
+        service,
+        lineupId,
+        lineupName,
+        rating,
+        content,
+        imageUrl,
+        passwordHash,
+      },
     );
 
     const [rows] = await getPool().execute<ReviewRow[]>(
-      `SELECT id, name, service, rating, content, image_url, created_at FROM reviews WHERE id = :id`,
+      `SELECT id, name, service, lineup_id, lineup_name, rating, content, image_url, created_at FROM reviews WHERE id = :id`,
       { id: result.insertId },
     );
 
@@ -181,7 +223,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ review: toReview(rows[0]) }, { status: 201 });
   } catch (error) {
     console.error("Failed to create review", error);
-    return NextResponse.json({ message: "후기를 저장하지 못했습니다." }, { status: 500 });
+    return NextResponse.json(
+      { message: "후기를 저장하지 못했습니다." },
+      { status: 500 },
+    );
   }
 }
 
@@ -190,7 +235,10 @@ export async function PUT(request: Request) {
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ message: "요청 형식이 올바르지 않습니다." }, { status: 400 });
+    return NextResponse.json(
+      { message: "요청 형식이 올바르지 않습니다." },
+      { status: 400 },
+    );
   }
 
   const id = Number(payload.id);
@@ -200,69 +248,112 @@ export async function PUT(request: Request) {
   const password = payload.password?.trim() ?? "";
 
   if (!Number.isInteger(id) || id < 1) {
-    return NextResponse.json({ message: "수정할 후기를 찾을 수 없습니다." }, { status: 400 });
+    return NextResponse.json(
+      { message: "수정할 후기를 찾을 수 없습니다." },
+      { status: 400 },
+    );
   }
 
   const adminRequest = isAdminRequest(request);
 
   if (!adminRequest && !password) {
-    return NextResponse.json({ message: "비밀번호를 입력해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "비밀번호를 입력해주세요." },
+      { status: 400 },
+    );
   }
 
   if (!allowedServices.has(service)) {
-    return NextResponse.json({ message: "서비스를 다시 선택해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "서비스를 다시 선택해주세요." },
+      { status: 400 },
+    );
   }
 
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    return NextResponse.json({ message: "평점은 1~5점으로 선택해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "평점은 1~5점으로 선택해주세요." },
+      { status: 400 },
+    );
   }
 
   if (content.length < 1 || content.length > 400) {
-    return NextResponse.json({ message: "후기는 1~400자로 입력해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "후기는 1~400자로 입력해주세요." },
+      { status: 400 },
+    );
   }
 
   try {
     const [existingRows] = await getPool().execute<ReviewRow[]>(
-      `SELECT id, name, service, rating, content, image_url, password_hash, created_at
+      `SELECT id, name, service, lineup_id, lineup_name, rating, content, image_url, password_hash, created_at
        FROM reviews WHERE id = :id LIMIT 1`,
       { id },
     );
 
     const existingReview = existingRows[0];
     if (!existingReview) {
-      return NextResponse.json({ message: "수정할 후기를 찾을 수 없습니다." }, { status: 404 });
+      return NextResponse.json(
+        { message: "수정할 후기를 찾을 수 없습니다." },
+        { status: 404 },
+      );
     }
 
     if (!adminRequest && !canModifyReview(password, existingReview)) {
-      return NextResponse.json({ message: "비밀번호가 일치하지 않습니다." }, { status: 403 });
+      return NextResponse.json(
+        { message: "비밀번호가 일치하지 않습니다." },
+        { status: 403 },
+      );
     }
 
-    const createdAt = adminRequest && payload.createdAt ? new Date(payload.createdAt) : null;
+    const createdAt =
+      adminRequest && payload.createdAt ? new Date(payload.createdAt) : null;
     if (createdAt && isNaN(createdAt.getTime())) {
-      return NextResponse.json({ message: "날짜 형식이 올바르지 않습니다." }, { status: 400 });
+      return NextResponse.json(
+        { message: "날짜 형식이 올바르지 않습니다." },
+        { status: 400 },
+      );
     }
 
     if (createdAt) {
       await getPool().execute(
-        `UPDATE reviews SET service = :service, rating = :rating, content = :content, created_at = :createdAt WHERE id = :id`,
-        { id, service, rating, content, createdAt },
+        `UPDATE reviews SET service = :service, lineup_id = :lineupId, lineup_name = :lineupName, rating = :rating, content = :content, created_at = :createdAt WHERE id = :id`,
+        {
+          id,
+          service,
+          lineupId: payload.lineupId ? Number(payload.lineupId) : null,
+          lineupName: payload.lineupName?.trim() || null,
+          rating,
+          content,
+          createdAt,
+        },
       );
     } else {
       await getPool().execute(
-        `UPDATE reviews SET service = :service, rating = :rating, content = :content WHERE id = :id`,
-        { id, service, rating, content },
+        `UPDATE reviews SET service = :service, lineup_id = :lineupId, lineup_name = :lineupName, rating = :rating, content = :content WHERE id = :id`,
+        {
+          id,
+          service,
+          lineupId: payload.lineupId ? Number(payload.lineupId) : null,
+          lineupName: payload.lineupName?.trim() || null,
+          rating,
+          content,
+        },
       );
     }
 
     const [rows] = await getPool().execute<ReviewRow[]>(
-      `SELECT id, name, service, rating, content, image_url, created_at FROM reviews WHERE id = :id`,
+      `SELECT id, name, service, lineup_id, lineup_name, rating, content, image_url, created_at FROM reviews WHERE id = :id`,
       { id },
     );
 
     return NextResponse.json({ review: toReview(rows[0]) });
   } catch (error) {
     console.error("Failed to update review", error);
-    return NextResponse.json({ message: "후기를 수정하지 못했습니다." }, { status: 500 });
+    return NextResponse.json(
+      { message: "후기를 수정하지 못했습니다." },
+      { status: 500 },
+    );
   }
 }
 
@@ -271,42 +362,60 @@ export async function DELETE(request: Request) {
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ message: "요청 형식이 올바르지 않습니다." }, { status: 400 });
+    return NextResponse.json(
+      { message: "요청 형식이 올바르지 않습니다." },
+      { status: 400 },
+    );
   }
 
   const id = Number(payload.id);
   const password = payload.password?.trim() ?? "";
 
   if (!Number.isInteger(id) || id < 1) {
-    return NextResponse.json({ message: "삭제할 후기를 찾을 수 없습니다." }, { status: 400 });
+    return NextResponse.json(
+      { message: "삭제할 후기를 찾을 수 없습니다." },
+      { status: 400 },
+    );
   }
 
   const adminRequest = isAdminRequest(request);
 
   if (!adminRequest && !password) {
-    return NextResponse.json({ message: "비밀번호를 입력해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "비밀번호를 입력해주세요." },
+      { status: 400 },
+    );
   }
 
   try {
     const [rows] = await getPool().execute<ReviewRow[]>(
-      `SELECT id, name, service, rating, content, image_url, password_hash, created_at
+      `SELECT id, name, service, lineup_id, lineup_name, rating, content, image_url, password_hash, created_at
        FROM reviews WHERE id = :id LIMIT 1`,
       { id },
     );
 
     const review = rows[0];
     if (!review) {
-      return NextResponse.json({ message: "삭제할 후기를 찾을 수 없습니다." }, { status: 404 });
+      return NextResponse.json(
+        { message: "삭제할 후기를 찾을 수 없습니다." },
+        { status: 404 },
+      );
     }
 
     if (!adminRequest && !canModifyReview(password, review)) {
-      return NextResponse.json({ message: "비밀번호가 일치하지 않습니다." }, { status: 403 });
+      return NextResponse.json(
+        { message: "비밀번호가 일치하지 않습니다." },
+        { status: 403 },
+      );
     }
 
     await getPool().execute(`DELETE FROM reviews WHERE id = :id`, { id });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Failed to delete review", error);
-    return NextResponse.json({ message: "후기를 삭제하지 못했습니다." }, { status: 500 });
+    return NextResponse.json(
+      { message: "후기를 삭제하지 못했습니다." },
+      { status: 500 },
+    );
   }
 }

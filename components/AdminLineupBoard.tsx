@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Lineup } from "@/lib/lineups";
+import { getLineupPath, type Lineup } from "@/lib/lineups";
 import {
   DndContext,
   DragOverlay,
@@ -482,7 +482,7 @@ export default function AdminLineupBoard({
         );
       } else {
         setLineups((cur) => [...cur, data.lineup]);
-        router.push(`/lineup/${data.lineup.id}`);
+        router.push(getLineupPath(data.lineup));
       }
       closeModal();
     } catch (err) {

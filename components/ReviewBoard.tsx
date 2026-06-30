@@ -12,12 +12,21 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 type Review = {
   id: string;
   name: string;
   service: string;
+  lineupId?: string;
+  lineupName?: string;
   rating: number;
   content: string;
   image?: string;
@@ -54,6 +63,8 @@ const blankForm = {
   name: "",
   password: "",
   service: "롤 대리",
+  lineupId: "",
+  lineupName: "",
   rating: 5,
   content: "",
 };
@@ -110,9 +121,11 @@ function Stars({ rating }: { rating: number }) {
 export default function ReviewBoard({
   initialReviews = [],
   isAdmin = false,
+  lineups = [],
 }: {
   initialReviews?: Review[];
   isAdmin?: boolean;
+  lineups?: Array<{ id: string; name: string }>;
 }) {
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
   const [form, setForm] = useState(blankForm);
@@ -122,7 +135,9 @@ export default function ReviewBoard({
   const [editForms, setEditForms] = useState<Record<string, EditForm>>({});
   const [deleteOpenId, setDeleteOpenId] = useState("");
   const [editOpenId, setEditOpenId] = useState("");
-  const [editVerifiedIds, setEditVerifiedIds] = useState<Set<string>>(new Set());
+  const [editVerifiedIds, setEditVerifiedIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [selectedReviewId, setSelectedReviewId] = useState("");
   const [writeOpen, setWriteOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -255,7 +270,11 @@ export default function ReviewBoard({
   const openEditForm = (review: Review) => {
     if (editOpenId === review.id) {
       setEditOpenId("");
-      setEditVerifiedIds((s) => { const n = new Set(s); n.delete(review.id); return n; });
+      setEditVerifiedIds((s) => {
+        const n = new Set(s);
+        n.delete(review.id);
+        return n;
+      });
       return;
     }
     setDeleteOpenId("");
@@ -270,14 +289,21 @@ export default function ReviewBoard({
         createdAt: review.createdAt.slice(0, 16),
       },
     }));
-    setEditVerifiedIds((s) => { const n = new Set(s); n.delete(review.id); return n; });
+    setEditVerifiedIds((s) => {
+      const n = new Set(s);
+      n.delete(review.id);
+      return n;
+    });
   };
 
   const verifyEditPassword = async (review: Review) => {
     const editForm = editForms[review.id] ?? blankEditForm;
     const password = editForm.password.trim();
     setError("");
-    if (!password) { setError("비밀번호를 입력해주세요."); return; }
+    if (!password) {
+      setError("비밀번호를 입력해주세요.");
+      return;
+    }
 
     setEditingId(review.id);
     try {
@@ -286,7 +312,10 @@ export default function ReviewBoard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: review.id, password }),
       });
-      const data = (await response.json()) as { ok?: boolean; message?: string };
+      const data = (await response.json()) as {
+        ok?: boolean;
+        message?: string;
+      };
       if (!response.ok || !data.ok) {
         setError(data.message ?? "비밀번호가 일치하지 않습니다.");
         return;
@@ -321,10 +350,19 @@ export default function ReviewBoard({
         setUploading(true);
         const fd = new FormData();
         fd.append("image", imageFile);
-        const uploadRes = await fetch("/api/uploads/reviews", { method: "POST", body: fd });
-        const uploadData = (await uploadRes.json()) as { imageUrl?: string; message?: string };
+        const uploadRes = await fetch("/api/uploads/reviews", {
+          method: "POST",
+          body: fd,
+        });
+        const uploadData = (await uploadRes.json()) as {
+          imageUrl?: string;
+          message?: string;
+        };
         setUploading(false);
-        if (!uploadRes.ok) throw new Error(uploadData.message ?? "이미지 업로드에 실패했습니다.");
+        if (!uploadRes.ok)
+          throw new Error(
+            uploadData.message ?? "이미지 업로드에 실패했습니다.",
+          );
         imageUrl = uploadData.imageUrl;
       }
 
@@ -335,6 +373,10 @@ export default function ReviewBoard({
           name,
           password,
           service: form.service,
+          lineupId: form.lineupId || undefined,
+          lineupName: form.lineupId
+            ? lineups.find((lineup) => lineup.id === form.lineupId)?.name
+            : undefined,
           rating: form.rating,
           content,
           imageUrl,
@@ -443,7 +485,9 @@ export default function ReviewBoard({
           rating: editForm.rating,
           content,
           image: review.image,
-          ...(isAdmin && editForm.createdAt ? { createdAt: editForm.createdAt } : {}),
+          ...(isAdmin && editForm.createdAt
+            ? { createdAt: editForm.createdAt }
+            : {}),
         }),
       });
       const data = (await response.json()) as CreateReviewResponse;
@@ -493,7 +537,9 @@ export default function ReviewBoard({
       setPage(1);
       setSelectedReviewId(data.review.id);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "복제하지 못했습니다.");
+      setError(
+        caught instanceof Error ? caught.message : "복제하지 못했습니다.",
+      );
     }
   };
 
@@ -502,12 +548,15 @@ export default function ReviewBoard({
       {writeOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm"
-          onMouseDown={(e) => { mousedownOnOverlay.current = e.target === e.currentTarget; }}
-          onClick={(e) => { if (e.target === e.currentTarget && mousedownOnOverlay.current) setWriteOpen(false); }}
+          onMouseDown={(e) => {
+            mousedownOnOverlay.current = e.target === e.currentTarget;
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && mousedownOnOverlay.current)
+              setWriteOpen(false);
+          }}
         >
-          <div
-            className="w-full max-w-xl rounded-[34px] border border-gold/20 bg-[#111] p-6 shadow-2xl sm:p-8 max-h-[90dvh] overflow-y-auto sm:max-h-[95dvh]"
-          >
+          <div className="w-full max-w-xl rounded-[34px] border border-gold/20 bg-[#111] p-6 shadow-2xl sm:p-8 max-h-[90dvh] overflow-y-auto sm:max-h-[95dvh]">
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
@@ -569,7 +618,7 @@ export default function ReviewBoard({
                   </label>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+                <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
                   <label className="grid gap-2">
                     <span className="text-sm font-bold text-zinc-300">
                       서비스
@@ -587,6 +636,29 @@ export default function ReviewBoard({
                       <option>롤 대리</option>
                       <option>롤 듀오</option>
                       <option>롤 계정</option>
+                    </select>
+                  </label>
+
+                  <label className="grid gap-2">
+                    <span className="text-sm font-bold text-zinc-300">
+                      작업 기사
+                    </span>
+                    <select
+                      value={form.lineupId}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          lineupId: event.target.value,
+                        }))
+                      }
+                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
+                    >
+                      <option value="">기사 선택 안 함</option>
+                      {lineups.map((lineup) => (
+                        <option key={lineup.id} value={lineup.id}>
+                          {lineup.name}
+                        </option>
+                      ))}
                     </select>
                   </label>
 
@@ -679,7 +751,9 @@ export default function ReviewBoard({
                   disabled={submitting || uploading}
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {(submitting || uploading) && <Loader2 size={18} className="animate-spin" />}
+                  {(submitting || uploading) && (
+                    <Loader2 size={18} className="animate-spin" />
+                  )}
                   {uploading ? "이미지 업로드 중..." : "후기 등록"}
                 </button>
               </div>
@@ -754,7 +828,9 @@ export default function ReviewBoard({
               updateEditForm(selectedReview.id, updates)
             }
             onEditOpenChange={() => openEditForm(selectedReview)}
-            onDuplicate={isAdmin ? () => void duplicateReview(selectedReview) : undefined}
+            onDuplicate={
+              isAdmin ? () => void duplicateReview(selectedReview) : undefined
+            }
             onVerifyPassword={() => void verifyEditPassword(selectedReview)}
             onBackToList={() => {
               setSelectedReviewId("");
@@ -963,7 +1039,11 @@ function ReviewDetail({
               disabled={deleting}
               className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-red-400/40 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+              {deleting ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Trash2 size={16} />
+              )}
               삭제
             </button>
           </div>
@@ -973,13 +1053,22 @@ function ReviewDetail({
           <div className="mt-6 rounded-3xl border border-gold/20 bg-white/[.035] p-4">
             {!isAdmin && !editVerified ? (
               <div className="grid gap-3">
-                <p className="text-sm font-bold text-zinc-300">작성 시 입력한 비밀번호를 확인해주세요.</p>
+                <p className="text-sm font-bold text-zinc-300">
+                  작성 시 입력한 비밀번호를 확인해주세요.
+                </p>
                 <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                   <input
                     type="password"
                     value={editForm.password}
-                    onChange={(event) => onEditFormChange({ password: event.target.value })}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onVerifyPassword(); } }}
+                    onChange={(event) =>
+                      onEditFormChange({ password: event.target.value })
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        onVerifyPassword();
+                      }
+                    }}
                     className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
                     placeholder="비밀번호"
                     autoFocus
@@ -999,10 +1088,14 @@ function ReviewDetail({
               <>
                 <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
                   <label className="grid gap-2">
-                    <span className="text-sm font-bold text-zinc-300">서비스</span>
+                    <span className="text-sm font-bold text-zinc-300">
+                      서비스
+                    </span>
                     <select
                       value={editForm.service}
-                      onChange={(event) => onEditFormChange({ service: event.target.value })}
+                      onChange={(event) =>
+                        onEditFormChange({ service: event.target.value })
+                      }
                       className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
                     >
                       <option>롤 대리</option>
@@ -1011,14 +1104,20 @@ function ReviewDetail({
                     </select>
                   </label>
                   <label className="grid gap-2">
-                    <span className="text-sm font-bold text-zinc-300">평점</span>
+                    <span className="text-sm font-bold text-zinc-300">
+                      평점
+                    </span>
                     <select
                       value={editForm.rating}
-                      onChange={(event) => onEditFormChange({ rating: Number(event.target.value) })}
+                      onChange={(event) =>
+                        onEditFormChange({ rating: Number(event.target.value) })
+                      }
                       className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
                     >
                       {[5, 4, 3, 2, 1].map((r) => (
-                        <option key={r} value={r}>{r}점</option>
+                        <option key={r} value={r}>
+                          {r}점
+                        </option>
                       ))}
                     </select>
                   </label>
@@ -1027,7 +1126,9 @@ function ReviewDetail({
                   <span className="text-sm font-bold text-zinc-300">후기</span>
                   <textarea
                     value={editForm.content}
-                    onChange={(event) => onEditFormChange({ content: event.target.value })}
+                    onChange={(event) =>
+                      onEditFormChange({ content: event.target.value })
+                    }
                     maxLength={400}
                     rows={3}
                     className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
@@ -1035,11 +1136,15 @@ function ReviewDetail({
                 </label>
                 {isAdmin && (
                   <label className="mt-4 grid gap-2">
-                    <span className="text-sm font-bold text-zinc-300">날짜 수정</span>
+                    <span className="text-sm font-bold text-zinc-300">
+                      날짜 수정
+                    </span>
                     <input
                       type="datetime-local"
                       value={editForm.createdAt}
-                      onChange={(event) => onEditFormChange({ createdAt: event.target.value })}
+                      onChange={(event) =>
+                        onEditFormChange({ createdAt: event.target.value })
+                      }
                       className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
                     />
                   </label>
