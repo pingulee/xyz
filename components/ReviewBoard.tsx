@@ -146,6 +146,11 @@ function StarRating({
   );
 }
 
+const SERVICE_LABEL: Record<string, string> = {
+  대리: "롤 대리",
+  듀오: "롤 듀오",
+};
+
 export default function ReviewBoard({
   initialReviews = [],
   isAdmin = false,
@@ -153,7 +158,7 @@ export default function ReviewBoard({
 }: {
   initialReviews?: Review[];
   isAdmin?: boolean;
-  lineups?: Array<{ id: string; name: string }>;
+  lineups?: Array<{ id: string; name: string; services: string[] }>;
 }) {
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
   const [form, setForm] = useState(blankForm);
@@ -589,35 +594,24 @@ export default function ReviewBoard({
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="grid gap-2">
                     <span className="text-sm font-bold text-zinc-300">
-                      서비스
-                    </span>
-                    <select
-                      value={form.service}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          service: event.target.value,
-                        }))
-                      }
-                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
-                    >
-                      <option>롤 대리</option>
-                      <option>롤 듀오</option>
-                    </select>
-                  </label>
-
-                  <label className="grid gap-2">
-                    <span className="text-sm font-bold text-zinc-300">
                       작업 기사
                     </span>
                     <select
                       value={form.lineupId}
-                      onChange={(event) =>
+                      onChange={(event) => {
+                        const id = event.target.value;
+                        const selected = lineups.find((l) => l.id === id);
+                        const availableServices = selected
+                          ? selected.services.map((s) => SERVICE_LABEL[s]).filter(Boolean)
+                          : ["롤 대리", "롤 듀오"];
                         setForm((current) => ({
                           ...current,
-                          lineupId: event.target.value,
-                        }))
-                      }
+                          lineupId: id,
+                          service: availableServices.includes(current.service)
+                            ? current.service
+                            : (availableServices[0] ?? "롤 대리"),
+                        }));
+                      }}
                       className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
                     >
                       <option value="">기사 선택 안 함</option>
@@ -627,6 +621,34 @@ export default function ReviewBoard({
                         </option>
                       ))}
                     </select>
+                  </label>
+
+                  <label className="grid gap-2">
+                    <span className="text-sm font-bold text-zinc-300">
+                      서비스
+                    </span>
+                    {(() => {
+                      const selected = lineups.find((l) => l.id === form.lineupId);
+                      const opts = selected
+                        ? selected.services.map((s) => SERVICE_LABEL[s]).filter(Boolean)
+                        : ["롤 대리", "롤 듀오"];
+                      return (
+                        <select
+                          value={form.service}
+                          onChange={(event) =>
+                            setForm((current) => ({
+                              ...current,
+                              service: event.target.value,
+                            }))
+                          }
+                          className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
+                        >
+                          {opts.map((s) => (
+                            <option key={s}>{s}</option>
+                          ))}
+                        </select>
+                      );
+                    })()}
                   </label>
                 </div>
 

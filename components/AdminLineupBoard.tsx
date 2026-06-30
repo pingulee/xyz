@@ -5,7 +5,6 @@ import {
   Clock,
   Copy,
   EyeOff,
-  GripVertical,
   Loader2,
   LogOut,
   Pencil,
@@ -17,23 +16,6 @@ import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getLineupPath } from "@/lib/lineup-model";
 import type { Lineup } from "@/lib/lineup-model";
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  rectSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 
 const MAX_IMAGE_SIZE = 1024 * 1024 * 5;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -57,168 +39,31 @@ const positionColors: Record<string, string> = {
 };
 
 const LOL_CHAMPIONS = [
-  "가렌",
-  "갈리오",
-  "강플랭크",
-  "그라가스",
-  "그레이브즈",
-  "나미",
-  "나서스",
-  "나피리",
-  "녹턴",
-  "누누와 윌럼프",
-  "니달리",
-  "니코",
-  "다리우스",
-  "드레이븐",
-  "라이즈",
-  "라칸",
-  "람머스",
-  "럭스",
-  "럼블",
-  "레나타 글라스크",
-  "레넥톤",
-  "레오나",
-  "렉사이",
-  "렐",
-  "로크",
-  "루시안",
-  "룰루",
-  "르블랑",
-  "리 신",
-  "리산드라",
-  "리벤",
-  "릴리아",
-  "마스터 이",
-  "마오카이",
-  "말파이트",
-  "말자하",
-  "모데카이저",
-  "모르가나",
-  "문도 박사",
-  "미스 포츈",
-  "바드",
-  "바루스",
-  "베이가",
-  "베인",
-  "벡스",
-  "벨베스",
-  "벨코즈",
-  "볼리베어",
-  "브라움",
-  "브라이어",
-  "블라디미르",
-  "블리츠크랭크",
-  "비에고",
-  "빅토르",
-  "사미라",
-  "사일러스",
-  "세라핀",
-  "세주아니",
-  "세트",
-  "소나",
-  "소라카",
-  "쉔",
-  "쉬바나",
-  "스몰더",
-  "스웨인",
-  "시비르",
-  "신드라",
-  "신지드",
-  "신짜오",
-  "아리",
-  "아무무",
-  "아우렐리온 솔",
-  "아지르",
-  "아칼리",
-  "아크샨",
-  "아트록스",
-  "아펠리오스",
-  "애니",
-  "야스오",
-  "에코",
-  "엘리스",
-  "오공",
-  "오로라",
-  "오른",
-  "오리아나",
-  "올라프",
-  "우디르",
-  "우르곳",
-  "워윅",
-  "유미",
-  "이렐리아",
-  "이블린",
-  "이즈리얼",
-  "일라오이",
-  "잔나",
-  "잭스",
-  "제드",
-  "제이스",
-  "조이",
-  "진",
-  "질리언",
-  "징크스",
-  "카르마",
-  "카밀",
-  "카사딘",
-  "카서스",
-  "카이사",
-  "카직스",
-  "카타리나",
-  "칼리스타",
-  "케넨",
-  "케이틀린",
-  "코그모",
-  "코르키",
-  "퀸",
-  "크산테",
-  "클레드",
-  "타릭",
-  "탈론",
-  "탈리야",
-  "탐 켄치",
-  "트런들",
-  "트리스타나",
-  "트린다미어",
-  "트위스티드 페이트",
-  "트위치",
-  "티모",
-  "파이크",
-  "판테온",
-  "피오라",
-  "피즈",
-  "하이머딩거",
-  "헤카림",
-  "흐웨이",
+  "가렌", "갈리오", "강플랭크", "그라가스", "그레이브즈", "나미", "나서스",
+  "나피리", "녹턴", "누누와 윌럼프", "니달리", "니코", "다리우스", "드레이븐",
+  "라이즈", "라칸", "람머스", "럭스", "럼블", "레나타 글라스크", "레넥톤",
+  "레오나", "렉사이", "렐", "로크", "루시안", "룰루", "르블랑", "리 신",
+  "리산드라", "리벤", "릴리아", "마스터 이", "마오카이", "말파이트", "말자하",
+  "모데카이저", "모르가나", "문도 박사", "미스 포츈", "바드", "바루스", "베이가",
+  "베인", "벡스", "벨베스", "벨코즈", "볼리베어", "브라움", "브라이어",
+  "블라디미르", "블리츠크랭크", "비에고", "빅토르", "사미라", "사일러스",
+  "세라핀", "세주아니", "세트", "소나", "소라카", "쉔", "쉬바나", "스몰더",
+  "스웨인", "시비르", "신드라", "신지드", "신짜오", "아리", "아무무",
+  "아우렐리온 솔", "아지르", "아칼리", "아크샨", "아트록스", "아펠리오스",
+  "애니", "야스오", "에코", "엘리스", "오공", "오로라", "오른", "오리아나",
+  "올라프", "우디르", "우르곳", "워윅", "유미", "이렐리아", "이블린",
+  "이즈리얼", "일라오이", "잔나", "잭스", "제드", "제이스", "조이", "진",
+  "질리언", "징크스", "카르마", "카밀", "카사딘", "카서스", "카이사", "카직스",
+  "카타리나", "칼리스타", "케넨", "케이틀린", "코그모", "코르키", "퀸",
+  "크산테", "클레드", "타릭", "탈론", "탈리야", "탐 켄치", "트런들",
+  "트리스타나", "트린다미어", "트위스티드 페이트", "트위치", "티모", "파이크",
+  "판테온", "피오라", "피즈", "하이머딩거", "헤카림", "흐웨이",
 ];
 
 const POSITIONS = ["탑", "정글", "미드", "바텀", "서포터"] as const;
 const TIME_SLOTS = [
-  "00",
-  "01",
-  "02",
-  "03",
-  "04",
-  "05",
-  "06",
-  "07",
-  "08",
-  "09",
-  "10",
-  "11",
-  "12",
-  "13",
-  "14",
-  "15",
-  "16",
-  "17",
-  "18",
-  "19",
-  "20",
-  "21",
-  "22",
-  "23",
+  "00","01","02","03","04","05","06","07","08","09","10","11",
+  "12","13","14","15","16","17","18","19","20","21","22","23",
 ];
 
 const blankForm = {
@@ -243,7 +88,6 @@ const blankForm = {
 };
 
 type FormState = typeof blankForm;
-
 type LineupResponse = { lineup: Lineup; message?: string };
 
 export default function AdminLineupBoard({
@@ -263,14 +107,9 @@ export default function AdminLineupBoard({
   const [imagePreview, setImagePreview] = useState("");
   const [imageName, setImageName] = useState("");
   const [imageError, setImageError] = useState("");
-  const [activeLineup, setActiveLineup] = useState<Lineup | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mousedownOnOverlay = useRef(false);
   const router = useRouter();
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-  );
 
   useEffect(() => {
     if (modalOpen) {
@@ -288,11 +127,7 @@ export default function AdminLineupBoard({
   }[keyof FormState];
   const set =
     (key: StringKey) =>
-    (
-      e: ChangeEvent<
-        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-      >,
-    ) =>
+    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const togglePosition = (pos: string) =>
@@ -356,9 +191,7 @@ export default function AdminLineupBoard({
     setModalOpen(true);
   };
 
-  const parseHours = (
-    hours: string,
-  ): { start: string; end: string; all: boolean } => {
+  const parseHours = (hours: string): { start: string; end: string; all: boolean } => {
     if (!hours || hours.toUpperCase() === "ALL")
       return { start: "00", end: "23", all: true };
     const m = hours.match(/(\d{1,2}):?\d*\s*~\s*(\d{1,2})/);
@@ -415,19 +248,9 @@ export default function AdminLineupBoard({
     rank: form.rank,
     tier: form.tier,
     description: form.description,
-    weekdayHours: formatHours(
-      form.weekdayStart,
-      form.weekdayEnd,
-      form.weekdayAll,
-    ),
-    weekendHours: formatHours(
-      form.weekendStart,
-      form.weekendEnd,
-      form.weekendAll,
-    ),
-    champions: [form.champ1, form.champ2, form.champ3]
-      .filter(Boolean)
-      .join(","),
+    weekdayHours: formatHours(form.weekdayStart, form.weekdayEnd, form.weekdayAll),
+    weekendHours: formatHours(form.weekendStart, form.weekendEnd, form.weekendAll),
+    champions: [form.champ1, form.champ2, form.champ3].filter(Boolean).join(","),
     services: [form.serviceBoost && "대리", form.serviceDuo && "듀오"]
       .filter(Boolean)
       .join(","),
@@ -457,9 +280,7 @@ export default function AdminLineupBoard({
         };
         setUploading(false);
         if (!uploadRes.ok)
-          throw new Error(
-            uploadData.message ?? "이미지 업로드에 실패했습니다.",
-          );
+          throw new Error(uploadData.message ?? "이미지 업로드에 실패했습니다.");
         imageUrl = uploadData.imageUrl ?? null;
       }
 
@@ -478,9 +299,7 @@ export default function AdminLineupBoard({
       if (!response.ok) throw new Error(data.message ?? "저장하지 못했습니다.");
 
       if (editingId) {
-        setLineups((cur) =>
-          cur.map((l) => (l.id === editingId ? data.lineup : l)),
-        );
+        setLineups((cur) => cur.map((l) => (l.id === editingId ? data.lineup : l)));
       } else {
         setLineups((cur) => [...cur, data.lineup]);
         router.push(getLineupPath(data.lineup));
@@ -541,26 +360,6 @@ export default function AdminLineupBoard({
     }
   };
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const id = String(event.active.id);
-    setActiveLineup(lineups.find((l) => l.id === id) ?? null);
-  };
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    setActiveLineup(null);
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIdx = lineups.findIndex((l) => l.id === String(active.id));
-    const newIdx = lineups.findIndex((l) => l.id === String(over.id));
-    const reordered = arrayMove(lineups, oldIdx, newIdx);
-    setLineups(reordered);
-    await fetch("/api/lineup", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: reordered.map((l) => l.id) }),
-    });
-  };
-
   const inputCls =
     "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
   const labelCls = "grid gap-2 text-sm font-bold text-zinc-300";
@@ -583,7 +382,6 @@ export default function AdminLineupBoard({
           }}
         >
           <div className="w-full max-w-3xl mx-auto rounded-[28px] md:rounded-[34px] border border-gold/20 bg-[#111] shadow-2xl max-h-[92dvh] overflow-y-auto">
-            {/* 헤더 */}
             <div className="flex items-start justify-between gap-4 p-5 md:px-8 md:pt-8 md:pb-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
@@ -607,12 +405,9 @@ export default function AdminLineupBoard({
               onSubmit={saveLineup}
               className="md:grid md:grid-cols-[240px_1fr] md:divide-x md:divide-white/8"
             >
-              {/* 왼쪽 패널: 이미지 · 이름 · 티어 · 포지션 */}
               <div className="grid gap-3 p-5 md:px-8 md:pb-8 md:pt-0 md:content-start">
                 <div className="grid gap-2">
-                  <span className="text-sm font-bold text-zinc-300">
-                    프로필 이미지
-                  </span>
+                  <span className="text-sm font-bold text-zinc-300">프로필 이미지</span>
                   {currentImage ? (
                     <div className="relative overflow-hidden rounded-2xl bg-zinc-900">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -679,9 +474,7 @@ export default function AdminLineupBoard({
                 </label>
 
                 <div className="grid gap-2">
-                  <span className="text-sm font-bold text-zinc-300">
-                    포지션
-                  </span>
+                  <span className="text-sm font-bold text-zinc-300">포지션</span>
                   <div className="flex flex-wrap gap-x-4 gap-y-2">
                     {POSITIONS.map((pos) => (
                       <label
@@ -701,40 +494,23 @@ export default function AdminLineupBoard({
                 </div>
               </div>
 
-              {/* 오른쪽 패널: 시간 · 챔피언 · 작업종류 · 소개 · 공개 · 버튼 */}
               <div className="grid gap-3 border-t border-white/8 p-5 md:border-t-0 md:px-8 md:pb-8 md:pt-0 md:content-start">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="grid gap-2">
-                    <span className="text-sm font-bold text-zinc-300">
-                      평일 시간
-                    </span>
+                    <span className="text-sm font-bold text-zinc-300">평일 시간</span>
                     {form.weekdayAll ? (
                       <div className={`${inputCls} text-zinc-500`}>ALL</div>
                     ) : (
                       <div className="flex items-center gap-1">
-                        <select
-                          value={form.weekdayStart}
-                          onChange={set("weekdayStart")}
-                          className={inputCls}
-                        >
+                        <select value={form.weekdayStart} onChange={set("weekdayStart")} className={inputCls}>
                           {TIME_SLOTS.map((h) => (
-                            <option key={h} value={h}>
-                              {h}:00
-                            </option>
+                            <option key={h} value={h}>{h}:00</option>
                           ))}
                         </select>
-                        <span className="shrink-0 text-zinc-500 text-xs">
-                          ~
-                        </span>
-                        <select
-                          value={form.weekdayEnd}
-                          onChange={set("weekdayEnd")}
-                          className={inputCls}
-                        >
+                        <span className="shrink-0 text-zinc-500 text-xs">~</span>
+                        <select value={form.weekdayEnd} onChange={set("weekdayEnd")} className={inputCls}>
                           {TIME_SLOTS.map((h) => (
-                            <option key={h} value={h}>
-                              {h}:00
-                            </option>
+                            <option key={h} value={h}>{h}:00</option>
                           ))}
                         </select>
                       </div>
@@ -743,48 +519,27 @@ export default function AdminLineupBoard({
                       <input
                         type="checkbox"
                         checked={form.weekdayAll}
-                        onChange={(e) =>
-                          setForm((f) => ({
-                            ...f,
-                            weekdayAll: e.target.checked,
-                          }))
-                        }
+                        onChange={(e) => setForm((f) => ({ ...f, weekdayAll: e.target.checked }))}
                         className="h-4 w-4 accent-gold"
                       />
                       ALL
                     </label>
                   </div>
                   <div className="grid gap-2">
-                    <span className="text-sm font-bold text-zinc-300">
-                      주말 시간
-                    </span>
+                    <span className="text-sm font-bold text-zinc-300">주말 시간</span>
                     {form.weekendAll ? (
                       <div className={`${inputCls} text-zinc-500`}>ALL</div>
                     ) : (
                       <div className="flex items-center gap-1">
-                        <select
-                          value={form.weekendStart}
-                          onChange={set("weekendStart")}
-                          className={inputCls}
-                        >
+                        <select value={form.weekendStart} onChange={set("weekendStart")} className={inputCls}>
                           {TIME_SLOTS.map((h) => (
-                            <option key={h} value={h}>
-                              {h}:00
-                            </option>
+                            <option key={h} value={h}>{h}:00</option>
                           ))}
                         </select>
-                        <span className="shrink-0 text-zinc-500 text-xs">
-                          ~
-                        </span>
-                        <select
-                          value={form.weekendEnd}
-                          onChange={set("weekendEnd")}
-                          className={inputCls}
-                        >
+                        <span className="shrink-0 text-zinc-500 text-xs">~</span>
+                        <select value={form.weekendEnd} onChange={set("weekendEnd")} className={inputCls}>
                           {TIME_SLOTS.map((h) => (
-                            <option key={h} value={h}>
-                              {h}:00
-                            </option>
+                            <option key={h} value={h}>{h}:00</option>
                           ))}
                         </select>
                       </div>
@@ -793,12 +548,7 @@ export default function AdminLineupBoard({
                       <input
                         type="checkbox"
                         checked={form.weekendAll}
-                        onChange={(e) =>
-                          setForm((f) => ({
-                            ...f,
-                            weekendAll: e.target.checked,
-                          }))
-                        }
+                        onChange={(e) => setForm((f) => ({ ...f, weekendAll: e.target.checked }))}
                         className="h-4 w-4 accent-gold"
                       />
                       ALL
@@ -807,30 +557,16 @@ export default function AdminLineupBoard({
                 </div>
 
                 <div className="grid gap-2">
-                  <span className="text-sm font-bold text-zinc-300">
-                    챔피언 (최대 3개)
-                  </span>
+                  <span className="text-sm font-bold text-zinc-300">챔피언 (최대 3개)</span>
                   <div className="grid grid-cols-3 gap-2">
                     {(["champ1", "champ2", "champ3"] as const).map((key, i) => {
                       const other1 = i === 0 ? form.champ2 : form.champ1;
-                      const other2 =
-                        i === 1
-                          ? form.champ3
-                          : i === 0
-                            ? form.champ3
-                            : form.champ2;
+                      const other2 = i === 1 ? form.champ3 : i === 0 ? form.champ3 : form.champ2;
                       return (
-                        <select
-                          key={key}
-                          value={form[key]}
-                          onChange={set(key)}
-                          className={inputCls}
-                        >
+                        <select key={key} value={form[key]} onChange={set(key)} className={inputCls}>
                           <option value="">없음</option>
                           {champOptions(other1, other2).map((c) => (
-                            <option key={c} value={c}>
-                              {c}
-                            </option>
+                            <option key={c} value={c}>{c}</option>
                           ))}
                         </select>
                       );
@@ -839,20 +575,13 @@ export default function AdminLineupBoard({
                 </div>
 
                 <div className="grid gap-2">
-                  <span className="text-sm font-bold text-zinc-300">
-                    작업 종류
-                  </span>
+                  <span className="text-sm font-bold text-zinc-300">작업 종류</span>
                   <div className="flex gap-6">
                     <label className="flex items-center gap-2 text-sm font-bold text-zinc-300 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={form.serviceBoost}
-                        onChange={(e) =>
-                          setForm((f) => ({
-                            ...f,
-                            serviceBoost: e.target.checked,
-                          }))
-                        }
+                        onChange={(e) => setForm((f) => ({ ...f, serviceBoost: e.target.checked }))}
                         className="h-4 w-4 accent-gold"
                       />
                       대리
@@ -861,12 +590,7 @@ export default function AdminLineupBoard({
                       <input
                         type="checkbox"
                         checked={form.serviceDuo}
-                        onChange={(e) =>
-                          setForm((f) => ({
-                            ...f,
-                            serviceDuo: e.target.checked,
-                          }))
-                        }
+                        onChange={(e) => setForm((f) => ({ ...f, serviceDuo: e.target.checked }))}
                         className="h-4 w-4 accent-gold"
                       />
                       듀오
@@ -890,9 +614,7 @@ export default function AdminLineupBoard({
                   <input
                     type="checkbox"
                     checked={form.active}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, active: e.target.checked }))
-                    }
+                    onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
                     className="h-4 w-4 accent-gold"
                   />
                   공개 (체크 해제 시 숨김)
@@ -912,11 +634,7 @@ export default function AdminLineupBoard({
                   {(saving || uploading) && (
                     <Loader2 size={18} className="animate-spin" />
                   )}
-                  {uploading
-                    ? "이미지 업로드 중..."
-                    : editingId
-                      ? "수정 저장"
-                      : "기사 등록"}
+                  {uploading ? "이미지 업로드 중..." : editingId ? "수정 저장" : "기사 등록"}
                 </button>
               </div>
             </form>
@@ -926,9 +644,7 @@ export default function AdminLineupBoard({
 
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-xl font-black text-white">
-            기사 {lineups.length}명
-          </h2>
+          <h2 className="text-xl font-black text-white">기사 {lineups.length}명</h2>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -949,68 +665,55 @@ export default function AdminLineupBoard({
           </div>
         </div>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={(e) => void handleDragEnd(e)}
-        >
-          <SortableContext
-            items={lineups.map((l) => l.id)}
-            strategy={rectSortingStrategy}
-          >
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {lineups.length === 0 && (
-                <p className="col-span-full text-sm text-zinc-500">
-                  등록된 기사가 없습니다.
-                </p>
-              )}
-              {lineups.map((knight) => (
-                <SortableCard
-                  key={knight.id}
-                  knight={knight}
-                  deletingId={deletingId}
-                  onEdit={openEdit}
-                  onDuplicate={duplicateLineup}
-                  onDelete={deleteLineup}
-                />
-              ))}
-            </div>
-          </SortableContext>
-
-          <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
-            {activeLineup && (
-              <div className="rotate-2 scale-105 opacity-90 shadow-2xl">
-                <KnightCard knight={activeLineup} isOverlay />
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {lineups.length === 0 && (
+            <p className="col-span-full text-sm text-zinc-500">등록된 기사가 없습니다.</p>
+          )}
+          {lineups.map((knight) => (
+            <div key={knight.id} className="relative">
+              <KnightCard knight={knight} />
+              <div className="absolute bottom-3 right-3 flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => void duplicateLineup(knight)}
+                  className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-gold/40 hover:text-white"
+                  aria-label="복제"
+                >
+                  <Copy size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openEdit(knight)}
+                  className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-gold/40 hover:text-white"
+                  aria-label="수정"
+                >
+                  <Pencil size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void deleteLineup(knight)}
+                  disabled={deletingId === knight.id}
+                  className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-red-400/40 hover:text-red-200 disabled:opacity-60"
+                  aria-label="삭제"
+                >
+                  {deletingId === knight.id ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={13} />
+                  )}
+                </button>
               </div>
-            )}
-          </DragOverlay>
-        </DndContext>
+            </div>
+          ))}
+        </div>
       </div>
     </>
   );
 }
 
-const positionColorsExt: Record<string, string> = {
-  정글: "bg-emerald-500/15 text-emerald-400",
-  미드: "bg-blue-500/15 text-blue-400",
-  바텀: "bg-purple-500/15 text-purple-400",
-  서포터: "bg-pink-500/15 text-pink-400",
-  서폿: "bg-pink-500/15 text-pink-400",
-  탑: "bg-orange-500/15 text-orange-400",
-};
-
-function KnightCard({
-  knight,
-  isOverlay = false,
-}: {
-  knight: Lineup;
-  isOverlay?: boolean;
-}) {
+function KnightCard({ knight }: { knight: Lineup }) {
   return (
-    <article
-      className={`card-premium overflow-hidden rounded-[28px] ${!knight.active && !isOverlay ? "opacity-50" : ""}`}
-    >
+    <article className={`card-premium overflow-hidden rounded-[28px] ${!knight.active ? "opacity-50" : ""}`}>
       <div className="flex gap-4 p-5">
         <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-black">
           {knight.image && (
@@ -1028,7 +731,7 @@ function KnightCard({
             {knight.positions.map((pos) => (
               <span
                 key={pos}
-                className={`rounded-full px-2.5 py-0.5 text-xs font-black ${positionColorsExt[pos] ?? "bg-gold/10 text-gold"}`}
+                className={`rounded-full px-2.5 py-0.5 text-xs font-black ${positionColors[pos] ?? "bg-gold/10 text-gold"}`}
               >
                 {pos}
               </span>
@@ -1041,11 +744,9 @@ function KnightCard({
                 height={18}
                 className="rounded-full bg-zinc-800"
               />
-              <span className="text-xs font-black text-gold">
-                {knight.rank}
-              </span>
+              <span className="text-xs font-black text-gold">{knight.rank}</span>
             </div>
-            {!knight.active && !isOverlay && (
+            {!knight.active && (
               <span className="inline-flex items-center gap-1 rounded-full bg-zinc-700/50 px-2 py-0.5 text-[10px] font-bold text-zinc-400">
                 <EyeOff size={10} />
                 숨김
@@ -1070,9 +771,7 @@ function KnightCard({
         <div className="mt-4 grid gap-2.5">
           {knight.champions.length > 0 && (
             <div className="flex items-start gap-2">
-              <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">
-                챔피언
-              </span>
+              <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">챔피언</span>
               <div className="flex flex-wrap gap-1.5">
                 {knight.champions.map((c) => (
                   <span
@@ -1086,9 +785,7 @@ function KnightCard({
             </div>
           )}
           <div className="flex items-start gap-2">
-            <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">
-              작업
-            </span>
+            <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">작업</span>
             <div className="flex flex-wrap gap-1.5">
               {knight.services.map((s) => (
                 <span
@@ -1103,84 +800,5 @@ function KnightCard({
         </div>
       </div>
     </article>
-  );
-}
-
-function SortableCard({
-  knight,
-  deletingId,
-  onEdit,
-  onDuplicate,
-  onDelete,
-}: {
-  knight: Lineup;
-  deletingId: string;
-  onEdit: (l: Lineup) => void;
-  onDuplicate: (l: Lineup) => Promise<void>;
-  onDelete: (l: Lineup) => Promise<void>;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: knight.id });
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`relative ${isDragging ? "opacity-40 scale-95" : ""} transition-transform`}
-    >
-      <KnightCard knight={knight} />
-      {/* 드래그 핸들 */}
-      <button
-        type="button"
-        className="absolute right-3 top-3 grid h-8 w-8 cursor-grab place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-500 backdrop-blur-sm transition hover:border-gold/40 hover:text-gold active:cursor-grabbing"
-        aria-label="순서 변경"
-        {...attributes}
-        {...listeners}
-      >
-        <GripVertical size={15} />
-      </button>
-      {/* 액션 버튼 */}
-      <div className="absolute bottom-3 right-3 flex gap-1.5">
-        <button
-          type="button"
-          onClick={() => void onDuplicate(knight)}
-          className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-gold/40 hover:text-white"
-          aria-label="복제"
-        >
-          <Copy size={13} />
-        </button>
-        <button
-          type="button"
-          onClick={() => onEdit(knight)}
-          className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-gold/40 hover:text-white"
-          aria-label="수정"
-        >
-          <Pencil size={13} />
-        </button>
-        <button
-          type="button"
-          onClick={() => void onDelete(knight)}
-          disabled={deletingId === knight.id}
-          className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-red-400/40 hover:text-red-200 disabled:opacity-60"
-          aria-label="삭제"
-        >
-          {deletingId === knight.id ? (
-            <Loader2 size={13} className="animate-spin" />
-          ) : (
-            <Trash2 size={13} />
-          )}
-        </button>
-      </div>
-    </div>
   );
 }
