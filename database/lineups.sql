@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS lineups (
   weekend_hours VARCHAR(30)  NOT NULL DEFAULT '',
   champions     VARCHAR(300) NOT NULL DEFAULT '' COMMENT 'comma-separated',
   services      VARCHAR(120) NOT NULL DEFAULT '' COMMENT 'comma-separated',
-  image         VARCHAR(200) NOT NULL DEFAULT '',
+  image_data    LONGTEXT     NULL,
   sort_order    SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   active        BOOLEAN NOT NULL DEFAULT TRUE,
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

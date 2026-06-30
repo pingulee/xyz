@@ -5,6 +5,14 @@ import { getLineups, getLineupById } from "@/lib/lineups";
 
 export const runtime = "nodejs";
 
+const maxImageLength = 1024 * 1024 * 3;
+const allowedImagePrefixes = [
+  "data:image/jpeg;base64,",
+  "data:image/jpg;base64,",
+  "data:image/png;base64,",
+  "data:image/webp;base64,",
+];
+
 type LineupPayload = {
   id?: string;
   name?: string;
@@ -16,28 +24,23 @@ type LineupPayload = {
   weekendHours?: string;
   champions?: string;
   services?: string;
-  image?: string;
+  image?: string | null;
   sortOrder?: number;
   active?: boolean;
   password?: string;
 };
 
-const TIER_OPTIONS = [
-  "/images/tier/1-iron.png",
-  "/images/tier/2-bronze.png",
-  "/images/tier/3-silver.png",
-  "/images/tier/4-gold.png",
-  "/images/tier/5-platinum.png",
-  "/images/tier/6-emerald.png",
-  "/images/tier/7-diamond.png",
-  "/images/tier/8-master.png",
-  "/images/tier/9-grandmaster.png",
-  "/images/tier/10-challenger.png",
-];
-
 function isAdminPassword(password: string) {
   const adminPassword = process.env.ADMIN_PASSWORD;
   return Boolean(adminPassword && password === adminPassword);
+}
+
+function isAllowedImageData(image: string | null | undefined) {
+  if (!image) return true;
+  return (
+    image.length <= maxImageLength &&
+    allowedImagePrefixes.some((prefix) => image.startsWith(prefix))
+  );
 }
 
 function validateLineup(payload: LineupPayload) {
@@ -50,7 +53,7 @@ function validateLineup(payload: LineupPayload) {
   const weekendHours = payload.weekendHours?.trim() ?? "";
   const champions = payload.champions?.trim() ?? "";
   const services = payload.services?.trim() ?? "";
-  const image = payload.image?.trim() ?? "";
+  const image = payload.image ?? null;
 
   if (!name || name.length > 60) return { message: "이름을 입력해주세요. (최대 60자)" };
   if (!positions) return { message: "포지션을 입력해주세요." };
@@ -60,6 +63,7 @@ function validateLineup(payload: LineupPayload) {
   if (!weekdayHours || weekdayHours.length > 30) return { message: "평일 시간을 입력해주세요." };
   if (!weekendHours || weekendHours.length > 30) return { message: "주말 시간을 입력해주세요." };
   if (!services) return { message: "작업 종류를 입력해주세요." };
+  if (!isAllowedImageData(image)) return { message: "이미지 형식이 올바르지 않습니다. (JPG/PNG/WEBP, 3MB 이하)" };
 
   return { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, image };
 }
@@ -90,7 +94,7 @@ export async function POST(request: Request) {
 
   try {
     const [result] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO lineups (name, positions, rank, tier, description, weekday_hours, weekend_hours, champions, services, image, sort_order, active)
+      `INSERT INTO lineups (name, positions, rank, tier, description, weekday_hours, weekend_hours, champions, services, image_data, sort_order, active)
        VALUES (:name, :positions, :rank, :tier, :description, :weekdayHours, :weekendHours, :champions, :services, :image, :sortOrder, :active)`,
       { ...v, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false },
     );
@@ -127,7 +131,7 @@ export async function PUT(request: Request) {
       `UPDATE lineups
        SET name=:name, positions=:positions, rank=:rank, tier=:tier, description=:description,
            weekday_hours=:weekdayHours, weekend_hours=:weekendHours, champions=:champions,
-           services=:services, image=:image, sort_order=:sortOrder, active=:active
+           services=:services, image_data=:image, sort_order=:sortOrder, active=:active
        WHERE id=:id`,
       { ...v, id, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false },
     );
@@ -165,5 +169,3 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ message: "기사를 삭제하지 못했습니다." }, { status: 500 });
   }
 }
-
-export { TIER_OPTIONS };

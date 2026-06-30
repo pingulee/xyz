@@ -1,11 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { EyeOff, Loader2, LogOut, Pencil, Trash2, UploadCloud } from "lucide-react";
+import { EyeOff, GripVertical, Loader2, LogOut, Pencil, Trash2, X } from "lucide-react";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import type { Lineup } from "@/lib/lineups";
 
 const STORAGE_KEY = "xyz-admin-password";
+
+const MAX_IMAGE_SIZE = 1024 * 1024 * 2;
+const MAX_IMAGE_WIDTH = 1600;
+const MAX_IMAGE_HEIGHT = 1600;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const TIER_OPTIONS = [
   { label: "아이언",       value: "/images/tier/1-iron.png" },
@@ -30,8 +35,7 @@ const blankForm = {
   weekendHours: "",
   champions: "",
   services: "",
-  image: "",
-  sortOrder: 0,
+  image: null as string | null,
   active: true,
 };
 
@@ -50,10 +54,14 @@ export default function AdminLineupBoard({
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState("");
   const [message, setMessage] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState("");
-  const [uploading, setUploading] = useState(false);
+  const [imageName, setImageName] = useState("");
+  const [imageError, setImageError] = useState("");
+  const [savingOrder, setSavingOrder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // drag state
+  const dragIndexRef = useRef<number | null>(null);
+  const dragOverIndexRef = useRef<number | null>(null);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
@@ -65,8 +73,47 @@ export default function AdminLineupBoard({
   }, []);
 
   const set = (key: keyof typeof blankForm) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const handleImage = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setImageError("");
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setImageError("JPG, PNG, WEBP 이미지만 첨부할 수 있습니다.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      setImageError("이미지는 2MB 이하만 첨부할 수 있습니다.");
+      return;
+    }
+
+    const img = new window.Image();
+    img.onload = () => {
+      if (img.width > MAX_IMAGE_WIDTH || img.height > MAX_IMAGE_HEIGHT) {
+        setImageError(`이미지는 ${MAX_IMAGE_WIDTH}×${MAX_IMAGE_HEIGHT}px 이하만 업로드 가능합니다.`);
+        URL.revokeObjectURL(img.src);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        setForm((f) => ({ ...f, image: String(reader.result) }));
+        setImageName(file.name);
+        URL.revokeObjectURL(img.src);
+      };
+      reader.readAsDataURL(file);
+    };
+    img.onerror = () => { setImageError("이미지를 읽을 수 없습니다."); URL.revokeObjectURL(img.src); };
+    img.src = URL.createObjectURL(file);
+  };
+
+  const removeImage = () => {
+    setForm((f) => ({ ...f, image: null }));
+    setImageName("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const login = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -97,9 +144,10 @@ export default function AdminLineupBoard({
       champions: lineup.champions.join(","),
       services: lineup.services.join(","),
       image: lineup.image,
-      sortOrder: lineup.sortOrder,
       active: lineup.active,
     });
+    setImageName(lineup.image ? "현재 이미지" : "");
+    setImageError("");
     setMessage("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -107,33 +155,10 @@ export default function AdminLineupBoard({
   const resetForm = () => {
     setEditingId("");
     setForm(blankForm);
+    setImageName("");
+    setImageError("");
     setMessage("");
-    setImageFile(null);
-    setImagePreview("");
     if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
-  const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile) return form.image;
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", imageFile);
-      fd.append("password", password);
-      const res = await fetch("/api/lineups/upload", { method: "POST", body: fd });
-      const data = (await res.json()) as { path?: string; message?: string };
-      if (!res.ok) throw new Error(data.message ?? "업로드 실패");
-      return data.path ?? null;
-    } finally {
-      setUploading(false);
-    }
   };
 
   const saveLineup = async (e: FormEvent<HTMLFormElement>) => {
@@ -142,17 +167,13 @@ export default function AdminLineupBoard({
     setSaving(true);
 
     try {
-      const imagePath = await uploadImage();
-      if (imagePath === null) throw new Error("이미지 업로드에 실패했습니다.");
-
       const response = await fetch("/api/lineups", {
         method: editingId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: editingId || undefined,
           ...form,
-          image: imagePath,
-          sortOrder: Number(form.sortOrder),
+          sortOrder: lineups.length,
           password,
         }),
       });
@@ -160,14 +181,9 @@ export default function AdminLineupBoard({
       if (!response.ok) throw new Error(data.message ?? "저장하지 못했습니다.");
 
       if (editingId) {
-        setLineups((cur) =>
-          cur.map((l) => (l.id === editingId ? data.lineup : l))
-            .sort((a, b) => a.sortOrder - b.sortOrder || Number(a.id) - Number(b.id)),
-        );
+        setLineups((cur) => cur.map((l) => (l.id === editingId ? data.lineup : l)));
       } else {
-        setLineups((cur) =>
-          [...cur, data.lineup].sort((a, b) => a.sortOrder - b.sortOrder || Number(a.id) - Number(b.id)),
-        );
+        setLineups((cur) => [...cur, data.lineup]);
       }
       resetForm();
       setMessage("저장되었습니다.");
@@ -182,7 +198,6 @@ export default function AdminLineupBoard({
     if (!confirm(`"${lineup.name}" 기사를 삭제하시겠습니까?`)) return;
     setMessage("");
     setDeletingId(lineup.id);
-
     try {
       const response = await fetch("/api/lineups", {
         method: "DELETE",
@@ -199,39 +214,68 @@ export default function AdminLineupBoard({
     }
   };
 
-  const inputCls =
-    "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
+  // drag-to-reorder
+  const onDragStart = (index: number) => { dragIndexRef.current = index; };
+  const onDragEnter = (index: number) => { dragOverIndexRef.current = index; };
+  const onDragEnd = async () => {
+    const from = dragIndexRef.current;
+    const to = dragOverIndexRef.current;
+    dragIndexRef.current = null;
+    dragOverIndexRef.current = null;
+    if (from === null || to === null || from === to) return;
+
+    const reordered = [...lineups];
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(to, 0, moved);
+    setLineups(reordered);
+
+    setSavingOrder(true);
+    try {
+      await Promise.all(
+        reordered.map((l, i) =>
+          fetch("/api/lineups", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: l.id,
+              name: l.name,
+              positions: l.positions.join(","),
+              rank: l.rank,
+              tier: l.tier,
+              description: l.description,
+              weekdayHours: l.weekdayHours,
+              weekendHours: l.weekendHours,
+              champions: l.champions.join(","),
+              services: l.services.join(","),
+              image: l.image,
+              sortOrder: i,
+              active: l.active,
+              password,
+            }),
+          }),
+        ),
+      );
+    } catch {
+      setMessage("정렬 저장에 실패했습니다.");
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
+  const inputCls = "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
   const labelCls = "grid gap-2 text-sm font-bold text-zinc-300";
 
   if (!password) {
     return (
-      <form
-        onSubmit={login}
-        className="card-premium mx-auto max-w-xl rounded-[34px] p-6 sm:p-8"
-      >
+      <form onSubmit={login} className="card-premium mx-auto max-w-xl rounded-[34px] p-6 sm:p-8">
         <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">admin</p>
         <h2 className="mt-3 text-2xl font-black text-white">관리자 로그인</h2>
         <label className="mt-7 grid gap-2">
           <span className="text-sm font-bold text-zinc-300">비밀번호</span>
-          <input
-            type="password"
-            value={passwordInput}
-            onChange={(e) => setPasswordInput(e.target.value)}
-            className={inputCls}
-            placeholder="ADMIN_PASSWORD"
-          />
+          <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className={inputCls} placeholder="ADMIN_PASSWORD" />
         </label>
-        {message && (
-          <p className="mt-4 rounded-2xl border border-gold/15 bg-white/[.035] px-4 py-3 text-sm font-bold text-zinc-300">
-            {message}
-          </p>
-        )}
-        <button
-          type="submit"
-          className="mt-5 w-full rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5"
-        >
-          입장
-        </button>
+        {message && <p className="mt-4 rounded-2xl border border-gold/15 bg-white/[.035] px-4 py-3 text-sm font-bold text-zinc-300">{message}</p>}
+        <button type="submit" className="mt-5 w-full rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5">입장</button>
       </form>
     );
   }
@@ -243,186 +287,104 @@ export default function AdminLineupBoard({
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">admin only</p>
-            <h2 className="mt-3 text-2xl font-black text-white">
-              {editingId ? "기사 수정" : "기사 추가"}
-            </h2>
+            <h2 className="mt-3 text-2xl font-black text-white">{editingId ? "기사 수정" : "기사 추가"}</h2>
           </div>
-          <button
-            type="button"
-            onClick={logout}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white"
-          >
-            <LogOut size={16} />
-            로그아웃
+          <button type="button" onClick={logout} className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">
+            <LogOut size={16} />로그아웃
           </button>
         </div>
 
         <div className="mt-7 grid gap-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelCls}>
-              이름
-              <input value={form.name} onChange={set("name")} maxLength={60} className={inputCls} placeholder="이브" />
-            </label>
-            <label className={labelCls}>
-              랭크
-              <input value={form.rank} onChange={set("rank")} maxLength={30} className={inputCls} placeholder="Challenger" />
-            </label>
+            <label className={labelCls}>이름<input value={form.name} onChange={set("name")} maxLength={60} className={inputCls} placeholder="이브" /></label>
+            <label className={labelCls}>랭크<input value={form.rank} onChange={set("rank")} maxLength={30} className={inputCls} placeholder="Challenger" /></label>
           </div>
-
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelCls}>
-              포지션 (쉼표 구분)
-              <input value={form.positions} onChange={set("positions")} className={inputCls} placeholder="정글,탑" />
-            </label>
+            <label className={labelCls}>포지션 (쉼표 구분)<input value={form.positions} onChange={set("positions")} className={inputCls} placeholder="정글,탑" /></label>
             <label className={labelCls}>
               티어 이미지
               <select value={form.tier} onChange={set("tier")} className={inputCls}>
-                {TIER_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
+                {TIER_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
             </label>
           </div>
-
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelCls}>
-              평일 시간
-              <input value={form.weekdayHours} onChange={set("weekdayHours")} maxLength={30} className={inputCls} placeholder="18:00 ~ 23:00" />
-            </label>
-            <label className={labelCls}>
-              주말 시간
-              <input value={form.weekendHours} onChange={set("weekendHours")} maxLength={30} className={inputCls} placeholder="ALL" />
-            </label>
+            <label className={labelCls}>평일 시간<input value={form.weekdayHours} onChange={set("weekdayHours")} maxLength={30} className={inputCls} placeholder="18:00 ~ 23:00" /></label>
+            <label className={labelCls}>주말 시간<input value={form.weekendHours} onChange={set("weekendHours")} maxLength={30} className={inputCls} placeholder="ALL" /></label>
           </div>
-
-          <label className={labelCls}>
-            챔피언 (쉼표 구분, 선택)
-            <input value={form.champions} onChange={set("champions")} className={inputCls} placeholder="이블린,카서스,자이라" />
-          </label>
-
-          <label className={labelCls}>
-            작업 종류 (쉼표 구분)
-            <input value={form.services} onChange={set("services")} className={inputCls} placeholder="대리,듀오" />
-          </label>
-
+          <label className={labelCls}>챔피언 (쉼표 구분, 선택)<input value={form.champions} onChange={set("champions")} className={inputCls} placeholder="이블린,카서스,자이라" /></label>
+          <label className={labelCls}>작업 종류 (쉼표 구분)<input value={form.services} onChange={set("services")} className={inputCls} placeholder="대리,듀오" /></label>
           <label className={labelCls}>
             소개
-            <textarea
-              value={form.description}
-              onChange={set("description")}
-              maxLength={300}
-              rows={3}
-              className={`${inputCls} resize-none leading-7`}
-              placeholder="기사 소개를 입력해주세요."
-            />
+            <textarea value={form.description} onChange={set("description")} maxLength={300} rows={3} className={`${inputCls} resize-none leading-7`} placeholder="기사 소개를 입력해주세요." />
           </label>
 
+          {/* 이미지 업로드 */}
           <div className="grid gap-2">
             <span className="text-sm font-bold text-zinc-300">프로필 이미지</span>
-            <div className="flex items-center gap-4">
-              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-zinc-900">
-                {(imagePreview || form.image) && (
-                  <Image
-                    src={imagePreview || form.image}
-                    alt="미리보기"
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                )}
+            {form.image ? (
+              <div className="relative overflow-hidden rounded-2xl bg-zinc-900">
+                <Image src={form.image} alt="미리보기" width={80} height={80} className="h-20 w-20 object-cover" unoptimized />
+                <button type="button" onClick={removeImage} className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white hover:bg-black">
+                  <X size={12} />
+                </button>
+                <p className="px-3 py-2 text-xs text-zinc-500">{imageName}</p>
               </div>
-              <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 bg-white/[.03] px-4 py-3 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">
-                <UploadCloud size={18} />
-                {uploading ? "업로드 중..." : "이미지 선택"}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
+            ) : (
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 bg-white/3 px-4 py-6 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">
+                이미지 선택 (JPG/PNG/WEBP, 2MB 이하)
+                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImage} />
               </label>
-            </div>
-            {(imagePreview || form.image) && (
-              <p className="text-xs text-zinc-600 break-all">{imagePreview ? imageFile?.name : form.image}</p>
             )}
+            {imageError && <p className="text-xs text-red-400">{imageError}</p>}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelCls}>
-              정렬 순서
-              <input
-                type="number"
-                value={form.sortOrder}
-                onChange={(e) => setForm((f) => ({ ...f, sortOrder: Number(e.target.value) }))}
-                className={inputCls}
-                min={0}
-              />
-            </label>
-            <label className="flex items-center gap-2 text-sm font-bold text-zinc-300 self-end pb-3">
-              <input
-                type="checkbox"
-                checked={form.active}
-                onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
-                className="h-4 w-4 accent-gold"
-              />
-              공개 (체크 해제 시 숨김)
-            </label>
-          </div>
+          <label className="flex items-center gap-2 text-sm font-bold text-zinc-300">
+            <input type="checkbox" checked={form.active} onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))} className="h-4 w-4 accent-gold" />
+            공개 (체크 해제 시 숨김)
+          </label>
 
-          {message && (
-            <p className="rounded-2xl border border-gold/15 bg-white/[.035] px-4 py-3 text-sm font-bold text-zinc-300">
-              {message}
-            </p>
-          )}
+          {message && <p className="rounded-2xl border border-gold/15 bg-white/[.035] px-4 py-3 text-sm font-bold text-zinc-300">{message}</p>}
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              type="submit"
-              disabled={saving}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
-            >
+            <button type="submit" disabled={saving} className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60">
               {saving && <Loader2 size={18} className="animate-spin" />}
               {editingId ? "수정 저장" : "기사 등록"}
             </button>
             {editingId && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="rounded-full border border-white/10 px-7 py-4 font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white"
-              >
-                취소
-              </button>
+              <button type="button" onClick={resetForm} className="rounded-full border border-white/10 px-7 py-4 font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white">취소</button>
             )}
           </div>
         </div>
       </form>
 
-      {/* List */}
+      {/* List with drag-to-reorder */}
       <div className="space-y-4">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">lineup</p>
-          <h2 className="mt-2 text-2xl font-black text-white">기사 {lineups.length}명</h2>
+        <div className="flex items-center gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">lineup</p>
+            <h2 className="mt-2 text-2xl font-black text-white">기사 {lineups.length}명</h2>
+          </div>
+          {savingOrder && <Loader2 size={16} className="animate-spin text-gold" />}
         </div>
+        <p className="text-xs text-zinc-500">행을 드래그해서 순서를 변경할 수 있습니다.</p>
 
         <div className="overflow-hidden rounded-[30px] border border-gold/15 bg-white/[.035]">
-          {lineups.length === 0 && (
-            <p className="p-6 text-sm text-zinc-500">등록된 기사가 없습니다.</p>
-          )}
-          {lineups.map((lineup) => (
+          {lineups.length === 0 && <p className="p-6 text-sm text-zinc-500">등록된 기사가 없습니다.</p>}
+          {lineups.map((lineup, index) => (
             <div
               key={lineup.id}
-              className="flex items-center gap-4 border-b border-white/8 p-4 last:border-b-0"
+              draggable
+              onDragStart={() => onDragStart(index)}
+              onDragEnter={() => onDragEnter(index)}
+              onDragEnd={() => void onDragEnd()}
+              onDragOver={(e) => e.preventDefault()}
+              className="flex cursor-grab items-center gap-4 border-b border-white/8 p-4 last:border-b-0 active:cursor-grabbing"
             >
+              <GripVertical size={16} className="shrink-0 text-zinc-600" />
               <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-zinc-900">
                 {lineup.image && (
-                  <Image
-                    src={lineup.image}
-                    alt={lineup.name}
-                    fill
-                    className="object-cover opacity-90"
-                    unoptimized
-                  />
+                  <Image src={lineup.image} alt={lineup.name} fill className="object-cover opacity-90" unoptimized />
                 )}
               </div>
               <div className="min-w-0 flex-1">
@@ -430,36 +392,18 @@ export default function AdminLineupBoard({
                   <span className="font-black text-white">{lineup.name}</span>
                   {!lineup.active && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-zinc-700/50 px-2 py-0.5 text-[10px] font-bold text-zinc-400">
-                      <EyeOff size={10} />
-                      숨김
+                      <EyeOff size={10} />숨김
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-zinc-500">
-                  {lineup.positions.join(" · ")} · {lineup.rank}
-                </p>
+                <p className="text-xs text-zinc-500">{lineup.positions.join(" · ")} · {lineup.rank}</p>
               </div>
               <div className="flex shrink-0 gap-2">
-                <button
-                  type="button"
-                  onClick={() => startEdit(lineup)}
-                  className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white"
-                  aria-label="수정"
-                >
+                <button type="button" onClick={() => startEdit(lineup)} className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white" aria-label="수정">
                   <Pencil size={15} />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void deleteLineup(lineup)}
-                  disabled={deletingId === lineup.id}
-                  className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-red-400/40 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60"
-                  aria-label="삭제"
-                >
-                  {deletingId === lineup.id ? (
-                    <Loader2 size={15} className="animate-spin" />
-                  ) : (
-                    <Trash2 size={15} />
-                  )}
+                <button type="button" onClick={() => void deleteLineup(lineup)} disabled={deletingId === lineup.id} className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-red-400/40 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60" aria-label="삭제">
+                  {deletingId === lineup.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
                 </button>
               </div>
             </div>

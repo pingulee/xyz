@@ -5,10 +5,19 @@ import { getNotices, toNotice } from "@/lib/notices";
 
 export const runtime = "nodejs";
 
+const maxImageLength = 1024 * 1024 * 3;
+const allowedImagePrefixes = [
+  "data:image/jpeg;base64,",
+  "data:image/jpg;base64,",
+  "data:image/png;base64,",
+  "data:image/webp;base64,",
+];
+
 type NoticePayload = {
   id?: string;
   title?: string;
   content?: string;
+  image?: string | null;
   pinned?: boolean;
   password?: string;
 };
@@ -17,6 +26,7 @@ type NoticeRow = RowDataPacket & {
   id: number;
   title: string;
   content: string;
+  image_data: string | null;
   pinned: 0 | 1;
   created_at: Date;
   updated_at: Date;
@@ -27,9 +37,18 @@ function isAdminPassword(password: string) {
   return Boolean(adminPassword && password === adminPassword);
 }
 
+function isAllowedImageData(image: string | null | undefined) {
+  if (!image) return true;
+  return (
+    image.length <= maxImageLength &&
+    allowedImagePrefixes.some((prefix) => image.startsWith(prefix))
+  );
+}
+
 function validateNotice(payload: NoticePayload) {
   const title = payload.title?.trim() ?? "";
   const content = payload.content?.trim() ?? "";
+  const image = payload.image ?? null;
 
   if (title.length < 1 || title.length > 120) {
     return { message: "제목은 1~120자로 입력해주세요." };
@@ -39,7 +58,11 @@ function validateNotice(payload: NoticePayload) {
     return { message: "내용은 1~3000자로 입력해주세요." };
   }
 
-  return { title, content };
+  if (!isAllowedImageData(image)) {
+    return { message: "이미지 형식이 올바르지 않습니다. (JPG/PNG/WEBP, 3MB 이하)" };
+  }
+
+  return { title, content, image };
 }
 
 export async function GET() {
@@ -80,17 +103,18 @@ export async function POST(request: Request) {
 
   try {
     const [result] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO notices (title, content, pinned)
-       VALUES (:title, :content, :pinned)`,
+      `INSERT INTO notices (title, content, image_data, pinned)
+       VALUES (:title, :content, :image, :pinned)`,
       {
         title: validated.title,
         content: validated.content,
+        image: validated.image,
         pinned: Boolean(payload.pinned),
       },
     );
 
     const [rows] = await getPool().execute<NoticeRow[]>(
-      `SELECT id, title, content, pinned, created_at, updated_at
+      `SELECT id, title, content, image_data, pinned, created_at, updated_at
        FROM notices
        WHERE id = :id`,
       { id: result.insertId },
@@ -143,18 +167,20 @@ export async function PUT(request: Request) {
       `UPDATE notices
        SET title = :title,
            content = :content,
+           image_data = :image,
            pinned = :pinned
        WHERE id = :id`,
       {
         id,
         title: validated.title,
         content: validated.content,
+        image: validated.image,
         pinned: Boolean(payload.pinned),
       },
     );
 
     const [rows] = await getPool().execute<NoticeRow[]>(
-      `SELECT id, title, content, pinned, created_at, updated_at
+      `SELECT id, title, content, image_data, pinned, created_at, updated_at
        FROM notices
        WHERE id = :id`,
       { id },

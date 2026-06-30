@@ -40,12 +40,15 @@ export default async function LineupPage() {
               <article className="card-premium overflow-hidden rounded-[28px]">
                 <div className="flex gap-4 p-5">
                   <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-black">
-                    <Image
-                      src={knight.image}
-                      alt={knight.name}
-                      fill
-                      className="object-cover opacity-90"
-                    />
+                    {knight.image && (
+                      <Image
+                        src={knight.image}
+                        alt={knight.name}
+                        fill
+                        className="object-cover opacity-90"
+                        unoptimized
+                      />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Pin } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { Notice } from "@/lib/notices";
@@ -42,7 +43,7 @@ export default function NoticeBoard({
             type="button"
             onClick={() => setSelectedId(notice.id)}
             className={`grid w-full gap-2 border-b border-white/8 p-4 text-left transition last:border-b-0 hover:bg-white/4 ${
-              selectedNotice?.id === notice.id ? "bg-white/[.045]" : ""
+              selectedNotice?.id === notice.id ? "bg-white/4.5" : ""
             }`}
           >
             <span className="flex flex-wrap items-center gap-2">
@@ -84,6 +85,11 @@ export default function NoticeBoard({
           >
             {formatDate(selectedNotice.createdAt)}
           </time>
+          {selectedNotice.image && (
+            <div className="mt-4 overflow-hidden rounded-2xl">
+              <Image src={selectedNotice.image} alt="공지 이미지" width={600} height={400} className="w-full object-cover" unoptimized />
+            </div>
+          )}
           <p className="mt-6 whitespace-pre-wrap leading-8 text-zinc-300">
             {selectedNotice.content}
           </p>

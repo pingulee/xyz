@@ -152,13 +152,16 @@ export default async function Home() {
               <Reveal key={name} delay={i * 0.08}>
                 <article className="card-premium overflow-hidden rounded-[34px]">
                   <div className="relative aspect-4/3 bg-black">
-                    <Image
-                      src={image}
-                      alt={`${name} 프로필 이미지`}
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 33vw"
-                      className="object-cover opacity-90"
-                    />
+                    {image && (
+                      <Image
+                        src={image}
+                        alt={`${name} 프로필 이미지`}
+                        fill
+                        sizes="(max-width: 1024px) 100vw, 33vw"
+                        className="object-cover opacity-90"
+                        unoptimized
+                      />
+                    )}
                     <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent" />
                   </div>
                   <div className="p-7">
