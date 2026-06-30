@@ -973,13 +973,13 @@ export default function ReviewBoard({
                     onClick={() => openReview(review.id)}
                     className="group grid w-full cursor-pointer gap-4 border-b border-white/8 px-5 py-5 text-left transition last:border-b-0 hover:bg-white/[.055] lg:grid-cols-[3.25rem_minmax(0,1.45fr)_6rem_7rem_5.5rem_10rem_7rem_5rem] lg:items-center"
                   >
-                    <span className="hidden h-10 w-10 place-items-center rounded-2xl border border-white/8 bg-black/20 text-sm font-black text-zinc-500 transition group-hover:border-gold/25 group-hover:text-gold lg:grid">
+                    <span className="hidden text-sm font-black text-zinc-500 transition group-hover:text-gold lg:block">
                       {displayNumber}
                     </span>
 
                     <span className="grid min-w-0 gap-2">
                       <span className="flex items-start justify-between gap-3 lg:hidden">
-                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl border border-white/8 bg-black/20 text-sm font-black text-zinc-500">
+                        <span className="shrink-0 text-sm font-black text-zinc-500">
                           {displayNumber}
                         </span>
                         <span className="whitespace-nowrap text-xs font-bold text-zinc-500">

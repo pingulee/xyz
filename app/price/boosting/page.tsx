@@ -4,11 +4,35 @@ import FaqItem from "@/components/FaqItem";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import ServiceDetail from "@/components/ServiceDetail";
+import { site } from "@/lib/site";
+
+const description =
+  "XYZ 롤 대리 가격표와 티어별 승률 보장, 진행 방식, 기사 배정, 환불 기준을 확인하세요. 현재 티어와 목표 티어 기준으로 맞춤 견적을 안내합니다.";
 
 export const metadata: Metadata = {
-  title: "롤 대리 가격",
-  description: "xyz 롤 대리 가격과 진행 방식 안내입니다.",
+  title: "롤 대리 가격 | 티어별 승률 보장 비용 안내",
+  description,
+  keywords: [
+    "롤 대리 가격",
+    "롤 대리 비용",
+    "롤 티어 올리기",
+    "롤 승률 보장",
+    "롤 작업 가격",
+    "XYZ 롤 대리",
+  ],
   alternates: { canonical: "/price/boosting" },
+  openGraph: {
+    title: "롤 대리 가격 | XYZ",
+    description,
+    url: "/price/boosting",
+    type: "website",
+    siteName: site.name,
+  },
+  twitter: {
+    card: "summary",
+    title: "롤 대리 가격 | XYZ",
+    description,
+  },
 };
 
 const faqs = [
@@ -39,8 +63,42 @@ const faqs = [
 ];
 
 export default function BoostingPage() {
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map(([question, answer]) => ({
+      "@type": "Question",
+      name: question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: answer,
+      },
+    })),
+  };
+  const serviceJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: "롤 대리",
+    description,
+    provider: {
+      "@type": "Organization",
+      name: site.name,
+      url: site.url,
+    },
+    serviceType: "League of Legends boosting",
+    areaServed: "KR",
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <ServiceDetail
         eyebrow="boosting"
         title="롤 대리"

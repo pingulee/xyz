@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, Plus, Star, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Review, ReviewNavItem, ReviewReply, TierRecord } from "@/lib/reviews";
 
 const TIER_OPTIONS = [
@@ -253,6 +253,7 @@ export default function ReviewDetailView({
   const [tierRecords, setTierRecords] = useState<TierRecord[]>(
     review.reply?.tierRecords ?? [],
   );
+  const viewTrackedRef = useRef(false);
 
   const canReply =
     knightLineupId !== null && review.lineupId === String(knightLineupId);
@@ -260,6 +261,31 @@ export default function ReviewDetailView({
   const displayKnightName =
     review.reply?.knightName || knightName || "기사 답변";
   const canModifyReview = !review.reply;
+
+  useEffect(() => {
+    if (viewTrackedRef.current) return;
+    viewTrackedRef.current = true;
+
+    const trackView = async () => {
+      try {
+        const response = await fetch("/api/reviews", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: initialReview.id }),
+        });
+        const data = (await response.json()) as {
+          review?: Review;
+        };
+        if (response.ok && data.review) {
+          setReview(data.review);
+        }
+      } catch {
+        // View count failures should not block reading the review.
+      }
+    };
+
+    void trackView();
+  }, [initialReview.id]);
 
   const openReviewEdit = () => {
     setReviewError("");

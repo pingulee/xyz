@@ -30,7 +30,7 @@ export default function PriceTable() {
                     alt=""
                     width={32}
                     height={32}
-                    className="rounded-full ring-2 ring-zinc-900"
+                    className="rounded-full"
                     style={{ zIndex: row.icons.length - i }}
                   />
                 ))}
@@ -72,7 +72,7 @@ export default function PriceTable() {
                     alt=""
                     width={32}
                     height={32}
-                    className="rounded-full ring-2 ring-zinc-900"
+                    className="rounded-full"
                     style={{ zIndex: row.icons.length - i }}
                   />
                 ))}
