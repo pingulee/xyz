@@ -45,6 +45,19 @@ export function toReview(row: ReviewRow): Review {
   };
 }
 
+export async function getReviewsByLineupId(lineupId: number): Promise<Review[]> {
+  await ensureReviewsSchema();
+  const [rows] = await getPool().execute<ReviewRow[]>(
+    `SELECT r.id, r.name, r.service, r.lineup_id, l.name AS lineup_name, r.rating, r.content, r.created_at
+     FROM reviews r
+     LEFT JOIN lineups l ON l.id = r.lineup_id
+     WHERE r.lineup_id = :lineupId
+     ORDER BY r.created_at DESC`,
+    { lineupId },
+  );
+  return rows.map(toReview);
+}
+
 export async function getReviews(limit = 100) {
   await ensureReviewsSchema();
   const [rows] = await getPool().execute<ReviewRow[]>(

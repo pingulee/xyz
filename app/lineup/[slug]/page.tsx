@@ -6,7 +6,9 @@ import { Clock, Star } from "lucide-react";
 import Container from "@/components/Container";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
+import LineupReviews from "@/components/LineupReviews";
 import { getLineupBySlug, getLineupReviewStats } from "@/lib/lineups";
+import { getReviewsByLineupId } from "@/lib/reviews";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lineup = await getLineupBySlug(slug);
 
   if (!lineup) {
-    return {
-      title: "기사 정보를 찾을 수 없습니다",
-    };
+    return { title: "기사 정보를 찾을 수 없습니다" };
   }
 
   return {
@@ -48,7 +48,10 @@ export default async function LineupDetailPage({ params }: Props) {
     notFound();
   }
 
-  const stats = await getLineupReviewStats(Number(lineup.id));
+  const [stats, reviews] = await Promise.all([
+    getLineupReviewStats(Number(lineup.id)),
+    getReviewsByLineupId(Number(lineup.id)),
+  ]);
 
   return (
     <section className="py-20">
@@ -74,17 +77,21 @@ export default async function LineupDetailPage({ params }: Props) {
         <Reveal>
           <div className="card-premium overflow-hidden rounded-[32px] p-6 md:p-8">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-              <div className="relative h-48 w-full overflow-hidden rounded-[28px] bg-black lg:h-72 lg:w-[360px]">
-                {lineup.image && (
-                  <Image
-                    src={lineup.image}
-                    alt={lineup.name}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                )}
-              </div>
+              {lineup.image && (
+                <div className="shrink-0">
+                  <div className="relative mx-auto overflow-hidden rounded-[28px] bg-black"
+                    style={{ width: 300, height: 300, maxWidth: "100%" }}
+                  >
+                    <Image
+                      src={lineup.image}
+                      alt={lineup.name}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -116,27 +123,21 @@ export default async function LineupDetailPage({ params }: Props) {
                       <Clock size={16} />
                       평일 작업 가능 시간
                     </div>
-                    <p className="mt-2 text-sm text-zinc-300">
-                      {lineup.weekdayHours}
-                    </p>
+                    <p className="mt-2 text-sm text-zinc-300">{lineup.weekdayHours}</p>
                   </div>
                   <div className="rounded-2xl border border-white/8 bg-white/[.04] p-4">
                     <div className="flex items-center gap-2 text-sm font-black text-gold">
                       <Clock size={16} />
                       주말 작업 가능 시간
                     </div>
-                    <p className="mt-2 text-sm text-zinc-300">
-                      {lineup.weekendHours}
-                    </p>
+                    <p className="mt-2 text-sm text-zinc-300">{lineup.weekendHours}</p>
                   </div>
                 </div>
 
                 <div className="mt-6 rounded-3xl border border-gold/15 bg-white/[.04] p-5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <div className="text-sm font-black text-zinc-500">
-                        Average Rating
-                      </div>
+                      <div className="text-sm font-black text-zinc-500">Average Rating</div>
                       <div className="mt-2 flex items-end gap-2">
                         <span className="text-4xl font-black text-white">
                           {stats.averageRating.toFixed(1)}
@@ -147,9 +148,7 @@ export default async function LineupDetailPage({ params }: Props) {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-black text-zinc-500">
-                        Total Reviews
-                      </div>
+                      <div className="text-sm font-black text-zinc-500">Total Reviews</div>
                       <div className="mt-2 text-3xl font-black text-white">
                         {stats.reviewCount}
                       </div>
@@ -157,33 +156,18 @@ export default async function LineupDetailPage({ params }: Props) {
                   </div>
 
                   <div className="mt-6">
-                    <div className="text-sm font-black text-zinc-500">
-                      Rating Distribution
-                    </div>
+                    <div className="text-sm font-black text-zinc-500">Rating Distribution</div>
                     <div className="mt-4 space-y-3">
                       {[5, 4, 3, 2, 1].map((value) => {
-                        const count =
-                          stats.ratingDistribution[
-                            value as keyof typeof stats.ratingDistribution
-                          ];
-                        const percentage =
-                          stats.reviewCount > 0
-                            ? (count / stats.reviewCount) * 100
-                            : 0;
+                        const count = stats.ratingDistribution[value as keyof typeof stats.ratingDistribution];
+                        const percentage = stats.reviewCount > 0 ? (count / stats.reviewCount) * 100 : 0;
                         return (
                           <div key={value} className="flex items-center gap-3">
-                            <span className="w-8 text-sm font-bold text-zinc-400">
-                              {value}★
-                            </span>
+                            <span className="w-8 text-sm font-bold text-zinc-400">{value}★</span>
                             <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/8">
-                              <div
-                                className="h-full rounded-full bg-gold"
-                                style={{ width: `${percentage}%` }}
-                              />
+                              <div className="h-full rounded-full bg-gold" style={{ width: `${percentage}%` }} />
                             </div>
-                            <span className="w-10 text-right text-sm font-semibold text-zinc-400">
-                              {count}
-                            </span>
+                            <span className="w-10 text-right text-sm font-semibold text-zinc-400">{count}</span>
                           </div>
                         );
                       })}
@@ -193,9 +177,7 @@ export default async function LineupDetailPage({ params }: Props) {
 
                 <div className="mt-6 grid gap-6 md:grid-cols-2">
                   <div>
-                    <div className="text-sm font-black text-zinc-500">
-                      대표 챔피언
-                    </div>
+                    <div className="text-sm font-black text-zinc-500">대표 챔피언</div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {lineup.champions.map((champion) => (
                         <span
@@ -209,9 +191,7 @@ export default async function LineupDetailPage({ params }: Props) {
                   </div>
 
                   <div>
-                    <div className="text-sm font-black text-zinc-500">
-                      진행 서비스
-                    </div>
+                    <div className="text-sm font-black text-zinc-500">진행 서비스</div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {lineup.services.map((service) => (
                         <span
@@ -226,6 +206,15 @@ export default async function LineupDetailPage({ params }: Props) {
                 </div>
               </div>
             </div>
+          </div>
+        </Reveal>
+
+        <Reveal>
+          <div className="mt-12">
+            <h2 className="mb-6 text-xl font-black text-white">
+              후기 <span className="text-gold">{reviews.length}</span>개
+            </h2>
+            <LineupReviews reviews={reviews} />
           </div>
         </Reveal>
       </Container>
