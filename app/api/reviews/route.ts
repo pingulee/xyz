@@ -64,7 +64,7 @@ function canModifyReview(password: string, review: ReviewRow) {
 
 function isValidImageUrl(url: string | null | undefined): boolean {
   if (!url) return true;
-  return url.startsWith("/api/uploads/reviews/") && url.length <= 255;
+  return url.startsWith("/uploads/reviews/") && url.length <= 255;
 }
 
 function getClientIp(request: Request) {

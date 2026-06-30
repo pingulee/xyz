@@ -472,7 +472,7 @@ export default function ReviewBoard({
           onClick={() => setWriteOpen(false)}
         >
           <div
-            className="w-full max-w-xl rounded-[34px] border border-gold/20 bg-[#111] p-6 shadow-2xl sm:p-8 max-h-[90dvh] overflow-y-auto"
+            className="w-full max-w-xl rounded-[34px] border border-gold/20 bg-[#111] p-6 shadow-2xl sm:p-8 max-h-[90dvh] overflow-y-auto sm:max-h-[95dvh]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-6 flex items-start justify-between gap-4">
@@ -591,7 +591,7 @@ export default function ReviewBoard({
                       }))
                     }
                     maxLength={400}
-                    rows={6}
+                    rows={4}
                     className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
                     placeholder="진행 과정, 상담, 만족했던 점을 남겨주세요."
                   />
