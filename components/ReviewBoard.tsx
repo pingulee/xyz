@@ -11,13 +11,8 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import {
-  FormEvent,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 type TierRecord = {
@@ -70,6 +65,19 @@ type EditForm = {
 };
 
 const REVIEWS_PER_PAGE = 10;
+
+const TIER_ICON_BY_NAME: Record<string, string> = {
+  아이언: "/images/tier/1-iron.png",
+  브론즈: "/images/tier/2-bronze.png",
+  실버: "/images/tier/3-silver.png",
+  골드: "/images/tier/4-gold.png",
+  플래티넘: "/images/tier/5-platinum.png",
+  에메랄드: "/images/tier/6-emerald.png",
+  다이아몬드: "/images/tier/7-diamond.png",
+  마스터: "/images/tier/8-master.png",
+  그랜드마스터: "/images/tier/9-grandmaster.png",
+  챌린저: "/images/tier/10-challenger.png",
+};
 
 const blankForm = {
   name: "",
@@ -210,7 +218,10 @@ export default function ReviewBoard({
     () => (isAdmin ? reviews : reviews.filter((r) => !r.reply)),
     [reviews, isAdmin],
   );
-  const totalPages = Math.max(1, Math.ceil(unansweredReviews.length / REVIEWS_PER_PAGE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(unansweredReviews.length / REVIEWS_PER_PAGE),
+  );
   const currentPage = Math.min(page, totalPages);
   const selectedReview = reviews.find(
     (review) => review.id === selectedReviewId,
@@ -219,9 +230,12 @@ export default function ReviewBoard({
     (review) => review.id === selectedReviewId,
   );
   const previousReview =
-    selectedReviewIndex > 0 ? unansweredReviews[selectedReviewIndex - 1] : undefined;
+    selectedReviewIndex > 0
+      ? unansweredReviews[selectedReviewIndex - 1]
+      : undefined;
   const nextReview =
-    selectedReviewIndex >= 0 && selectedReviewIndex < unansweredReviews.length - 1
+    selectedReviewIndex >= 0 &&
+    selectedReviewIndex < unansweredReviews.length - 1
       ? unansweredReviews[selectedReviewIndex + 1]
       : undefined;
   const paginatedReviews = useMemo(() => {
@@ -519,7 +533,11 @@ export default function ReviewBoard({
     }
   };
 
-  const submitReply = async (reviewId: string, content: string, tierRecords: TierRecord[]) => {
+  const submitReply = async (
+    reviewId: string,
+    content: string,
+    tierRecords: TierRecord[],
+  ) => {
     setError("");
     setReplyingId(reviewId);
     try {
@@ -528,13 +546,21 @@ export default function ReviewBoard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reviewId, content, tierRecords }),
       });
-      const data = (await response.json()) as { reply?: ReviewReply; message?: string };
-      if (!response.ok) throw new Error(data.message ?? "답변을 저장하지 못했습니다.");
+      const data = (await response.json()) as {
+        reply?: ReviewReply;
+        message?: string;
+      };
+      if (!response.ok)
+        throw new Error(data.message ?? "답변을 저장하지 못했습니다.");
       setReviews((cur) =>
         cur.map((r) => (r.id === reviewId ? { ...r, reply: data.reply } : r)),
       );
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "답변을 저장하지 못했습니다.");
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "답변을 저장하지 못했습니다.",
+      );
     } finally {
       setReplyingId("");
     }
@@ -550,12 +576,17 @@ export default function ReviewBoard({
         body: JSON.stringify({ reviewId }),
       });
       const data = (await response.json()) as { message?: string };
-      if (!response.ok) throw new Error(data.message ?? "답변을 삭제하지 못했습니다.");
+      if (!response.ok)
+        throw new Error(data.message ?? "답변을 삭제하지 못했습니다.");
       setReviews((cur) =>
         cur.map((r) => (r.id === reviewId ? { ...r, reply: undefined } : r)),
       );
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "답변을 삭제하지 못했습니다.");
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "답변을 삭제하지 못했습니다.",
+      );
     } finally {
       setDeletingReplyId("");
     }
@@ -673,7 +704,9 @@ export default function ReviewBoard({
                         const id = event.target.value;
                         const selected = lineups.find((l) => l.id === id);
                         const availableServices = selected
-                          ? selected.services.map((s) => SERVICE_LABEL[s]).filter(Boolean)
+                          ? selected.services
+                              .map((s) => SERVICE_LABEL[s])
+                              .filter(Boolean)
                           : ["롤 대리", "롤 듀오"];
                         setForm((current) => ({
                           ...current,
@@ -699,9 +732,13 @@ export default function ReviewBoard({
                       서비스
                     </span>
                     {(() => {
-                      const selected = lineups.find((l) => l.id === form.lineupId);
+                      const selected = lineups.find(
+                        (l) => l.id === form.lineupId,
+                      );
                       const opts = selected
-                        ? selected.services.map((s) => SERVICE_LABEL[s]).filter(Boolean)
+                        ? selected.services
+                            .map((s) => SERVICE_LABEL[s])
+                            .filter(Boolean)
                         : ["롤 대리", "롤 듀오"];
                       return (
                         <select
@@ -761,9 +798,7 @@ export default function ReviewBoard({
                   disabled={submitting}
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {submitting && (
-                    <Loader2 size={18} className="animate-spin" />
-                  )}
+                  {submitting && <Loader2 size={18} className="animate-spin" />}
                   등록하기
                 </button>
               </div>
@@ -823,7 +858,9 @@ export default function ReviewBoard({
             knightName={knightName}
             replying={replyingId === selectedReview.id}
             deletingReply={deletingReplyId === selectedReview.id}
-            onSubmitReply={(content, tierRecords) => void submitReply(selectedReview.id, content, tierRecords)}
+            onSubmitReply={(content, tierRecords) =>
+              void submitReply(selectedReview.id, content, tierRecords)
+            }
             onDeleteReply={() => void deleteReply(selectedReview.id)}
             onDelete={() => void deleteReview(selectedReview.id)}
             onDeleteOpenChange={() => {
@@ -865,33 +902,43 @@ export default function ReviewBoard({
           />
         ) : (
           <>
-            <div className="overflow-hidden rounded-[30px] border border-gold/15 bg-white/[.035]">
+            <div className="grid gap-3">
               {paginatedReviews.map((review, i) => (
                 <button
                   key={review.id}
                   type="button"
                   onClick={() => setSelectedReviewId(review.id)}
-                  className="grid w-full grid-cols-[1fr_auto] gap-4 border-b border-white/8 p-4 text-left transition last:border-b-0 hover:bg-white/4 sm:grid-cols-[4rem_1fr_auto]"
+                  className="group grid w-full gap-4 rounded-3xl border border-white/8 bg-white/[.035] p-4 text-left transition hover:-translate-y-0.5 hover:border-gold/30 hover:bg-white/[.055] sm:grid-cols-[3.5rem_1fr_auto]"
                 >
-                  <span className="hidden text-center text-sm font-black text-zinc-500 sm:block">
+                  <span className="hidden h-11 w-11 place-items-center rounded-2xl border border-white/8 bg-black/20 text-sm font-black text-zinc-500 transition group-hover:border-gold/25 group-hover:text-gold sm:grid">
                     {(currentPage - 1) * REVIEWS_PER_PAGE + i + 1}
                   </span>
 
-                  <span className="col-span-1 grid gap-2">
-                    <span className="flex flex-wrap items-center gap-2">
-                      <span className="text-base font-black text-white">
+                  <span className="grid min-w-0 gap-3">
+                    <span className="flex flex-wrap items-center gap-2.5">
+                      <span className="text-base font-black text-white transition group-hover:text-gold">
                         {review.name}
                       </span>
-                      <span className="rounded-full bg-gold/10 px-3 py-1 text-xs font-black text-gold">
+                      <span className="rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-xs font-black text-gold">
                         {review.service}
                       </span>
+                      {review.lineupName && (
+                        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-bold text-zinc-400">
+                          {review.lineupName} 기사
+                        </span>
+                      )}
+                      {review.reply && (
+                        <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-black text-emerald-300">
+                          답변 완료
+                        </span>
+                      )}
                     </span>
 
-                    <span className="line-clamp-1 text-sm leading-6 text-zinc-400">
+                    <span className="line-clamp-2 text-sm leading-6 text-zinc-300">
                       {review.content}
                     </span>
 
-                    <span className="flex items-center gap-3">
+                    <span className="flex flex-wrap items-center gap-3">
                       <Stars rating={review.rating} />
                       <time
                         className="text-xs font-bold text-zinc-500"
@@ -902,6 +949,9 @@ export default function ReviewBoard({
                     </span>
                   </span>
 
+                  <span className="hidden self-center text-sm font-black text-zinc-600 transition group-hover:text-gold sm:block">
+                    보기
+                  </span>
                 </button>
               ))}
             </div>
@@ -961,8 +1011,16 @@ export default function ReviewBoard({
 }
 
 const TIER_OPTIONS_RB = [
-  "아이언", "브론즈", "실버", "골드", "플래티넘",
-  "에메랄드", "다이아몬드", "마스터", "그랜드마스터", "챌린저",
+  "아이언",
+  "브론즈",
+  "실버",
+  "골드",
+  "플래티넘",
+  "에메랄드",
+  "다이아몬드",
+  "마스터",
+  "그랜드마스터",
+  "챌린저",
 ];
 
 const inputClsRB =
@@ -975,36 +1033,69 @@ function TierRecordEditorRB({
   records: TierRecord[];
   onChange: (r: TierRecord[]) => void;
 }) {
-  const add = () => onChange([...records, { tier: "골드", wins: 0, losses: 0 }]);
+  const add = () =>
+    onChange([...records, { tier: "골드", wins: 0, losses: 0 }]);
   const remove = (i: number) => onChange(records.filter((_, idx) => idx !== i));
   const update = (i: number, field: keyof TierRecord, val: string | number) =>
-    onChange(records.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
+    onChange(records.map((r, idx) => (idx === i ? { ...r, [field]: val } : r)));
 
   return (
     <div className="grid gap-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-black text-zinc-400">작업 기록</span>
-        <button type="button" onClick={add}
-          className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">
+        <button
+          type="button"
+          onClick={add}
+          className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white"
+        >
           <Plus size={11} /> 추가
         </button>
       </div>
       {records.map((r, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <select value={r.tier} onChange={(e) => update(i, "tier", e.target.value)}
-            className={`${inputClsRB} flex-1`}>
-            {TIER_OPTIONS_RB.map((t) => <option key={t} value={t}>{t}</option>)}
+        <div
+          key={i}
+          className="grid gap-2 rounded-2xl border border-white/8 bg-white/[.025] p-2 sm:grid-cols-[1fr_auto_auto_auto_auto_auto] sm:items-center"
+        >
+          <select
+            value={r.tier}
+            onChange={(e) => update(i, "tier", e.target.value)}
+            className={`${inputClsRB} flex-1`}
+          >
+            {TIER_OPTIONS_RB.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
           </select>
-          <input type="number" min={0} max={999} value={r.wins}
-            onChange={(e) => update(i, "wins", Math.max(0, Number(e.target.value) || 0))}
-            className={`${inputClsRB} w-14 text-center`} placeholder="승" />
+          <input
+            type="number"
+            min={0}
+            max={999}
+            value={r.wins}
+            onChange={(e) =>
+              update(i, "wins", Math.max(0, Number(e.target.value) || 0))
+            }
+            className={`${inputClsRB} w-14 text-center`}
+            placeholder="승"
+          />
           <span className="text-xs text-zinc-500 shrink-0">승</span>
-          <input type="number" min={0} max={999} value={r.losses}
-            onChange={(e) => update(i, "losses", Math.max(0, Number(e.target.value) || 0))}
-            className={`${inputClsRB} w-14 text-center`} placeholder="패" />
+          <input
+            type="number"
+            min={0}
+            max={999}
+            value={r.losses}
+            onChange={(e) =>
+              update(i, "losses", Math.max(0, Number(e.target.value) || 0))
+            }
+            className={`${inputClsRB} w-14 text-center`}
+            placeholder="패"
+          />
           <span className="text-xs text-zinc-500 shrink-0">패</span>
-          <button type="button" onClick={() => remove(i)}
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/10 text-zinc-500 transition hover:border-red-400/40 hover:text-red-300">
+          <button
+            type="button"
+            onClick={() => remove(i)}
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/10 text-zinc-500 transition hover:border-red-400/40 hover:text-red-300"
+          >
             <Trash2 size={11} />
           </button>
         </div>
@@ -1034,8 +1125,11 @@ function ReplySection({
   const [editing, setEditing] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [draft, setDraft] = useState(review.reply?.content ?? "");
-  const [tierRecords, setTierRecords] = useState<TierRecord[]>(review.reply?.tierRecords ?? []);
-  const canReply = knightLineupId !== null && review.lineupId === String(knightLineupId);
+  const [tierRecords, setTierRecords] = useState<TierRecord[]>(
+    review.reply?.tierRecords ?? [],
+  );
+  const canReply =
+    knightLineupId !== null && review.lineupId === String(knightLineupId);
   const isLoggedIn = knightLineupId !== null;
 
   const startEdit = () => {
@@ -1053,35 +1147,99 @@ function ReplySection({
   };
 
   return (
-    <div className="mt-4 rounded-3xl border border-gold/15 bg-white/3 p-4">
-      <p className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-gold">기사 답변</p>
+    <div className="mt-6 rounded-3xl border border-gold/20 bg-[linear-gradient(135deg,rgba(246,194,91,0.10),rgba(255,255,255,0.035)_45%,rgba(0,0,0,0.18))] p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-gold">
+            기사 답변
+          </p>
+          <p className="mt-1 text-xs font-bold text-zinc-500">
+            담당 기사가 남긴 진행 기록과 안내입니다.
+          </p>
+        </div>
+        {review.reply && (
+          <span className="rounded-full border border-gold/20 bg-black/20 px-3 py-1 text-xs font-black text-gold">
+            답변 완료
+          </span>
+        )}
+      </div>
 
       {/* 답변 존재 + 보기 모드 */}
       {review.reply && !editing && (
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-black text-gold">{review.reply.knightName}</span>
-            <span className="text-xs text-zinc-600">기사</span>
+          <div className="mb-3 flex items-center gap-3">
+            <div className="grid h-9 w-9 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-sm font-black text-gold">
+              {review.reply.knightName.slice(0, 1)}
+            </div>
+            <div>
+              <span className="text-sm font-black text-white">
+                {review.reply.knightName}
+              </span>
+              <span className="ml-2 text-xs text-zinc-500">기사</span>
+            </div>
           </div>
           {review.reply.tierRecords.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {review.reply.tierRecords.map((r, i) => (
-                <span key={i} className="rounded-full border border-gold/20 bg-gold/8 px-2.5 py-0.5 text-xs font-black text-gold">
-                  {r.tier} {r.wins}승 {r.losses}패
-                </span>
-              ))}
+            <div className="mb-4 grid gap-2 sm:grid-cols-2">
+              {review.reply.tierRecords.map((r, i) => {
+                const icon = TIER_ICON_BY_NAME[r.tier];
+                const total = r.wins + r.losses;
+                const rate = total > 0 ? Math.round((r.wins / total) * 100) : 0;
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/20 px-3 py-2"
+                  >
+                    {icon && (
+                      <Image
+                        src={icon}
+                        alt={r.tier}
+                        width={28}
+                        height={28}
+                        className="rounded-full bg-zinc-900"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-black text-gold">
+                        {r.tier}
+                      </div>
+                      <div className="text-xs font-bold text-zinc-400">
+                        {r.wins}승 {r.losses}패
+                      </div>
+                    </div>
+                    <span className="text-sm font-black text-white">
+                      {rate}%
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
-          <p className="text-sm leading-7 whitespace-pre-wrap text-zinc-300">{review.reply.content}</p>
+          <p className="text-sm leading-7 whitespace-pre-wrap text-zinc-300">
+            {review.reply.content}
+          </p>
           <div className="mt-2 flex items-center gap-3">
-            <span className="text-xs text-zinc-600">{formatDate(review.reply.createdAt)}</span>
+            <span className="text-xs text-zinc-600">
+              {formatDate(review.reply.createdAt)}
+            </span>
             {canReply && (
               <div className="flex gap-2">
-                <button type="button" onClick={startEdit}
-                  className="text-xs font-bold text-zinc-500 transition hover:text-zinc-200">수정</button>
-                <button type="button" onClick={onDeleteReply} disabled={deletingReply}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 transition hover:text-red-300 disabled:opacity-50">
-                  {deletingReply && <Loader2 size={10} className="animate-spin" />}삭제
+                <button
+                  type="button"
+                  onClick={startEdit}
+                  className="text-xs font-bold text-zinc-500 transition hover:text-zinc-200"
+                >
+                  수정
+                </button>
+                <button
+                  type="button"
+                  onClick={onDeleteReply}
+                  disabled={deletingReply}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 transition hover:text-red-300 disabled:opacity-50"
+                >
+                  {deletingReply && (
+                    <Loader2 size={10} className="animate-spin" />
+                  )}
+                  삭제
                 </button>
               </div>
             )}
@@ -1097,16 +1255,33 @@ function ReplySection({
             <span className="text-xs text-zinc-600">기사 (닉네임 자동)</span>
           </div>
           <TierRecordEditorRB records={tierRecords} onChange={setTierRecords} />
-          <textarea value={draft} onChange={(e) => setDraft(e.target.value)}
-            rows={3} maxLength={500} placeholder="고객에게 답변을 남겨주세요."
-            className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full" />
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={3}
+            maxLength={500}
+            placeholder="고객에게 답변을 남겨주세요."
+            className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full"
+          />
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => { setEditing(false); setFormOpen(false); }}
-              className="rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">취소</button>
-            <button type="button"
-              onClick={() => { if (draft.trim()) onSubmitReply(draft.trim(), tierRecords); }}
+            <button
+              type="button"
+              onClick={() => {
+                setEditing(false);
+                setFormOpen(false);
+              }}
+              className="rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (draft.trim()) onSubmitReply(draft.trim(), tierRecords);
+              }}
               disabled={replying || !draft.trim()}
-              className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-2.5 text-sm font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60">
+              className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-2.5 text-sm font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60"
+            >
               {replying && <Loader2 size={14} className="animate-spin" />}
               {editing ? "수정 저장" : "답변 등록"}
             </button>

@@ -23,6 +23,19 @@ const positionColors: Record<string, string> = {
   탑: "bg-orange-500/15 text-orange-400",
 };
 
+const tierIconByName: Record<string, string> = {
+  아이언: "/images/tier/1-iron.png",
+  브론즈: "/images/tier/2-bronze.png",
+  실버: "/images/tier/3-silver.png",
+  골드: "/images/tier/4-gold.png",
+  플래티넘: "/images/tier/5-platinum.png",
+  에메랄드: "/images/tier/6-emerald.png",
+  다이아몬드: "/images/tier/7-diamond.png",
+  마스터: "/images/tier/8-master.png",
+  그랜드마스터: "/images/tier/9-grandmaster.png",
+  챌린저: "/images/tier/10-challenger.png",
+};
+
 type Props = {
   params: Promise<{ slug: string }>;
 };
@@ -144,7 +157,7 @@ export default async function LineupDetailPage({ params }: Props) {
                 <div className="mt-6 rounded-3xl border border-gold/15 bg-white/4 p-5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <div className="text-sm font-black text-zinc-500">Average Rating</div>
+                      <div className="text-sm font-black text-zinc-500">평균 평점</div>
                       <div className="mt-2 flex items-end gap-2">
                         <span className="text-4xl font-black text-white">
                           {stats.averageRating.toFixed(1)}
@@ -155,7 +168,7 @@ export default async function LineupDetailPage({ params }: Props) {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-black text-zinc-500">Total Reviews</div>
+                      <div className="text-sm font-black text-zinc-500">전체 후기</div>
                       <div className="mt-2 text-3xl font-black text-white">
                         {stats.reviewCount}
                       </div>
@@ -163,7 +176,7 @@ export default async function LineupDetailPage({ params }: Props) {
                   </div>
 
                   <div className="mt-6">
-                    <div className="text-sm font-black text-zinc-500">Rating Distribution</div>
+                    <div className="text-sm font-black text-zinc-500">평점 분포</div>
                     <div className="mt-4 space-y-3">
                       {[5, 4, 3, 2, 1].map((value) => {
                         const count = stats.ratingDistribution[value as keyof typeof stats.ratingDistribution];
@@ -207,7 +220,18 @@ export default async function LineupDetailPage({ params }: Props) {
                           const pct = total > 0 ? Math.round((t.wins / total) * 100) : 0;
                           return (
                             <div key={t.tier} className="flex items-center gap-3">
-                              <span className="w-20 shrink-0 text-xs font-black text-zinc-400">{t.tier}</span>
+                              <span className="flex w-28 shrink-0 items-center gap-2 text-xs font-black text-zinc-400">
+                                {tierIconByName[t.tier] && (
+                                  <Image
+                                    src={tierIconByName[t.tier]}
+                                    alt={t.tier}
+                                    width={24}
+                                    height={24}
+                                    className="rounded-full bg-zinc-900"
+                                  />
+                                )}
+                                {t.tier}
+                              </span>
                               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/8">
                                 <div className="h-full rounded-full bg-gold" style={{ width: `${pct}%` }} />
                               </div>
