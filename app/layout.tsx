@@ -9,7 +9,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "XYZ | 롤대리 롤듀오 롤계정",
+    default: "XYZ | 롤 대리 롤 듀오 롤 계정",
     template: "%s | XYZ",
   },
   description: site.description,
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "XYZ | 롤대리 롤듀오 롤계정",
+    title: "XYZ | 롤 대리 롤 듀오 롤 계정",
     description: site.description,
     url: site.url,
     siteName: site.name,
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "XYZ | 롤대리 롤듀오 롤계정",
+    title: "XYZ | 롤 대리 롤 듀오 롤 계정",
     description: site.description,
     images: ["/images/profile.webp"],
   },
