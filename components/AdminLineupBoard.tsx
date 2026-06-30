@@ -173,7 +173,9 @@ export default function AdminLineupBoard({
         body: JSON.stringify({
           id: editingId || undefined,
           ...form,
-          sortOrder: lineups.length,
+          sortOrder: editingId
+            ? (lineups.find((l) => l.id === editingId)?.sortOrder ?? 0)
+            : lineups.length,
           password,
         }),
       });
