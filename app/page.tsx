@@ -145,13 +145,13 @@ export default function Home() {
             />
           </Reveal>
           <div className="grid gap-6 lg:grid-cols-3">
-            {lineups.map(({ title, rank, image }, i) => (
-              <Reveal key={title} delay={i * 0.08}>
+            {lineups.map(({ name, rank, image }, i) => (
+              <Reveal key={name} delay={i * 0.08}>
                 <article className="card-premium overflow-hidden rounded-[34px]">
                   <div className="relative aspect-4/3 bg-black">
                     <Image
                       src={image}
-                      alt={`${title} 프로필 이미지`}
+                      alt={`${name} 프로필 이미지`}
                       fill
                       sizes="(max-width: 1024px) 100vw, 33vw"
                       className="object-cover opacity-90"
@@ -163,7 +163,7 @@ export default function Home() {
                       {rank}
                     </span>
                     <h3 className="mt-5 text-2xl font-black text-white">
-                      {title}
+                      {name}
                     </h3>
                     <p className="mt-3 leading-7 text-zinc-400">
                       포지션별 숙련도와 진행 안정성을 기준으로 배정합니다.
