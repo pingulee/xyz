@@ -18,6 +18,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useRouter } from "next/navigation";
 
 type TierRecord = {
   tier: string;
@@ -205,24 +206,28 @@ export default function ReviewBoard({
   const [deletingReplyId, setDeletingReplyId] = useState("");
   const mousedownOnOverlay = useRef(false);
 
-  const totalPages = Math.max(1, Math.ceil(reviews.length / REVIEWS_PER_PAGE));
+  const unansweredReviews = useMemo(
+    () => (isAdmin ? reviews : reviews.filter((r) => !r.reply)),
+    [reviews, isAdmin],
+  );
+  const totalPages = Math.max(1, Math.ceil(unansweredReviews.length / REVIEWS_PER_PAGE));
   const currentPage = Math.min(page, totalPages);
   const selectedReview = reviews.find(
     (review) => review.id === selectedReviewId,
   );
-  const selectedReviewIndex = reviews.findIndex(
+  const selectedReviewIndex = unansweredReviews.findIndex(
     (review) => review.id === selectedReviewId,
   );
   const previousReview =
-    selectedReviewIndex > 0 ? reviews[selectedReviewIndex - 1] : undefined;
+    selectedReviewIndex > 0 ? unansweredReviews[selectedReviewIndex - 1] : undefined;
   const nextReview =
-    selectedReviewIndex >= 0 && selectedReviewIndex < reviews.length - 1
-      ? reviews[selectedReviewIndex + 1]
+    selectedReviewIndex >= 0 && selectedReviewIndex < unansweredReviews.length - 1
+      ? unansweredReviews[selectedReviewIndex + 1]
       : undefined;
   const paginatedReviews = useMemo(() => {
     const start = (currentPage - 1) * REVIEWS_PER_PAGE;
-    return reviews.slice(start, start + REVIEWS_PER_PAGE);
-  }, [currentPage, reviews]);
+    return unansweredReviews.slice(start, start + REVIEWS_PER_PAGE);
+  }, [currentPage, unansweredReviews]);
   const pageItems = useMemo(
     () => getPageItems(currentPage, totalPages),
     [currentPage, totalPages],
@@ -602,7 +607,7 @@ export default function ReviewBoard({
                   write review
                 </p>
                 <h2 className="mt-3 text-2xl font-black text-white">
-                  후기 작성
+                  후기 남기기
                 </h2>
               </div>
 
@@ -759,7 +764,7 @@ export default function ReviewBoard({
                   {submitting && (
                     <Loader2 size={18} className="animate-spin" />
                   )}
-                  후기 등록
+                  등록하기
                 </button>
               </div>
             </form>
@@ -774,7 +779,7 @@ export default function ReviewBoard({
               reviews
             </p>
             <h2 className="mt-2 text-2xl font-black text-white">
-              전체 후기 {reviews.length}개
+              미답변 후기 {unansweredReviews.length}개
             </h2>
           </div>
 
@@ -783,7 +788,7 @@ export default function ReviewBoard({
             onClick={() => setWriteOpen(true)}
             className="cursor-pointer rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black shadow-gold-sm transition"
           >
-            후기 작성
+            후기 남기기
           </button>
         </div>
 
@@ -794,7 +799,7 @@ export default function ReviewBoard({
           </div>
         ) : reviews.length === 0 ? (
           <div className="rounded-[30px] border border-gold/15 bg-white/[.035] p-8 text-center text-zinc-400">
-            아직 등록된 후기가 없습니다.
+            미답변 후기가 없습니다.
           </div>
         ) : selectedReview ? (
           <ReviewDetail
@@ -1025,12 +1030,13 @@ function ReplySection({
   onSubmitReply: (content: string, tierRecords: TierRecord[]) => void;
   onDeleteReply: () => void;
 }) {
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [draft, setDraft] = useState(review.reply?.content ?? "");
   const [tierRecords, setTierRecords] = useState<TierRecord[]>(review.reply?.tierRecords ?? []);
   const canReply = knightLineupId !== null && review.lineupId === String(knightLineupId);
-
-  if (!review.reply && !canReply) return null;
+  const isLoggedIn = knightLineupId !== null;
 
   const startEdit = () => {
     setDraft(review.reply?.content ?? "");
@@ -1038,10 +1044,20 @@ function ReplySection({
     setEditing(true);
   };
 
+  const handleReplyButtonClick = () => {
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
+    }
+    setFormOpen(true);
+  };
+
   return (
     <div className="mt-4 rounded-3xl border border-gold/15 bg-white/3 p-4">
       <p className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-gold">기사 답변</p>
-      {review.reply && !editing ? (
+
+      {/* 답변 존재 + 보기 모드 */}
+      {review.reply && !editing && (
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-black text-gold">{review.reply.knightName}</span>
@@ -1071,7 +1087,10 @@ function ReplySection({
             )}
           </div>
         </div>
-      ) : canReply ? (
+      )}
+
+      {/* 폼 (신규 or 수정) */}
+      {canReply && (formOpen || editing) && (
         <div className="grid gap-3">
           <div className="flex items-center gap-2">
             <span className="text-xs font-black text-gold">{knightName}</span>
@@ -1082,10 +1101,8 @@ function ReplySection({
             rows={3} maxLength={500} placeholder="고객에게 답변을 남겨주세요."
             className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full" />
           <div className="flex justify-end gap-2">
-            {editing && (
-              <button type="button" onClick={() => setEditing(false)}
-                className="rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">취소</button>
-            )}
+            <button type="button" onClick={() => { setEditing(false); setFormOpen(false); }}
+              className="rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">취소</button>
             <button type="button"
               onClick={() => { if (draft.trim()) onSubmitReply(draft.trim(), tierRecords); }}
               disabled={replying || !draft.trim()}
@@ -1095,7 +1112,22 @@ function ReplySection({
             </button>
           </div>
         </div>
-      ) : null}
+      )}
+
+      {/* 답변 없고 폼 안 열린 상태 → 버튼 */}
+      {!review.reply && !formOpen && !editing && (
+        <button
+          type="button"
+          onClick={handleReplyButtonClick}
+          className="text-xs font-bold text-zinc-500 transition hover:text-gold"
+        >
+          {canReply
+            ? "답변 작성"
+            : isLoggedIn
+              ? "이 기사의 후기에만 답변 가능합니다"
+              : "기사님만 답변 가능 — 로그인하기"}
+        </button>
+      )}
     </div>
   );
 }

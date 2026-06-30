@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Loader2, Plus, Star, Trash2 } from "lucide-react";
 import type { Review, ReviewReply, TierRecord } from "@/lib/reviews";
 
@@ -219,9 +220,10 @@ function ReplyBlock({
   const [replyData, setReplyData] = useState(review.reply);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const router = useRouter();
   const canReply = knightLineupId !== null && review.lineupId === String(knightLineupId);
-
-  if (!replyData && !canReply) return null;
+  const isLoggedIn = knightLineupId !== null;
 
   const submitReply = async (content: string, tierRecords: TierRecord[]) => {
     setSaving(true);
@@ -256,10 +258,20 @@ function ReplyBlock({
     }
   };
 
+  const handleReplyButtonClick = () => {
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
+    }
+    setFormOpen(true);
+  };
+
   return (
     <div className="mt-4 rounded-2xl border border-gold/15 bg-white/3 p-4">
       <p className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-gold">기사 답변</p>
-      {replyData && !editing ? (
+
+      {/* 답변 존재 + 보기 모드 */}
+      {replyData && !editing && (
         <ReplyDisplay
           reply={replyData}
           canEdit={canReply}
@@ -267,15 +279,33 @@ function ReplyBlock({
           onEdit={() => setEditing(true)}
           onDelete={() => void deleteReply()}
         />
-      ) : canReply ? (
+      )}
+
+      {/* 폼 (신규 or 수정) */}
+      {(canReply && (formOpen || editing)) && (
         <ReplyForm
           knightName={knightName}
           initial={editing ? replyData : undefined}
           saving={saving}
           onSubmit={(content, tierRecords) => void submitReply(content, tierRecords)}
-          onCancel={editing ? () => setEditing(false) : undefined}
+          onCancel={() => { setEditing(false); setFormOpen(false); }}
         />
-      ) : null}
+      )}
+
+      {/* 답변 없고 폼 안 열린 상태 → 버튼 */}
+      {!replyData && !formOpen && !editing && (
+        <button
+          type="button"
+          onClick={handleReplyButtonClick}
+          className="text-xs font-bold text-zinc-500 transition hover:text-gold"
+        >
+          {canReply
+            ? "답변 작성"
+            : isLoggedIn
+              ? "이 기사의 후기에만 답변 가능합니다"
+              : "기사님만 답변 가능 — 로그인하기"}
+        </button>
+      )}
     </div>
   );
 }
