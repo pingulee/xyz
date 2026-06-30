@@ -50,7 +50,10 @@ export function toLineup(row: LineupRow): Lineup {
   };
 }
 
-export async function getLineups(activeOnly = true): Promise<Lineup[]> {
+export async function getLineups(
+  activeOnly = true,
+  sortByReviews = false,
+): Promise<Lineup[]> {
   await ensureReviewsSchema();
   const [rows] = await getPool().execute<LineupRow[]>(
     `SELECT l.*, COALESCE(stats.average_rating, 0) AS average_rating, COALESCE(stats.review_count, 0) AS review_count
@@ -62,7 +65,11 @@ export async function getLineups(activeOnly = true): Promise<Lineup[]> {
        GROUP BY lineup_id
      ) stats ON stats.lineup_id = l.id
      ${activeOnly ? "WHERE l.active = 1" : ""}
-     ORDER BY l.sort_order ASC, l.id ASC`,
+     ORDER BY ${
+       sortByReviews
+         ? "review_count DESC, average_rating DESC, l.sort_order ASC, l.id ASC"
+         : "l.sort_order ASC, l.id ASC"
+     }`,
   );
   return rows.map(toLineup);
 }

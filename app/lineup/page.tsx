@@ -32,7 +32,7 @@ export default async function LineupPage() {
   const token = cookieStore.get(SESSION_COOKIE)?.value ?? "";
   const isAdmin = validateSession(token);
 
-  const lineups = await getLineups(isAdmin ? false : true);
+  const lineups = await getLineups(isAdmin ? false : true, !isAdmin);
 
   if (isAdmin) {
     return (
