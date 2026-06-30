@@ -83,6 +83,11 @@ export async function getLineupById(id: number): Promise<Lineup | null> {
   return rows[0] ? toLineup(rows[0]) : null;
 }
 
+export function getLineupPath(lineup: { name: string }): string {
+  const slug = lineup.name.toLowerCase().replace(/[^a-z0-9가-힣]+/g, "-");
+  return `/lineup/${slug}`;
+}
+
 export async function getLineupBySlug(slug: string): Promise<Lineup | null> {
   const lineups = await getLineups(false);
   return (
