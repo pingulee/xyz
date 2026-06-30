@@ -1,28 +1,40 @@
-import { randomBytes } from "crypto";
-
-const sessions = new Map<string, number>();
-const SESSION_TTL = 24 * 60 * 60 * 1000;
+import { createHmac, timingSafeEqual } from "crypto";
 
 export const SESSION_COOKIE = "xyz_admin_session";
+const SESSION_TTL = 24 * 60 * 60 * 1000;
+
+function getSecret(): string {
+  return process.env.ADMIN_PASSWORD ?? "";
+}
 
 export function createSession(): string {
-  const token = randomBytes(32).toString("hex");
-  sessions.set(token, Date.now() + SESSION_TTL);
-  return token;
+  const expiry = Date.now() + SESSION_TTL;
+  const payload = `admin:${expiry}`;
+  const sig = createHmac("sha256", getSecret()).update(payload).digest("hex");
+  return `${expiry}:${sig}`;
 }
 
 export function validateSession(token: string): boolean {
-  const expiry = sessions.get(token);
-  if (!expiry) return false;
-  if (Date.now() > expiry) {
-    sessions.delete(token);
-    return false;
-  }
-  return true;
+  if (!token) return false;
+  const colonIdx = token.indexOf(":");
+  if (colonIdx === -1) return false;
+
+  const expiry = Number(token.slice(0, colonIdx));
+  const sig = token.slice(colonIdx + 1);
+
+  if (!expiry || Date.now() > expiry) return false;
+
+  const payload = `admin:${expiry}`;
+  const expectedSig = createHmac("sha256", getSecret()).update(payload).digest("hex");
+
+  const sigBuf = Buffer.from(sig.padEnd(128, "0"), "hex");
+  const expectedBuf = Buffer.from(expectedSig.padEnd(128, "0"), "hex");
+
+  return timingSafeEqual(sigBuf, expectedBuf) && sig === expectedSig;
 }
 
-export function deleteSession(token: string): void {
-  sessions.delete(token);
+export function deleteSession(_token: string): void {
+  // stateless — cookie cleared client-side is sufficient
 }
 
 export function getSessionCookieHeader(token: string): string {

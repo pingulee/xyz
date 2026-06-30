@@ -91,12 +91,13 @@ export async function POST(request: Request) {
 
   const v = validateLineup(payload);
   if ("message" in v) return NextResponse.json({ message: v.message }, { status: 400 });
+  const { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, image } = v;
 
   try {
     const [result] = await getPool().execute<ResultSetHeader>(
       `INSERT INTO lineups (name, positions, rank, tier, description, weekday_hours, weekend_hours, champions, services, image_data, sort_order, active)
        VALUES (:name, :positions, :rank, :tier, :description, :weekdayHours, :weekendHours, :champions, :services, :image, :sortOrder, :active)`,
-      { ...v, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false },
+      { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, image, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false },
     );
     const lineup = await getLineupById(result.insertId);
     return NextResponse.json({ lineup }, { status: 201 });
@@ -125,6 +126,7 @@ export async function PUT(request: Request) {
 
   const v = validateLineup(payload);
   if ("message" in v) return NextResponse.json({ message: v.message }, { status: 400 });
+  const { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, image } = v;
 
   try {
     await getPool().execute(
@@ -133,7 +135,7 @@ export async function PUT(request: Request) {
            weekday_hours=:weekdayHours, weekend_hours=:weekendHours, champions=:champions,
            services=:services, image_data=:image, sort_order=:sortOrder, active=:active
        WHERE id=:id`,
-      { ...v, id, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false },
+      { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, image, id, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false },
     );
     const lineup = await getLineupById(id);
     if (!lineup) return NextResponse.json({ message: "기사를 찾을 수 없습니다." }, { status: 404 });
