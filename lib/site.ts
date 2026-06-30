@@ -2,7 +2,7 @@ export const site = {
   name: "롤대리.xyz",
   url: "https://롤대리.xyz",
   description:
-    "롤대리, 롤 듀오, 롤 계정 상담을 검증된 상위 티어 기사와 체계적인 운영으로 안내하는 리그 오브 레전드 전문 서비스입니다.",
+    "롤 대리, 롤 듀오, 롤 계정 검증된 상위 티어 기사와 체계적인 운영으로 안내하는 리그 오브 레전드 전문 서비스입니다.",
   kakaoUrl: "https://open.kakao.com/o/sKuEg9zi",
 };
 

@@ -10,12 +10,12 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "작업 후기",
   description:
-    "롤대리.xyz 작업 후기와 실제 진행 경험을 확인하고 직접 후기를 남길 수 있습니다.",
+    "XYZ 작업 후기와 실제 진행 경험을 확인하고 직접 후기를 남길 수 있습니다.",
   alternates: { canonical: "/reviews" },
   openGraph: {
-    title: "작업 후기 | 롤대리.xyz",
+    title: "작업 후기 | XYZ",
     description:
-      "롤대리.xyz 작업 후기와 실제 진행 경험을 확인하고 직접 후기를 남길 수 있습니다.",
+      "XYZ 작업 후기와 실제 진행 경험을 확인하고 직접 후기를 남길 수 있습니다.",
     url: "/reviews",
     type: "website",
   },

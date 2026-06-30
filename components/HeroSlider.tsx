@@ -3,11 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const slides = [
@@ -16,7 +12,7 @@ const slides = [
     title: "프리미엄 롤 대리",
     titlePrefix: "프리미엄 ",
     titleHighlight: "롤 대리",
-    desc: "검증된 상위 티어 기사와 체계적인 진행 리포트로 목표 티어까지 안정적으로 관리합니다.",
+    desc: "현재 시즌 기준 챌린저 티어 기사가 목표 티어까지 달성해드립니다.",
     image: "/images/hero/boosting.webp",
     alt: "롤 대리 서비스를 상징하는 프리미엄 게임 이미지",
     secondary: "가격 보기",
@@ -38,7 +34,7 @@ const slides = [
     title: "맞춤형 롤 계정",
     titlePrefix: "맞춤형 ",
     titleHighlight: "롤 계정",
-    desc: "예산, 티어, 챔피언, 일정 조건에 맞춰 운영 가능한 계정 서비스를 섬세하게 안내합니다.",
+    desc: "예산, 티어, 챔피언, 일정 조건에 맞춰 구매 가능한 계정을 안내합니다.",
     image: "/images/hero/account.webp",
     alt: "롤 계정 서비스를 상징하는 프리미엄 게임 이미지",
     secondary: "서비스 보기",

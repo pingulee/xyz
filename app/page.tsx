@@ -280,8 +280,13 @@ export default function Home() {
                 key={q}
                 className="group rounded-3xl border border-gold/15 bg-white/[.035] p-6"
               >
-                <summary className="cursor-pointer list-none text-lg font-black text-white">
+                <summary className="flex cursor-pointer list-none items-center justify-between text-lg font-black text-white">
                   {q}
+                  <span className="ml-4 shrink-0 text-gold transition-transform duration-200 group-open:rotate-45">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                    </svg>
+                  </span>
                 </summary>
                 <p className="mt-4 leading-7 text-zinc-400">{a}</p>
               </details>

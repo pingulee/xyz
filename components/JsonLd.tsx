@@ -9,12 +9,7 @@ export default function JsonLd() {
     description: site.description,
     areaServed: "KR",
     inLanguage: "ko-KR",
-    serviceType: [
-      "롤대리",
-      "롤 듀오",
-      "롤 계정 상담",
-      "리그 오브 레전드 대리",
-    ],
+    serviceType: ["롤 대리", "롤 듀오", "롤 계정", "롤 업디"],
     sameAs: [site.kakaoUrl],
   };
 

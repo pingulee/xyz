@@ -10,12 +10,11 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "공지사항",
   description:
-    "롤대리.xyz의 서비스 운영 공지, 가격 안내, 작업 진행 안내를 확인하세요.",
+    "XYZ의 서비스 운영 공지, 가격 안내, 작업 진행 안내를 확인하세요.",
   alternates: { canonical: "/notices" },
   openGraph: {
-    title: "공지사항 | 롤대리.xyz",
-    description:
-      "롤대리.xyz의 최신 공지사항과 서비스 운영 안내를 확인하세요.",
+    title: "공지사항 | XYZ",
+    description: "XYZ의 최신 공지사항과 서비스 운영 안내를 확인하세요.",
     url: "/notices",
     type: "website",
   },
