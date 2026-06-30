@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ResultSetHeader } from "mysql2";
 import { getPool } from "@/lib/db";
 import { getLineups, getLineupById } from "@/lib/lineups";
+import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession";
 
 export const runtime = "nodejs";
 
@@ -27,12 +28,11 @@ type LineupPayload = {
   image?: string | null;
   sortOrder?: number;
   active?: boolean;
-  password?: string;
 };
 
-function isAdminPassword(password: string) {
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  return Boolean(adminPassword && password === adminPassword);
+function isAdminRequest(request: Request): boolean {
+  const token = getSessionTokenFromRequest(request);
+  return token ? validateSession(token) : false;
 }
 
 function isAllowedImageData(image: string | null | undefined) {
@@ -78,15 +78,15 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
+  }
+
   let payload: LineupPayload;
   try {
     payload = await request.json();
   } catch {
     return NextResponse.json({ message: "요청 형식이 올바르지 않습니다." }, { status: 400 });
-  }
-
-  if (!isAdminPassword(payload.password?.trim() ?? "")) {
-    return NextResponse.json({ message: "관리자 비밀번호가 일치하지 않습니다." }, { status: 403 });
   }
 
   const v = validateLineup(payload);
@@ -107,6 +107,10 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
+  }
+
   let payload: LineupPayload;
   try {
     payload = await request.json();
@@ -117,10 +121,6 @@ export async function PUT(request: Request) {
   const id = Number(payload.id);
   if (!Number.isInteger(id) || id < 1) {
     return NextResponse.json({ message: "수정할 기사를 찾을 수 없습니다." }, { status: 400 });
-  }
-
-  if (!isAdminPassword(payload.password?.trim() ?? "")) {
-    return NextResponse.json({ message: "관리자 비밀번호가 일치하지 않습니다." }, { status: 403 });
   }
 
   const v = validateLineup(payload);
@@ -145,7 +145,11 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  let payload: LineupPayload;
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
+  }
+
+  let payload: { id?: string };
   try {
     payload = await request.json();
   } catch {
@@ -155,10 +159,6 @@ export async function DELETE(request: Request) {
   const id = Number(payload.id);
   if (!Number.isInteger(id) || id < 1) {
     return NextResponse.json({ message: "삭제할 기사를 찾을 수 없습니다." }, { status: 400 });
-  }
-
-  if (!isAdminPassword(payload.password?.trim() ?? "")) {
-    return NextResponse.json({ message: "관리자 비밀번호가 일치하지 않습니다." }, { status: 403 });
   }
 
   try {

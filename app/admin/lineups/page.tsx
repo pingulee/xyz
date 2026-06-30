@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import AdminLineupBoard from "@/components/AdminLineupBoard";
 import Container from "@/components/Container";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import { getLineups } from "@/lib/lineups";
+import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +19,10 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminLineupsPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value ?? "";
+  if (!validateSession(token)) redirect("/admin");
+
   const lineups = await getLineups(false);
 
   return (

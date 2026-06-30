@@ -107,8 +107,10 @@ function Stars({ rating }: { rating: number }) {
 
 export default function ReviewBoard({
   initialReviews = [],
+  isAdmin = false,
 }: {
   initialReviews?: Review[];
+  isAdmin?: boolean;
 }) {
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
   const [form, setForm] = useState(blankForm);
@@ -323,19 +325,19 @@ export default function ReviewBoard({
   };
 
   const deleteReview = async (reviewId: string) => {
-    const deleteForm = deleteForms[reviewId] ?? blankDeleteForm;
-    const password = deleteForm.password.trim();
-
     setError("");
-
-    if (!password) {
-      setError("삭제하려면 비밀번호를 입력해주세요.");
-      return;
-    }
-
     setDeletingId(reviewId);
 
     try {
+      const deleteForm = deleteForms[reviewId] ?? blankDeleteForm;
+      const password = isAdmin ? "" : deleteForm.password.trim();
+
+      if (!isAdmin && !password) {
+        setError("삭제하려면 비밀번호를 입력해주세요.");
+        setDeletingId("");
+        return;
+      }
+
       const response = await fetch("/api/reviews", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
@@ -373,13 +375,18 @@ export default function ReviewBoard({
 
   const editReview = async (review: Review) => {
     const editForm = editForms[review.id] ?? blankEditForm;
-    const password = editForm.password.trim();
+    const password = isAdmin ? "" : editForm.password.trim();
     const content = editForm.content.trim();
 
     setError("");
 
-    if (!password || !content) {
+    if (!isAdmin && !password) {
       setError("수정하려면 비밀번호와 후기 내용을 입력해주세요.");
+      return;
+    }
+
+    if (!content) {
+      setError("후기 내용을 입력해주세요.");
       return;
     }
 
@@ -653,8 +660,13 @@ export default function ReviewBoard({
             }
             editOpen={editOpenId === selectedReview.id}
             editing={editingId === selectedReview.id}
+            isAdmin={isAdmin}
             onDelete={() => void deleteReview(selectedReview.id)}
             onDeleteOpenChange={() => {
+              if (isAdmin) {
+                void deleteReview(selectedReview.id);
+                return;
+              }
               setEditOpenId("");
               setDeleteOpenId((current) =>
                 current === selectedReview.id ? "" : selectedReview.id,
@@ -681,6 +693,7 @@ export default function ReviewBoard({
             previousReview={previousReview}
             review={selectedReview}
             nextReview={nextReview}
+            error={error}
           />
         ) : (
           <>
@@ -798,6 +811,8 @@ function ReviewDetail({
   editForm,
   editOpen,
   editing,
+  error,
+  isAdmin,
   nextReview,
   onDelete,
   onDeleteFormChange,
@@ -816,6 +831,8 @@ function ReviewDetail({
   editForm: EditForm;
   editOpen: boolean;
   editing: boolean;
+  error?: string;
+  isAdmin: boolean;
   nextReview?: Review;
   onDelete: () => void;
   onDeleteFormChange: (updates: Partial<DeleteForm>) => void;
@@ -851,9 +868,10 @@ function ReviewDetail({
             <button
               type="button"
               onClick={onDeleteOpenChange}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-red-400/40 hover:text-red-200"
+              disabled={deleting}
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-red-400/40 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <Trash2 size={16} />
+              {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
               삭제
             </button>
           </div>
@@ -906,15 +924,17 @@ function ReviewDetail({
               />
             </label>
             <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
-              <input
-                type="password"
-                value={editForm.password}
-                onChange={(event) =>
-                  onEditFormChange({ password: event.target.value })
-                }
-                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
-                placeholder="수정 비밀번호"
-              />
+              {!isAdmin && (
+                <input
+                  type="password"
+                  value={editForm.password}
+                  onChange={(event) =>
+                    onEditFormChange({ password: event.target.value })
+                  }
+                  className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
+                  placeholder="수정 비밀번호"
+                />
+              )}
               <button
                 type="button"
                 onClick={onEdit}
@@ -953,7 +973,7 @@ function ReviewDetail({
           </>
         )}
 
-        {deleteOpen && (
+        {!isAdmin && deleteOpen && (
           <div className="mt-6 rounded-3xl border border-red-400/20 bg-red-500/8 p-4">
             <p className="text-sm font-bold text-zinc-300">
               작성 시 입력한 비밀번호를 입력하면 삭제됩니다.
@@ -979,6 +999,12 @@ function ReviewDetail({
               </button>
             </div>
           </div>
+        )}
+
+        {error && (
+          <p className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-200">
+            {error}
+          </p>
         )}
 
         {(previousReview || nextReview) && (

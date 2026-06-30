@@ -3,6 +3,7 @@ import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { getReviews, toReview } from "@/lib/reviews";
+import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession";
 
 export const runtime = "nodejs";
 
@@ -68,19 +69,17 @@ function isAllowedImageData(image: string | null) {
   );
 }
 
+function isAdminRequest(request: Request): boolean {
+  const token = getSessionTokenFromRequest(request);
+  return token ? validateSession(token) : false;
+}
+
 function canModifyReview(password: string, review: ReviewRow) {
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  const isAdmin = Boolean(adminPassword && password === adminPassword);
   const isOwner = review.password_hash
     ? verifyPassword(password, review.password_hash)
     : false;
 
-  return isAdmin || isOwner;
-}
-
-function isAdminPassword(password: string) {
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  return Boolean(adminPassword && password === adminPassword);
+  return isOwner;
 }
 
 function getClientIp(request: Request) {
@@ -201,7 +200,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const adminWrite = isAdminPassword(password);
+    const adminWrite = isAdminRequest(request);
     if (!adminWrite) {
       const cooldown = await getReviewCooldown(request);
       if (cooldown > 0) {
@@ -267,7 +266,9 @@ export async function PUT(request: Request) {
     );
   }
 
-  if (!password) {
+  const adminRequest = isAdminRequest(request);
+
+  if (!adminRequest && !password) {
     return NextResponse.json(
       { message: "비밀번호를 입력해주세요." },
       { status: 400 },
@@ -322,7 +323,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    if (!canModifyReview(password, existingReview)) {
+    if (!adminRequest && !canModifyReview(password, existingReview)) {
       return NextResponse.json(
         { message: "비밀번호가 일치하지 않습니다." },
         { status: 403 },
@@ -378,7 +379,9 @@ export async function DELETE(request: Request) {
     );
   }
 
-  if (!password) {
+  const adminRequest = isAdminRequest(request);
+
+  if (!adminRequest && !password) {
     return NextResponse.json(
       { message: "비밀번호를 입력해주세요." },
       { status: 400 },
@@ -402,7 +405,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    if (!canModifyReview(password, review)) {
+    if (!adminRequest && !canModifyReview(password, review)) {
       return NextResponse.json(
         { message: "비밀번호가 일치하지 않습니다." },
         { status: 403 },

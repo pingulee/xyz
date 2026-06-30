@@ -82,7 +82,7 @@ export default function Footer() {
         </div>
       </Container>
       <div className="border-t border-gold/10 py-6 text-center text-xs text-zinc-600">
-        © 2026 XYZ. All rights reserved.
+        © 2025 XYZ. All rights reserved.
       </div>
     </footer>
   );

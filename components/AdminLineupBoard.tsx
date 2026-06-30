@@ -2,10 +2,9 @@
 
 import Image from "next/image";
 import { EyeOff, GripVertical, Loader2, LogOut, Pencil, Trash2, X } from "lucide-react";
-import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Lineup } from "@/lib/lineups";
-
-const STORAGE_KEY = "xyz-admin-password";
 
 const MAX_IMAGE_SIZE = 1024 * 1024 * 2;
 const MAX_IMAGE_WIDTH = 1600;
@@ -47,8 +46,6 @@ export default function AdminLineupBoard({
   initialLineups?: Lineup[];
 }) {
   const [lineups, setLineups] = useState(initialLineups);
-  const [password, setPassword] = useState("");
-  const [passwordInput, setPasswordInput] = useState("");
   const [form, setForm] = useState(blankForm);
   const [editingId, setEditingId] = useState("");
   const [saving, setSaving] = useState(false);
@@ -58,19 +55,10 @@ export default function AdminLineupBoard({
   const [imageError, setImageError] = useState("");
   const [savingOrder, setSavingOrder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
-  // drag state
   const dragIndexRef = useRef<number | null>(null);
   const dragOverIndexRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPassword(stored);
-      setPasswordInput(stored);
-    }
-  }, []);
 
   const set = (key: keyof typeof blankForm) =>
     (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -115,20 +103,9 @@ export default function AdminLineupBoard({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const login = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const pw = passwordInput.trim();
-    if (!pw) { setMessage("관리자 비밀번호를 입력해주세요."); return; }
-    window.localStorage.setItem(STORAGE_KEY, pw);
-    setPassword(pw);
-    setMessage("");
-  };
-
-  const logout = () => {
-    window.localStorage.removeItem(STORAGE_KEY);
-    setPassword("");
-    setPasswordInput("");
-    setMessage("");
+  const logout = async () => {
+    await fetch("/api/admin/logout", { method: "POST" });
+    router.push("/admin");
   };
 
   const startEdit = (lineup: Lineup) => {
@@ -176,7 +153,6 @@ export default function AdminLineupBoard({
           sortOrder: editingId
             ? (lineups.find((l) => l.id === editingId)?.sortOrder ?? 0)
             : lineups.length,
-          password,
         }),
       });
       const data = (await response.json()) as LineupResponse;
@@ -204,7 +180,7 @@ export default function AdminLineupBoard({
       const response = await fetch("/api/lineups", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: lineup.id, password }),
+        body: JSON.stringify({ id: lineup.id }),
       });
       const data = (await response.json()) as { message?: string };
       if (!response.ok) throw new Error(data.message ?? "삭제하지 못했습니다.");
@@ -216,7 +192,6 @@ export default function AdminLineupBoard({
     }
   };
 
-  // drag-to-reorder
   const onDragStart = (index: number) => { dragIndexRef.current = index; };
   const onDragEnter = (index: number) => { dragOverIndexRef.current = index; };
   const onDragEnd = async () => {
@@ -252,7 +227,6 @@ export default function AdminLineupBoard({
               image: l.image,
               sortOrder: i,
               active: l.active,
-              password,
             }),
           }),
         ),
@@ -267,21 +241,6 @@ export default function AdminLineupBoard({
   const inputCls = "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
   const labelCls = "grid gap-2 text-sm font-bold text-zinc-300";
 
-  if (!password) {
-    return (
-      <form onSubmit={login} className="card-premium mx-auto max-w-xl rounded-[34px] p-6 sm:p-8">
-        <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">admin</p>
-        <h2 className="mt-3 text-2xl font-black text-white">관리자 로그인</h2>
-        <label className="mt-7 grid gap-2">
-          <span className="text-sm font-bold text-zinc-300">비밀번호</span>
-          <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className={inputCls} placeholder="ADMIN_PASSWORD" />
-        </label>
-        {message && <p className="mt-4 rounded-2xl border border-gold/15 bg-white/[.035] px-4 py-3 text-sm font-bold text-zinc-300">{message}</p>}
-        <button type="submit" className="mt-5 w-full rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5">입장</button>
-      </form>
-    );
-  }
-
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_1.2fr] lg:items-start">
       {/* Form */}
@@ -291,7 +250,7 @@ export default function AdminLineupBoard({
             <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">admin only</p>
             <h2 className="mt-3 text-2xl font-black text-white">{editingId ? "기사 수정" : "기사 추가"}</h2>
           </div>
-          <button type="button" onClick={logout} className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">
+          <button type="button" onClick={() => void logout()} className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">
             <LogOut size={16} />로그아웃
           </button>
         </div>
@@ -321,7 +280,6 @@ export default function AdminLineupBoard({
             <textarea value={form.description} onChange={set("description")} maxLength={300} rows={3} className={`${inputCls} resize-none leading-7`} placeholder="기사 소개를 입력해주세요." />
           </label>
 
-          {/* 이미지 업로드 */}
           <div className="grid gap-2">
             <span className="text-sm font-bold text-zinc-300">프로필 이미지</span>
             {form.image ? (

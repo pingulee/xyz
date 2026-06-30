@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { getNotices, toNotice } from "@/lib/notices";
+import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession";
 
 export const runtime = "nodejs";
 
@@ -19,7 +20,6 @@ type NoticePayload = {
   content?: string;
   image?: string | null;
   pinned?: boolean;
-  password?: string;
 };
 
 type NoticeRow = RowDataPacket & {
@@ -32,9 +32,9 @@ type NoticeRow = RowDataPacket & {
   updated_at: Date;
 };
 
-function isAdminPassword(password: string) {
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  return Boolean(adminPassword && password === adminPassword);
+function isAdminRequest(request: Request): boolean {
+  const token = getSessionTokenFromRequest(request);
+  return token ? validateSession(token) : false;
 }
 
 function isAllowedImageData(image: string | null | undefined) {
@@ -78,21 +78,17 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  let payload: NoticePayload;
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
+  }
 
+  let payload: NoticePayload;
   try {
     payload = await request.json();
   } catch {
     return NextResponse.json(
       { message: "요청 형식이 올바르지 않습니다." },
       { status: 400 },
-    );
-  }
-
-  if (!isAdminPassword(payload.password?.trim() ?? "")) {
-    return NextResponse.json(
-      { message: "관리자 비밀번호가 일치하지 않습니다." },
-      { status: 403 },
     );
   }
 
@@ -131,8 +127,11 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  let payload: NoticePayload;
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
+  }
 
+  let payload: NoticePayload;
   try {
     payload = await request.json();
   } catch {
@@ -147,13 +146,6 @@ export async function PUT(request: Request) {
     return NextResponse.json(
       { message: "수정할 공지사항을 찾을 수 없습니다." },
       { status: 400 },
-    );
-  }
-
-  if (!isAdminPassword(payload.password?.trim() ?? "")) {
-    return NextResponse.json(
-      { message: "관리자 비밀번호가 일치하지 않습니다." },
-      { status: 403 },
     );
   }
 
@@ -204,8 +196,11 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  let payload: NoticePayload;
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
+  }
 
+  let payload: { id?: string };
   try {
     payload = await request.json();
   } catch {
@@ -220,13 +215,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json(
       { message: "삭제할 공지사항을 찾을 수 없습니다." },
       { status: 400 },
-    );
-  }
-
-  if (!isAdminPassword(payload.password?.trim() ?? "")) {
-    return NextResponse.json(
-      { message: "관리자 비밀번호가 일치하지 않습니다." },
-      { status: 403 },
     );
   }
 

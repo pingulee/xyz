@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Container from "@/components/Container";
 import Reveal from "@/components/Reveal";
 import ReviewBoard from "@/components/ReviewBoard";
 import SectionTitle from "@/components/SectionTitle";
 import { getReviews } from "@/lib/reviews";
+import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +25,11 @@ export const metadata: Metadata = {
 
 export default async function ReviewsPage() {
   const reviews = await getReviews();
+
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value ?? "";
+  const isAdmin = validateSession(token);
+
   const reviewSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -57,7 +64,7 @@ export default async function ReviewsPage() {
           />
         </Reveal>
         <Reveal>
-          <ReviewBoard initialReviews={reviews} />
+          <ReviewBoard initialReviews={reviews} isAdmin={isAdmin} />
         </Reveal>
       </Container>
     </section>

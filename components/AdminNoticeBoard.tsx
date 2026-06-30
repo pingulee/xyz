@@ -2,15 +2,14 @@
 
 import Image from "next/image";
 import { Loader2, LogOut, Pencil, Pin, Trash2, X } from "lucide-react";
-import { ChangeEvent, type FormEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, type FormEvent, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Notice } from "@/lib/notices";
 
 type NoticeResponse = {
   notice: Notice;
   message?: string;
 };
-
-const STORAGE_KEY = "xyz-admin-password";
 
 const MAX_IMAGE_SIZE = 1024 * 1024 * 2;
 const MAX_IMAGE_WIDTH = 1600;
@@ -38,8 +37,6 @@ export default function AdminNoticeBoard({
   initialNotices?: Notice[];
 }) {
   const [notices, setNotices] = useState(initialNotices);
-  const [password, setPassword] = useState("");
-  const [passwordInput, setPasswordInput] = useState("");
   const [form, setForm] = useState(blankForm);
   const [selectedId, setSelectedId] = useState(initialNotices[0]?.id ?? "");
   const [editingId, setEditingId] = useState("");
@@ -49,17 +46,9 @@ export default function AdminNoticeBoard({
   const [imageName, setImageName] = useState("");
   const [imageError, setImageError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   const selectedNotice = notices.find((n) => n.id === selectedId) ?? notices[0];
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPassword(stored);
-      setPasswordInput(stored);
-    }
-  }, []);
 
   const handleImage = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -100,20 +89,9 @@ export default function AdminNoticeBoard({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const login = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const pw = passwordInput.trim();
-    if (!pw) { setMessage("관리자 비밀번호를 입력해주세요."); return; }
-    window.localStorage.setItem(STORAGE_KEY, pw);
-    setPassword(pw);
-    setMessage("");
-  };
-
-  const logout = () => {
-    window.localStorage.removeItem(STORAGE_KEY);
-    setPassword("");
-    setPasswordInput("");
-    setMessage("");
+  const logout = async () => {
+    await fetch("/api/admin/logout", { method: "POST" });
+    router.push("/admin");
   };
 
   const startEdit = (notice: Notice) => {
@@ -145,7 +123,7 @@ export default function AdminNoticeBoard({
       const response = await fetch("/api/notices", {
         method: editingId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editingId || undefined, title, content, image: form.image, pinned: form.pinned, password }),
+        body: JSON.stringify({ id: editingId || undefined, title, content, image: form.image, pinned: form.pinned }),
       });
       const data = (await response.json()) as NoticeResponse;
       if (!response.ok) throw new Error(data.message ?? "공지사항을 저장하지 못했습니다.");
@@ -174,7 +152,7 @@ export default function AdminNoticeBoard({
       const response = await fetch("/api/notices", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: notice.id, password }),
+        body: JSON.stringify({ id: notice.id }),
       });
       const data = (await response.json()) as { message?: string };
       if (!response.ok) throw new Error(data.message ?? "공지사항을 삭제하지 못했습니다.");
@@ -190,21 +168,6 @@ export default function AdminNoticeBoard({
 
   const inputCls = "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
 
-  if (!password) {
-    return (
-      <form onSubmit={login} className="card-premium mx-auto max-w-xl rounded-[34px] p-6 sm:p-8">
-        <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">admin</p>
-        <h2 className="mt-3 text-2xl font-black text-white">관리자 로그인</h2>
-        <label className="mt-7 grid gap-2">
-          <span className="text-sm font-bold text-zinc-300">비밀번호</span>
-          <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className={inputCls} placeholder="ADMIN_PASSWORD" />
-        </label>
-        {message && <p className="mt-4 rounded-2xl border border-gold/15 bg-white/[.035] px-4 py-3 text-sm font-bold text-zinc-300">{message}</p>}
-        <button type="submit" className="mt-5 w-full rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5">입장</button>
-      </form>
-    );
-  }
-
   return (
     <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
       <form onSubmit={saveNotice} className="card-premium rounded-[34px] p-6 sm:p-8">
@@ -213,7 +176,7 @@ export default function AdminNoticeBoard({
             <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">admin only</p>
             <h2 className="mt-3 text-2xl font-black text-white">{editingId ? "공지 수정" : "공지 작성"}</h2>
           </div>
-          <button type="button" onClick={logout} className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">
+          <button type="button" onClick={() => void logout()} className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">
             <LogOut size={16} />로그아웃
           </button>
         </div>
@@ -229,7 +192,6 @@ export default function AdminNoticeBoard({
             <textarea value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} maxLength={3000} rows={8} className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50" placeholder="공지 내용을 입력해주세요." />
           </label>
 
-          {/* 이미지 업로드 */}
           <div className="grid gap-2">
             <span className="text-sm font-bold text-zinc-300">이미지 (선택)</span>
             {form.image ? (
