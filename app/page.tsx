@@ -17,7 +17,8 @@ import SectionTitle from "@/components/SectionTitle";
 import ServiceCard from "@/components/ServiceCard";
 import PriceTable from "@/components/PriceTable";
 import JsonLd from "@/components/JsonLd";
-import { lineups, services, site } from "@/lib/site";
+import { services, site } from "@/lib/site";
+import { getLineups } from "@/lib/lineups";
 
 const stats = [
   ["상위 티어", "검증 기사"],
@@ -59,7 +60,9 @@ const faqs = [
   ],
 ];
 
-export default function Home() {
+export default async function Home() {
+  const lineups = await getLineups();
+
   return (
     <>
       <JsonLd />

@@ -4,7 +4,7 @@ import { Clock, Medal, Shield } from "lucide-react";
 import Container from "@/components/Container";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
-import { lineups } from "@/lib/site";
+import { getLineups } from "@/lib/lineups";
 
 export const metadata: Metadata = {
   title: "기사 라인업",
@@ -20,7 +20,9 @@ const positionColors: Record<string, string> = {
   탑: "bg-orange-500/15 text-orange-400",
 };
 
-export default function LineupPage() {
+export default async function LineupPage() {
+  const lineups = await getLineups();
+
   return (
     <section className="py-20">
       <Container>
