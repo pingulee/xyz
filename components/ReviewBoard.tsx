@@ -685,13 +685,13 @@ export default function ReviewBoard({
                   key={review.id}
                   type="button"
                   onClick={() => setSelectedReviewId(review.id)}
-                  className="grid w-full grid-cols-[auto_1fr] gap-4 border-b border-white/8 p-4 text-left transition last:border-b-0 hover:bg-white/4 sm:grid-cols-[4rem_1fr_auto]"
+                  className="grid w-full grid-cols-[1fr_auto] gap-4 border-b border-white/8 p-4 text-left transition last:border-b-0 hover:bg-white/4 sm:grid-cols-[4rem_1fr_auto]"
                 >
                   <span className="hidden text-center text-sm font-black text-zinc-500 sm:block">
                     {(currentPage - 1) * REVIEWS_PER_PAGE + i + 1}
                   </span>
 
-                  <span className="grid gap-2">
+                  <span className="col-span-1 grid gap-2">
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="text-base font-black text-white">
                         {review.name}
@@ -717,7 +717,7 @@ export default function ReviewBoard({
                   </span>
 
                   {review.image && (
-                    <span className="relative hidden h-16 w-22 overflow-hidden rounded-2xl bg-black sm:block">
+                    <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-black sm:w-22">
                       <Image
                         src={review.image}
                         alt={`${review.name} 후기 이미지`}
