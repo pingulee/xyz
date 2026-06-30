@@ -22,7 +22,9 @@ type ReviewRow = RowDataPacket & {
   created_at: Date;
   reply_id: number | null;
   reply_lineup_id: number | null;
+  reply_knight_name: string | null;
   reply_content: string | null;
+  reply_tier_records: string | null;
   reply_created_at: Date | null;
 };
 

@@ -8,7 +8,7 @@ import Container from "@/components/Container";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import LineupReviews from "@/components/LineupReviews";
-import { getLineupBySlug, getLineupReviewStats } from "@/lib/lineups";
+import { getLineupBySlug, getLineupReviewStats, getLineupWinStats } from "@/lib/lineups";
 import { getReviewsByLineupId } from "@/lib/reviews";
 import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSession";
 
@@ -54,9 +54,10 @@ export default async function LineupDetailPage({ params }: Props) {
   const knightToken = cookieStore.get(KNIGHT_SESSION_COOKIE)?.value ?? "";
   const knightLineupId = validateKnightSession(knightToken);
 
-  const [stats, reviews] = await Promise.all([
+  const [stats, reviews, winStats] = await Promise.all([
     getLineupReviewStats(Number(lineup.id)),
     getReviewsByLineupId(Number(lineup.id)),
+    getLineupWinStats(Number(lineup.id)),
   ]);
 
   return (
@@ -181,6 +182,47 @@ export default async function LineupDetailPage({ params }: Props) {
                   </div>
                 </div>
 
+                {(winStats.total.wins > 0 || winStats.total.losses > 0) && (
+                  <div className="mt-6 rounded-3xl border border-gold/15 bg-white/4 p-5">
+                    <div className="text-sm font-black text-zinc-500 mb-4">작업 기록</div>
+                    <div className="flex items-center gap-4 mb-4">
+                      <div>
+                        <div className="text-xs text-zinc-500 mb-1">전체 승률</div>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-2xl font-black text-white">
+                            {winStats.total.wins + winStats.total.losses > 0
+                              ? Math.round((winStats.total.wins / (winStats.total.wins + winStats.total.losses)) * 100)
+                              : 0}%
+                          </span>
+                          <span className="text-sm text-zinc-500">
+                            {winStats.total.wins}승 {winStats.total.losses}패
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {winStats.byTier.length > 0 && (
+                      <div className="grid gap-2">
+                        {winStats.byTier.map((t) => {
+                          const total = t.wins + t.losses;
+                          const pct = total > 0 ? Math.round((t.wins / total) * 100) : 0;
+                          return (
+                            <div key={t.tier} className="flex items-center gap-3">
+                              <span className="w-20 shrink-0 text-xs font-black text-zinc-400">{t.tier}</span>
+                              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/8">
+                                <div className="h-full rounded-full bg-gold" style={{ width: `${pct}%` }} />
+                              </div>
+                              <span className="w-24 shrink-0 text-right text-xs text-zinc-400">
+                                {t.wins}승 {t.losses}패
+                                <span className="ml-1.5 font-black text-white">{pct}%</span>
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="mt-6 grid gap-6 md:grid-cols-2">
                   <div>
                     <div className="text-sm font-black text-zinc-500">대표 챔피언</div>
@@ -220,7 +262,7 @@ export default async function LineupDetailPage({ params }: Props) {
             <h2 className="mb-6 text-xl font-black text-white">
               후기 <span className="text-gold">{reviews.length}</span>개
             </h2>
-            <LineupReviews reviews={reviews} knightLineupId={knightLineupId} />
+            <LineupReviews reviews={reviews} knightLineupId={knightLineupId} knightName={lineup.name} />
           </div>
         </Reveal>
       </Container>

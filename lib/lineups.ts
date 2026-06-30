@@ -1,6 +1,7 @@
 import { RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { ensureReviewsSchema } from "@/lib/reviews";
+import type { TierRecord } from "@/lib/reviews";
 import type { Lineup } from "@/lib/lineup-model";
 
 type LineupRow = RowDataPacket & {
@@ -97,6 +98,47 @@ export async function getLineupBySlug(slug: string): Promise<Lineup | null> {
         lineup.name.toLowerCase().replace(/[^a-z0-9가-힣]+/g, "-") === decoded,
     ) ?? null
   );
+}
+
+const TIER_ORDER = [
+  "아이언", "브론즈", "실버", "골드", "플래티넘",
+  "에메랄드", "다이아몬드", "마스터", "그랜드마스터", "챌린저",
+];
+
+export async function getLineupWinStats(lineupId: number): Promise<{
+  total: { wins: number; losses: number };
+  byTier: { tier: string; wins: number; losses: number }[];
+}> {
+  const [rows] = await getPool().execute<RowDataPacket[]>(
+    `SELECT tier_records FROM review_replies WHERE lineup_id = :lineupId AND tier_records IS NOT NULL`,
+    { lineupId },
+  );
+
+  const byTier: Record<string, { wins: number; losses: number }> = {};
+  let totalWins = 0;
+  let totalLosses = 0;
+
+  for (const row of rows) {
+    let records: TierRecord[] = [];
+    try {
+      const raw = row.tier_records;
+      records = (typeof raw === "string" ? JSON.parse(raw) : raw) as TierRecord[];
+    } catch { continue; }
+    for (const r of records) {
+      if (!r.tier) continue;
+      if (!byTier[r.tier]) byTier[r.tier] = { wins: 0, losses: 0 };
+      byTier[r.tier].wins += Number(r.wins) || 0;
+      byTier[r.tier].losses += Number(r.losses) || 0;
+      totalWins += Number(r.wins) || 0;
+      totalLosses += Number(r.losses) || 0;
+    }
+  }
+
+  const byTierArr = Object.entries(byTier)
+    .map(([tier, v]) => ({ tier, ...v }))
+    .sort((a, b) => TIER_ORDER.indexOf(b.tier) - TIER_ORDER.indexOf(a.tier));
+
+  return { total: { wins: totalWins, losses: totalLosses }, byTier: byTierArr };
 }
 
 export async function getLineupReviewStats(id: number) {

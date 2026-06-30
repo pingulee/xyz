@@ -6,6 +6,7 @@ import {
   Copy,
   Loader2,
   Pencil,
+  Plus,
   Star,
   Trash2,
   X,
@@ -18,10 +19,18 @@ import {
   useState,
 } from "react";
 
+type TierRecord = {
+  tier: string;
+  wins: number;
+  losses: number;
+};
+
 type ReviewReply = {
   id: string;
   lineupId: string;
+  knightName: string;
   content: string;
+  tierRecords: TierRecord[];
   createdAt: string;
 };
 
@@ -170,6 +179,9 @@ export default function ReviewBoard({
   lineups?: Array<{ id: string; name: string; services: string[] }>;
   knightLineupId?: number | null;
 }) {
+  const knightName = knightLineupId
+    ? (lineups.find((l) => l.id === String(knightLineupId))?.name ?? "")
+    : "";
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
   const [form, setForm] = useState(blankForm);
   const [deleteForms, setDeleteForms] = useState<Record<string, DeleteForm>>(
@@ -502,14 +514,14 @@ export default function ReviewBoard({
     }
   };
 
-  const submitReply = async (reviewId: string, content: string) => {
+  const submitReply = async (reviewId: string, content: string, tierRecords: TierRecord[]) => {
     setError("");
     setReplyingId(reviewId);
     try {
       const response = await fetch("/api/reviews/reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reviewId, content }),
+        body: JSON.stringify({ reviewId, content, tierRecords }),
       });
       const data = (await response.json()) as { reply?: ReviewReply; message?: string };
       if (!response.ok) throw new Error(data.message ?? "답변을 저장하지 못했습니다.");
@@ -803,9 +815,10 @@ export default function ReviewBoard({
             editing={editingId === selectedReview.id}
             isAdmin={isAdmin}
             knightLineupId={knightLineupId}
+            knightName={knightName}
             replying={replyingId === selectedReview.id}
             deletingReply={deletingReplyId === selectedReview.id}
-            onSubmitReply={(content) => void submitReply(selectedReview.id, content)}
+            onSubmitReply={(content, tierRecords) => void submitReply(selectedReview.id, content, tierRecords)}
             onDeleteReply={() => void deleteReply(selectedReview.id)}
             onDelete={() => void deleteReview(selectedReview.id)}
             onDeleteOpenChange={() => {
@@ -942,9 +955,63 @@ export default function ReviewBoard({
   );
 }
 
+const TIER_OPTIONS_RB = [
+  "아이언", "브론즈", "실버", "골드", "플래티넘",
+  "에메랄드", "다이아몬드", "마스터", "그랜드마스터", "챌린저",
+];
+
+const inputClsRB =
+  "rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50";
+
+function TierRecordEditorRB({
+  records,
+  onChange,
+}: {
+  records: TierRecord[];
+  onChange: (r: TierRecord[]) => void;
+}) {
+  const add = () => onChange([...records, { tier: "골드", wins: 0, losses: 0 }]);
+  const remove = (i: number) => onChange(records.filter((_, idx) => idx !== i));
+  const update = (i: number, field: keyof TierRecord, val: string | number) =>
+    onChange(records.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
+
+  return (
+    <div className="grid gap-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-black text-zinc-400">작업 기록</span>
+        <button type="button" onClick={add}
+          className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">
+          <Plus size={11} /> 추가
+        </button>
+      </div>
+      {records.map((r, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <select value={r.tier} onChange={(e) => update(i, "tier", e.target.value)}
+            className={`${inputClsRB} flex-1`}>
+            {TIER_OPTIONS_RB.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <input type="number" min={0} max={999} value={r.wins}
+            onChange={(e) => update(i, "wins", Math.max(0, Number(e.target.value) || 0))}
+            className={`${inputClsRB} w-14 text-center`} placeholder="승" />
+          <span className="text-xs text-zinc-500 shrink-0">승</span>
+          <input type="number" min={0} max={999} value={r.losses}
+            onChange={(e) => update(i, "losses", Math.max(0, Number(e.target.value) || 0))}
+            className={`${inputClsRB} w-14 text-center`} placeholder="패" />
+          <span className="text-xs text-zinc-500 shrink-0">패</span>
+          <button type="button" onClick={() => remove(i)}
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/10 text-zinc-500 transition hover:border-red-400/40 hover:text-red-300">
+            <Trash2 size={11} />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ReplySection({
   review,
   knightLineupId,
+  knightName,
   replying,
   deletingReply,
   onSubmitReply,
@@ -952,98 +1019,83 @@ function ReplySection({
 }: {
   review: Review;
   knightLineupId: number | null;
+  knightName: string;
   replying: boolean;
   deletingReply: boolean;
-  onSubmitReply: (content: string) => void;
+  onSubmitReply: (content: string, tierRecords: TierRecord[]) => void;
   onDeleteReply: () => void;
 }) {
+  const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(review.reply?.content ?? "");
+  const [tierRecords, setTierRecords] = useState<TierRecord[]>(review.reply?.tierRecords ?? []);
   const canReply = knightLineupId !== null && review.lineupId === String(knightLineupId);
 
   if (!review.reply && !canReply) return null;
 
+  const startEdit = () => {
+    setDraft(review.reply?.content ?? "");
+    setTierRecords(review.reply?.tierRecords ?? []);
+    setEditing(true);
+  };
+
   return (
-    <div className="mt-4 rounded-3xl border border-gold/15 bg-white/[.03] p-4">
+    <div className="mt-4 rounded-3xl border border-gold/15 bg-white/3 p-4">
       <p className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-gold">기사 답변</p>
-      {review.reply ? (
+      {review.reply && !editing ? (
         <div>
-          <p className="text-sm leading-7 whitespace-pre-wrap text-zinc-300">{review.reply.content}</p>
-          <p className="mt-2 text-xs text-zinc-500">{formatDate(review.reply.createdAt)}</p>
-          {canReply && (
-            <div className="mt-3 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setDraft(review.reply!.content)}
-                className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white"
-              >
-                수정
-              </button>
-              <button
-                type="button"
-                onClick={onDeleteReply}
-                disabled={deletingReply}
-                className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1.5 text-xs font-bold text-zinc-400 transition hover:border-red-400/40 hover:text-red-200 disabled:opacity-60"
-              >
-                {deletingReply && <Loader2 size={12} className="animate-spin" />}
-                삭제
-              </button>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-black text-gold">{review.reply.knightName}</span>
+            <span className="text-xs text-zinc-600">기사</span>
+          </div>
+          {review.reply.tierRecords.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {review.reply.tierRecords.map((r, i) => (
+                <span key={i} className="rounded-full border border-gold/20 bg-gold/8 px-2.5 py-0.5 text-xs font-black text-gold">
+                  {r.tier} {r.wins}승 {r.losses}패
+                </span>
+              ))}
             </div>
           )}
-        </div>
-      ) : (
-        canReply && (
-          <div className="grid gap-2">
-            <textarea
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              rows={3}
-              maxLength={500}
-              placeholder="후기에 답변을 남겨주세요."
-              className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full"
-            />
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={() => { if (draft.trim()) onSubmitReply(draft.trim()); }}
-                disabled={replying || !draft.trim()}
-                className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-2.5 text-sm font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {replying && <Loader2 size={14} className="animate-spin" />}
-                답변 등록
-              </button>
-            </div>
+          <p className="text-sm leading-7 whitespace-pre-wrap text-zinc-300">{review.reply.content}</p>
+          <div className="mt-2 flex items-center gap-3">
+            <span className="text-xs text-zinc-600">{formatDate(review.reply.createdAt)}</span>
+            {canReply && (
+              <div className="flex gap-2">
+                <button type="button" onClick={startEdit}
+                  className="text-xs font-bold text-zinc-500 transition hover:text-zinc-200">수정</button>
+                <button type="button" onClick={onDeleteReply} disabled={deletingReply}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 transition hover:text-red-300 disabled:opacity-50">
+                  {deletingReply && <Loader2 size={10} className="animate-spin" />}삭제
+                </button>
+              </div>
+            )}
           </div>
-        )
-      )}
-      {canReply && review.reply && draft !== review.reply.content && (
-        <div className="mt-3 grid gap-2">
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            rows={3}
-            maxLength={500}
-            className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full"
-          />
+        </div>
+      ) : canReply ? (
+        <div className="grid gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black text-gold">{knightName}</span>
+            <span className="text-xs text-zinc-600">기사 (닉네임 자동)</span>
+          </div>
+          <TierRecordEditorRB records={tierRecords} onChange={setTierRecords} />
+          <textarea value={draft} onChange={(e) => setDraft(e.target.value)}
+            rows={3} maxLength={500} placeholder="고객에게 답변을 남겨주세요."
+            className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full" />
           <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setDraft(review.reply!.content)}
-              className="rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white"
-            >
-              취소
-            </button>
-            <button
-              type="button"
-              onClick={() => { if (draft.trim()) onSubmitReply(draft.trim()); }}
+            {editing && (
+              <button type="button" onClick={() => setEditing(false)}
+                className="rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">취소</button>
+            )}
+            <button type="button"
+              onClick={() => { if (draft.trim()) onSubmitReply(draft.trim(), tierRecords); }}
               disabled={replying || !draft.trim()}
-              className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-2.5 text-sm font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60"
-            >
+              className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-2.5 text-sm font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60">
               {replying && <Loader2 size={14} className="animate-spin" />}
-              수정 저장
+              {editing ? "수정 저장" : "답변 등록"}
             </button>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -1059,6 +1111,7 @@ function ReviewDetail({
   error,
   isAdmin,
   knightLineupId,
+  knightName,
   replying,
   deletingReply,
   onSubmitReply,
@@ -1087,9 +1140,10 @@ function ReviewDetail({
   error?: string;
   isAdmin: boolean;
   knightLineupId: number | null;
+  knightName: string;
   replying: boolean;
   deletingReply: boolean;
-  onSubmitReply: (content: string) => void;
+  onSubmitReply: (content: string, tierRecords: TierRecord[]) => void;
   onDeleteReply: () => void;
   nextReview?: Review;
   onDelete: () => void;
@@ -1272,6 +1326,7 @@ function ReviewDetail({
           <ReplySection
             review={review}
             knightLineupId={knightLineupId}
+            knightName={knightName}
             replying={replying}
             deletingReply={deletingReply}
             onSubmitReply={onSubmitReply}
