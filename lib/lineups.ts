@@ -89,11 +89,12 @@ export function getLineupPath(lineup: { name: string }): string {
 }
 
 export async function getLineupBySlug(slug: string): Promise<Lineup | null> {
+  const decoded = decodeURIComponent(slug);
   const lineups = await getLineups(false);
   return (
     lineups.find(
       (lineup) =>
-        lineup.name.toLowerCase().replace(/[^a-z0-9가-힣]+/g, "-") === slug,
+        lineup.name.toLowerCase().replace(/[^a-z0-9가-힣]+/g, "-") === decoded,
     ) ?? null
   );
 }
