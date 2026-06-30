@@ -193,7 +193,32 @@ const LOL_CHAMPIONS = [
 ];
 
 const POSITIONS = ["탑", "정글", "미드", "바텀", "서포터"] as const;
-const TIME_SLOTS = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"];
+const TIME_SLOTS = [
+  "00",
+  "01",
+  "02",
+  "03",
+  "04",
+  "05",
+  "06",
+  "07",
+  "08",
+  "09",
+  "10",
+  "11",
+  "12",
+  "13",
+  "14",
+  "15",
+  "16",
+  "17",
+  "18",
+  "19",
+  "20",
+  "21",
+  "22",
+  "23",
+];
 
 const blankForm = {
   name: "",
@@ -257,10 +282,16 @@ export default function AdminLineupBoard({
     };
   }, [modalOpen]);
 
-  type StringKey = { [K in keyof FormState]: FormState[K] extends string ? K : never }[keyof FormState];
+  type StringKey = {
+    [K in keyof FormState]: FormState[K] extends string ? K : never;
+  }[keyof FormState];
   const set =
     (key: StringKey) =>
-    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    (
+      e: ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >,
+    ) =>
       setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const togglePosition = (pos: string) =>
@@ -324,10 +355,18 @@ export default function AdminLineupBoard({
     setModalOpen(true);
   };
 
-  const parseHours = (hours: string): { start: string; end: string; all: boolean } => {
-    if (!hours || hours.toUpperCase() === "ALL") return { start: "00", end: "23", all: true };
+  const parseHours = (
+    hours: string,
+  ): { start: string; end: string; all: boolean } => {
+    if (!hours || hours.toUpperCase() === "ALL")
+      return { start: "00", end: "23", all: true };
     const m = hours.match(/(\d{1,2}):?\d*\s*~\s*(\d{1,2})/);
-    if (m) return { start: String(m[1]).padStart(2, "0"), end: String(m[2]).padStart(2, "0"), all: false };
+    if (m)
+      return {
+        start: String(m[1]).padStart(2, "0"),
+        end: String(m[2]).padStart(2, "0"),
+        all: false,
+      };
     return { start: "00", end: "23", all: false };
   };
 
@@ -375,8 +414,16 @@ export default function AdminLineupBoard({
     rank: form.rank,
     tier: form.tier,
     description: form.description,
-    weekdayHours: formatHours(form.weekdayStart, form.weekdayEnd, form.weekdayAll),
-    weekendHours: formatHours(form.weekendStart, form.weekendEnd, form.weekendAll),
+    weekdayHours: formatHours(
+      form.weekdayStart,
+      form.weekdayEnd,
+      form.weekdayAll,
+    ),
+    weekendHours: formatHours(
+      form.weekendStart,
+      form.weekendEnd,
+      form.weekendAll,
+    ),
     champions: [form.champ1, form.champ2, form.champ3]
       .filter(Boolean)
       .join(","),
@@ -422,7 +469,7 @@ export default function AdminLineupBoard({
           id: editingId || undefined,
           ...buildPayload(imageUrl),
           sortOrder: editingId
-            ? lineups.find((l) => l.id === editingId)?.sortOrder ?? 0
+            ? (lineups.find((l) => l.id === editingId)?.sortOrder ?? 0)
             : lineups.length,
         }),
       });
@@ -537,54 +584,114 @@ export default function AdminLineupBoard({
             {/* 헤더 */}
             <div className="flex items-start justify-between gap-4 p-5 md:px-8 md:pt-8 md:pb-4">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">admin</p>
-                <h2 className="mt-1 text-xl font-black text-white md:text-2xl">{editingId ? "기사 수정" : "기사 추가"}</h2>
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
+                  admin
+                </p>
+                <h2 className="mt-1 text-xl font-black text-white md:text-2xl">
+                  {editingId ? "기사 수정" : "기사 추가"}
+                </h2>
               </div>
-              <button type="button" onClick={closeModal} className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white" aria-label="닫기">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white"
+                aria-label="닫기"
+              >
                 <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={saveLineup} className="md:grid md:grid-cols-[240px_1fr] md:divide-x md:divide-white/8">
+            <form
+              onSubmit={saveLineup}
+              className="md:grid md:grid-cols-[240px_1fr] md:divide-x md:divide-white/8"
+            >
               {/* 왼쪽 패널: 이미지 · 이름 · 티어 · 포지션 */}
               <div className="grid gap-3 p-5 md:px-8 md:pb-8 md:pt-0 md:content-start">
                 <div className="grid gap-2">
-                  <span className="text-sm font-bold text-zinc-300">프로필 이미지</span>
+                  <span className="text-sm font-bold text-zinc-300">
+                    프로필 이미지
+                  </span>
                   {currentImage ? (
                     <div className="relative overflow-hidden rounded-2xl bg-zinc-900">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={currentImage} alt="미리보기" className="h-32 w-full object-cover" />
-                      <button type="button" onClick={removeImage} className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white hover:bg-black"><X size={12} /></button>
-                      <p className="px-3 py-1.5 text-xs text-zinc-500 truncate">{imageName}</p>
+                      <img
+                        src={currentImage}
+                        alt="미리보기"
+                        className="h-32 w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white hover:bg-black"
+                      >
+                        <X size={12} />
+                      </button>
+                      <p className="px-3 py-1.5 text-xs text-zinc-500 truncate">
+                        {imageName}
+                      </p>
                     </div>
                   ) : (
                     <label className="flex h-32 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-white/15 bg-white/3 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">
                       <span>이미지 선택</span>
-                      <span className="text-xs font-normal text-zinc-600">JPG / PNG / WEBP · 5MB 이하</span>
-                      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImage} />
+                      <span className="text-xs font-normal text-zinc-600">
+                        JPG / PNG / WEBP · 5MB 이하
+                      </span>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={handleImage}
+                      />
                     </label>
                   )}
-                  {imageError && <p className="text-xs text-red-400">{imageError}</p>}
+                  {imageError && (
+                    <p className="text-xs text-red-400">{imageError}</p>
+                  )}
                 </div>
 
                 <label className={labelCls}>
                   이름
-                  <input value={form.name} onChange={set("name")} maxLength={60} className={inputCls} placeholder="이브" />
+                  <input
+                    value={form.name}
+                    onChange={set("name")}
+                    maxLength={60}
+                    className={inputCls}
+                    placeholder="닉네임"
+                  />
                 </label>
 
                 <label className={labelCls}>
                   티어
-                  <select value={form.tier} onChange={(e) => setTierOption(e.target.value)} className={inputCls}>
-                    {TIER_OPTIONS.map((opt) => <option key={opt.tier} value={opt.tier}>{opt.label}</option>)}
+                  <select
+                    value={form.tier}
+                    onChange={(e) => setTierOption(e.target.value)}
+                    className={inputCls}
+                  >
+                    {TIER_OPTIONS.map((opt) => (
+                      <option key={opt.tier} value={opt.tier}>
+                        {opt.label}
+                      </option>
+                    ))}
                   </select>
                 </label>
 
                 <div className="grid gap-2">
-                  <span className="text-sm font-bold text-zinc-300">포지션</span>
+                  <span className="text-sm font-bold text-zinc-300">
+                    포지션
+                  </span>
                   <div className="flex flex-wrap gap-x-4 gap-y-2">
                     {POSITIONS.map((pos) => (
-                      <label key={pos} className="flex items-center gap-2 text-sm font-bold text-zinc-300 cursor-pointer">
-                        <input type="checkbox" checked={form.positionSet.has(pos)} onChange={() => togglePosition(pos)} className="h-4 w-4 accent-gold" />
+                      <label
+                        key={pos}
+                        className="flex items-center gap-2 text-sm font-bold text-zinc-300 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={form.positionSet.has(pos)}
+                          onChange={() => togglePosition(pos)}
+                          className="h-4 w-4 accent-gold"
+                        />
                         {pos}
                       </label>
                     ))}
@@ -596,57 +703,133 @@ export default function AdminLineupBoard({
               <div className="grid gap-3 border-t border-white/8 p-5 md:border-t-0 md:px-8 md:pb-8 md:pt-0 md:content-start">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="grid gap-2">
-                    <span className="text-sm font-bold text-zinc-300">평일 시간</span>
+                    <span className="text-sm font-bold text-zinc-300">
+                      평일 시간
+                    </span>
                     {form.weekdayAll ? (
                       <div className={`${inputCls} text-zinc-500`}>ALL</div>
                     ) : (
                       <div className="flex items-center gap-1">
-                        <select value={form.weekdayStart} onChange={set("weekdayStart")} className={inputCls}>
-                          {TIME_SLOTS.map((h) => <option key={h} value={h}>{h}:00</option>)}
+                        <select
+                          value={form.weekdayStart}
+                          onChange={set("weekdayStart")}
+                          className={inputCls}
+                        >
+                          {TIME_SLOTS.map((h) => (
+                            <option key={h} value={h}>
+                              {h}:00
+                            </option>
+                          ))}
                         </select>
-                        <span className="shrink-0 text-zinc-500 text-xs">~</span>
-                        <select value={form.weekdayEnd} onChange={set("weekdayEnd")} className={inputCls}>
-                          {TIME_SLOTS.map((h) => <option key={h} value={h}>{h}:00</option>)}
+                        <span className="shrink-0 text-zinc-500 text-xs">
+                          ~
+                        </span>
+                        <select
+                          value={form.weekdayEnd}
+                          onChange={set("weekdayEnd")}
+                          className={inputCls}
+                        >
+                          {TIME_SLOTS.map((h) => (
+                            <option key={h} value={h}>
+                              {h}:00
+                            </option>
+                          ))}
                         </select>
                       </div>
                     )}
                     <label className="flex items-center gap-2 text-xs font-bold text-zinc-400 cursor-pointer">
-                      <input type="checkbox" checked={form.weekdayAll} onChange={(e) => setForm((f) => ({ ...f, weekdayAll: e.target.checked }))} className="h-4 w-4 accent-gold" />
+                      <input
+                        type="checkbox"
+                        checked={form.weekdayAll}
+                        onChange={(e) =>
+                          setForm((f) => ({
+                            ...f,
+                            weekdayAll: e.target.checked,
+                          }))
+                        }
+                        className="h-4 w-4 accent-gold"
+                      />
                       ALL
                     </label>
                   </div>
                   <div className="grid gap-2">
-                    <span className="text-sm font-bold text-zinc-300">주말 시간</span>
+                    <span className="text-sm font-bold text-zinc-300">
+                      주말 시간
+                    </span>
                     {form.weekendAll ? (
                       <div className={`${inputCls} text-zinc-500`}>ALL</div>
                     ) : (
                       <div className="flex items-center gap-1">
-                        <select value={form.weekendStart} onChange={set("weekendStart")} className={inputCls}>
-                          {TIME_SLOTS.map((h) => <option key={h} value={h}>{h}:00</option>)}
+                        <select
+                          value={form.weekendStart}
+                          onChange={set("weekendStart")}
+                          className={inputCls}
+                        >
+                          {TIME_SLOTS.map((h) => (
+                            <option key={h} value={h}>
+                              {h}:00
+                            </option>
+                          ))}
                         </select>
-                        <span className="shrink-0 text-zinc-500 text-xs">~</span>
-                        <select value={form.weekendEnd} onChange={set("weekendEnd")} className={inputCls}>
-                          {TIME_SLOTS.map((h) => <option key={h} value={h}>{h}:00</option>)}
+                        <span className="shrink-0 text-zinc-500 text-xs">
+                          ~
+                        </span>
+                        <select
+                          value={form.weekendEnd}
+                          onChange={set("weekendEnd")}
+                          className={inputCls}
+                        >
+                          {TIME_SLOTS.map((h) => (
+                            <option key={h} value={h}>
+                              {h}:00
+                            </option>
+                          ))}
                         </select>
                       </div>
                     )}
                     <label className="flex items-center gap-2 text-xs font-bold text-zinc-400 cursor-pointer">
-                      <input type="checkbox" checked={form.weekendAll} onChange={(e) => setForm((f) => ({ ...f, weekendAll: e.target.checked }))} className="h-4 w-4 accent-gold" />
+                      <input
+                        type="checkbox"
+                        checked={form.weekendAll}
+                        onChange={(e) =>
+                          setForm((f) => ({
+                            ...f,
+                            weekendAll: e.target.checked,
+                          }))
+                        }
+                        className="h-4 w-4 accent-gold"
+                      />
                       ALL
                     </label>
                   </div>
                 </div>
 
                 <div className="grid gap-2">
-                  <span className="text-sm font-bold text-zinc-300">챔피언 (최대 3개)</span>
+                  <span className="text-sm font-bold text-zinc-300">
+                    챔피언 (최대 3개)
+                  </span>
                   <div className="grid grid-cols-3 gap-2">
                     {(["champ1", "champ2", "champ3"] as const).map((key, i) => {
                       const other1 = i === 0 ? form.champ2 : form.champ1;
-                      const other2 = i === 1 ? form.champ3 : (i === 0 ? form.champ3 : form.champ2);
+                      const other2 =
+                        i === 1
+                          ? form.champ3
+                          : i === 0
+                            ? form.champ3
+                            : form.champ2;
                       return (
-                        <select key={key} value={form[key]} onChange={set(key)} className={inputCls}>
+                        <select
+                          key={key}
+                          value={form[key]}
+                          onChange={set(key)}
+                          className={inputCls}
+                        >
                           <option value="">없음</option>
-                          {champOptions(other1, other2).map((c) => <option key={c} value={c}>{c}</option>)}
+                          {champOptions(other1, other2).map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
                         </select>
                       );
                     })}
@@ -654,14 +837,36 @@ export default function AdminLineupBoard({
                 </div>
 
                 <div className="grid gap-2">
-                  <span className="text-sm font-bold text-zinc-300">작업 종류</span>
+                  <span className="text-sm font-bold text-zinc-300">
+                    작업 종류
+                  </span>
                   <div className="flex gap-6">
                     <label className="flex items-center gap-2 text-sm font-bold text-zinc-300 cursor-pointer">
-                      <input type="checkbox" checked={form.serviceBoost} onChange={(e) => setForm((f) => ({ ...f, serviceBoost: e.target.checked }))} className="h-4 w-4 accent-gold" />
+                      <input
+                        type="checkbox"
+                        checked={form.serviceBoost}
+                        onChange={(e) =>
+                          setForm((f) => ({
+                            ...f,
+                            serviceBoost: e.target.checked,
+                          }))
+                        }
+                        className="h-4 w-4 accent-gold"
+                      />
                       대리
                     </label>
                     <label className="flex items-center gap-2 text-sm font-bold text-zinc-300 cursor-pointer">
-                      <input type="checkbox" checked={form.serviceDuo} onChange={(e) => setForm((f) => ({ ...f, serviceDuo: e.target.checked }))} className="h-4 w-4 accent-gold" />
+                      <input
+                        type="checkbox"
+                        checked={form.serviceDuo}
+                        onChange={(e) =>
+                          setForm((f) => ({
+                            ...f,
+                            serviceDuo: e.target.checked,
+                          }))
+                        }
+                        className="h-4 w-4 accent-gold"
+                      />
                       듀오
                     </label>
                   </div>
@@ -669,19 +874,47 @@ export default function AdminLineupBoard({
 
                 <label className={labelCls}>
                   소개
-                  <textarea value={form.description} onChange={set("description")} maxLength={300} rows={3} className={`${inputCls} resize-none leading-7`} placeholder="기사 소개를 입력해주세요." />
+                  <textarea
+                    value={form.description}
+                    onChange={set("description")}
+                    maxLength={300}
+                    rows={3}
+                    className={`${inputCls} resize-none leading-7`}
+                    placeholder="기사 소개를 입력해주세요."
+                  />
                 </label>
 
                 <label className="flex items-center gap-2 text-sm font-bold text-zinc-300 cursor-pointer">
-                  <input type="checkbox" checked={form.active} onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))} className="h-4 w-4 accent-gold" />
+                  <input
+                    type="checkbox"
+                    checked={form.active}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, active: e.target.checked }))
+                    }
+                    className="h-4 w-4 accent-gold"
+                  />
                   공개 (체크 해제 시 숨김)
                 </label>
 
-                {message && <p className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-200">{message}</p>}
+                {message && (
+                  <p className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-200">
+                    {message}
+                  </p>
+                )}
 
-                <button type="submit" disabled={saving || uploading} className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60">
-                  {(saving || uploading) && <Loader2 size={18} className="animate-spin" />}
-                  {uploading ? "이미지 업로드 중..." : editingId ? "수정 저장" : "기사 등록"}
+                <button
+                  type="submit"
+                  disabled={saving || uploading}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {(saving || uploading) && (
+                    <Loader2 size={18} className="animate-spin" />
+                  )}
+                  {uploading
+                    ? "이미지 업로드 중..."
+                    : editingId
+                      ? "수정 저장"
+                      : "기사 등록"}
                 </button>
               </div>
             </form>
@@ -720,10 +953,15 @@ export default function AdminLineupBoard({
           onDragStart={handleDragStart}
           onDragEnd={(e) => void handleDragEnd(e)}
         >
-          <SortableContext items={lineups.map((l) => l.id)} strategy={rectSortingStrategy}>
+          <SortableContext
+            items={lineups.map((l) => l.id)}
+            strategy={rectSortingStrategy}
+          >
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {lineups.length === 0 && (
-                <p className="col-span-full text-sm text-zinc-500">등록된 기사가 없습니다.</p>
+                <p className="col-span-full text-sm text-zinc-500">
+                  등록된 기사가 없습니다.
+                </p>
               )}
               {lineups.map((knight) => (
                 <SortableCard
@@ -760,32 +998,68 @@ const positionColorsExt: Record<string, string> = {
   탑: "bg-orange-500/15 text-orange-400",
 };
 
-function KnightCard({ knight, isOverlay = false }: { knight: Lineup; isOverlay?: boolean }) {
+function KnightCard({
+  knight,
+  isOverlay = false,
+}: {
+  knight: Lineup;
+  isOverlay?: boolean;
+}) {
   return (
-    <article className={`card-premium overflow-hidden rounded-[28px] ${!knight.active && !isOverlay ? "opacity-50" : ""}`}>
+    <article
+      className={`card-premium overflow-hidden rounded-[28px] ${!knight.active && !isOverlay ? "opacity-50" : ""}`}
+    >
       <div className="flex gap-4 p-5">
         <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-black">
           {knight.image && (
-            <Image src={knight.image} alt={knight.name} fill className="object-cover opacity-90" unoptimized />
+            <Image
+              src={knight.image}
+              alt={knight.name}
+              fill
+              className="object-cover opacity-90"
+              unoptimized
+            />
           )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             {knight.positions.map((pos) => (
-              <span key={pos} className={`rounded-full px-2.5 py-0.5 text-xs font-black ${positionColorsExt[pos] ?? "bg-gold/10 text-gold"}`}>{pos}</span>
+              <span
+                key={pos}
+                className={`rounded-full px-2.5 py-0.5 text-xs font-black ${positionColorsExt[pos] ?? "bg-gold/10 text-gold"}`}
+              >
+                {pos}
+              </span>
             ))}
             <div className="flex items-center gap-1">
-              <Image src={knight.tier} alt={knight.rank} width={18} height={18} className="rounded-full bg-zinc-800" />
-              <span className="text-xs font-black text-gold">{knight.rank}</span>
+              <Image
+                src={knight.tier}
+                alt={knight.rank}
+                width={18}
+                height={18}
+                className="rounded-full bg-zinc-800"
+              />
+              <span className="text-xs font-black text-gold">
+                {knight.rank}
+              </span>
             </div>
             {!knight.active && !isOverlay && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-zinc-700/50 px-2 py-0.5 text-[10px] font-bold text-zinc-400"><EyeOff size={10} />숨김</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-zinc-700/50 px-2 py-0.5 text-[10px] font-bold text-zinc-400">
+                <EyeOff size={10} />
+                숨김
+              </span>
             )}
           </div>
           <p className="mt-1.5 font-black text-white">{knight.name}</p>
           <div className="mt-1 grid gap-0.5 text-xs text-zinc-500">
-            <div className="flex items-center gap-1.5"><Clock size={10} /><span>평일 {knight.weekdayHours}</span></div>
-            <div className="flex items-center gap-1.5"><Clock size={10} /><span>주말 {knight.weekendHours}</span></div>
+            <div className="flex items-center gap-1.5">
+              <Clock size={10} />
+              <span>평일 {knight.weekdayHours}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock size={10} />
+              <span>주말 {knight.weekendHours}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -794,16 +1068,34 @@ function KnightCard({ knight, isOverlay = false }: { knight: Lineup; isOverlay?:
         <div className="mt-4 grid gap-2.5">
           {knight.champions.length > 0 && (
             <div className="flex items-start gap-2">
-              <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">챔피언</span>
+              <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">
+                챔피언
+              </span>
               <div className="flex flex-wrap gap-1.5">
-                {knight.champions.map((c) => <span key={c} className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300">{c}</span>)}
+                {knight.champions.map((c) => (
+                  <span
+                    key={c}
+                    className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300"
+                  >
+                    {c}
+                  </span>
+                ))}
               </div>
             </div>
           )}
           <div className="flex items-start gap-2">
-            <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">작업</span>
+            <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">
+              작업
+            </span>
             <div className="flex flex-wrap gap-1.5">
-              {knight.services.map((s) => <span key={s} className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300">{s}</span>)}
+              {knight.services.map((s) => (
+                <span
+                  key={s}
+                  className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300"
+                >
+                  {s}
+                </span>
+              ))}
             </div>
           </div>
         </div>
@@ -825,14 +1117,25 @@ function SortableCard({
   onDuplicate: (l: Lineup) => Promise<void>;
   onDelete: (l: Lineup) => Promise<void>;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: knight.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: knight.id });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={`relative ${isDragging ? "opacity-40 scale-95" : ""} transition-transform`}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative ${isDragging ? "opacity-40 scale-95" : ""} transition-transform`}
+    >
       <KnightCard knight={knight} />
       {/* 드래그 핸들 */}
       <button
@@ -846,10 +1149,34 @@ function SortableCard({
       </button>
       {/* 액션 버튼 */}
       <div className="absolute bottom-3 right-3 flex gap-1.5">
-        <button type="button" onClick={() => void onDuplicate(knight)} className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-gold/40 hover:text-white" aria-label="복제"><Copy size={13} /></button>
-        <button type="button" onClick={() => onEdit(knight)} className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-gold/40 hover:text-white" aria-label="수정"><Pencil size={13} /></button>
-        <button type="button" onClick={() => void onDelete(knight)} disabled={deletingId === knight.id} className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-red-400/40 hover:text-red-200 disabled:opacity-60" aria-label="삭제">
-          {deletingId === knight.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+        <button
+          type="button"
+          onClick={() => void onDuplicate(knight)}
+          className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-gold/40 hover:text-white"
+          aria-label="복제"
+        >
+          <Copy size={13} />
+        </button>
+        <button
+          type="button"
+          onClick={() => onEdit(knight)}
+          className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-gold/40 hover:text-white"
+          aria-label="수정"
+        >
+          <Pencil size={13} />
+        </button>
+        <button
+          type="button"
+          onClick={() => void onDelete(knight)}
+          disabled={deletingId === knight.id}
+          className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-red-400/40 hover:text-red-200 disabled:opacity-60"
+          aria-label="삭제"
+        >
+          {deletingId === knight.id ? (
+            <Loader2 size={13} className="animate-spin" />
+          ) : (
+            <Trash2 size={13} />
+          )}
         </button>
       </div>
     </div>
