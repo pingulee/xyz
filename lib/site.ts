@@ -42,12 +42,71 @@ export const services = [
   },
 ];
 
-export const priceRows = [
-  ["아이언 - 브론즈", "상담 후 안내", "빠른 진행"],
-  ["실버 - 골드", "상담 후 안내", "인기 구간"],
-  ["플래티넘 - 에메랄드", "상담 후 안내", "승률 관리"],
-  ["다이아 이상", "별도 견적", "전담 기사 배정"],
-];
+const T = {
+  iron: "/images/tier/1-iron.png",
+  bronze: "/images/tier/2-bronze.png",
+  silver: "/images/tier/3-silver.png",
+  gold: "/images/tier/4-gold.png",
+  platinum: "/images/tier/5-platinum.png",
+  emerald: "/images/tier/6-emerald.png",
+  diamond: "/images/tier/7-diamond.png",
+  master: "/images/tier/8-master.png",
+  grandmaster: "/images/tier/9-grandmaster.png",
+  challenger: "/images/tier/10-challenger.png",
+};
+
+export type PriceRow = { icons: string[]; cells: string[] };
+
+export const boostingPrices = {
+  hourly: {
+    title: "대리 랭크 시간제",
+    badge: "⏱️ 1시간",
+    rows: [
+      {
+        icons: [T.iron, T.bronze, T.silver],
+        cells: ["아이언 · 브론즈 · 실버", "90% 보장", "12,000원"],
+      },
+      { icons: [T.gold], cells: ["골드", "85% 보장", "14,000원"] },
+      { icons: [T.platinum], cells: ["플래티넘", "80% 보장", "16,000원"] },
+      { icons: [T.emerald], cells: ["에메랄드", "75% 보장", "18,000원"] },
+      {
+        icons: [T.diamond],
+        cells: ["다이아몬드 4~2", "70% 보장", "20,000원"],
+      },
+      { icons: [T.diamond], cells: ["다이아몬드 1", "65% 보장", "24,000원"] },
+      { icons: [T.master], cells: ["마스터 0~99 LP", "55% 보장", "26,000원"] },
+      {
+        icons: [T.master],
+        cells: ["마스터 100~199 LP", "55% 보장", "28,000원"],
+      },
+      { icons: [T.master], cells: ["100 LP 당", "55% 보장", "+2,000원"] },
+      { icons: [T.grandmaster], cells: ["그랜드마스터↑", "50%", "상담"] },
+    ] as PriceRow[],
+    cols: ["구간", "승률 보장", "금액"] as const,
+    note: "· 1시간 당 가격입니다.\n· 승률 보장 서비스는 10시간 이상 신청 시 적용됩니다.\n· 마스터 티어 이상부터는 기사의 과실이 없는 패배는 승리로 인정하여 승률을 산정합니다. (기사 과실 판단 기준: KDA 5.0 이상)",
+  },
+  score: {
+    title: "고티어 점수 보장제",
+    badge: "✅ 100점",
+    rows: [
+      { icons: [T.diamond], cells: ["다이아몬드 1", "140,000원"] },
+      { icons: [T.master], cells: ["마스터 0~199 LP", "180,000원"] },
+      { icons: [T.master], cells: ["마스터 200~399 LP", "200,000원"] },
+      { icons: [T.master], cells: ["마스터 400~599 LP", "220,000원"] },
+      { icons: [T.master], cells: ["200 LP 당", "+20,000원"] },
+      { icons: [T.grandmaster], cells: ["그랜드마스터↑", "상담"] },
+    ] as PriceRow[],
+    cols: ["구간", "금액"] as const,
+    note: "· 100점 상승 당 가격입니다.\n· 점수는 10단위 반올림을 적용합니다. (예: 92점 상승, 106점 상승 → 100점으로 계산)",
+  },
+  normal: {
+    title: "일반 게임 · 칼바람",
+    badge: "✅ 1판",
+    rows: [{ icons: [], cells: ["티어 무관", "5,000원"] }] as PriceRow[],
+    cols: ["항목", "금액"] as const,
+    note: "",
+  },
+};
 
 export const lineups = [
   {

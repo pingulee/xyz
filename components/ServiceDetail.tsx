@@ -30,23 +30,15 @@ export default function ServiceDetail({
         <Reveal>
           <SectionTitle eyebrow={eyebrow} title={title} desc={desc} />
         </Reveal>
-        <div
-          className={
-            showPriceTable
-              ? "grid gap-8 lg:grid-cols-[0.9fr_1.1fr]"
-              : "mx-auto max-w-4xl"
-          }
-        >
+        <div className="grid gap-8">
           <Reveal>
             <div className="card-premium rounded-[34px] p-8">
-              <h2 className="text-2xl font-black text-white">
-                {featureTitle}
-              </h2>
-              <div className="mt-7 grid gap-4 sm:grid-cols-2">
+              <h2 className="text-2xl font-black text-white">{featureTitle}</h2>
+              <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {points.map((point) => (
                   <div
                     key={point}
-                    className="flex items-center gap-3 rounded-2xl bg-white/[.04] p-4 text-zinc-300"
+                    className="flex items-center gap-3 rounded-2xl bg-white/4 p-4 text-zinc-300"
                   >
                     <CheckCircle2 className="shrink-0 text-gold" size={20} />
                     {point}

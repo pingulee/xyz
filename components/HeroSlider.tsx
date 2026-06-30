@@ -73,10 +73,30 @@ export default function HeroSlider() {
 
   return (
     <section
-      className="noise relative h-205 overflow-hidden bg-background sm:h-215 lg:h-[calc(100svh-80px)] lg:min-h-180"
+      className="noise relative h-155 overflow-hidden bg-background sm:h-170 lg:h-[calc(100svh-80px)] lg:min-h-180"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={slide.image}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+          className="absolute inset-0 lg:hidden"
+        >
+          <Image
+            src={slide.image}
+            alt={slide.alt}
+            fill
+            priority={index === 0}
+            sizes="100vw"
+            className="object-cover opacity-50"
+          />
+          <div className="absolute inset-0 bg-linear-to-t from-black via-black/55 to-black/30" />
+        </motion.div>
+      </AnimatePresence>
       <div className="grid-bg absolute inset-0 opacity-70" />
       <div className="absolute left-[12%] top-20 h-72 w-72 rounded-full bg-gold/18 blur-[110px]" />
       <div className="absolute bottom-8 right-[10%] h-96 w-96 rounded-full bg-gold-soft/12 blur-[130px]" />
@@ -144,7 +164,7 @@ export default function HeroSlider() {
         </div>
 
         <motion.div
-          className="relative mx-auto w-full max-w-150 cursor-grab active:cursor-grabbing"
+          className="relative mx-auto hidden w-full max-w-150 cursor-grab active:cursor-grabbing lg:block"
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.18}
