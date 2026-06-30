@@ -120,6 +120,7 @@ export default function ReviewBoard({
   const [editForms, setEditForms] = useState<Record<string, EditForm>>({});
   const [deleteOpenId, setDeleteOpenId] = useState("");
   const [editOpenId, setEditOpenId] = useState("");
+  const [editVerifiedIds, setEditVerifiedIds] = useState<Set<string>>(new Set());
   const [selectedReviewId, setSelectedReviewId] = useState("");
   const [writeOpen, setWriteOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -261,17 +262,49 @@ export default function ReviewBoard({
   };
 
   const openEditForm = (review: Review) => {
-    setEditOpenId((current) => (current === review.id ? "" : review.id));
+    if (editOpenId === review.id) {
+      setEditOpenId("");
+      setEditVerifiedIds((s) => { const n = new Set(s); n.delete(review.id); return n; });
+      return;
+    }
     setDeleteOpenId("");
+    setEditOpenId(review.id);
     setEditForms((current) => ({
       ...current,
-      [review.id]: current[review.id] ?? {
+      [review.id]: {
         password: "",
         service: review.service,
         rating: review.rating,
         content: review.content,
       },
     }));
+    setEditVerifiedIds((s) => { const n = new Set(s); n.delete(review.id); return n; });
+  };
+
+  const verifyEditPassword = async (review: Review) => {
+    const editForm = editForms[review.id] ?? blankEditForm;
+    const password = editForm.password.trim();
+    setError("");
+    if (!password) { setError("비밀번호를 입력해주세요."); return; }
+
+    setEditingId(review.id);
+    try {
+      const response = await fetch("/api/reviews/verify-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: review.id, password }),
+      });
+      const data = (await response.json()) as { ok?: boolean; message?: string };
+      if (!response.ok || !data.ok) {
+        setError(data.message ?? "비밀번호가 일치하지 않습니다.");
+        return;
+      }
+      setEditVerifiedIds((s) => new Set(s).add(review.id));
+    } catch {
+      setError("비밀번호 확인에 실패했습니다.");
+    } finally {
+      setEditingId("");
+    }
   };
 
   const submitReview = async (event: FormEvent<HTMLFormElement>) => {
@@ -313,6 +346,7 @@ export default function ReviewBoard({
       setImageName("");
       setPage(1);
       setSelectedReviewId(data.review.id);
+      setWriteOpen(false);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -434,8 +468,14 @@ export default function ReviewBoard({
   return (
     <div className="grid gap-8">
       {writeOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-xl rounded-[34px] border border-gold/20 bg-[#111] p-6 shadow-2xl sm:p-8 max-md:max-h-[90dvh] max-md:overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm"
+          onClick={() => setWriteOpen(false)}
+        >
+          <div
+            className="w-full max-w-xl rounded-[34px] border border-gold/20 bg-[#111] p-6 shadow-2xl sm:p-8 max-md:max-h-[90dvh] max-md:overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
@@ -659,6 +699,7 @@ export default function ReviewBoard({
               }
             }
             editOpen={editOpenId === selectedReview.id}
+            editVerified={editVerifiedIds.has(selectedReview.id)}
             editing={editingId === selectedReview.id}
             isAdmin={isAdmin}
             onDelete={() => void deleteReview(selectedReview.id)}
@@ -680,6 +721,7 @@ export default function ReviewBoard({
               updateEditForm(selectedReview.id, updates)
             }
             onEditOpenChange={() => openEditForm(selectedReview)}
+            onVerifyPassword={() => void verifyEditPassword(selectedReview)}
             onBackToList={() => {
               setSelectedReviewId("");
               setDeleteOpenId("");
@@ -810,6 +852,7 @@ function ReviewDetail({
   deleting,
   editForm,
   editOpen,
+  editVerified,
   editing,
   error,
   isAdmin,
@@ -820,6 +863,7 @@ function ReviewDetail({
   onEdit,
   onEditFormChange,
   onEditOpenChange,
+  onVerifyPassword,
   onBackToList,
   onSelectReview,
   previousReview,
@@ -830,6 +874,7 @@ function ReviewDetail({
   deleting: boolean;
   editForm: EditForm;
   editOpen: boolean;
+  editVerified: boolean;
   editing: boolean;
   error?: string;
   isAdmin: boolean;
@@ -840,6 +885,7 @@ function ReviewDetail({
   onEdit: () => void;
   onEditFormChange: (updates: Partial<EditForm>) => void;
   onEditOpenChange: () => void;
+  onVerifyPassword: () => void;
   onBackToList: () => void;
   onSelectReview: (reviewId: string) => void;
   previousReview?: Review;
@@ -879,72 +925,81 @@ function ReviewDetail({
 
         {editOpen ? (
           <div className="mt-6 rounded-3xl border border-gold/20 bg-white/[.035] p-4">
-            <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-              <label className="grid gap-2">
-                <span className="text-sm font-bold text-zinc-300">서비스</span>
-                <select
-                  value={editForm.service}
-                  onChange={(event) =>
-                    onEditFormChange({ service: event.target.value })
-                  }
-                  className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
-                >
-                  <option>롤 대리</option>
-                  <option>롤 듀오</option>
-                  <option>롤 계정</option>
-                </select>
-              </label>
-              <label className="grid gap-2">
-                <span className="text-sm font-bold text-zinc-300">평점</span>
-                <select
-                  value={editForm.rating}
-                  onChange={(event) =>
-                    onEditFormChange({ rating: Number(event.target.value) })
-                  }
-                  className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
-                >
-                  {[5, 4, 3, 2, 1].map((rating) => (
-                    <option key={rating} value={rating}>
-                      {rating}점
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <label className="mt-4 grid gap-2">
-              <span className="text-sm font-bold text-zinc-300">후기</span>
-              <textarea
-                value={editForm.content}
-                onChange={(event) =>
-                  onEditFormChange({ content: event.target.value })
-                }
-                maxLength={400}
-                rows={5}
-                className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
-              />
-            </label>
-            <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
-              {!isAdmin && (
-                <input
-                  type="password"
-                  value={editForm.password}
-                  onChange={(event) =>
-                    onEditFormChange({ password: event.target.value })
-                  }
-                  className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
-                  placeholder="수정 비밀번호"
-                />
-              )}
-              <button
-                type="button"
-                onClick={onEdit}
-                disabled={editing}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gold-gradient px-5 py-3 font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {editing && <Loader2 size={17} className="animate-spin" />}
-                수정 저장
-              </button>
-            </div>
+            {!isAdmin && !editVerified ? (
+              <div className="grid gap-3">
+                <p className="text-sm font-bold text-zinc-300">작성 시 입력한 비밀번호를 확인해주세요.</p>
+                <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                  <input
+                    type="password"
+                    value={editForm.password}
+                    onChange={(event) => onEditFormChange({ password: event.target.value })}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onVerifyPassword(); } }}
+                    className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
+                    placeholder="비밀번호"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={onVerifyPassword}
+                    disabled={editing}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gold-gradient px-5 py-3 font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {editing && <Loader2 size={17} className="animate-spin" />}
+                    확인
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+                  <label className="grid gap-2">
+                    <span className="text-sm font-bold text-zinc-300">서비스</span>
+                    <select
+                      value={editForm.service}
+                      onChange={(event) => onEditFormChange({ service: event.target.value })}
+                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
+                    >
+                      <option>롤 대리</option>
+                      <option>롤 듀오</option>
+                      <option>롤 계정</option>
+                    </select>
+                  </label>
+                  <label className="grid gap-2">
+                    <span className="text-sm font-bold text-zinc-300">평점</span>
+                    <select
+                      value={editForm.rating}
+                      onChange={(event) => onEditFormChange({ rating: Number(event.target.value) })}
+                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
+                    >
+                      {[5, 4, 3, 2, 1].map((r) => (
+                        <option key={r} value={r}>{r}점</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <label className="mt-4 grid gap-2">
+                  <span className="text-sm font-bold text-zinc-300">후기</span>
+                  <textarea
+                    value={editForm.content}
+                    onChange={(event) => onEditFormChange({ content: event.target.value })}
+                    maxLength={400}
+                    rows={5}
+                    className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
+                  />
+                </label>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={onEdit}
+                    disabled={editing}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gold-gradient px-5 py-3 font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {editing && <Loader2 size={17} className="animate-spin" />}
+                    수정 저장
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <>

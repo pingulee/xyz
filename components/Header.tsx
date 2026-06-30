@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { useState } from "react";
 import clsx from "clsx";
@@ -28,8 +28,17 @@ const menuItems: MenuItem[] = navItems.map((item) =>
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [mobileOpenItem, setMobileOpenItem] = useState("");
+
+  const handleNavClick = (href: string) => {
+    setOpen(false);
+    setMobileOpenItem("");
+    if (pathname === href || (href !== "/" && pathname.startsWith(href) && href.split("/").length >= pathname.split("/").length)) {
+      router.refresh();
+    }
+  };
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -81,6 +90,7 @@ export default function Header() {
                       <Link
                         key={child.href}
                         href={child.href}
+                        onClick={() => handleNavClick(child.href)}
                         className={clsx(
                           "block rounded-xl px-4 py-3 text-sm font-bold transition",
                           pathname === child.href
@@ -104,6 +114,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => handleNavClick(item.href)}
                 className={clsx(
                   "relative text-sm font-bold transition",
                   active ? "text-gold" : "text-zinc-300 hover:text-white",
@@ -182,10 +193,7 @@ export default function Header() {
               ) : (
                 <Link
                   href={item.href}
-                  onClick={() => {
-                    setOpen(false);
-                    setMobileOpenItem("");
-                  }}
+                  onClick={() => handleNavClick(item.href)}
                   className={clsx(
                     "block rounded-2xl px-4 py-4 text-base font-bold",
                     isActive(item.href)
@@ -201,10 +209,7 @@ export default function Header() {
                 <div className="ml-4 mt-1 space-y-1 border-l border-gold/10 pl-3">
                   <Link
                     href={item.href}
-                    onClick={() => {
-                      setOpen(false);
-                      setMobileOpenItem("");
-                    }}
+                    onClick={() => handleNavClick(item.href)}
                     className={clsx(
                       "block rounded-xl px-4 py-3 text-sm font-bold",
                       pathname === item.href
@@ -218,10 +223,7 @@ export default function Header() {
                     <Link
                       key={child.href}
                       href={child.href}
-                      onClick={() => {
-                        setOpen(false);
-                        setMobileOpenItem("");
-                      }}
+                      onClick={() => handleNavClick(child.href)}
                       className={clsx(
                         "block rounded-xl px-4 py-3 text-sm font-bold",
                         pathname === child.href
