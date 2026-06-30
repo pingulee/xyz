@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Container from "@/components/Container";
 import NoticeBoard from "@/components/NoticeBoard";
+import AdminNoticeBoard from "@/components/AdminNoticeBoard";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import { getNotices } from "@/lib/notices";
+import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +24,12 @@ export const metadata: Metadata = {
 };
 
 export default async function NoticesPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value ?? "";
+  const isAdmin = validateSession(token);
+
   const notices = await getNotices();
+
   const noticeSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -49,11 +57,15 @@ export default async function NoticesPage() {
           <SectionTitle
             eyebrow="notice"
             title="공지사항"
-            desc="서비스 운영 안내와 주요 변경사항을 확인할 수 있습니다."
+            desc={isAdmin ? "관리자 모드 — 작성, 수정, 삭제가 가능합니다." : "서비스 운영 안내와 주요 변경사항을 확인할 수 있습니다."}
           />
         </Reveal>
         <Reveal>
-          <NoticeBoard initialNotices={notices} />
+          {isAdmin ? (
+            <AdminNoticeBoard initialNotices={notices} />
+          ) : (
+            <NoticeBoard initialNotices={notices} />
+          )}
         </Reveal>
       </Container>
     </section>

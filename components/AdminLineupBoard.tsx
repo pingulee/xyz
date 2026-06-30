@@ -1,8 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { EyeOff, GripVertical, Loader2, LogOut, Pencil, Trash2, X } from "lucide-react";
-import { ChangeEvent, type FormEvent, useRef, useState } from "react";
+import {
+  Clock,
+  Copy,
+  EyeOff,
+  Loader2,
+  LogOut,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Lineup } from "@/lib/lineups";
 
@@ -10,23 +20,185 @@ const MAX_IMAGE_SIZE = 1024 * 1024 * 5;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const TIER_OPTIONS = [
-  { label: "챌린저",       value: "/images/tier/10-challenger.png" },
-  { label: "그랜드마스터", value: "/images/tier/9-grandmaster.png" },
+  { label: "챌린저", rank: "챌린저", tier: "/images/tier/10-challenger.png" },
+  {
+    label: "그랜드마스터",
+    rank: "그랜드마스터",
+    tier: "/images/tier/9-grandmaster.png",
+  },
 ];
+
+const positionColors: Record<string, string> = {
+  정글: "bg-emerald-500/15 text-emerald-400",
+  미드: "bg-blue-500/15 text-blue-400",
+  바텀: "bg-purple-500/15 text-purple-400",
+  서포터: "bg-pink-500/15 text-pink-400",
+  서폿: "bg-pink-500/15 text-pink-400",
+  탑: "bg-orange-500/15 text-orange-400",
+};
+
+const LOL_CHAMPIONS = [
+  "가렌",
+  "갈리오",
+  "강플랭크",
+  "그라가스",
+  "그레이브즈",
+  "나미",
+  "나서스",
+  "나피리",
+  "녹턴",
+  "누누와 윌럼프",
+  "니달리",
+  "니코",
+  "다리우스",
+  "드레이븐",
+  "라이즈",
+  "라칸",
+  "람머스",
+  "럭스",
+  "럼블",
+  "레나타 글라스크",
+  "레넥톤",
+  "레오나",
+  "렉사이",
+  "렐",
+  "로크",
+  "루시안",
+  "룰루",
+  "르블랑",
+  "리 신",
+  "리산드라",
+  "리벤",
+  "릴리아",
+  "마스터 이",
+  "마오카이",
+  "말파이트",
+  "말자하",
+  "모데카이저",
+  "모르가나",
+  "문도 박사",
+  "미스 포츈",
+  "바드",
+  "바루스",
+  "베이가",
+  "베인",
+  "벡스",
+  "벨베스",
+  "벨코즈",
+  "볼리베어",
+  "브라움",
+  "브라이어",
+  "블라디미르",
+  "블리츠크랭크",
+  "비에고",
+  "빅토르",
+  "사미라",
+  "사일러스",
+  "세라핀",
+  "세주아니",
+  "세트",
+  "소나",
+  "소라카",
+  "쉔",
+  "쉬바나",
+  "스몰더",
+  "스웨인",
+  "시비르",
+  "신드라",
+  "신지드",
+  "신짜오",
+  "아리",
+  "아무무",
+  "아우렐리온 솔",
+  "아지르",
+  "아칼리",
+  "아크샨",
+  "아트록스",
+  "아펠리오스",
+  "애니",
+  "야스오",
+  "에코",
+  "엘리스",
+  "오공",
+  "오로라",
+  "오른",
+  "오리아나",
+  "올라프",
+  "우디르",
+  "우르곳",
+  "워윅",
+  "유미",
+  "이렐리아",
+  "이블린",
+  "이즈리얼",
+  "일라오이",
+  "잔나",
+  "잭스",
+  "제드",
+  "제이스",
+  "조이",
+  "진",
+  "질리언",
+  "징크스",
+  "카르마",
+  "카밀",
+  "카사딘",
+  "카서스",
+  "카이사",
+  "카직스",
+  "카타리나",
+  "칼리스타",
+  "케넨",
+  "케이틀린",
+  "코그모",
+  "코르키",
+  "퀸",
+  "크산테",
+  "클레드",
+  "타릭",
+  "탈론",
+  "탈리야",
+  "탐 켄치",
+  "트런들",
+  "트리스타나",
+  "트린다미어",
+  "트위스티드 페이트",
+  "트위치",
+  "티모",
+  "파이크",
+  "판테온",
+  "피오라",
+  "피즈",
+  "하이머딩거",
+  "헤카림",
+  "흐웨이",
+];
+
+const POSITIONS = ["탑", "정글", "미드", "바텀", "서포터"] as const;
+const TIME_SLOTS = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"];
 
 const blankForm = {
   name: "",
-  positions: "",
-  rank: "",
+  positionSet: new Set<string>(),
+  rank: "챌린저",
   tier: "/images/tier/10-challenger.png",
   description: "",
-  weekdayHours: "",
-  weekendHours: "",
-  champions: "",
-  services: "",
+  weekdayStart: "18",
+  weekdayEnd: "23",
+  weekdayAll: false,
+  weekendStart: "00",
+  weekendEnd: "23",
+  weekendAll: true,
+  champ1: "",
+  champ2: "",
+  champ3: "",
+  serviceBoost: false,
+  serviceDuo: false,
   imageUrl: null as string | null,
   active: true,
 };
+
+type FormState = typeof blankForm;
 
 type LineupResponse = { lineup: Lineup; message?: string };
 
@@ -38,6 +210,7 @@ export default function AdminLineupBoard({
   const [lineups, setLineups] = useState(initialLineups);
   const [form, setForm] = useState(blankForm);
   const [editingId, setEditingId] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState("");
@@ -46,22 +219,44 @@ export default function AdminLineupBoard({
   const [imagePreview, setImagePreview] = useState("");
   const [imageName, setImageName] = useState("");
   const [imageError, setImageError] = useState("");
-  const [savingOrder, setSavingOrder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mousedownOnOverlay = useRef(false);
   const router = useRouter();
 
-  const dragIndexRef = useRef<number | null>(null);
-  const dragOverIndexRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (modalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [modalOpen]);
 
-  const set = (key: keyof typeof blankForm) =>
+  type StringKey = { [K in keyof FormState]: FormState[K] extends string ? K : never }[keyof FormState];
+  const set =
+    (key: StringKey) =>
     (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const togglePosition = (pos: string) =>
+    setForm((f) => {
+      const next = new Set(f.positionSet);
+      if (next.has(pos)) next.delete(pos);
+      else next.add(pos);
+      return { ...f, positionSet: next };
+    });
+
+  const setTierOption = (tierValue: string) => {
+    const opt = TIER_OPTIONS.find((o) => o.tier === tierValue);
+    if (opt) setForm((f) => ({ ...f, tier: opt.tier, rank: opt.rank }));
+  };
 
   const handleImage = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setImageError("");
     if (!file) return;
-
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       setImageError("JPG, PNG, WEBP 이미지만 첨부할 수 있습니다.");
       return;
@@ -70,11 +265,9 @@ export default function AdminLineupBoard({
       setImageError("이미지는 5MB 이하만 첨부할 수 있습니다.");
       return;
     }
-
     if (imagePreview) URL.revokeObjectURL(imagePreview);
-    const objectUrl = URL.createObjectURL(file);
     setImageFile(file);
-    setImagePreview(objectUrl);
+    setImagePreview(URL.createObjectURL(file));
     setImageName(file.name);
   };
 
@@ -92,43 +285,86 @@ export default function AdminLineupBoard({
     router.push("/admin");
   };
 
-  const startEdit = (lineup: Lineup) => {
-    setEditingId(lineup.id);
-    setForm({
-      name: lineup.name,
-      positions: lineup.positions.join(","),
-      rank: lineup.rank,
-      tier: lineup.tier,
-      description: lineup.description,
-      weekdayHours: lineup.weekdayHours,
-      weekendHours: lineup.weekendHours,
-      champions: lineup.champions.join(","),
-      services: lineup.services.join(","),
-      imageUrl: lineup.image,
-      active: lineup.active,
-    });
-    setImageFile(null);
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
-    setImagePreview("");
-    setImageName(lineup.image ? "현재 이미지" : "");
-    setImageError("");
-    setMessage("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const resetForm = () => {
-    setEditingId("");
-    setForm(blankForm);
+  const resetImageState = () => {
     setImageFile(null);
     if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImagePreview("");
     setImageName("");
     setImageError("");
-    setMessage("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const saveLineup = async (e: FormEvent<HTMLFormElement>) => {
+  const openWrite = () => {
+    setEditingId("");
+    setForm(blankForm);
+    resetImageState();
+    setMessage("");
+    setModalOpen(true);
+  };
+
+  const parseHours = (hours: string): { start: string; end: string; all: boolean } => {
+    if (!hours || hours.toUpperCase() === "ALL") return { start: "00", end: "23", all: true };
+    const m = hours.match(/(\d{1,2}):?\d*\s*~\s*(\d{1,2})/);
+    if (m) return { start: String(m[1]).padStart(2, "0"), end: String(m[2]).padStart(2, "0"), all: false };
+    return { start: "00", end: "23", all: false };
+  };
+
+  const openEdit = (lineup: Lineup) => {
+    setEditingId(lineup.id);
+    const wd = parseHours(lineup.weekdayHours);
+    const we = parseHours(lineup.weekendHours);
+    setForm({
+      name: lineup.name,
+      positionSet: new Set(lineup.positions),
+      rank: lineup.rank,
+      tier: lineup.tier,
+      description: lineup.description,
+      weekdayStart: wd.start,
+      weekdayEnd: wd.end,
+      weekdayAll: wd.all,
+      weekendStart: we.start,
+      weekendEnd: we.end,
+      weekendAll: we.all,
+      champ1: lineup.champions[0] ?? "",
+      champ2: lineup.champions[1] ?? "",
+      champ3: lineup.champions[2] ?? "",
+      serviceBoost: lineup.services.includes("대리"),
+      serviceDuo: lineup.services.includes("듀오"),
+      imageUrl: lineup.image,
+      active: lineup.active,
+    });
+    resetImageState();
+    setImageName(lineup.image ? "현재 이미지" : "");
+    setMessage("");
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setMessage("");
+  };
+
+  const formatHours = (start: string, end: string, all: boolean) =>
+    all ? "ALL" : `${start}:00 ~ ${end}:00`;
+
+  const buildPayload = (imageUrl: string | null) => ({
+    name: form.name,
+    positions: Array.from(form.positionSet).join(","),
+    rank: form.rank,
+    tier: form.tier,
+    description: form.description,
+    weekdayHours: formatHours(form.weekdayStart, form.weekdayEnd, form.weekdayAll),
+    weekendHours: formatHours(form.weekendStart, form.weekendEnd, form.weekendAll),
+    champions: [form.champ1, form.champ2, form.champ3]
+      .filter(Boolean)
+      .join(","),
+    services: [form.serviceBoost && "대리", form.serviceDuo && "듀오"]
+      .filter(Boolean)
+      .join(","),
+    image: imageUrl,
+    active: form.active,
+  });
+
+  const saveLineup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setMessage("");
     setSaving(true);
@@ -140,10 +376,19 @@ export default function AdminLineupBoard({
         setUploading(true);
         const fd = new FormData();
         fd.append("image", imageFile);
-        const uploadRes = await fetch("/api/uploads/lineups", { method: "POST", body: fd });
-        const uploadData = (await uploadRes.json()) as { imageUrl?: string; message?: string };
+        const uploadRes = await fetch("/api/uploads/lineups", {
+          method: "POST",
+          body: fd,
+        });
+        const uploadData = (await uploadRes.json()) as {
+          imageUrl?: string;
+          message?: string;
+        };
         setUploading(false);
-        if (!uploadRes.ok) throw new Error(uploadData.message ?? "이미지 업로드에 실패했습니다.");
+        if (!uploadRes.ok)
+          throw new Error(
+            uploadData.message ?? "이미지 업로드에 실패했습니다.",
+          );
         imageUrl = uploadData.imageUrl ?? null;
       }
 
@@ -152,10 +397,9 @@ export default function AdminLineupBoard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: editingId || undefined,
-          ...form,
-          image: imageUrl,
+          ...buildPayload(imageUrl),
           sortOrder: editingId
-            ? (lineups.find((l) => l.id === editingId)?.sortOrder ?? 0)
+            ? lineups.find((l) => l.id === editingId)?.sortOrder ?? 0
             : lineups.length,
         }),
       });
@@ -163,12 +407,13 @@ export default function AdminLineupBoard({
       if (!response.ok) throw new Error(data.message ?? "저장하지 못했습니다.");
 
       if (editingId) {
-        setLineups((cur) => cur.map((l) => (l.id === editingId ? data.lineup : l)));
+        setLineups((cur) =>
+          cur.map((l) => (l.id === editingId ? data.lineup : l)),
+        );
       } else {
         setLineups((cur) => [...cur, data.lineup]);
       }
-      resetForm();
-      setMessage("저장되었습니다.");
+      closeModal();
     } catch (err) {
       setUploading(false);
       setMessage(err instanceof Error ? err.message : "저장하지 못했습니다.");
@@ -177,9 +422,36 @@ export default function AdminLineupBoard({
     }
   };
 
+  const duplicateLineup = async (lineup: Lineup) => {
+    try {
+      const response = await fetch("/api/lineups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${lineup.name} (복사본)`,
+          positions: lineup.positions.join(","),
+          rank: lineup.rank,
+          tier: lineup.tier,
+          description: lineup.description,
+          weekdayHours: lineup.weekdayHours,
+          weekendHours: lineup.weekendHours,
+          champions: lineup.champions.join(","),
+          services: lineup.services.join(","),
+          image: lineup.image,
+          sortOrder: lineups.length,
+          active: false,
+        }),
+      });
+      const data = (await response.json()) as LineupResponse;
+      if (!response.ok) throw new Error(data.message ?? "복제하지 못했습니다.");
+      setLineups((cur) => [...cur, data.lineup]);
+    } catch {
+      // silently fail
+    }
+  };
+
   const deleteLineup = async (lineup: Lineup) => {
     if (!confirm(`"${lineup.name}" 기사를 삭제하시겠습니까?`)) return;
-    setMessage("");
     setDeletingId(lineup.id);
     try {
       const response = await fetch("/api/lineups", {
@@ -190,191 +462,360 @@ export default function AdminLineupBoard({
       const data = (await response.json()) as { message?: string };
       if (!response.ok) throw new Error(data.message ?? "삭제하지 못했습니다.");
       setLineups((cur) => cur.filter((l) => l.id !== lineup.id));
-    } catch (err) {
-      setMessage(err instanceof Error ? err.message : "삭제하지 못했습니다.");
+    } catch {
+      // silently fail
     } finally {
       setDeletingId("");
     }
   };
 
-  const onDragStart = (index: number) => { dragIndexRef.current = index; };
-  const onDragEnter = (index: number) => { dragOverIndexRef.current = index; };
-  const onDragEnd = async () => {
-    const from = dragIndexRef.current;
-    const to = dragOverIndexRef.current;
-    dragIndexRef.current = null;
-    dragOverIndexRef.current = null;
-    if (from === null || to === null || from === to) return;
-
-    const reordered = [...lineups];
-    const [moved] = reordered.splice(from, 1);
-    reordered.splice(to, 0, moved);
-    setLineups(reordered);
-
-    setSavingOrder(true);
-    try {
-      await Promise.all(
-        reordered.map((l, i) =>
-          fetch("/api/lineups", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              id: l.id,
-              name: l.name,
-              positions: l.positions.join(","),
-              rank: l.rank,
-              tier: l.tier,
-              description: l.description,
-              weekdayHours: l.weekdayHours,
-              weekendHours: l.weekendHours,
-              champions: l.champions.join(","),
-              services: l.services.join(","),
-              image: l.image,
-              sortOrder: i,
-              active: l.active,
-            }),
-          }),
-        ),
-      );
-    } catch {
-      setMessage("정렬 저장에 실패했습니다.");
-    } finally {
-      setSavingOrder(false);
-    }
-  };
-
-  const inputCls = "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
+  const inputCls =
+    "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
   const labelCls = "grid gap-2 text-sm font-bold text-zinc-300";
   const currentImage = imagePreview || form.imageUrl;
 
+  const champOptions = (exclude1: string, exclude2: string) =>
+    LOL_CHAMPIONS.filter((c) => c !== exclude1 && c !== exclude2);
+
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_1.2fr] lg:items-start">
-      <form onSubmit={saveLineup} className="card-premium rounded-[34px] p-6 sm:p-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">admin only</p>
-            <h2 className="mt-3 text-2xl font-black text-white">{editingId ? "기사 수정" : "기사 추가"}</h2>
-          </div>
-          <button type="button" onClick={() => void logout()} className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">
-            <LogOut size={16} />로그아웃
-          </button>
-        </div>
+    <>
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm"
+          onMouseDown={(e) => {
+            mousedownOnOverlay.current = e.target === e.currentTarget;
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && mousedownOnOverlay.current)
+              closeModal();
+          }}
+        >
+          <div className="w-full max-w-3xl mx-auto rounded-[28px] md:rounded-[34px] border border-gold/20 bg-[#111] shadow-2xl max-h-[92dvh] overflow-y-auto">
+            {/* 헤더 */}
+            <div className="flex items-start justify-between gap-4 p-5 md:px-8 md:pt-8 md:pb-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">admin</p>
+                <h2 className="mt-1 text-xl font-black text-white md:text-2xl">{editingId ? "기사 수정" : "기사 추가"}</h2>
+              </div>
+              <button type="button" onClick={closeModal} className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white" aria-label="닫기">
+                <X size={16} />
+              </button>
+            </div>
 
-        <div className="mt-7 grid gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelCls}>이름<input value={form.name} onChange={set("name")} maxLength={60} className={inputCls} placeholder="이브" /></label>
-            <label className={labelCls}>랭크<input value={form.rank} onChange={set("rank")} maxLength={30} className={inputCls} placeholder="Challenger" /></label>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelCls}>포지션 (쉼표 구분)<input value={form.positions} onChange={set("positions")} className={inputCls} placeholder="정글,탑" /></label>
-            <label className={labelCls}>
-              티어
-              <select value={form.tier} onChange={set("tier")} className={inputCls}>
-                {TIER_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-              </select>
-            </label>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className={labelCls}>평일 시간<input value={form.weekdayHours} onChange={set("weekdayHours")} maxLength={30} className={inputCls} placeholder="18:00 ~ 23:00" /></label>
-            <label className={labelCls}>주말 시간<input value={form.weekendHours} onChange={set("weekendHours")} maxLength={30} className={inputCls} placeholder="ALL" /></label>
-          </div>
-          <label className={labelCls}>챔피언 (쉼표 구분, 선택)<input value={form.champions} onChange={set("champions")} className={inputCls} placeholder="이블린,카서스,자이라" /></label>
-          <label className={labelCls}>작업 종류 (쉼표 구분)<input value={form.services} onChange={set("services")} className={inputCls} placeholder="대리,듀오" /></label>
-          <label className={labelCls}>
-            소개
-            <textarea value={form.description} onChange={set("description")} maxLength={300} rows={3} className={`${inputCls} resize-none leading-7`} placeholder="기사 소개를 입력해주세요." />
-          </label>
+            <form onSubmit={saveLineup} className="md:grid md:grid-cols-[240px_1fr] md:divide-x md:divide-white/8">
+              {/* 왼쪽 패널: 이미지 · 이름 · 티어 · 포지션 */}
+              <div className="grid gap-3 p-5 md:px-8 md:pb-8 md:pt-0 md:content-start">
+                <div className="grid gap-2">
+                  <span className="text-sm font-bold text-zinc-300">프로필 이미지</span>
+                  {currentImage ? (
+                    <div className="relative overflow-hidden rounded-2xl bg-zinc-900">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={currentImage} alt="미리보기" className="h-32 w-full object-cover" />
+                      <button type="button" onClick={removeImage} className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white hover:bg-black"><X size={12} /></button>
+                      <p className="px-3 py-1.5 text-xs text-zinc-500 truncate">{imageName}</p>
+                    </div>
+                  ) : (
+                    <label className="flex h-32 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-white/15 bg-white/3 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">
+                      <span>이미지 선택</span>
+                      <span className="text-xs font-normal text-zinc-600">JPG / PNG / WEBP · 5MB 이하</span>
+                      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImage} />
+                    </label>
+                  )}
+                  {imageError && <p className="text-xs text-red-400">{imageError}</p>}
+                </div>
 
-          <div className="grid gap-2">
-            <span className="text-sm font-bold text-zinc-300">프로필 이미지</span>
-            {currentImage ? (
-              <div className="relative overflow-hidden rounded-2xl bg-zinc-900">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={currentImage} alt="미리보기" className="h-20 w-20 object-cover" />
-                <button type="button" onClick={removeImage} className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white hover:bg-black">
-                  <X size={12} />
+                <label className={labelCls}>
+                  이름
+                  <input value={form.name} onChange={set("name")} maxLength={60} className={inputCls} placeholder="이브" />
+                </label>
+
+                <label className={labelCls}>
+                  티어
+                  <select value={form.tier} onChange={(e) => setTierOption(e.target.value)} className={inputCls}>
+                    {TIER_OPTIONS.map((opt) => <option key={opt.tier} value={opt.tier}>{opt.label}</option>)}
+                  </select>
+                </label>
+
+                <div className="grid gap-2">
+                  <span className="text-sm font-bold text-zinc-300">포지션</span>
+                  <div className="flex flex-wrap gap-x-4 gap-y-2">
+                    {POSITIONS.map((pos) => (
+                      <label key={pos} className="flex items-center gap-2 text-sm font-bold text-zinc-300 cursor-pointer">
+                        <input type="checkbox" checked={form.positionSet.has(pos)} onChange={() => togglePosition(pos)} className="h-4 w-4 accent-gold" />
+                        {pos}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 오른쪽 패널: 시간 · 챔피언 · 작업종류 · 소개 · 공개 · 버튼 */}
+              <div className="grid gap-3 border-t border-white/8 p-5 md:border-t-0 md:px-8 md:pb-8 md:pt-0 md:content-start">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-2">
+                    <span className="text-sm font-bold text-zinc-300">평일 시간</span>
+                    {form.weekdayAll ? (
+                      <div className={`${inputCls} text-zinc-500`}>ALL</div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <select value={form.weekdayStart} onChange={set("weekdayStart")} className={inputCls}>
+                          {TIME_SLOTS.map((h) => <option key={h} value={h}>{h}:00</option>)}
+                        </select>
+                        <span className="shrink-0 text-zinc-500 text-xs">~</span>
+                        <select value={form.weekdayEnd} onChange={set("weekdayEnd")} className={inputCls}>
+                          {TIME_SLOTS.map((h) => <option key={h} value={h}>{h}:00</option>)}
+                        </select>
+                      </div>
+                    )}
+                    <label className="flex items-center gap-2 text-xs font-bold text-zinc-400 cursor-pointer">
+                      <input type="checkbox" checked={form.weekdayAll} onChange={(e) => setForm((f) => ({ ...f, weekdayAll: e.target.checked }))} className="h-4 w-4 accent-gold" />
+                      ALL
+                    </label>
+                  </div>
+                  <div className="grid gap-2">
+                    <span className="text-sm font-bold text-zinc-300">주말 시간</span>
+                    {form.weekendAll ? (
+                      <div className={`${inputCls} text-zinc-500`}>ALL</div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <select value={form.weekendStart} onChange={set("weekendStart")} className={inputCls}>
+                          {TIME_SLOTS.map((h) => <option key={h} value={h}>{h}:00</option>)}
+                        </select>
+                        <span className="shrink-0 text-zinc-500 text-xs">~</span>
+                        <select value={form.weekendEnd} onChange={set("weekendEnd")} className={inputCls}>
+                          {TIME_SLOTS.map((h) => <option key={h} value={h}>{h}:00</option>)}
+                        </select>
+                      </div>
+                    )}
+                    <label className="flex items-center gap-2 text-xs font-bold text-zinc-400 cursor-pointer">
+                      <input type="checkbox" checked={form.weekendAll} onChange={(e) => setForm((f) => ({ ...f, weekendAll: e.target.checked }))} className="h-4 w-4 accent-gold" />
+                      ALL
+                    </label>
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <span className="text-sm font-bold text-zinc-300">챔피언 (최대 3개)</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(["champ1", "champ2", "champ3"] as const).map((key, i) => {
+                      const other1 = i === 0 ? form.champ2 : form.champ1;
+                      const other2 = i === 1 ? form.champ3 : (i === 0 ? form.champ3 : form.champ2);
+                      return (
+                        <select key={key} value={form[key]} onChange={set(key)} className={inputCls}>
+                          <option value="">없음</option>
+                          {champOptions(other1, other2).map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <span className="text-sm font-bold text-zinc-300">작업 종류</span>
+                  <div className="flex gap-6">
+                    <label className="flex items-center gap-2 text-sm font-bold text-zinc-300 cursor-pointer">
+                      <input type="checkbox" checked={form.serviceBoost} onChange={(e) => setForm((f) => ({ ...f, serviceBoost: e.target.checked }))} className="h-4 w-4 accent-gold" />
+                      대리
+                    </label>
+                    <label className="flex items-center gap-2 text-sm font-bold text-zinc-300 cursor-pointer">
+                      <input type="checkbox" checked={form.serviceDuo} onChange={(e) => setForm((f) => ({ ...f, serviceDuo: e.target.checked }))} className="h-4 w-4 accent-gold" />
+                      듀오
+                    </label>
+                  </div>
+                </div>
+
+                <label className={labelCls}>
+                  소개
+                  <textarea value={form.description} onChange={set("description")} maxLength={300} rows={3} className={`${inputCls} resize-none leading-7`} placeholder="기사 소개를 입력해주세요." />
+                </label>
+
+                <label className="flex items-center gap-2 text-sm font-bold text-zinc-300 cursor-pointer">
+                  <input type="checkbox" checked={form.active} onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))} className="h-4 w-4 accent-gold" />
+                  공개 (체크 해제 시 숨김)
+                </label>
+
+                {message && <p className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-200">{message}</p>}
+
+                <button type="submit" disabled={saving || uploading} className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60">
+                  {(saving || uploading) && <Loader2 size={18} className="animate-spin" />}
+                  {uploading ? "이미지 업로드 중..." : editingId ? "수정 저장" : "기사 등록"}
                 </button>
-                <p className="px-3 py-2 text-xs text-zinc-500">{imageName}</p>
               </div>
-            ) : (
-              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 bg-white/3 px-4 py-6 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">
-                이미지 선택 (JPG/PNG/WEBP, 5MB 이하)
-                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImage} />
-              </label>
-            )}
-            {imageError && <p className="text-xs text-red-400">{imageError}</p>}
-          </div>
-
-          <label className="flex items-center gap-2 text-sm font-bold text-zinc-300">
-            <input type="checkbox" checked={form.active} onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))} className="h-4 w-4 accent-gold" />
-            공개 (체크 해제 시 숨김)
-          </label>
-
-          {message && <p className="rounded-2xl border border-gold/15 bg-white/[.035] px-4 py-3 text-sm font-bold text-zinc-300">{message}</p>}
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <button type="submit" disabled={saving || uploading} className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60">
-              {(saving || uploading) && <Loader2 size={18} className="animate-spin" />}
-              {uploading ? "이미지 업로드 중..." : editingId ? "수정 저장" : "기사 등록"}
-            </button>
-            {editingId && (
-              <button type="button" onClick={resetForm} className="rounded-full border border-white/10 px-7 py-4 font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white">취소</button>
-            )}
+            </form>
           </div>
         </div>
-      </form>
+      )}
 
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">lineup</p>
-            <h2 className="mt-2 text-2xl font-black text-white">기사 {lineups.length}명</h2>
-          </div>
-          {savingOrder && <Loader2 size={16} className="animate-spin text-gold" />}
-        </div>
-        <p className="text-xs text-zinc-500">행을 드래그해서 순서를 변경할 수 있습니다.</p>
-
-        <div className="overflow-hidden rounded-[30px] border border-gold/15 bg-white/[.035]">
-          {lineups.length === 0 && <p className="p-6 text-sm text-zinc-500">등록된 기사가 없습니다.</p>}
-          {lineups.map((lineup, index) => (
-            <div
-              key={lineup.id}
-              draggable
-              onDragStart={() => onDragStart(index)}
-              onDragEnter={() => onDragEnter(index)}
-              onDragEnd={() => void onDragEnd()}
-              onDragOver={(e) => e.preventDefault()}
-              className="flex cursor-grab items-center gap-4 border-b border-white/8 p-4 last:border-b-0 active:cursor-grabbing"
+      <div className="space-y-6">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-xl font-black text-white">
+            기사 {lineups.length}명
+          </h2>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={openWrite}
+              className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black shadow-gold-sm transition"
             >
-              <GripVertical size={16} className="shrink-0 text-zinc-600" />
-              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-zinc-900">
-                {lineup.image && (
-                  <Image src={lineup.image} alt={lineup.name} fill className="object-cover opacity-90" unoptimized />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-black text-white">{lineup.name}</span>
-                  {!lineup.active && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-zinc-700/50 px-2 py-0.5 text-[10px] font-bold text-zinc-400">
-                      <EyeOff size={10} />숨김
-                    </span>
+              <Plus size={16} />
+              기사 추가
+            </button>
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-3 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white"
+            >
+              <LogOut size={16} />
+              로그아웃
+            </button>
+          </div>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {lineups.length === 0 && (
+            <p className="col-span-full text-sm text-zinc-500">
+              등록된 기사가 없습니다.
+            </p>
+          )}
+          {lineups.map((knight) => (
+            <article
+              key={knight.id}
+              className={`card-premium overflow-hidden rounded-[28px] ${
+                !knight.active ? "opacity-50" : ""
+              }`}
+            >
+              <div className="flex gap-4 p-5">
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-black">
+                  {knight.image && (
+                    <Image
+                      src={knight.image}
+                      alt={knight.name}
+                      fill
+                      className="object-cover opacity-90"
+                      unoptimized
+                    />
                   )}
                 </div>
-                <p className="text-xs text-zinc-500">{lineup.positions.join(" · ")} · {lineup.rank}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {knight.positions.map((pos) => (
+                      <span
+                        key={pos}
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-black ${
+                          positionColors[pos] ?? "bg-gold/10 text-gold"
+                        }`}
+                      >
+                        {pos}
+                      </span>
+                    ))}
+                    <div className="flex items-center gap-1">
+                      <Image
+                        src={knight.tier}
+                        alt={knight.rank}
+                        width={18}
+                        height={18}
+                        className="rounded-full bg-zinc-800"
+                      />
+                      <span className="text-xs font-black text-gold">
+                        {knight.rank}
+                      </span>
+                    </div>
+                    {!knight.active && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-zinc-700/50 px-2 py-0.5 text-[10px] font-bold text-zinc-400">
+                        <EyeOff size={10} />
+                        숨김
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1.5 font-black text-white">{knight.name}</p>
+                  <div className="mt-1 grid gap-0.5 text-xs text-zinc-500">
+                    <div className="flex items-center gap-1.5">
+                      <Clock size={10} />
+                      <span>평일 {knight.weekdayHours}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Clock size={10} />
+                      <span>주말 {knight.weekendHours}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="flex shrink-0 gap-2">
-                <button type="button" onClick={() => startEdit(lineup)} className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white" aria-label="수정">
-                  <Pencil size={15} />
-                </button>
-                <button type="button" onClick={() => void deleteLineup(lineup)} disabled={deletingId === lineup.id} className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-red-400/40 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60" aria-label="삭제">
-                  {deletingId === lineup.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
-                </button>
+
+              <div className="border-t border-white/6 px-5 pb-5 pt-4">
+                <p className="text-sm leading-6 text-zinc-400">
+                  {knight.description}
+                </p>
+                <div className="mt-4 grid gap-2.5">
+                  {knight.champions && knight.champions.length > 0 && (
+                    <div className="flex items-start gap-2">
+                      <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">
+                        챔피언
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {knight.champions.map((c) => (
+                          <span
+                            key={c}
+                            className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300"
+                          >
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-start gap-2">
+                    <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">
+                      작업
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {knight.services.map((s) => (
+                        <span
+                          key={s}
+                          className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300"
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void duplicateLineup(knight)}
+                    className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white"
+                    aria-label="복제"
+                  >
+                    <Copy size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openEdit(knight)}
+                    className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white"
+                    aria-label="수정"
+                  >
+                    <Pencil size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void deleteLineup(knight)}
+                    disabled={deletingId === knight.id}
+                    className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-red-400/40 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60"
+                    aria-label="삭제"
+                  >
+                    {deletingId === knight.id ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : (
+                      <Trash2 size={15} />
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       </div>
-    </div>
+    </>
   );
 }

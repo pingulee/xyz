@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Image from "next/image";
 import { Clock, Medal, Shield } from "lucide-react";
 import Container from "@/components/Container";
+import AdminLineupBoard from "@/components/AdminLineupBoard";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import { getLineups } from "@/lib/lineups";
+import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "기사 라인업",
@@ -16,12 +21,36 @@ const positionColors: Record<string, string> = {
   정글: "bg-emerald-500/15 text-emerald-400",
   미드: "bg-blue-500/15 text-blue-400",
   바텀: "bg-purple-500/15 text-purple-400",
+  서포터: "bg-pink-500/15 text-pink-400",
   서폿: "bg-pink-500/15 text-pink-400",
   탑: "bg-orange-500/15 text-orange-400",
 };
 
 export default async function LineupPage() {
-  const lineups = await getLineups();
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value ?? "";
+  const isAdmin = validateSession(token);
+
+  const lineups = await getLineups(isAdmin ? false : true);
+
+  if (isAdmin) {
+    return (
+      <section className="py-20">
+        <Container>
+          <Reveal>
+            <SectionTitle
+              eyebrow="admin"
+              title="기사 라인업 관리"
+              desc="관리자 모드 — 추가, 수정, 삭제가 가능합니다."
+            />
+          </Reveal>
+          <Reveal>
+            <AdminLineupBoard initialLineups={lineups} />
+          </Reveal>
+        </Container>
+      </section>
+    );
+  }
 
   return (
     <section className="py-20">

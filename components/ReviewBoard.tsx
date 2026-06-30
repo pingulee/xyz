@@ -4,6 +4,7 @@ import Image from "next/image";
 import {
   ChevronLeft,
   ChevronRight,
+  Copy,
   ImagePlus,
   Loader2,
   Pencil,
@@ -465,6 +466,31 @@ export default function ReviewBoard({
     }
   };
 
+  const duplicateReview = async (review: Review) => {
+    setError("");
+    try {
+      const response = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: review.name,
+          password: "admin_duplicate",
+          service: review.service,
+          rating: review.rating,
+          content: review.content,
+          imageUrl: review.image,
+        }),
+      });
+      const data = (await response.json()) as CreateReviewResponse;
+      if (!response.ok) throw new Error(data.message ?? "복제하지 못했습니다.");
+      setReviews((current) => [data.review, ...current]);
+      setPage(1);
+      setSelectedReviewId(data.review.id);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "복제하지 못했습니다.");
+    }
+  };
+
   return (
     <div className="grid gap-8">
       {writeOpen && (
@@ -721,6 +747,7 @@ export default function ReviewBoard({
               updateEditForm(selectedReview.id, updates)
             }
             onEditOpenChange={() => openEditForm(selectedReview)}
+            onDuplicate={isAdmin ? () => void duplicateReview(selectedReview) : undefined}
             onVerifyPassword={() => void verifyEditPassword(selectedReview)}
             onBackToList={() => {
               setSelectedReviewId("");
@@ -864,6 +891,7 @@ function ReviewDetail({
   onEditFormChange,
   onEditOpenChange,
   onVerifyPassword,
+  onDuplicate,
   onBackToList,
   onSelectReview,
   previousReview,
@@ -886,6 +914,7 @@ function ReviewDetail({
   onEditFormChange: (updates: Partial<EditForm>) => void;
   onEditOpenChange: () => void;
   onVerifyPassword: () => void;
+  onDuplicate?: () => void;
   onBackToList: () => void;
   onSelectReview: (reviewId: string) => void;
   previousReview?: Review;
@@ -903,6 +932,16 @@ function ReviewDetail({
           </div>
 
           <div className="flex shrink-0 flex-wrap justify-end gap-2">
+            {onDuplicate && (
+              <button
+                type="button"
+                onClick={onDuplicate}
+                className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white"
+              >
+                <Copy size={16} />
+                복제
+              </button>
+            )}
             <button
               type="button"
               onClick={onEditOpenChange}
@@ -983,7 +1022,7 @@ function ReviewDetail({
                     value={editForm.content}
                     onChange={(event) => onEditFormChange({ content: event.target.value })}
                     maxLength={400}
-                    rows={5}
+                    rows={3}
                     className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
                   />
                 </label>
