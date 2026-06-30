@@ -25,6 +25,7 @@ type ReviewPayload = {
   content?: string;
   imageUrl?: string;
   password?: string;
+  createdAt?: string;
 };
 
 type RateLimitRow = RowDataPacket & {
@@ -236,10 +237,22 @@ export async function PUT(request: Request) {
       return NextResponse.json({ message: "비밀번호가 일치하지 않습니다." }, { status: 403 });
     }
 
-    await getPool().execute(
-      `UPDATE reviews SET service = :service, rating = :rating, content = :content WHERE id = :id`,
-      { id, service, rating, content },
-    );
+    const createdAt = adminRequest && payload.createdAt ? new Date(payload.createdAt) : null;
+    if (createdAt && isNaN(createdAt.getTime())) {
+      return NextResponse.json({ message: "날짜 형식이 올바르지 않습니다." }, { status: 400 });
+    }
+
+    if (createdAt) {
+      await getPool().execute(
+        `UPDATE reviews SET service = :service, rating = :rating, content = :content, created_at = :createdAt WHERE id = :id`,
+        { id, service, rating, content, createdAt },
+      );
+    } else {
+      await getPool().execute(
+        `UPDATE reviews SET service = :service, rating = :rating, content = :content WHERE id = :id`,
+        { id, service, rating, content },
+      );
+    }
 
     const [rows] = await getPool().execute<ReviewRow[]>(
       `SELECT id, name, service, rating, content, image_url, created_at FROM reviews WHERE id = :id`,

@@ -336,7 +336,7 @@ export default function AdminLineupBoard({
 
   const logout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin?from=" + encodeURIComponent(window.location.pathname));
+    router.refresh();
   };
 
   const resetImageState = () => {

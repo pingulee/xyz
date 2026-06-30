@@ -18,7 +18,7 @@ export default async function AdminPage() {
   const token = cookieStore.get(SESSION_COOKIE)?.value ?? "";
 
   if (validateSession(token)) {
-    redirect("/admin/lineups");
+    redirect("/lineup");
   }
 
   return (

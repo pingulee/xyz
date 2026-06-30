@@ -39,7 +39,7 @@ function AdminLoginFormInner() {
         return;
       }
 
-      router.push(from && from.startsWith("/") ? from : "/");
+      router.push(from && from.startsWith("/") && from !== "/admin" ? from : "/lineup");
     } catch {
       setMessage("로그인에 실패했습니다.");
     } finally {

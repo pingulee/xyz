@@ -43,6 +43,7 @@ type EditForm = {
   service: string;
   rating: number;
   content: string;
+  createdAt: string;
 };
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -66,6 +67,7 @@ const blankEditForm = {
   service: "롤 대리",
   rating: 5,
   content: "",
+  createdAt: "",
 };
 
 function getPageItems(currentPage: number, totalPages: number) {
@@ -90,6 +92,8 @@ function formatDate(date: string) {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(new Date(date));
 }
 
@@ -263,6 +267,7 @@ export default function ReviewBoard({
         service: review.service,
         rating: review.rating,
         content: review.content,
+        createdAt: review.createdAt.slice(0, 16),
       },
     }));
     setEditVerifiedIds((s) => { const n = new Set(s); n.delete(review.id); return n; });
@@ -438,6 +443,7 @@ export default function ReviewBoard({
           rating: editForm.rating,
           content,
           image: review.image,
+          ...(isAdmin && editForm.createdAt ? { createdAt: editForm.createdAt } : {}),
         }),
       });
       const data = (await response.json()) as CreateReviewResponse;
@@ -722,6 +728,7 @@ export default function ReviewBoard({
                 service: selectedReview.service,
                 rating: selectedReview.rating,
                 content: selectedReview.content,
+                createdAt: selectedReview.createdAt.slice(0, 16),
               }
             }
             editOpen={editOpenId === selectedReview.id}
@@ -1026,6 +1033,17 @@ function ReviewDetail({
                     className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
                   />
                 </label>
+                {isAdmin && (
+                  <label className="mt-4 grid gap-2">
+                    <span className="text-sm font-bold text-zinc-300">날짜 수정</span>
+                    <input
+                      type="datetime-local"
+                      value={editForm.createdAt}
+                      onChange={(event) => onEditFormChange({ createdAt: event.target.value })}
+                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
+                    />
+                  </label>
+                )}
                 <div className="mt-4 flex justify-end">
                   <button
                     type="button"
