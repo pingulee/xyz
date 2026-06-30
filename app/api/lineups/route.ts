@@ -6,13 +6,6 @@ import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession"
 
 export const runtime = "nodejs";
 
-const maxImageLength = 1024 * 1024 * 3;
-const allowedImagePrefixes = [
-  "data:image/jpeg;base64,",
-  "data:image/jpg;base64,",
-  "data:image/png;base64,",
-  "data:image/webp;base64,",
-];
 
 type LineupPayload = {
   id?: string;
@@ -35,12 +28,9 @@ function isAdminRequest(request: Request): boolean {
   return token ? validateSession(token) : false;
 }
 
-function isAllowedImageData(image: string | null | undefined) {
+function isValidImageUrl(image: string | null | undefined): boolean {
   if (!image) return true;
-  return (
-    image.length <= maxImageLength &&
-    allowedImagePrefixes.some((prefix) => image.startsWith(prefix))
-  );
+  return image.startsWith("/uploads/lineups/") && image.length <= 255;
 }
 
 function validateLineup(payload: LineupPayload) {
@@ -63,7 +53,7 @@ function validateLineup(payload: LineupPayload) {
   if (!weekdayHours || weekdayHours.length > 30) return { message: "평일 시간을 입력해주세요." };
   if (!weekendHours || weekendHours.length > 30) return { message: "주말 시간을 입력해주세요." };
   if (!services) return { message: "작업 종류를 입력해주세요." };
-  if (!isAllowedImageData(image)) return { message: "이미지 형식이 올바르지 않습니다. (JPG/PNG/WEBP, 3MB 이하)" };
+  if (!isValidImageUrl(image)) return { message: "이미지 URL 형식이 올바르지 않습니다." };
 
   return { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, image };
 }
@@ -95,7 +85,7 @@ export async function POST(request: Request) {
 
   try {
     const [result] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO lineups (name, positions, rank, tier, description, weekday_hours, weekend_hours, champions, services, image_data, sort_order, active)
+      `INSERT INTO lineups (name, positions, rank, tier, description, weekday_hours, weekend_hours, champions, services, image_url, sort_order, active)
        VALUES (:name, :positions, :rank, :tier, :description, :weekdayHours, :weekendHours, :champions, :services, :image, :sortOrder, :active)`,
       { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, image, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false },
     );
@@ -133,7 +123,7 @@ export async function PUT(request: Request) {
       `UPDATE lineups
        SET name=:name, positions=:positions, rank=:rank, tier=:tier, description=:description,
            weekday_hours=:weekdayHours, weekend_hours=:weekendHours, champions=:champions,
-           services=:services, image_data=:image, sort_order=:sortOrder, active=:active
+           services=:services, image_url=:image, sort_order=:sortOrder, active=:active
        WHERE id=:id`,
       { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, image, id, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false },
     );

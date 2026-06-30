@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS lineups (
   champions     VARCHAR(300) NOT NULL DEFAULT '' COMMENT 'comma-separated',
   services      VARCHAR(120) NOT NULL DEFAULT '' COMMENT 'comma-separated',
   image_data    LONGTEXT     NULL,
+  image_url     VARCHAR(255) NULL,
   sort_order    SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   active        BOOLEAN NOT NULL DEFAULT TRUE,
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -17,3 +18,6 @@ CREATE TABLE IF NOT EXISTS lineups (
   PRIMARY KEY (id),
   INDEX idx_lineups_active_sort (active, sort_order)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+ALTER TABLE lineups
+  ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL AFTER image_data;

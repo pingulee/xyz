@@ -28,7 +28,7 @@ type LineupRow = RowDataPacket & {
   weekend_hours: string;
   champions: string;
   services: string;
-  image_data: string | null;
+  image_url: string | null;
   sort_order: number;
   active: 0 | 1;
 };
@@ -52,7 +52,7 @@ export function toLineup(row: LineupRow): Lineup {
     weekendHours: row.weekend_hours,
     champions: split(row.champions),
     services: split(row.services),
-    image: row.image_data ?? null,
+    image: row.image_url ?? null,
     sortOrder: row.sort_order,
     active: Boolean(row.active),
   };

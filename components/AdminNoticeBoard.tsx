@@ -11,15 +11,13 @@ type NoticeResponse = {
   message?: string;
 };
 
-const MAX_IMAGE_SIZE = 1024 * 1024 * 2;
-const MAX_IMAGE_WIDTH = 1600;
-const MAX_IMAGE_HEIGHT = 1600;
+const MAX_IMAGE_SIZE = 1024 * 1024 * 5;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const blankForm = {
   title: "",
   content: "",
-  image: null as string | null,
+  imageUrl: null as string | null,
   pinned: false,
 };
 
@@ -41,8 +39,11 @@ export default function AdminNoticeBoard({
   const [selectedId, setSelectedId] = useState(initialNotices[0]?.id ?? "");
   const [editingId, setEditingId] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState("");
   const [message, setMessage] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
   const [imageName, setImageName] = useState("");
   const [imageError, setImageError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,32 +61,23 @@ export default function AdminNoticeBoard({
       return;
     }
     if (file.size > MAX_IMAGE_SIZE) {
-      setImageError("이미지는 2MB 이하만 첨부할 수 있습니다.");
+      setImageError("이미지는 5MB 이하만 첨부할 수 있습니다.");
       return;
     }
 
-    const img = new window.Image();
-    img.onload = () => {
-      if (img.width > MAX_IMAGE_WIDTH || img.height > MAX_IMAGE_HEIGHT) {
-        setImageError(`이미지는 ${MAX_IMAGE_WIDTH}×${MAX_IMAGE_HEIGHT}px 이하만 업로드 가능합니다.`);
-        URL.revokeObjectURL(img.src);
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        setForm((f) => ({ ...f, image: String(reader.result) }));
-        setImageName(file.name);
-        URL.revokeObjectURL(img.src);
-      };
-      reader.readAsDataURL(file);
-    };
-    img.onerror = () => { setImageError("이미지를 읽을 수 없습니다."); URL.revokeObjectURL(img.src); };
-    img.src = URL.createObjectURL(file);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    const objectUrl = URL.createObjectURL(file);
+    setImageFile(file);
+    setImagePreview(objectUrl);
+    setImageName(file.name);
   };
 
   const removeImage = () => {
-    setForm((f) => ({ ...f, image: null }));
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview("");
     setImageName("");
+    setForm((f) => ({ ...f, imageUrl: null }));
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -96,7 +88,9 @@ export default function AdminNoticeBoard({
 
   const startEdit = (notice: Notice) => {
     setEditingId(notice.id);
-    setForm({ title: notice.title, content: notice.content, image: notice.image, pinned: notice.pinned });
+    setForm({ title: notice.title, content: notice.content, imageUrl: notice.image, pinned: notice.pinned });
+    setImageFile(null);
+    setImagePreview("");
     setImageName(notice.image ? "현재 이미지" : "");
     setImageError("");
     setMessage("");
@@ -105,6 +99,9 @@ export default function AdminNoticeBoard({
   const resetForm = () => {
     setEditingId("");
     setForm(blankForm);
+    setImageFile(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview("");
     setImageName("");
     setImageError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -120,10 +117,23 @@ export default function AdminNoticeBoard({
 
     setSaving(true);
     try {
+      let imageUrl = form.imageUrl;
+
+      if (imageFile) {
+        setUploading(true);
+        const fd = new FormData();
+        fd.append("image", imageFile);
+        const uploadRes = await fetch("/api/uploads/notices", { method: "POST", body: fd });
+        const uploadData = (await uploadRes.json()) as { imageUrl?: string; message?: string };
+        setUploading(false);
+        if (!uploadRes.ok) throw new Error(uploadData.message ?? "이미지 업로드에 실패했습니다.");
+        imageUrl = uploadData.imageUrl ?? null;
+      }
+
       const response = await fetch("/api/notices", {
         method: editingId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editingId || undefined, title, content, image: form.image, pinned: form.pinned }),
+        body: JSON.stringify({ id: editingId || undefined, title, content, image: imageUrl, pinned: form.pinned }),
       });
       const data = (await response.json()) as NoticeResponse;
       if (!response.ok) throw new Error(data.message ?? "공지사항을 저장하지 못했습니다.");
@@ -139,6 +149,7 @@ export default function AdminNoticeBoard({
       }
       resetForm();
     } catch (caught) {
+      setUploading(false);
       setMessage(caught instanceof Error ? caught.message : "공지사항을 저장하지 못했습니다.");
     } finally {
       setSaving(false);
@@ -167,6 +178,7 @@ export default function AdminNoticeBoard({
   };
 
   const inputCls = "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
+  const currentImage = imagePreview || form.imageUrl;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
@@ -194,9 +206,10 @@ export default function AdminNoticeBoard({
 
           <div className="grid gap-2">
             <span className="text-sm font-bold text-zinc-300">이미지 (선택)</span>
-            {form.image ? (
+            {currentImage ? (
               <div className="relative overflow-hidden rounded-2xl bg-zinc-900">
-                <Image src={form.image} alt="미리보기" width={320} height={180} className="w-full object-cover" unoptimized />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={currentImage} alt="미리보기" className="w-full object-cover" />
                 <button type="button" onClick={removeImage} className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-black/70 text-white hover:bg-black">
                   <X size={14} />
                 </button>
@@ -204,7 +217,7 @@ export default function AdminNoticeBoard({
               </div>
             ) : (
               <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 bg-white/3 px-4 py-6 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white">
-                이미지 선택 (JPG/PNG/WEBP, 2MB 이하)
+                이미지 선택 (JPG/PNG/WEBP, 5MB 이하)
                 <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImage} />
               </label>
             )}
@@ -219,9 +232,9 @@ export default function AdminNoticeBoard({
           {message && <p className="rounded-2xl border border-gold/15 bg-white/[.035] px-4 py-3 text-sm font-bold text-zinc-300">{message}</p>}
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <button type="submit" disabled={saving} className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60">
-              {saving && <Loader2 size={18} className="animate-spin" />}
-              {editingId ? "수정 저장" : "공지 등록"}
+            <button type="submit" disabled={saving || uploading} className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60">
+              {(saving || uploading) && <Loader2 size={18} className="animate-spin" />}
+              {uploading ? "이미지 업로드 중..." : editingId ? "수정 저장" : "공지 등록"}
             </button>
             {editingId && (
               <button type="button" onClick={resetForm} className="rounded-full border border-white/10 px-7 py-4 font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white">취소</button>

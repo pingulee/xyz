@@ -6,14 +6,6 @@ import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession"
 
 export const runtime = "nodejs";
 
-const maxImageLength = 1024 * 1024 * 3;
-const allowedImagePrefixes = [
-  "data:image/jpeg;base64,",
-  "data:image/jpg;base64,",
-  "data:image/png;base64,",
-  "data:image/webp;base64,",
-];
-
 type NoticePayload = {
   id?: string;
   title?: string;
@@ -26,7 +18,7 @@ type NoticeRow = RowDataPacket & {
   id: number;
   title: string;
   content: string;
-  image_data: string | null;
+  image_url: string | null;
   pinned: 0 | 1;
   created_at: Date;
   updated_at: Date;
@@ -37,12 +29,9 @@ function isAdminRequest(request: Request): boolean {
   return token ? validateSession(token) : false;
 }
 
-function isAllowedImageData(image: string | null | undefined) {
+function isValidImageUrl(image: string | null | undefined): boolean {
   if (!image) return true;
-  return (
-    image.length <= maxImageLength &&
-    allowedImagePrefixes.some((prefix) => image.startsWith(prefix))
-  );
+  return image.startsWith("/uploads/notices/") && image.length <= 255;
 }
 
 function validateNotice(payload: NoticePayload) {
@@ -58,7 +47,7 @@ function validateNotice(payload: NoticePayload) {
     return { message: "내용은 1~3000자로 입력해주세요." };
   }
 
-  if (!isAllowedImageData(image)) {
+  if (!isValidImageUrl(image)) {
     return { message: "이미지 형식이 올바르지 않습니다. (JPG/PNG/WEBP, 3MB 이하)" };
   }
 
@@ -99,7 +88,7 @@ export async function POST(request: Request) {
 
   try {
     const [result] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO notices (title, content, image_data, pinned)
+      `INSERT INTO notices (title, content, image_url, pinned)
        VALUES (:title, :content, :image, :pinned)`,
       {
         title: validated.title,
@@ -110,7 +99,7 @@ export async function POST(request: Request) {
     );
 
     const [rows] = await getPool().execute<NoticeRow[]>(
-      `SELECT id, title, content, image_data, pinned, created_at, updated_at
+      `SELECT id, title, content, image_url, pinned, created_at, updated_at
        FROM notices
        WHERE id = :id`,
       { id: result.insertId },
@@ -159,7 +148,7 @@ export async function PUT(request: Request) {
       `UPDATE notices
        SET title = :title,
            content = :content,
-           image_data = :image,
+           image_url = :image,
            pinned = :pinned
        WHERE id = :id`,
       {
@@ -172,7 +161,7 @@ export async function PUT(request: Request) {
     );
 
     const [rows] = await getPool().execute<NoticeRow[]>(
-      `SELECT id, title, content, image_data, pinned, created_at, updated_at
+      `SELECT id, title, content, image_url, pinned, created_at, updated_at
        FROM notices
        WHERE id = :id`,
       { id },
