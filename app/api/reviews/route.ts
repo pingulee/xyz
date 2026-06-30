@@ -18,7 +18,6 @@ type ReviewRow = RowDataPacket & {
   lineup_name: string | null;
   rating: number;
   content: string;
-  image_url: string | null;
   password_hash: string | null;
   created_at: Date;
 };
@@ -30,7 +29,6 @@ type ReviewPayload = {
   lineupName?: string;
   rating?: number;
   content?: string;
-  imageUrl?: string;
   password?: string;
   createdAt?: string;
 };
@@ -68,11 +66,6 @@ function canModifyReview(password: string, review: ReviewRow) {
   return review.password_hash
     ? verifyPassword(password, review.password_hash)
     : false;
-}
-
-function isValidImageUrl(url: string | null | undefined): boolean {
-  if (!url) return true;
-  return url.startsWith("/uploads/reviews/") && url.length <= 255;
 }
 
 function getClientIp(request: Request) {
@@ -139,7 +132,6 @@ export async function POST(request: Request) {
   const lineupName = payload.lineupName?.trim() || null;
   const content = payload.content?.trim() ?? "";
   const rating = Number(payload.rating);
-  const imageUrl = payload.imageUrl?.trim() || null;
   const password = payload.password?.trim() ?? "";
 
   if (name.length < 1 || name.length > 20) {
@@ -177,13 +169,6 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!isValidImageUrl(imageUrl)) {
-    return NextResponse.json(
-      { message: "잘못된 이미지 경로입니다." },
-      { status: 400 },
-    );
-  }
-
   try {
     const adminWrite = isAdminRequest(request);
     if (!adminWrite) {
@@ -199,22 +184,13 @@ export async function POST(request: Request) {
 
     const passwordHash = hashPassword(password);
     const [result] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO reviews (name, service, lineup_id, lineup_name, rating, content, image_url, password_hash)
-       VALUES (:name, :service, :lineupId, :lineupName, :rating, :content, :imageUrl, :passwordHash)`,
-      {
-        name,
-        service,
-        lineupId,
-        lineupName,
-        rating,
-        content,
-        imageUrl,
-        passwordHash,
-      },
+      `INSERT INTO reviews (name, service, lineup_id, lineup_name, rating, content, password_hash)
+       VALUES (:name, :service, :lineupId, :lineupName, :rating, :content, :passwordHash)`,
+      { name, service, lineupId, lineupName, rating, content, passwordHash },
     );
 
     const [rows] = await getPool().execute<ReviewRow[]>(
-      `SELECT id, name, service, lineup_id, lineup_name, rating, content, image_url, created_at FROM reviews WHERE id = :id`,
+      `SELECT id, name, service, lineup_id, lineup_name, rating, content, created_at FROM reviews WHERE id = :id`,
       { id: result.insertId },
     );
 
@@ -286,7 +262,7 @@ export async function PUT(request: Request) {
 
   try {
     const [existingRows] = await getPool().execute<ReviewRow[]>(
-      `SELECT id, name, service, lineup_id, lineup_name, rating, content, image_url, password_hash, created_at
+      `SELECT id, name, service, lineup_id, lineup_name, rating, content, password_hash, created_at
        FROM reviews WHERE id = :id LIMIT 1`,
       { id },
     );
@@ -317,33 +293,18 @@ export async function PUT(request: Request) {
 
     if (createdAt) {
       await getPool().execute(
-        `UPDATE reviews SET service = :service, lineup_id = :lineupId, lineup_name = :lineupName, rating = :rating, content = :content, created_at = :createdAt WHERE id = :id`,
-        {
-          id,
-          service,
-          lineupId: payload.lineupId ? Number(payload.lineupId) : null,
-          lineupName: payload.lineupName?.trim() || null,
-          rating,
-          content,
-          createdAt,
-        },
+        `UPDATE reviews SET service = :service, rating = :rating, content = :content, created_at = :createdAt WHERE id = :id`,
+        { id, service, rating, content, createdAt },
       );
     } else {
       await getPool().execute(
-        `UPDATE reviews SET service = :service, lineup_id = :lineupId, lineup_name = :lineupName, rating = :rating, content = :content WHERE id = :id`,
-        {
-          id,
-          service,
-          lineupId: payload.lineupId ? Number(payload.lineupId) : null,
-          lineupName: payload.lineupName?.trim() || null,
-          rating,
-          content,
-        },
+        `UPDATE reviews SET service = :service, rating = :rating, content = :content WHERE id = :id`,
+        { id, service, rating, content },
       );
     }
 
     const [rows] = await getPool().execute<ReviewRow[]>(
-      `SELECT id, name, service, lineup_id, lineup_name, rating, content, image_url, created_at FROM reviews WHERE id = :id`,
+      `SELECT id, name, service, lineup_id, lineup_name, rating, content, created_at FROM reviews WHERE id = :id`,
       { id },
     );
 
@@ -389,7 +350,7 @@ export async function DELETE(request: Request) {
 
   try {
     const [rows] = await getPool().execute<ReviewRow[]>(
-      `SELECT id, name, service, lineup_id, lineup_name, rating, content, image_url, password_hash, created_at
+      `SELECT id, name, service, lineup_id, lineup_name, rating, content, password_hash, created_at
        FROM reviews WHERE id = :id LIMIT 1`,
       { id },
     );

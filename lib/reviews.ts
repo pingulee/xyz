@@ -9,7 +9,6 @@ export type Review = {
   lineupName?: string;
   rating: number;
   content: string;
-  image?: string;
   createdAt: string;
 };
 
@@ -21,7 +20,6 @@ type ReviewRow = RowDataPacket & {
   lineup_name: string | null;
   rating: number;
   content: string;
-  image_url: string | null;
   created_at: Date;
 };
 
@@ -43,7 +41,6 @@ export function toReview(row: ReviewRow): Review {
     lineupName: row.lineup_name ?? undefined,
     rating: row.rating,
     content: row.content,
-    image: row.image_url ?? undefined,
     createdAt: row.created_at.toISOString(),
   };
 }
@@ -51,7 +48,7 @@ export function toReview(row: ReviewRow): Review {
 export async function getReviews(limit = 100) {
   await ensureReviewsSchema();
   const [rows] = await getPool().execute<ReviewRow[]>(
-    `SELECT r.id, r.name, r.service, r.lineup_id, l.name AS lineup_name, r.rating, r.content, r.image_url, r.created_at
+    `SELECT r.id, r.name, r.service, r.lineup_id, l.name AS lineup_name, r.rating, r.content, r.created_at
      FROM reviews r
      LEFT JOIN lineups l ON l.id = r.lineup_id
      ORDER BY r.created_at DESC

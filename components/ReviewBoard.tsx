@@ -1,11 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import {
   ChevronLeft,
   ChevronRight,
   Copy,
-  ImagePlus,
   Loader2,
   Pencil,
   Star,
@@ -13,7 +11,6 @@ import {
   X,
 } from "lucide-react";
 import {
-  ChangeEvent,
   FormEvent,
   useEffect,
   useMemo,
@@ -29,7 +26,6 @@ type Review = {
   lineupName?: string;
   rating: number;
   content: string;
-  image?: string;
   createdAt: string;
 };
 
@@ -55,9 +51,7 @@ type EditForm = {
   createdAt: string;
 };
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const REVIEWS_PER_PAGE = 10;
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const blankForm = {
   name: "",
@@ -118,6 +112,40 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
+function StarRating({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (rating: number) => void;
+}) {
+  const [hovered, setHovered] = useState(0);
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star)}
+          onMouseEnter={() => setHovered(star)}
+          onMouseLeave={() => setHovered(0)}
+          className="text-gold transition-transform hover:scale-110"
+          aria-label={`${star}점`}
+        >
+          <Star
+            size={28}
+            fill={(hovered || value) >= star ? "currentColor" : "none"}
+            strokeWidth={1.5}
+          />
+        </button>
+      ))}
+      <span className="ml-2 self-center text-sm font-black text-zinc-400">
+        {hovered || value}점
+      </span>
+    </div>
+  );
+}
+
 export default function ReviewBoard({
   initialReviews = [],
   isAdmin = false,
@@ -141,10 +169,6 @@ export default function ReviewBoard({
   const [selectedReviewId, setSelectedReviewId] = useState("");
   const [writeOpen, setWriteOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState("");
-  const [imageName, setImageName] = useState("");
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(initialReviews.length === 0);
   const [submitting, setSubmitting] = useState(false);
@@ -216,35 +240,6 @@ export default function ReviewBoard({
     setSelectedReviewId("");
     setDeleteOpenId("");
     setEditOpenId("");
-  };
-
-  const handleImage = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    setError("");
-
-    if (!file) return;
-
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      setError("JPG, PNG, WEBP 이미지만 첨부할 수 있습니다.");
-      return;
-    }
-
-    if (file.size > MAX_IMAGE_SIZE) {
-      setError("이미지는 5MB 이하만 첨부할 수 있습니다.");
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(file);
-    setImageFile(file);
-    setImagePreview(objectUrl);
-    setImageName(file.name);
-  };
-
-  const removeImage = () => {
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
-    setImageFile(null);
-    setImagePreview("");
-    setImageName("");
   };
 
   const updateDeleteForm = (reviewId: string, updates: Partial<DeleteForm>) => {
@@ -344,28 +339,6 @@ export default function ReviewBoard({
     setSubmitting(true);
 
     try {
-      let imageUrl: string | undefined;
-
-      if (imageFile) {
-        setUploading(true);
-        const fd = new FormData();
-        fd.append("image", imageFile);
-        const uploadRes = await fetch("/api/uploads/reviews", {
-          method: "POST",
-          body: fd,
-        });
-        const uploadData = (await uploadRes.json()) as {
-          imageUrl?: string;
-          message?: string;
-        };
-        setUploading(false);
-        if (!uploadRes.ok)
-          throw new Error(
-            uploadData.message ?? "이미지 업로드에 실패했습니다.",
-          );
-        imageUrl = uploadData.imageUrl;
-      }
-
       const response = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -379,7 +352,6 @@ export default function ReviewBoard({
             : undefined,
           rating: form.rating,
           content,
-          imageUrl,
         }),
       });
       const data = (await response.json()) as CreateReviewResponse;
@@ -390,12 +362,10 @@ export default function ReviewBoard({
 
       setReviews((current) => [data.review, ...current]);
       setForm(blankForm);
-      removeImage();
       setPage(1);
       setSelectedReviewId(data.review.id);
       setWriteOpen(false);
     } catch (caught) {
-      setUploading(false);
       setError(
         caught instanceof Error
           ? caught.message
@@ -484,7 +454,6 @@ export default function ReviewBoard({
           service: editForm.service,
           rating: editForm.rating,
           content,
-          image: review.image,
           ...(isAdmin && editForm.createdAt
             ? { createdAt: editForm.createdAt }
             : {}),
@@ -528,7 +497,6 @@ export default function ReviewBoard({
           service: review.service,
           rating: review.rating,
           content: review.content,
-          imageUrl: review.image,
         }),
       });
       const data = (await response.json()) as CreateReviewResponse;
@@ -618,7 +586,7 @@ export default function ReviewBoard({
                   </label>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
+                <div className="grid gap-4 md:grid-cols-2">
                   <label className="grid gap-2">
                     <span className="text-sm font-bold text-zinc-300">
                       서비스
@@ -661,28 +629,16 @@ export default function ReviewBoard({
                       ))}
                     </select>
                   </label>
+                </div>
 
-                  <label className="grid gap-2">
-                    <span className="text-sm font-bold text-zinc-300">
-                      평점
-                    </span>
-                    <select
-                      value={form.rating}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          rating: Number(event.target.value),
-                        }))
-                      }
-                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
-                    >
-                      {[5, 4, 3, 2, 1].map((rating) => (
-                        <option key={rating} value={rating}>
-                          {rating}점
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                <div className="grid gap-2">
+                  <span className="text-sm font-bold text-zinc-300">평점</span>
+                  <StarRating
+                    value={form.rating}
+                    onChange={(rating) =>
+                      setForm((current) => ({ ...current, rating }))
+                    }
+                  />
                 </div>
 
                 <label className="grid gap-2">
@@ -702,44 +658,6 @@ export default function ReviewBoard({
                   />
                 </label>
 
-                <div className="grid gap-3">
-                  <span className="text-sm font-bold text-zinc-300">
-                    이미지 첨부
-                  </span>
-                  {imagePreview ? (
-                    <div className="relative overflow-hidden rounded-3xl border border-gold/20 bg-black">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={imagePreview}
-                        alt="첨부 이미지 미리보기"
-                        className="h-32 w-full object-cover sm:h-40"
-                      />
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white backdrop-blur transition hover:text-gold"
-                        aria-label="첨부 이미지 제거"
-                      >
-                        <X size={18} />
-                      </button>
-                      <p className="px-4 py-3 text-sm text-zinc-400">
-                        {imageName}
-                      </p>
-                    </div>
-                  ) : (
-                    <label className="flex cursor-pointer items-center justify-center gap-3 rounded-3xl border border-dashed border-gold/25 bg-white/3 px-5 py-8 text-sm font-bold text-zinc-300 transition hover:border-gold/50 hover:text-white">
-                      <ImagePlus size={20} />
-                      이미지 선택
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        onChange={handleImage}
-                        className="sr-only"
-                      />
-                    </label>
-                  )}
-                </div>
-
                 {error && (
                   <p className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-200">
                     {error}
@@ -748,13 +666,13 @@ export default function ReviewBoard({
 
                 <button
                   type="submit"
-                  disabled={submitting || uploading}
+                  disabled={submitting}
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {(submitting || uploading) && (
+                  {submitting && (
                     <Loader2 size={18} className="animate-spin" />
                   )}
-                  {uploading ? "이미지 업로드 중..." : "후기 등록"}
+                  후기 등록
                 </button>
               </div>
             </form>
@@ -886,18 +804,6 @@ export default function ReviewBoard({
                     </span>
                   </span>
 
-                  {review.image && (
-                    <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-black sm:w-22">
-                      <Image
-                        src={review.image}
-                        alt={`${review.name} 후기 이미지`}
-                        fill
-                        sizes="88px"
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </span>
-                  )}
                 </button>
               ))}
             </div>
@@ -1086,41 +992,28 @@ function ReviewDetail({
               </div>
             ) : (
               <>
-                <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-                  <label className="grid gap-2">
-                    <span className="text-sm font-bold text-zinc-300">
-                      서비스
-                    </span>
-                    <select
-                      value={editForm.service}
-                      onChange={(event) =>
-                        onEditFormChange({ service: event.target.value })
-                      }
-                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
-                    >
-                      <option>롤 대리</option>
-                      <option>롤 듀오</option>
-                      <option>롤 계정</option>
-                    </select>
-                  </label>
-                  <label className="grid gap-2">
-                    <span className="text-sm font-bold text-zinc-300">
-                      평점
-                    </span>
-                    <select
-                      value={editForm.rating}
-                      onChange={(event) =>
-                        onEditFormChange({ rating: Number(event.target.value) })
-                      }
-                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
-                    >
-                      {[5, 4, 3, 2, 1].map((r) => (
-                        <option key={r} value={r}>
-                          {r}점
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                <label className="grid gap-2">
+                  <span className="text-sm font-bold text-zinc-300">
+                    서비스
+                  </span>
+                  <select
+                    value={editForm.service}
+                    onChange={(event) =>
+                      onEditFormChange({ service: event.target.value })
+                    }
+                    className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
+                  >
+                    <option>롤 대리</option>
+                    <option>롤 듀오</option>
+                    <option>롤 계정</option>
+                  </select>
+                </label>
+                <div className="grid gap-2">
+                  <span className="text-sm font-bold text-zinc-300">평점</span>
+                  <StarRating
+                    value={editForm.rating}
+                    onChange={(rating) => onEditFormChange({ rating })}
+                  />
                 </div>
                 <label className="mt-4 grid gap-2">
                   <span className="text-sm font-bold text-zinc-300">후기</span>
@@ -1165,17 +1058,6 @@ function ReviewDetail({
           </div>
         ) : (
           <>
-            {review.image && (
-              <div className="mt-6">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={review.image}
-                  alt={`${review.name} 후기 이미지`}
-                  className="mx-auto block h-auto max-h-180 max-w-full"
-                />
-              </div>
-            )}
-
             <p className="mt-6 whitespace-pre-wrap leading-8 text-zinc-300">
               {review.content}
             </p>
