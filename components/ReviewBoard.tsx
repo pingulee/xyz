@@ -155,6 +155,17 @@ export default function ReviewBoard({
   );
 
   useEffect(() => {
+    if (writeOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [writeOpen]);
+
+  useEffect(() => {
     const loadReviews = async () => {
       try {
         const response = await fetch("/api/reviews", { cache: "no-store" });
@@ -461,7 +472,7 @@ export default function ReviewBoard({
           onClick={() => setWriteOpen(false)}
         >
           <div
-            className="w-full max-w-xl rounded-[34px] border border-gold/20 bg-[#111] p-6 shadow-2xl sm:p-8 max-md:max-h-[90dvh] max-md:overflow-y-auto"
+            className="w-full max-w-xl rounded-[34px] border border-gold/20 bg-[#111] p-6 shadow-2xl sm:p-8 max-h-[90dvh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-6 flex items-start justify-between gap-4">
