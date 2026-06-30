@@ -2,7 +2,6 @@ CREATE TABLE IF NOT EXISTS notices (
   id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   title      VARCHAR(120) NOT NULL,
   content    TEXT NOT NULL,
-  image_data LONGTEXT NULL,
   image_url  VARCHAR(255) NULL,
   pinned     BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -11,5 +10,5 @@ CREATE TABLE IF NOT EXISTS notices (
   INDEX idx_notices_pinned_created_at (pinned, created_at)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-ALTER TABLE notices
-  ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL AFTER image_data;
+ALTER TABLE notices ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL;
+ALTER TABLE notices DROP COLUMN IF EXISTS image_data;

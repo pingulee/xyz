@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS reviews (
   service VARCHAR(30) NOT NULL,
   rating TINYINT UNSIGNED NOT NULL,
   content TEXT NOT NULL,
-  image_data LONGTEXT NULL,
   image_url VARCHAR(255) NULL,
   password_hash VARCHAR(200) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -12,11 +11,9 @@ CREATE TABLE IF NOT EXISTS reviews (
   INDEX idx_reviews_created_at (created_at)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-ALTER TABLE reviews
-  ADD COLUMN IF NOT EXISTS password_hash VARCHAR(200) NULL AFTER image_data;
-
-ALTER TABLE reviews
-  ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL AFTER image_data;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS password_hash VARCHAR(200) NULL;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL;
+ALTER TABLE reviews DROP COLUMN IF EXISTS image_data;
 
 CREATE TABLE IF NOT EXISTS review_rate_limits (
   ip_hash CHAR(64) NOT NULL,

@@ -1,21 +1,27 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function AdminLoginForm() {
+function AdminLoginFormInner() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
 
-  const inputCls = "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
+  const inputCls =
+    "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const pw = password.trim();
-    if (!pw) { setMessage("비밀번호를 입력해주세요."); return; }
+    if (!pw) {
+      setMessage("비밀번호를 입력해주세요.");
+      return;
+    }
 
     setLoading(true);
     setMessage("");
@@ -33,7 +39,7 @@ export default function AdminLoginForm() {
         return;
       }
 
-      router.push("/admin/lineups");
+      router.push(from && from.startsWith("/") ? from : "/");
     } catch {
       setMessage("로그인에 실패했습니다.");
     } finally {
@@ -42,8 +48,13 @@ export default function AdminLoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="card-premium mx-auto max-w-xl rounded-[34px] p-6 sm:p-8">
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">admin</p>
+    <form
+      onSubmit={handleSubmit}
+      className="card-premium mx-auto max-w-xl rounded-[34px] p-6 sm:p-8"
+    >
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
+        admin
+      </p>
       <h2 className="mt-3 text-2xl font-black text-white">관리자 로그인</h2>
       <p className="mt-2 text-sm text-zinc-500">롤대리.xyz 관리자 페이지입니다.</p>
 
@@ -74,5 +85,13 @@ export default function AdminLoginForm() {
         입장
       </button>
     </form>
+  );
+}
+
+export default function AdminLoginForm() {
+  return (
+    <Suspense>
+      <AdminLoginFormInner />
+    </Suspense>
   );
 }
