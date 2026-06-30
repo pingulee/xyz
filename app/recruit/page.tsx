@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 const conditions = [
-  "현 시즌 챌린저 이상 티어",
+  "현 시즌 챌린저 달성",
   "그랜드마스터 이상 상시 유지 가능",
   "본인 명의 계정 인증 가능",
   "책임감 있는 진행 가능",
