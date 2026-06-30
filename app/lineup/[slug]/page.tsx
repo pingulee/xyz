@@ -43,11 +43,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function LineupDetailPage({ params }: Props) {
   const { slug } = await params;
   const lineup = await getLineupBySlug(slug);
-  const stats = await getLineupReviewStats(Number(lineup?.id ?? 0));
 
   if (!lineup) {
     notFound();
   }
+
+  const stats = await getLineupReviewStats(Number(lineup.id));
 
   return (
     <section className="py-20">
