@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { useState } from "react";
+import type { MouseEvent } from "react";
 import clsx from "clsx";
 import { navItems, services, site } from "@/lib/site";
 
@@ -32,11 +33,25 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const [mobileOpenItem, setMobileOpenItem] = useState("");
 
-  const handleNavClick = (href: string) => {
+  const handleNavClick = (
+    href: string,
+    event?: MouseEvent<HTMLAnchorElement>,
+  ) => {
     setOpen(false);
     setMobileOpenItem("");
-    if (pathname === href || (href !== "/" && pathname.startsWith(href) && href.split("/").length >= pathname.split("/").length)) {
-      router.refresh();
+    const currentPath = window.location.pathname;
+    const samePath = currentPath === href;
+    if (samePath) {
+      event?.preventDefault();
+      window.location.assign(href);
+      return;
+    }
+    if (
+      href !== "/" &&
+      currentPath.startsWith(href) &&
+      href.split("/").length >= currentPath.split("/").length
+    ) {
+      router.push(href);
     }
   };
 
@@ -73,6 +88,7 @@ export default function Header() {
                 <div key={item.href} className="group relative">
                   <Link
                     href={item.href}
+                    onClick={(event) => handleNavClick(item.href, event)}
                     className={clsx(
                       "flex items-center gap-1 text-sm font-bold transition",
                       active ? "text-gold" : "text-zinc-300 hover:text-white",
@@ -90,7 +106,7 @@ export default function Header() {
                       <Link
                         key={child.href}
                         href={child.href}
-                        onClick={() => handleNavClick(child.href)}
+                        onClick={(event) => handleNavClick(child.href, event)}
                         className={clsx(
                           "block rounded-xl px-4 py-3 text-sm font-bold transition",
                           pathname === child.href
@@ -114,7 +130,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => handleNavClick(item.href)}
+                onClick={(event) => handleNavClick(item.href, event)}
                 className={clsx(
                   "relative text-sm font-bold transition",
                   active ? "text-gold" : "text-zinc-300 hover:text-white",
@@ -193,7 +209,7 @@ export default function Header() {
               ) : (
                 <Link
                   href={item.href}
-                  onClick={() => handleNavClick(item.href)}
+                  onClick={(event) => handleNavClick(item.href, event)}
                   className={clsx(
                     "block rounded-2xl px-4 py-4 text-base font-bold",
                     isActive(item.href)
@@ -209,7 +225,7 @@ export default function Header() {
                 <div className="ml-4 mt-1 space-y-1 border-l border-gold/10 pl-3">
                   <Link
                     href={item.href}
-                    onClick={() => handleNavClick(item.href)}
+                    onClick={(event) => handleNavClick(item.href, event)}
                     className={clsx(
                       "block rounded-xl px-4 py-3 text-sm font-bold",
                       pathname === item.href
@@ -223,7 +239,7 @@ export default function Header() {
                     <Link
                       key={child.href}
                       href={child.href}
-                      onClick={() => handleNavClick(child.href)}
+                      onClick={(event) => handleNavClick(child.href, event)}
                       className={clsx(
                         "block rounded-xl px-4 py-3 text-sm font-bold",
                         pathname === child.href

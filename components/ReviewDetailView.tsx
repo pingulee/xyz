@@ -35,6 +35,7 @@ const TIER_ICON_BY_NAME: Record<string, string> = {
 
 const inputCls =
   "rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50";
+const REVIEW_CONTENT_MAX_LENGTH = 100;
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("ko-KR", {
@@ -100,11 +101,11 @@ function PostNav({
   nextReview?: ReviewNavItem;
 }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+    <div className="grid grid-cols-3 gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-3">
       <NavLink label="이전글" review={previousReview} align="left" />
       <Link
         href="/reviews"
-        className="rounded-full border border-white/10 px-6 py-3 text-center text-sm font-black text-zinc-300 transition hover:border-gold/40 hover:text-white"
+        className="grid min-h-11 place-items-center rounded-full border border-white/10 px-3 py-2 text-center text-sm font-black text-zinc-300 transition hover:border-gold/40 hover:text-white sm:px-6 sm:py-3"
       >
         목록
       </Link>
@@ -124,9 +125,9 @@ function NavLink({
 }) {
   if (!review) {
     return (
-      <div className={`rounded-3xl border border-white/8 bg-black/15 p-4 opacity-50 ${align === "right" ? "sm:text-right" : ""}`}>
+      <div className={`grid min-h-11 place-items-center rounded-full border border-white/8 bg-black/15 px-3 py-2 opacity-50 sm:block sm:min-h-0 sm:rounded-3xl sm:p-4 ${align === "right" ? "sm:text-right" : ""}`}>
         <p className="text-xs font-black text-zinc-500">{label}</p>
-        <p className="mt-1 text-sm font-bold text-zinc-500">이동할 글이 없습니다.</p>
+        <p className="mt-1 hidden text-sm font-bold text-zinc-500 sm:block">이동할 글이 없습니다.</p>
       </div>
     );
   }
@@ -134,11 +135,11 @@ function NavLink({
   return (
     <Link
       href={`/reviews/${review.id}`}
-      className={`rounded-3xl border border-white/8 bg-white/[.035] p-4 transition hover:border-gold/30 hover:bg-white/[.055] ${align === "right" ? "sm:text-right" : ""}`}
+      className={`grid min-h-11 place-items-center rounded-full border border-white/8 bg-white/[.035] px-3 py-2 transition hover:border-gold/30 hover:bg-white/[.055] sm:block sm:min-h-0 sm:rounded-3xl sm:p-4 ${align === "right" ? "sm:text-right" : ""}`}
     >
       <p className="text-xs font-black text-gold">{label}</p>
-      <p className="mt-1 line-clamp-1 text-sm font-black text-white">{review.name}</p>
-      <p className="mt-1 line-clamp-1 text-xs text-zinc-500">{review.content}</p>
+      <p className="mt-1 hidden text-sm font-black text-white sm:line-clamp-1">{review.name}</p>
+      <p className="mt-1 hidden text-xs text-zinc-500 sm:line-clamp-1">{review.content}</p>
     </Link>
   );
 }
@@ -394,8 +395,6 @@ export default function ReviewDetailView({
 
   return (
     <div className="mx-auto grid max-w-5xl gap-6">
-      <PostNav previousReview={previousReview} nextReview={nextReview} />
-
       <article className="overflow-hidden rounded-[18px] border border-white/10 bg-white/[.035]">
         <div className="border-b border-white/8 bg-black/25 px-6 py-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -410,7 +409,9 @@ export default function ReviewDetailView({
               </h1>
               <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-bold text-zinc-500">
                 <span>작성자 {review.name}</span>
-                <time dateTime={review.createdAt}>{formatDate(review.createdAt)}</time>
+                <time dateTime={review.createdAt} className="whitespace-nowrap">
+                  {formatDate(review.createdAt)}
+                </time>
                 <span>조회 {review.viewCount}</span>
                 <span className="flex items-center gap-2">
                   평점 <Stars rating={review.rating} />
@@ -489,7 +490,7 @@ export default function ReviewDetailView({
                 value={editContent}
                 onChange={(event) => setEditContent(event.target.value)}
                 rows={5}
-                maxLength={400}
+                maxLength={REVIEW_CONTENT_MAX_LENGTH}
                 className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition focus:border-gold/50"
               />
               <div className="flex justify-end gap-2">
@@ -595,7 +596,7 @@ export default function ReviewDetailView({
               </div>
             </div>
 
-            {canReply && (
+            {canReply && !formOpen && (
               <div className="flex gap-2">
                 {review.reply && (
                   <button
@@ -707,7 +708,7 @@ export default function ReviewDetailView({
             </div>
           )}
 
-          {!canReply && !review.reply && (
+          {!formOpen && !canReply && !review.reply && (
             <button
               type="button"
               onClick={openReplyForm}

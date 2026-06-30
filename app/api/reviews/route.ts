@@ -58,6 +58,8 @@ type RateLimitRow = RowDataPacket & {
 
 const allowedServices = new Set(["롤 대리", "롤 듀오"]);
 const reviewCooldownMs = 10 * 60 * 1000;
+const reviewNameMaxLength = 7;
+const reviewContentMaxLength = 100;
 
 function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
@@ -153,9 +155,9 @@ export async function POST(request: Request) {
   const rating = Number(payload.rating);
   const password = payload.password?.trim() ?? "";
 
-  if (name.length < 1 || name.length > 20) {
+  if (name.length < 1 || name.length > reviewNameMaxLength) {
     return NextResponse.json(
-      { message: "닉네임은 1~20자로 입력해주세요." },
+      { message: `닉네임은 1~${reviewNameMaxLength}자로 입력해주세요.` },
       { status: 400 },
     );
   }
@@ -174,9 +176,9 @@ export async function POST(request: Request) {
     );
   }
 
-  if (content.length < 1 || content.length > 400) {
+  if (content.length < 1 || content.length > reviewContentMaxLength) {
     return NextResponse.json(
-      { message: "후기는 1~400자로 입력해주세요." },
+      { message: `후기는 1~${reviewContentMaxLength}자로 입력해주세요.` },
       { status: 400 },
     );
   }
@@ -272,9 +274,9 @@ export async function PUT(request: Request) {
     );
   }
 
-  if (content.length < 1 || content.length > 400) {
+  if (content.length < 1 || content.length > reviewContentMaxLength) {
     return NextResponse.json(
-      { message: "후기는 1~400자로 입력해주세요." },
+      { message: `후기는 1~${reviewContentMaxLength}자로 입력해주세요.` },
       { status: 400 },
     );
   }

@@ -66,6 +66,8 @@ type EditForm = {
 };
 
 const REVIEWS_PER_PAGE = 10;
+const REVIEW_NAME_MAX_LENGTH = 7;
+const REVIEW_CONTENT_MAX_LENGTH = 100;
 
 const TIER_ICON_BY_NAME: Record<string, string> = {
   아이언: "/images/tier/1-iron.png",
@@ -398,6 +400,16 @@ export default function ReviewBoard({
       return;
     }
 
+    if (name.length > REVIEW_NAME_MAX_LENGTH) {
+      setError(`닉네임은 ${REVIEW_NAME_MAX_LENGTH}자 이하로 입력해주세요.`);
+      return;
+    }
+
+    if (content.length > REVIEW_CONTENT_MAX_LENGTH) {
+      setError(`후기는 ${REVIEW_CONTENT_MAX_LENGTH}자 이하로 입력해주세요.`);
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -501,6 +513,11 @@ export default function ReviewBoard({
 
     if (!content) {
       setError("후기 내용을 입력해주세요.");
+      return;
+    }
+
+    if (content.length > REVIEW_CONTENT_MAX_LENGTH) {
+      setError(`후기는 ${REVIEW_CONTENT_MAX_LENGTH}자 이하로 입력해주세요.`);
       return;
     }
 
@@ -670,8 +687,13 @@ export default function ReviewBoard({
               <div className="grid gap-4">
                 <div className="grid gap-4">
                   <label className="grid gap-2">
-                    <span className="text-sm font-bold text-zinc-300">
-                      닉네임
+                    <span className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-bold text-zinc-300">
+                        닉네임
+                      </span>
+                      <span className="text-xs font-bold text-zinc-600">
+                        {form.name.length}/{REVIEW_NAME_MAX_LENGTH}
+                      </span>
                     </span>
                     <input
                       value={form.name}
@@ -681,7 +703,7 @@ export default function ReviewBoard({
                           name: event.target.value,
                         }))
                       }
-                      maxLength={20}
+                      maxLength={REVIEW_NAME_MAX_LENGTH}
                       className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
                       placeholder="예: 다이아 목표"
                     />
@@ -785,7 +807,12 @@ export default function ReviewBoard({
                 </div>
 
                 <label className="grid gap-2">
-                  <span className="text-sm font-bold text-zinc-300">후기</span>
+                  <span className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-bold text-zinc-300">후기</span>
+                    <span className="text-xs font-bold text-zinc-600">
+                      {form.content.length}/{REVIEW_CONTENT_MAX_LENGTH}
+                    </span>
+                  </span>
                   <textarea
                     value={form.content}
                     onChange={(event) =>
@@ -794,7 +821,7 @@ export default function ReviewBoard({
                         content: event.target.value,
                       }))
                     }
-                    maxLength={400}
+                    maxLength={REVIEW_CONTENT_MAX_LENGTH}
                     rows={4}
                     className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
                     placeholder="진행 과정, 상담, 만족했던 점을 남겨주세요."
@@ -922,10 +949,11 @@ export default function ReviewBoard({
         ) : (
           <>
             <div className="overflow-hidden rounded-[30px] border border-gold/15 bg-white/[.035]">
-              <div className="hidden grid-cols-[3.25rem_minmax(0,1.5fr)_7rem_6rem_8.5rem_7rem_5rem] gap-4 border-b border-white/8 bg-black/20 px-5 py-3 text-xs font-black text-zinc-500 lg:grid">
+              <div className="hidden grid-cols-[3.25rem_minmax(0,1.45fr)_6rem_7rem_5.5rem_10rem_7rem_5rem] gap-4 border-b border-white/8 bg-black/20 px-5 py-3 text-xs font-black text-zinc-500 lg:grid">
                 <span>번호</span>
                 <span>내용</span>
                 <span>작성자</span>
+                <span>작업 기사</span>
                 <span>평점</span>
                 <span>작성일</span>
                 <span>답변 상태</span>
@@ -943,7 +971,7 @@ export default function ReviewBoard({
                     key={review.id}
                     type="button"
                     onClick={() => openReview(review.id)}
-                    className="group grid w-full gap-4 border-b border-white/8 px-5 py-5 text-left transition last:border-b-0 hover:bg-white/[.055] lg:grid-cols-[3.25rem_minmax(0,1.5fr)_7rem_6rem_8.5rem_7rem_5rem] lg:items-center"
+                    className="group grid w-full cursor-pointer gap-4 border-b border-white/8 px-5 py-5 text-left transition last:border-b-0 hover:bg-white/[.055] lg:grid-cols-[3.25rem_minmax(0,1.45fr)_6rem_7rem_5.5rem_10rem_7rem_5rem] lg:items-center"
                   >
                     <span className="hidden h-10 w-10 place-items-center rounded-2xl border border-white/8 bg-black/20 text-sm font-black text-zinc-500 transition group-hover:border-gold/25 group-hover:text-gold lg:grid">
                       {displayNumber}
@@ -954,17 +982,16 @@ export default function ReviewBoard({
                         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl border border-white/8 bg-black/20 text-sm font-black text-zinc-500">
                           {displayNumber}
                         </span>
-                        <span className="text-xs font-bold text-zinc-500">
+                        <span className="whitespace-nowrap text-xs font-bold text-zinc-500">
                           {formatDate(review.createdAt)}
                         </span>
                       </span>
 
-                      <span className="line-clamp-2 text-sm font-bold leading-6 text-white transition group-hover:text-gold">
+                      <span className="block truncate text-sm font-bold leading-6 text-white transition group-hover:text-gold">
                         {review.content}
                       </span>
-                      <span className="flex flex-wrap gap-x-3 gap-y-1 text-xs font-bold text-zinc-500">
-                        <span>작업 기사 {lineupName || "선택 안 함"}</span>
-                        <span>서비스 {review.service}</span>
+                      <span className="truncate text-xs font-bold text-zinc-500 lg:hidden">
+                        작성자 {review.name} · 작업 기사 {lineupName || "선택 안 함"}
                       </span>
                     </span>
 
@@ -972,11 +999,15 @@ export default function ReviewBoard({
                       {review.name}
                     </span>
 
+                    <span className="hidden truncate text-sm font-bold text-zinc-400 lg:block">
+                      {lineupName || "선택 안 함"}
+                    </span>
+
                     <span className="hidden lg:block">
                       <Stars rating={review.rating} />
                     </span>
 
-                    <span className="hidden text-xs font-bold leading-5 text-zinc-400 lg:block">
+                    <span className="hidden whitespace-nowrap text-xs font-bold leading-5 text-zinc-400 lg:block">
                       <time dateTime={review.createdAt}>
                         {formatDate(review.createdAt)}
                       </time>
@@ -1550,7 +1581,7 @@ function ReviewDetail({
                     onChange={(event) =>
                       onEditFormChange({ content: event.target.value })
                     }
-                    maxLength={400}
+                    maxLength={REVIEW_CONTENT_MAX_LENGTH}
                     rows={3}
                     className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
                   />
@@ -1593,7 +1624,7 @@ function ReviewDetail({
               <span className="rounded-full bg-gold/10 px-3 py-1 text-gold">
                 {review.service}
               </span>
-              <time dateTime={review.createdAt}>
+              <time dateTime={review.createdAt} className="whitespace-nowrap">
                 {formatDate(review.createdAt)}
               </time>
             </div>
