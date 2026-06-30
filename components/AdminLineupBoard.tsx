@@ -84,6 +84,7 @@ const blankForm = {
   serviceDuo: false,
   imageUrl: null as string | null,
   active: true,
+  knightPassword: "",
 };
 
 type FormState = typeof blankForm;
@@ -226,6 +227,7 @@ export default function AdminLineupBoard({
       serviceDuo: lineup.services.includes("듀오"),
       imageUrl: lineup.image,
       active: lineup.active,
+      knightPassword: "",
     });
     resetImageState();
     setImageName(lineup.image ? "현재 이미지" : "");
@@ -255,6 +257,7 @@ export default function AdminLineupBoard({
       .join(","),
     image: imageUrl,
     active: form.active,
+    knightPassword: form.knightPassword || undefined,
   });
 
   const saveLineup = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -578,6 +581,19 @@ export default function AdminLineupBoard({
                     rows={3}
                     className={`${inputCls} resize-none leading-7`}
                     placeholder="기사 소개를 입력해주세요."
+                  />
+                </label>
+
+                <label className={labelCls}>
+                  기사 로그인 비밀번호
+                  <input
+                    type="password"
+                    value={form.knightPassword}
+                    onChange={set("knightPassword")}
+                    maxLength={60}
+                    className={inputCls}
+                    placeholder="변경 시에만 입력 (비워두면 유지)"
+                    autoComplete="new-password"
                   />
                 </label>
 

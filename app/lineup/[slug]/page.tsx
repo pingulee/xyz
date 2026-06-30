@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { Clock, Star } from "lucide-react";
 import Container from "@/components/Container";
@@ -9,6 +10,7 @@ import SectionTitle from "@/components/SectionTitle";
 import LineupReviews from "@/components/LineupReviews";
 import { getLineupBySlug, getLineupReviewStats } from "@/lib/lineups";
 import { getReviewsByLineupId } from "@/lib/reviews";
+import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSession";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +50,10 @@ export default async function LineupDetailPage({ params }: Props) {
     notFound();
   }
 
+  const cookieStore = await cookies();
+  const knightToken = cookieStore.get(KNIGHT_SESSION_COOKIE)?.value ?? "";
+  const knightLineupId = validateKnightSession(knightToken);
+
   const [stats, reviews] = await Promise.all([
     getLineupReviewStats(Number(lineup.id)),
     getReviewsByLineupId(Number(lineup.id)),
@@ -75,7 +81,7 @@ export default async function LineupDetailPage({ params }: Props) {
         </Reveal>
 
         <Reveal>
-          <div className="card-premium overflow-hidden rounded-[32px] p-6 md:p-8">
+          <div className="card-premium overflow-hidden rounded-4xl p-6 md:p-8">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
               {lineup.image && (
                 <div className="shrink-0">
@@ -118,14 +124,14 @@ export default async function LineupDetailPage({ params }: Props) {
                 </div>
 
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
-                  <div className="rounded-2xl border border-white/8 bg-white/[.04] p-4">
+                  <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
                     <div className="flex items-center gap-2 text-sm font-black text-gold">
                       <Clock size={16} />
                       평일 작업 가능 시간
                     </div>
                     <p className="mt-2 text-sm text-zinc-300">{lineup.weekdayHours}</p>
                   </div>
-                  <div className="rounded-2xl border border-white/8 bg-white/[.04] p-4">
+                  <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
                     <div className="flex items-center gap-2 text-sm font-black text-gold">
                       <Clock size={16} />
                       주말 작업 가능 시간
@@ -134,7 +140,7 @@ export default async function LineupDetailPage({ params }: Props) {
                   </div>
                 </div>
 
-                <div className="mt-6 rounded-3xl border border-gold/15 bg-white/[.04] p-5">
+                <div className="mt-6 rounded-3xl border border-gold/15 bg-white/4 p-5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <div className="text-sm font-black text-zinc-500">Average Rating</div>
@@ -214,7 +220,7 @@ export default async function LineupDetailPage({ params }: Props) {
             <h2 className="mb-6 text-xl font-black text-white">
               후기 <span className="text-gold">{reviews.length}</span>개
             </h2>
-            <LineupReviews reviews={reviews} />
+            <LineupReviews reviews={reviews} knightLineupId={knightLineupId} />
           </div>
         </Reveal>
       </Container>

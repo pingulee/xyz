@@ -18,6 +18,13 @@ import {
   useState,
 } from "react";
 
+type ReviewReply = {
+  id: string;
+  lineupId: string;
+  content: string;
+  createdAt: string;
+};
+
 type Review = {
   id: string;
   name: string;
@@ -27,6 +34,7 @@ type Review = {
   rating: number;
   content: string;
   createdAt: string;
+  reply?: ReviewReply;
 };
 
 type ReviewsResponse = {
@@ -155,10 +163,12 @@ export default function ReviewBoard({
   initialReviews = [],
   isAdmin = false,
   lineups = [],
+  knightLineupId = null,
 }: {
   initialReviews?: Review[];
   isAdmin?: boolean;
   lineups?: Array<{ id: string; name: string; services: string[] }>;
+  knightLineupId?: number | null;
 }) {
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
   const [form, setForm] = useState(blankForm);
@@ -179,6 +189,8 @@ export default function ReviewBoard({
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState("");
   const [editingId, setEditingId] = useState("");
+  const [replyingId, setReplyingId] = useState("");
+  const [deletingReplyId, setDeletingReplyId] = useState("");
   const mousedownOnOverlay = useRef(false);
 
   const totalPages = Math.max(1, Math.ceil(reviews.length / REVIEWS_PER_PAGE));
@@ -490,6 +502,48 @@ export default function ReviewBoard({
     }
   };
 
+  const submitReply = async (reviewId: string, content: string) => {
+    setError("");
+    setReplyingId(reviewId);
+    try {
+      const response = await fetch("/api/reviews/reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewId, content }),
+      });
+      const data = (await response.json()) as { reply?: ReviewReply; message?: string };
+      if (!response.ok) throw new Error(data.message ?? "답변을 저장하지 못했습니다.");
+      setReviews((cur) =>
+        cur.map((r) => (r.id === reviewId ? { ...r, reply: data.reply } : r)),
+      );
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "답변을 저장하지 못했습니다.");
+    } finally {
+      setReplyingId("");
+    }
+  };
+
+  const deleteReply = async (reviewId: string) => {
+    setError("");
+    setDeletingReplyId(reviewId);
+    try {
+      const response = await fetch("/api/reviews/reply", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewId }),
+      });
+      const data = (await response.json()) as { message?: string };
+      if (!response.ok) throw new Error(data.message ?? "답변을 삭제하지 못했습니다.");
+      setReviews((cur) =>
+        cur.map((r) => (r.id === reviewId ? { ...r, reply: undefined } : r)),
+      );
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "답변을 삭제하지 못했습니다.");
+    } finally {
+      setDeletingReplyId("");
+    }
+  };
+
   const duplicateReview = async (review: Review) => {
     setError("");
     try {
@@ -748,6 +802,11 @@ export default function ReviewBoard({
             editVerified={editVerifiedIds.has(selectedReview.id)}
             editing={editingId === selectedReview.id}
             isAdmin={isAdmin}
+            knightLineupId={knightLineupId}
+            replying={replyingId === selectedReview.id}
+            deletingReply={deletingReplyId === selectedReview.id}
+            onSubmitReply={(content) => void submitReply(selectedReview.id, content)}
+            onDeleteReply={() => void deleteReply(selectedReview.id)}
             onDelete={() => void deleteReview(selectedReview.id)}
             onDeleteOpenChange={() => {
               if (isAdmin) {
@@ -883,6 +942,112 @@ export default function ReviewBoard({
   );
 }
 
+function ReplySection({
+  review,
+  knightLineupId,
+  replying,
+  deletingReply,
+  onSubmitReply,
+  onDeleteReply,
+}: {
+  review: Review;
+  knightLineupId: number | null;
+  replying: boolean;
+  deletingReply: boolean;
+  onSubmitReply: (content: string) => void;
+  onDeleteReply: () => void;
+}) {
+  const [draft, setDraft] = useState(review.reply?.content ?? "");
+  const canReply = knightLineupId !== null && review.lineupId === String(knightLineupId);
+
+  if (!review.reply && !canReply) return null;
+
+  return (
+    <div className="mt-4 rounded-3xl border border-gold/15 bg-white/[.03] p-4">
+      <p className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-gold">기사 답변</p>
+      {review.reply ? (
+        <div>
+          <p className="text-sm leading-7 whitespace-pre-wrap text-zinc-300">{review.reply.content}</p>
+          <p className="mt-2 text-xs text-zinc-500">{formatDate(review.reply.createdAt)}</p>
+          {canReply && (
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setDraft(review.reply!.content)}
+                className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white"
+              >
+                수정
+              </button>
+              <button
+                type="button"
+                onClick={onDeleteReply}
+                disabled={deletingReply}
+                className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1.5 text-xs font-bold text-zinc-400 transition hover:border-red-400/40 hover:text-red-200 disabled:opacity-60"
+              >
+                {deletingReply && <Loader2 size={12} className="animate-spin" />}
+                삭제
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        canReply && (
+          <div className="grid gap-2">
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              rows={3}
+              maxLength={500}
+              placeholder="후기에 답변을 남겨주세요."
+              className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full"
+            />
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => { if (draft.trim()) onSubmitReply(draft.trim()); }}
+                disabled={replying || !draft.trim()}
+                className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-2.5 text-sm font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {replying && <Loader2 size={14} className="animate-spin" />}
+                답변 등록
+              </button>
+            </div>
+          </div>
+        )
+      )}
+      {canReply && review.reply && draft !== review.reply.content && (
+        <div className="mt-3 grid gap-2">
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={3}
+            maxLength={500}
+            className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full"
+          />
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setDraft(review.reply!.content)}
+              className="rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={() => { if (draft.trim()) onSubmitReply(draft.trim()); }}
+              disabled={replying || !draft.trim()}
+              className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-2.5 text-sm font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {replying && <Loader2 size={14} className="animate-spin" />}
+              수정 저장
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ReviewDetail({
   deleteForm,
   deleteOpen,
@@ -893,6 +1058,11 @@ function ReviewDetail({
   editing,
   error,
   isAdmin,
+  knightLineupId,
+  replying,
+  deletingReply,
+  onSubmitReply,
+  onDeleteReply,
   nextReview,
   onDelete,
   onDeleteFormChange,
@@ -916,6 +1086,11 @@ function ReviewDetail({
   editing: boolean;
   error?: string;
   isAdmin: boolean;
+  knightLineupId: number | null;
+  replying: boolean;
+  deletingReply: boolean;
+  onSubmitReply: (content: string) => void;
+  onDeleteReply: () => void;
   nextReview?: Review;
   onDelete: () => void;
   onDeleteFormChange: (updates: Partial<DeleteForm>) => void;
@@ -1091,6 +1266,17 @@ function ReviewDetail({
               </time>
             </div>
           </>
+        )}
+
+        {!editOpen && (
+          <ReplySection
+            review={review}
+            knightLineupId={knightLineupId}
+            replying={replying}
+            deletingReply={deletingReply}
+            onSubmitReply={onSubmitReply}
+            onDeleteReply={onDeleteReply}
+          />
         )}
 
         {!isAdmin && deleteOpen && (

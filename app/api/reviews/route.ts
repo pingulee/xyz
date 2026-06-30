@@ -20,6 +20,10 @@ type ReviewRow = RowDataPacket & {
   content: string;
   password_hash: string | null;
   created_at: Date;
+  reply_id: number | null;
+  reply_lineup_id: number | null;
+  reply_content: string | null;
+  reply_created_at: Date | null;
 };
 
 type ReviewPayload = {
@@ -190,7 +194,7 @@ export async function POST(request: Request) {
     );
 
     const [rows] = await getPool().execute<ReviewRow[]>(
-      `SELECT id, name, service, lineup_id, lineup_name, rating, content, created_at FROM reviews WHERE id = :id`,
+      `SELECT r.id, r.name, r.service, r.lineup_id, l.name AS lineup_name, r.rating, r.content, r.created_at, rr.id AS reply_id, rr.lineup_id AS reply_lineup_id, rr.content AS reply_content, rr.created_at AS reply_created_at FROM reviews r LEFT JOIN lineups l ON l.id = r.lineup_id LEFT JOIN review_replies rr ON rr.review_id = r.id WHERE r.id = :id`,
       { id: result.insertId },
     );
 
@@ -304,7 +308,7 @@ export async function PUT(request: Request) {
     }
 
     const [rows] = await getPool().execute<ReviewRow[]>(
-      `SELECT id, name, service, lineup_id, lineup_name, rating, content, created_at FROM reviews WHERE id = :id`,
+      `SELECT r.id, r.name, r.service, r.lineup_id, l.name AS lineup_name, r.rating, r.content, r.created_at, rr.id AS reply_id, rr.lineup_id AS reply_lineup_id, rr.content AS reply_content, rr.created_at AS reply_created_at FROM reviews r LEFT JOIN lineups l ON l.id = r.lineup_id LEFT JOIN review_replies rr ON rr.review_id = r.id WHERE r.id = :id`,
       { id },
     );
 

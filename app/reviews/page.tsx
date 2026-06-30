@@ -7,6 +7,7 @@ import SectionTitle from "@/components/SectionTitle";
 import { getReviews } from "@/lib/reviews";
 import { getLineups } from "@/lib/lineups";
 import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
+import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSession";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,8 @@ export default async function ReviewsPage() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value ?? "";
   const isAdmin = validateSession(token);
+  const knightToken = cookieStore.get(KNIGHT_SESSION_COOKIE)?.value ?? "";
+  const knightLineupId = validateKnightSession(knightToken);
 
   const reviewSchema = {
     "@context": "https://schema.org",
@@ -70,6 +73,7 @@ export default async function ReviewsPage() {
             initialReviews={reviews}
             isAdmin={isAdmin}
             lineups={lineups}
+            knightLineupId={knightLineupId}
           />
         </Reveal>
       </Container>

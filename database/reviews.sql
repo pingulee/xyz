@@ -25,6 +25,16 @@ ADD COLUMN IF NOT EXISTS lineup_name VARCHAR(60) NULL;
 ALTER TABLE reviews DROP COLUMN IF EXISTS image_data;
 ALTER TABLE reviews DROP COLUMN IF EXISTS image_url;
 
+CREATE TABLE IF NOT EXISTS review_replies (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    review_id BIGINT UNSIGNED NOT NULL,
+    lineup_id BIGINT UNSIGNED NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_review_replies_review_id (review_id)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS review_rate_limits (
     ip_hash CHAR(64) NOT NULL,
     last_created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
