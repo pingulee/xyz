@@ -668,6 +668,11 @@ export default function ReviewBoard({
               updateEditForm(selectedReview.id, updates)
             }
             onEditOpenChange={() => openEditForm(selectedReview)}
+            onBackToList={() => {
+              setSelectedReviewId("");
+              setDeleteOpenId("");
+              setEditOpenId("");
+            }}
             onSelectReview={(reviewId) => {
               setSelectedReviewId(reviewId);
               setDeleteOpenId("");
@@ -800,6 +805,7 @@ function ReviewDetail({
   onEdit,
   onEditFormChange,
   onEditOpenChange,
+  onBackToList,
   onSelectReview,
   previousReview,
   review,
@@ -817,6 +823,7 @@ function ReviewDetail({
   onEdit: () => void;
   onEditFormChange: (updates: Partial<EditForm>) => void;
   onEditOpenChange: () => void;
+  onBackToList: () => void;
   onSelectReview: (reviewId: string) => void;
   previousReview?: Review;
   review: Review;
@@ -994,6 +1001,16 @@ function ReviewDetail({
             />
           </div>
         )}
+
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={onBackToList}
+            className="rounded-full border border-white/10 px-6 py-3 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white"
+          >
+            목록으로
+          </button>
+        </div>
       </div>
     </article>
   );
