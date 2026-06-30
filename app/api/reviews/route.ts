@@ -37,7 +37,7 @@ type RateLimitRow = RowDataPacket & {
   last_created_at: Date;
 };
 
-const allowedServices = new Set(["롤 대리", "롤 듀오", "롤 계정"]);
+const allowedServices = new Set(["롤 대리", "롤 듀오"]);
 const reviewCooldownMs = 10 * 60 * 1000;
 
 function hashPassword(password: string) {

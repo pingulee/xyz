@@ -603,7 +603,6 @@ export default function ReviewBoard({
                     >
                       <option>롤 대리</option>
                       <option>롤 듀오</option>
-                      <option>롤 계정</option>
                     </select>
                   </label>
 
