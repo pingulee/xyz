@@ -25,6 +25,7 @@ export type Review = {
   rating: number;
   content: string;
   createdAt: string;
+  viewCount: number;
   reply?: ReviewReply;
 };
 
@@ -36,6 +37,7 @@ type ReviewRow = RowDataPacket & {
   lineup_name: string | null;
   rating: number;
   content: string;
+  view_count: number | null;
   created_at: Date;
   reply_id: number | null;
   reply_lineup_id: number | null;
@@ -51,6 +53,9 @@ export async function ensureReviewsSchema() {
   );
   await getPool().execute(
     `ALTER TABLE reviews ADD COLUMN IF NOT EXISTS lineup_name VARCHAR(60) NULL`,
+  );
+  await getPool().execute(
+    `ALTER TABLE reviews ADD COLUMN IF NOT EXISTS view_count INT UNSIGNED NOT NULL DEFAULT 0`,
   );
   await getPool().execute(`
     CREATE TABLE IF NOT EXISTS review_replies (
@@ -102,6 +107,7 @@ export function toReview(row: ReviewRow): Review {
     rating: row.rating,
     content: row.content,
     createdAt: row.created_at.toISOString(),
+    viewCount: Number(row.view_count ?? 0),
     reply: row.reply_id
       ? {
           id: String(row.reply_id),
@@ -117,7 +123,7 @@ export function toReview(row: ReviewRow): Review {
 
 const REVIEW_SELECT = `
   SELECT r.id, r.name, r.service, r.lineup_id, l.name AS lineup_name,
-         r.rating, r.content, r.created_at,
+         r.rating, r.content, r.view_count, r.created_at,
          rr.id AS reply_id, rr.lineup_id AS reply_lineup_id,
          rr.knight_name AS reply_knight_name,
          rr.content AS reply_content, rr.tier_records AS reply_tier_records,
@@ -143,4 +149,22 @@ export async function getReviews(limit = 100) {
     { limit },
   );
   return rows.map(toReview);
+}
+
+export async function getReviewById(id: number): Promise<Review | null> {
+  await ensureReviewsSchema();
+  const [rows] = await getPool().execute<ReviewRow[]>(
+    `${REVIEW_SELECT} WHERE r.id = :id LIMIT 1`,
+    { id },
+  );
+  return rows[0] ? toReview(rows[0]) : null;
+}
+
+export async function incrementReviewView(id: number): Promise<Review | null> {
+  await ensureReviewsSchema();
+  await getPool().execute(
+    `UPDATE reviews SET view_count = view_count + 1 WHERE id = :id`,
+    { id },
+  );
+  return getReviewById(id);
 }

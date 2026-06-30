@@ -120,17 +120,6 @@ function ReplyDisplay({
 }) {
   return (
     <div>
-      <div className="mb-2 flex items-center gap-3">
-        <div className="grid h-9 w-9 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-sm font-black text-gold">
-          {reply.knightName.slice(0, 1)}
-        </div>
-        <div>
-          <span className="text-sm font-black text-white">
-            {reply.knightName}
-          </span>
-          <span className="ml-2 text-xs text-zinc-500">기사</span>
-        </div>
-      </div>
       <TierBadges records={reply.tierRecords} />
       <p className="mt-2 text-sm leading-7 whitespace-pre-wrap text-zinc-300">
         {reply.content}
@@ -308,10 +297,12 @@ function ReplyBlock({
   review,
   knightLineupId,
   knightName,
+  knightImage,
 }: {
   review: Review;
   knightLineupId: number | null;
   knightName: string;
+  knightImage: string;
 }) {
   const [replyData, setReplyData] = useState(review.reply);
   const [editing, setEditing] = useState(false);
@@ -367,15 +358,39 @@ function ReplyBlock({
   };
 
   return (
-    <div className="mt-4 rounded-3xl border border-gold/20 bg-[linear-gradient(135deg,rgba(246,194,91,0.10),rgba(255,255,255,0.035)_45%,rgba(0,0,0,0.18))] p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-gold">
-            기사 답변
-          </p>
-          <p className="mt-1 text-xs font-bold text-zinc-500">
-            담당 기사가 남긴 진행 기록과 안내입니다.
-          </p>
+    <div className="relative mt-4 overflow-hidden rounded-3xl border border-gold/20 bg-zinc-950 p-5">
+      {knightImage && (
+        <Image
+          src={knightImage}
+          alt=""
+          fill
+          className="object-cover opacity-20"
+          sizes="(max-width: 768px) 100vw, 720px"
+          unoptimized
+        />
+      )}
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.88),rgba(0,0,0,0.62)_52%,rgba(0,0,0,0.30))]" />
+      <div className="relative mb-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          {knightImage ? (
+            <Image
+              src={knightImage}
+              alt={replyData?.knightName ?? knightName}
+              width={44}
+              height={44}
+              className="h-11 w-11 rounded-2xl border border-gold/25 object-cover"
+              unoptimized
+            />
+          ) : (
+            <div className="grid h-11 w-11 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-sm font-black text-gold">
+              {(replyData?.knightName ?? knightName).slice(0, 1)}
+            </div>
+          )}
+          <div>
+            <p className="text-base font-black text-white">
+              {replyData?.knightName ?? knightName}
+            </p>
+          </div>
         </div>
         {replyData && (
           <span className="rounded-full border border-gold/20 bg-black/20 px-3 py-1 text-xs font-black text-gold">
@@ -397,18 +412,20 @@ function ReplyBlock({
 
       {/* 폼 (신규 or 수정) */}
       {canReply && (formOpen || editing) && (
-        <ReplyForm
-          knightName={knightName}
-          initial={editing ? replyData : undefined}
-          saving={saving}
-          onSubmit={(content, tierRecords) =>
-            void submitReply(content, tierRecords)
-          }
-          onCancel={() => {
-            setEditing(false);
-            setFormOpen(false);
-          }}
-        />
+        <div className="relative">
+          <ReplyForm
+            knightName={knightName}
+            initial={editing ? replyData : undefined}
+            saving={saving}
+            onSubmit={(content, tierRecords) =>
+              void submitReply(content, tierRecords)
+            }
+            onCancel={() => {
+              setEditing(false);
+              setFormOpen(false);
+            }}
+          />
+        </div>
       )}
 
       {/* 답변 없고 폼 안 열린 상태 → 버튼 */}
@@ -416,7 +433,7 @@ function ReplyBlock({
         <button
           type="button"
           onClick={handleReplyButtonClick}
-          className="text-xs font-bold text-zinc-500 transition hover:text-gold"
+          className="relative text-xs font-bold text-zinc-400 transition hover:text-gold"
         >
           {canReply
             ? "답변 작성"
@@ -433,10 +450,12 @@ export default function LineupReviews({
   reviews,
   knightLineupId = null,
   knightName = "",
+  knightImage = "",
 }: {
   reviews: Review[];
   knightLineupId?: number | null;
   knightName?: string;
+  knightImage?: string;
 }) {
   const [page, setPage] = useState(1);
 
@@ -486,6 +505,7 @@ export default function LineupReviews({
             review={review}
             knightLineupId={knightLineupId}
             knightName={knightName}
+            knightImage={knightImage}
           />
         </div>
       ))}

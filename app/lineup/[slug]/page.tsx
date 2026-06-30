@@ -286,7 +286,12 @@ export default async function LineupDetailPage({ params }: Props) {
             <h2 className="mb-6 text-xl font-black text-white">
               후기 <span className="text-gold">{reviews.length}</span>개
             </h2>
-            <LineupReviews reviews={reviews} knightLineupId={knightLineupId} knightName={lineup.name} />
+            <LineupReviews
+              reviews={reviews}
+              knightLineupId={knightLineupId}
+              knightName={lineup.name}
+              knightImage={lineup.image ?? ""}
+            />
           </div>
         </Reveal>
       </Container>

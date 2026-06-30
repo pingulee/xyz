@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
-import { getReviews, toReview } from "@/lib/reviews";
+import { ensureReviewsSchema, getReviews, toReview } from "@/lib/reviews";
 import {
   getSessionTokenFromRequest,
   validateSession,
@@ -18,6 +18,7 @@ type ReviewRow = RowDataPacket & {
   lineup_name: string | null;
   rating: number;
   content: string;
+  view_count: number | null;
   password_hash: string | null;
   created_at: Date;
   reply_id: number | null;
@@ -38,6 +39,18 @@ type ReviewPayload = {
   password?: string;
   createdAt?: string;
 };
+
+const REVIEW_SELECT = `
+  SELECT r.id, r.name, r.service, r.lineup_id, l.name AS lineup_name,
+         r.rating, r.content, r.view_count, r.password_hash, r.created_at,
+         rr.id AS reply_id, rr.lineup_id AS reply_lineup_id,
+         rr.knight_name AS reply_knight_name,
+         rr.content AS reply_content, rr.tier_records AS reply_tier_records,
+         rr.created_at AS reply_created_at
+  FROM reviews r
+  LEFT JOIN lineups l ON l.id = r.lineup_id
+  LEFT JOIN review_replies rr ON rr.review_id = r.id
+`;
 
 type RateLimitRow = RowDataPacket & {
   last_created_at: Date;
@@ -196,7 +209,7 @@ export async function POST(request: Request) {
     );
 
     const [rows] = await getPool().execute<ReviewRow[]>(
-      `SELECT r.id, r.name, r.service, r.lineup_id, l.name AS lineup_name, r.rating, r.content, r.created_at, rr.id AS reply_id, rr.lineup_id AS reply_lineup_id, rr.content AS reply_content, rr.created_at AS reply_created_at FROM reviews r LEFT JOIN lineups l ON l.id = r.lineup_id LEFT JOIN review_replies rr ON rr.review_id = r.id WHERE r.id = :id`,
+      `${REVIEW_SELECT} WHERE r.id = :id`,
       { id: result.insertId },
     );
 
@@ -268,7 +281,7 @@ export async function PUT(request: Request) {
 
   try {
     const [existingRows] = await getPool().execute<ReviewRow[]>(
-      `SELECT id, name, service, lineup_id, lineup_name, rating, content, password_hash, created_at
+      `SELECT id, name, service, lineup_id, lineup_name, rating, content, view_count, password_hash, created_at
        FROM reviews WHERE id = :id LIMIT 1`,
       { id },
     );
@@ -310,7 +323,7 @@ export async function PUT(request: Request) {
     }
 
     const [rows] = await getPool().execute<ReviewRow[]>(
-      `SELECT r.id, r.name, r.service, r.lineup_id, l.name AS lineup_name, r.rating, r.content, r.created_at, rr.id AS reply_id, rr.lineup_id AS reply_lineup_id, rr.content AS reply_content, rr.created_at AS reply_created_at FROM reviews r LEFT JOIN lineups l ON l.id = r.lineup_id LEFT JOIN review_replies rr ON rr.review_id = r.id WHERE r.id = :id`,
+      `${REVIEW_SELECT} WHERE r.id = :id`,
       { id },
     );
 
@@ -319,6 +332,51 @@ export async function PUT(request: Request) {
     console.error("Failed to update review", error);
     return NextResponse.json(
       { message: "후기를 수정하지 못했습니다." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  let payload: { id?: string };
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json(
+      { message: "요청 형식이 올바르지 않습니다." },
+      { status: 400 },
+    );
+  }
+
+  const id = Number(payload.id);
+  if (!Number.isInteger(id) || id < 1) {
+    return NextResponse.json(
+      { message: "후기를 찾을 수 없습니다." },
+      { status: 400 },
+    );
+  }
+
+  try {
+    await ensureReviewsSchema();
+    await getPool().execute(
+      `UPDATE reviews SET view_count = view_count + 1 WHERE id = :id`,
+      { id },
+    );
+    const [rows] = await getPool().execute<ReviewRow[]>(
+      `${REVIEW_SELECT} WHERE r.id = :id`,
+      { id },
+    );
+    if (!rows[0]) {
+      return NextResponse.json(
+        { message: "후기를 찾을 수 없습니다." },
+        { status: 404 },
+      );
+    }
+    return NextResponse.json({ review: toReview(rows[0]) });
+  } catch (error) {
+    console.error("Failed to update review view count", error);
+    return NextResponse.json(
+      { message: "조회수를 업데이트하지 못했습니다." },
       { status: 500 },
     );
   }
@@ -356,7 +414,7 @@ export async function DELETE(request: Request) {
 
   try {
     const [rows] = await getPool().execute<ReviewRow[]>(
-      `SELECT id, name, service, lineup_id, lineup_name, rating, content, password_hash, created_at
+      `SELECT id, name, service, lineup_id, lineup_name, rating, content, view_count, password_hash, created_at
        FROM reviews WHERE id = :id LIMIT 1`,
       { id },
     );

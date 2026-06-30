@@ -39,6 +39,7 @@ type Review = {
   rating: number;
   content: string;
   createdAt: string;
+  viewCount: number;
   reply?: ReviewReply;
 };
 
@@ -185,7 +186,12 @@ export default function ReviewBoard({
 }: {
   initialReviews?: Review[];
   isAdmin?: boolean;
-  lineups?: Array<{ id: string; name: string; services: string[] }>;
+  lineups?: Array<{
+    id: string;
+    name: string;
+    services: string[];
+    image?: string | null;
+  }>;
   knightLineupId?: number | null;
 }) {
   const knightName = knightLineupId
@@ -213,39 +219,47 @@ export default function ReviewBoard({
   const [replyingId, setReplyingId] = useState("");
   const [deletingReplyId, setDeletingReplyId] = useState("");
   const mousedownOnOverlay = useRef(false);
-
-  const unansweredReviews = useMemo(
-    () => (isAdmin ? reviews : reviews.filter((r) => !r.reply)),
-    [reviews, isAdmin],
+  const router = useRouter();
+  const lineupImageById = useMemo(
+    () =>
+      Object.fromEntries(
+        lineups.map((lineup) => [lineup.id, lineup.image ?? ""]),
+      ) as Record<string, string>,
+    [lineups],
   );
+
+  const visibleReviews = reviews;
   const totalPages = Math.max(
     1,
-    Math.ceil(unansweredReviews.length / REVIEWS_PER_PAGE),
+    Math.ceil(visibleReviews.length / REVIEWS_PER_PAGE),
   );
   const currentPage = Math.min(page, totalPages);
   const selectedReview = reviews.find(
     (review) => review.id === selectedReviewId,
   );
-  const selectedReviewIndex = unansweredReviews.findIndex(
+  const selectedReviewIndex = visibleReviews.findIndex(
     (review) => review.id === selectedReviewId,
   );
   const previousReview =
     selectedReviewIndex > 0
-      ? unansweredReviews[selectedReviewIndex - 1]
+      ? visibleReviews[selectedReviewIndex - 1]
       : undefined;
   const nextReview =
-    selectedReviewIndex >= 0 &&
-    selectedReviewIndex < unansweredReviews.length - 1
-      ? unansweredReviews[selectedReviewIndex + 1]
+    selectedReviewIndex >= 0 && selectedReviewIndex < visibleReviews.length - 1
+      ? visibleReviews[selectedReviewIndex + 1]
       : undefined;
   const paginatedReviews = useMemo(() => {
     const start = (currentPage - 1) * REVIEWS_PER_PAGE;
-    return unansweredReviews.slice(start, start + REVIEWS_PER_PAGE);
-  }, [currentPage, unansweredReviews]);
+    return visibleReviews.slice(start, start + REVIEWS_PER_PAGE);
+  }, [currentPage, visibleReviews]);
   const pageItems = useMemo(
     () => getPageItems(currentPage, totalPages),
     [currentPage, totalPages],
   );
+
+  const openReview = (reviewId: string) => {
+    router.push(`/reviews/${reviewId}`);
+  };
 
   useEffect(() => {
     if (writeOpen) {
@@ -411,8 +425,8 @@ export default function ReviewBoard({
       setReviews((current) => [data.review, ...current]);
       setForm(blankForm);
       setPage(1);
-      setSelectedReviewId(data.review.id);
       setWriteOpen(false);
+      router.push(`/reviews/${data.review.id}`);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -610,7 +624,7 @@ export default function ReviewBoard({
       if (!response.ok) throw new Error(data.message ?? "복제하지 못했습니다.");
       setReviews((current) => [data.review, ...current]);
       setPage(1);
-      setSelectedReviewId(data.review.id);
+      router.push(`/reviews/${data.review.id}`);
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "복제하지 못했습니다.",
@@ -807,14 +821,14 @@ export default function ReviewBoard({
         </div>
       )}
 
-      <div className="space-y-5">
+      <div className="mx-auto max-w-6xl space-y-5">
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
               reviews
             </p>
             <h2 className="mt-2 text-2xl font-black text-white">
-              미답변 후기 {unansweredReviews.length}개
+              전체 후기 {visibleReviews.length}개
             </h2>
           </div>
 
@@ -834,7 +848,7 @@ export default function ReviewBoard({
           </div>
         ) : reviews.length === 0 ? (
           <div className="rounded-[30px] border border-gold/15 bg-white/[.035] p-8 text-center text-zinc-400">
-            미답변 후기가 없습니다.
+            아직 등록된 후기가 없습니다.
           </div>
         ) : selectedReview ? (
           <ReviewDetail
@@ -858,6 +872,11 @@ export default function ReviewBoard({
             knightName={knightName}
             replying={replyingId === selectedReview.id}
             deletingReply={deletingReplyId === selectedReview.id}
+            knightImage={
+              lineupImageById[
+                selectedReview.reply?.lineupId ?? selectedReview.lineupId ?? ""
+              ] ?? ""
+            }
             onSubmitReply={(content, tierRecords) =>
               void submitReply(selectedReview.id, content, tierRecords)
             }
@@ -891,7 +910,7 @@ export default function ReviewBoard({
               setEditOpenId("");
             }}
             onSelectReview={(reviewId) => {
-              setSelectedReviewId(reviewId);
+              openReview(reviewId);
               setDeleteOpenId("");
               setEditOpenId("");
             }}
@@ -902,58 +921,90 @@ export default function ReviewBoard({
           />
         ) : (
           <>
-            <div className="grid gap-3">
-              {paginatedReviews.map((review, i) => (
-                <button
-                  key={review.id}
-                  type="button"
-                  onClick={() => setSelectedReviewId(review.id)}
-                  className="group grid w-full gap-4 rounded-3xl border border-white/8 bg-white/[.035] p-4 text-left transition hover:-translate-y-0.5 hover:border-gold/30 hover:bg-white/[.055] sm:grid-cols-[3.5rem_1fr_auto]"
-                >
-                  <span className="hidden h-11 w-11 place-items-center rounded-2xl border border-white/8 bg-black/20 text-sm font-black text-zinc-500 transition group-hover:border-gold/25 group-hover:text-gold sm:grid">
-                    {(currentPage - 1) * REVIEWS_PER_PAGE + i + 1}
-                  </span>
+            <div className="overflow-hidden rounded-[30px] border border-gold/15 bg-white/[.035]">
+              <div className="hidden grid-cols-[3.25rem_minmax(0,1.5fr)_7rem_6rem_8.5rem_7rem_5rem] gap-4 border-b border-white/8 bg-black/20 px-5 py-3 text-xs font-black text-zinc-500 lg:grid">
+                <span>번호</span>
+                <span>내용</span>
+                <span>작성자</span>
+                <span>평점</span>
+                <span>작성일</span>
+                <span>작업 상태</span>
+                <span>조회수</span>
+              </div>
+              {paginatedReviews.map((review, i) => {
+                const lineupName =
+                  review.lineupName ?? review.reply?.knightName ?? "";
 
-                  <span className="grid min-w-0 gap-3">
-                    <span className="flex flex-wrap items-center gap-2.5">
-                      <span className="text-base font-black text-white transition group-hover:text-gold">
-                        {review.name}
-                      </span>
-                      <span className="rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-xs font-black text-gold">
-                        {review.service}
-                      </span>
-                      {review.lineupName && (
-                        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-bold text-zinc-400">
-                          {review.lineupName} 기사
-                        </span>
-                      )}
-                      {review.reply && (
-                        <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-black text-emerald-300">
-                          답변 완료
-                        </span>
-                      )}
+                return (
+                  <button
+                    key={review.id}
+                    type="button"
+                    onClick={() => openReview(review.id)}
+                    className="group grid w-full gap-4 border-b border-white/8 px-5 py-5 text-left transition last:border-b-0 hover:bg-white/[.055] lg:grid-cols-[3.25rem_minmax(0,1.5fr)_7rem_6rem_8.5rem_7rem_5rem] lg:items-center"
+                  >
+                    <span className="hidden h-10 w-10 place-items-center rounded-2xl border border-white/8 bg-black/20 text-sm font-black text-zinc-500 transition group-hover:border-gold/25 group-hover:text-gold lg:grid">
+                      {(currentPage - 1) * REVIEWS_PER_PAGE + i + 1}
                     </span>
 
-                    <span className="line-clamp-2 text-sm leading-6 text-zinc-300">
-                      {review.content}
+                    <span className="grid min-w-0 gap-2">
+                      <span className="flex items-start justify-between gap-3 lg:hidden">
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl border border-white/8 bg-black/20 text-sm font-black text-zinc-500">
+                          {(currentPage - 1) * REVIEWS_PER_PAGE + i + 1}
+                        </span>
+                        <span className="text-xs font-bold text-zinc-500">
+                          {formatDate(review.createdAt)}
+                        </span>
+                      </span>
+
+                      <span className="line-clamp-2 text-sm font-bold leading-6 text-white transition group-hover:text-gold">
+                        {review.content}
+                      </span>
+                      <span className="flex flex-wrap gap-x-3 gap-y-1 text-xs font-bold text-zinc-500">
+                        <span>작업 기사 {lineupName || "선택 안 함"}</span>
+                        <span>서비스 {review.service}</span>
+                      </span>
                     </span>
 
-                    <span className="flex flex-wrap items-center gap-3">
+                    <span className="hidden truncate text-sm font-black text-zinc-300 lg:block">
+                      {review.name}
+                    </span>
+
+                    <span className="hidden lg:block">
                       <Stars rating={review.rating} />
-                      <time
-                        className="text-xs font-bold text-zinc-500"
-                        dateTime={review.createdAt}
-                      >
+                    </span>
+
+                    <span className="hidden text-xs font-bold leading-5 text-zinc-400 lg:block">
+                      <time dateTime={review.createdAt}>
                         {formatDate(review.createdAt)}
                       </time>
                     </span>
-                  </span>
 
-                  <span className="hidden self-center text-sm font-black text-zinc-600 transition group-hover:text-gold sm:block">
-                    보기
-                  </span>
-                </button>
-              ))}
+                    <span className="flex flex-wrap items-center gap-3 lg:block">
+                      <span className="lg:hidden">
+                        <Stars rating={review.rating} />
+                      </span>
+                      <span
+                        className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-black ${
+                          review.reply
+                            ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
+                            : "border-white/10 bg-white/5 text-zinc-500"
+                        }`}
+                      >
+                        {review.reply ? "답변 완료" : "답변 대기"}
+                      </span>
+                    </span>
+
+                    <span className="hidden text-sm font-black text-zinc-400 lg:block">
+                      {review.viewCount ?? 0}
+                    </span>
+
+                    <span className="flex items-center justify-between gap-3 text-xs font-bold text-zinc-500 lg:hidden">
+                      <span>조회수 {review.viewCount ?? 0}</span>
+                      <span>작성자 {review.name}</span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {totalPages > 1 && (
@@ -1108,6 +1159,7 @@ function ReplySection({
   review,
   knightLineupId,
   knightName,
+  knightImage,
   replying,
   deletingReply,
   onSubmitReply,
@@ -1116,6 +1168,7 @@ function ReplySection({
   review: Review;
   knightLineupId: number | null;
   knightName: string;
+  knightImage: string;
   replying: boolean;
   deletingReply: boolean;
   onSubmitReply: (content: string, tierRecords: TierRecord[]) => void;
@@ -1147,15 +1200,39 @@ function ReplySection({
   };
 
   return (
-    <div className="mt-6 rounded-3xl border border-gold/20 bg-[linear-gradient(135deg,rgba(246,194,91,0.10),rgba(255,255,255,0.035)_45%,rgba(0,0,0,0.18))] p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-gold">
-            기사 답변
-          </p>
-          <p className="mt-1 text-xs font-bold text-zinc-500">
-            담당 기사가 남긴 진행 기록과 안내입니다.
-          </p>
+    <div className="relative mt-6 overflow-hidden rounded-3xl border border-gold/20 bg-zinc-950 p-5">
+      {knightImage && (
+        <Image
+          src={knightImage}
+          alt=""
+          fill
+          className="object-cover opacity-20"
+          sizes="(max-width: 768px) 100vw, 720px"
+          unoptimized
+        />
+      )}
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.88),rgba(0,0,0,0.62)_52%,rgba(0,0,0,0.30))]" />
+      <div className="relative mb-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          {knightImage ? (
+            <Image
+              src={knightImage}
+              alt={review.reply?.knightName ?? knightName}
+              width={44}
+              height={44}
+              className="h-11 w-11 rounded-2xl border border-gold/25 object-cover"
+              unoptimized
+            />
+          ) : (
+            <div className="grid h-11 w-11 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-sm font-black text-gold">
+              {(review.reply?.knightName ?? knightName).slice(0, 1)}
+            </div>
+          )}
+          <div>
+            <p className="text-base font-black text-white">
+              {review.reply?.knightName ?? knightName}
+            </p>
+          </div>
         </div>
         {review.reply && (
           <span className="rounded-full border border-gold/20 bg-black/20 px-3 py-1 text-xs font-black text-gold">
@@ -1166,18 +1243,7 @@ function ReplySection({
 
       {/* 답변 존재 + 보기 모드 */}
       {review.reply && !editing && (
-        <div>
-          <div className="mb-3 flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-sm font-black text-gold">
-              {review.reply.knightName.slice(0, 1)}
-            </div>
-            <div>
-              <span className="text-sm font-black text-white">
-                {review.reply.knightName}
-              </span>
-              <span className="ml-2 text-xs text-zinc-500">기사</span>
-            </div>
-          </div>
+        <div className="relative">
           {review.reply.tierRecords.length > 0 && (
             <div className="mb-4 grid gap-2 sm:grid-cols-2">
               {review.reply.tierRecords.map((r, i) => {
@@ -1249,7 +1315,7 @@ function ReplySection({
 
       {/* 폼 (신규 or 수정) */}
       {canReply && (formOpen || editing) && (
-        <div className="grid gap-3">
+        <div className="relative grid gap-3">
           <div className="flex items-center gap-2">
             <span className="text-xs font-black text-gold">{knightName}</span>
             <span className="text-xs text-zinc-600">기사 (닉네임 자동)</span>
@@ -1294,7 +1360,7 @@ function ReplySection({
         <button
           type="button"
           onClick={handleReplyButtonClick}
-          className="text-xs font-bold text-zinc-500 transition hover:text-gold"
+          className="relative text-xs font-bold text-zinc-400 transition hover:text-gold"
         >
           {canReply
             ? "답변 작성"
@@ -1319,6 +1385,7 @@ function ReviewDetail({
   isAdmin,
   knightLineupId,
   knightName,
+  knightImage,
   replying,
   deletingReply,
   onSubmitReply,
@@ -1348,6 +1415,7 @@ function ReviewDetail({
   isAdmin: boolean;
   knightLineupId: number | null;
   knightName: string;
+  knightImage: string;
   replying: boolean;
   deletingReply: boolean;
   onSubmitReply: (content: string, tierRecords: TierRecord[]) => void;
@@ -1534,6 +1602,7 @@ function ReviewDetail({
             review={review}
             knightLineupId={knightLineupId}
             knightName={knightName}
+            knightImage={knightImage}
             replying={replying}
             deletingReply={deletingReply}
             onSubmitReply={onSubmitReply}
