@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getLineupPath, type Lineup } from "@/lib/lineups";
+import { getLineupPath } from "@/lib/lineup-model";
+import type { Lineup } from "@/lib/lineup-model";
 import {
   DndContext,
   DragOverlay,

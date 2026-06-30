@@ -1,24 +1,7 @@
 import { RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { ensureReviewsSchema } from "@/lib/reviews";
-
-export type Lineup = {
-  id: string;
-  name: string;
-  positions: string[];
-  rank: string;
-  tier: string;
-  description: string;
-  weekdayHours: string;
-  weekendHours: string;
-  champions: string[];
-  services: string[];
-  image: string | null;
-  sortOrder: number;
-  active: boolean;
-  averageRating?: number | null;
-  reviewCount?: number;
-};
+import type { Lineup } from "@/lib/lineup-model";
 
 type LineupRow = RowDataPacket & {
   id: number;
@@ -43,19 +26,6 @@ function split(val: string): string[] {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
-}
-
-export function getLineupSlug(name: string): string {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9가-힣]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-export function getLineupPath(lineup: Pick<Lineup, "id" | "name">): string {
-  return `/lineup/${getLineupSlug(lineup.name)}`;
 }
 
 export function toLineup(row: LineupRow): Lineup {
@@ -115,7 +85,12 @@ export async function getLineupById(id: number): Promise<Lineup | null> {
 
 export async function getLineupBySlug(slug: string): Promise<Lineup | null> {
   const lineups = await getLineups(false);
-  return lineups.find((lineup) => getLineupSlug(lineup.name) === slug) ?? null;
+  return (
+    lineups.find(
+      (lineup) =>
+        lineup.name.toLowerCase().replace(/[^a-z0-9가-힣]+/g, "-") === slug,
+    ) ?? null
+  );
 }
 
 export async function getLineupReviewStats(id: number) {
