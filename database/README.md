@@ -20,4 +20,4 @@ The reviews API uses `/api/reviews` and requires a Node.js runtime. A static-onl
 deployment will not be able to write reviews to MySQL.
 
 For notices, also run `database/notices.sql`. The notices API uses
-`/api/notices` and only accepts writes when `ADMIN_PASSWORD` matches.
+`/api/notice` and only accepts writes when `ADMIN_PASSWORD` matches.

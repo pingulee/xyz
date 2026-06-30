@@ -14,11 +14,11 @@ export const metadata: Metadata = {
   title: "공지사항",
   description:
     "XYZ의 서비스 운영 공지, 가격 안내, 작업 진행 안내를 확인하세요.",
-  alternates: { canonical: "/notices" },
+  alternates: { canonical: "/notice" },
   openGraph: {
     title: "공지사항 | XYZ",
     description: "XYZ의 최신 공지사항과 서비스 운영 안내를 확인하세요.",
-    url: "/notices",
+    url: "/notice",
     type: "website",
   },
 };
@@ -57,7 +57,11 @@ export default async function NoticesPage() {
           <SectionTitle
             eyebrow="notice"
             title="공지사항"
-            desc={isAdmin ? "관리자 모드 — 작성, 수정, 삭제가 가능합니다." : "서비스 운영 안내와 주요 변경사항을 확인할 수 있습니다."}
+            desc={
+              isAdmin
+                ? "관리자 모드 — 작성, 수정, 삭제가 가능합니다."
+                : "서비스 운영 안내와 주요 변경사항을 확인할 수 있습니다."
+            }
           />
         </Reveal>
         <Reveal>

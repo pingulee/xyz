@@ -462,7 +462,7 @@ export default function AdminLineupBoard({
         imageUrl = uploadData.imageUrl ?? null;
       }
 
-      const response = await fetch("/api/lineups", {
+      const response = await fetch("/api/lineup", {
         method: editingId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -482,6 +482,7 @@ export default function AdminLineupBoard({
         );
       } else {
         setLineups((cur) => [...cur, data.lineup]);
+        router.push(`/lineup/${data.lineup.id}`);
       }
       closeModal();
     } catch (err) {
@@ -494,7 +495,7 @@ export default function AdminLineupBoard({
 
   const duplicateLineup = async (lineup: Lineup) => {
     try {
-      const response = await fetch("/api/lineups", {
+      const response = await fetch("/api/lineup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -524,7 +525,7 @@ export default function AdminLineupBoard({
     if (!confirm(`"${lineup.name}" 기사를 삭제하시겠습니까?`)) return;
     setDeletingId(lineup.id);
     try {
-      const response = await fetch("/api/lineups", {
+      const response = await fetch("/api/lineup", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: lineup.id }),
@@ -552,7 +553,7 @@ export default function AdminLineupBoard({
     const newIdx = lineups.findIndex((l) => l.id === String(over.id));
     const reordered = arrayMove(lineups, oldIdx, newIdx);
     setLineups(reordered);
-    await fetch("/api/lineups", {
+    await fetch("/api/lineup", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids: reordered.map((l) => l.id) }),

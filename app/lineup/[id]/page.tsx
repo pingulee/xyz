@@ -1,0 +1,172 @@
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Clock } from "lucide-react";
+import Container from "@/components/Container";
+import Reveal from "@/components/Reveal";
+import SectionTitle from "@/components/SectionTitle";
+import { getLineupById } from "@/lib/lineups";
+
+export const dynamic = "force-dynamic";
+
+const positionColors: Record<string, string> = {
+  정글: "bg-emerald-500/15 text-emerald-400",
+  미드: "bg-blue-500/15 text-blue-400",
+  바텀: "bg-purple-500/15 text-purple-400",
+  서포터: "bg-pink-500/15 text-pink-400",
+  서폿: "bg-pink-500/15 text-pink-400",
+  탑: "bg-orange-500/15 text-orange-400",
+};
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const lineup = await getLineupById(Number(id));
+
+  if (!lineup) {
+    return {
+      title: "기사 정보를 찾을 수 없습니다",
+    };
+  }
+
+  return {
+    title: `${lineup.name} | 기사 라인업`,
+    description: lineup.description,
+    alternates: { canonical: `/lineup/${lineup.id}` },
+  };
+}
+
+export default async function LineupDetailPage({ params }: Props) {
+  const { id } = await params;
+  const lineup = await getLineupById(Number(id));
+
+  if (!lineup) {
+    notFound();
+  }
+
+  return (
+    <section className="py-20">
+      <Container>
+        <Reveal>
+          <div className="mb-8 flex items-center gap-3 text-sm text-zinc-500">
+            <Link href="/lineup" className="transition hover:text-gold">
+              기사 라인업
+            </Link>
+            <span>/</span>
+            <span className="text-zinc-300">{lineup.name}</span>
+          </div>
+        </Reveal>
+
+        <Reveal>
+          <SectionTitle
+            eyebrow="lineup"
+            title={lineup.name}
+            desc={lineup.description}
+          />
+        </Reveal>
+
+        <Reveal>
+          <div className="card-premium overflow-hidden rounded-[32px] p-6 md:p-8">
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+              <div className="relative h-48 w-full overflow-hidden rounded-[28px] bg-black lg:h-72 lg:w-[360px]">
+                {lineup.image && (
+                  <Image
+                    src={lineup.image}
+                    alt={lineup.name}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                )}
+              </div>
+
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  {lineup.positions.map((pos) => (
+                    <span
+                      key={pos}
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-black ${positionColors[pos] ?? "bg-gold/10 text-gold"}`}
+                    >
+                      {pos}
+                    </span>
+                  ))}
+                  <div className="flex items-center gap-1">
+                    <Image
+                      src={lineup.tier}
+                      alt={lineup.rank}
+                      width={18}
+                      height={18}
+                      className="rounded-full bg-zinc-800"
+                    />
+                    <span className="text-xs font-black text-gold">
+                      {lineup.rank}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  <div className="rounded-2xl border border-white/8 bg-white/[.04] p-4">
+                    <div className="flex items-center gap-2 text-sm font-black text-gold">
+                      <Clock size={16} />
+                      평일 작업 가능 시간
+                    </div>
+                    <p className="mt-2 text-sm text-zinc-300">
+                      {lineup.weekdayHours}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/8 bg-white/[.04] p-4">
+                    <div className="flex items-center gap-2 text-sm font-black text-gold">
+                      <Clock size={16} />
+                      주말 작업 가능 시간
+                    </div>
+                    <p className="mt-2 text-sm text-zinc-300">
+                      {lineup.weekendHours}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-6 md:grid-cols-2">
+                  <div>
+                    <div className="text-sm font-black text-zinc-500">
+                      대표 챔피언
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {lineup.champions.map((champion) => (
+                        <span
+                          key={champion}
+                          className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-sm font-semibold text-zinc-300"
+                        >
+                          {champion}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm font-black text-zinc-500">
+                      진행 서비스
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {lineup.services.map((service) => (
+                        <span
+                          key={service}
+                          className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-sm font-semibold text-zinc-300"
+                        >
+                          {service}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </Container>
+    </section>
+  );
+}

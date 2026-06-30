@@ -8,7 +8,7 @@ export const site = {
 
 export const navItems = [
   { label: "메인", href: "/" },
-  { label: "공지사항", href: "/notices" },
+  { label: "공지사항", href: "/notice" },
   { label: "기사 라인업", href: "/lineup" },
   { label: "가격 안내", href: "/price" },
   { label: "작업 후기", href: "/reviews" },

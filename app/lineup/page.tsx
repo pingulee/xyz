@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
+import Link from "next/link";
 import { Clock, Medal, Shield } from "lucide-react";
 import Container from "@/components/Container";
 import AdminLineupBoard from "@/components/AdminLineupBoard";
@@ -66,88 +67,102 @@ export default async function LineupPage() {
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {lineups.map((knight, i) => (
             <Reveal key={knight.name} delay={i * 0.04}>
-              <article className="card-premium overflow-hidden rounded-[28px]">
-                <div className="flex gap-4 p-5">
-                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-black">
-                    {knight.image && (
-                      <Image
-                        src={knight.image}
-                        alt={knight.name}
-                        fill
-                        className="object-cover opacity-90"
-                        unoptimized
-                      />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      {knight.positions.map((pos) => (
-                        <span
-                          key={pos}
-                          className={`rounded-full px-2.5 py-0.5 text-xs font-black ${positionColors[pos] ?? "bg-gold/10 text-gold"}`}
-                        >
-                          {pos}
-                        </span>
-                      ))}
-                      <div className="flex items-center gap-1">
+              <Link href={`/lineup/${knight.id}`} className="block">
+                <article className="card-premium overflow-hidden rounded-[28px] transition-transform duration-200 hover:-translate-y-1">
+                  <div className="flex gap-4 p-5">
+                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-black">
+                      {knight.image && (
                         <Image
-                          src={knight.tier}
-                          alt={knight.rank}
-                          width={18}
-                          height={18}
-                          className="rounded-full bg-zinc-800"
+                          src={knight.image}
+                          alt={knight.name}
+                          fill
+                          className="object-cover opacity-90"
+                          unoptimized
                         />
-                        <span className="text-xs font-black text-gold">
-                          {knight.rank}
-                        </span>
-                      </div>
+                      )}
                     </div>
-                    <p className="mt-1.5 font-black text-white">{knight.name}</p>
-                    <div className="mt-1 grid gap-0.5 text-xs text-zinc-500">
-                      <div className="flex items-center gap-1.5">
-                        <Clock size={10} />
-                        <span>평일 {knight.weekdayHours}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {knight.positions.map((pos) => (
+                          <span
+                            key={pos}
+                            className={`rounded-full px-2.5 py-0.5 text-xs font-black ${positionColors[pos] ?? "bg-gold/10 text-gold"}`}
+                          >
+                            {pos}
+                          </span>
+                        ))}
+                        <div className="flex items-center gap-1">
+                          <Image
+                            src={knight.tier}
+                            alt={knight.rank}
+                            width={18}
+                            height={18}
+                            className="rounded-full bg-zinc-800"
+                          />
+                          <span className="text-xs font-black text-gold">
+                            {knight.rank}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Clock size={10} />
-                        <span>주말 {knight.weekendHours}</span>
+                      <p className="mt-1.5 font-black text-white">
+                        {knight.name}
+                      </p>
+                      <div className="mt-1 grid gap-0.5 text-xs text-zinc-500">
+                        <div className="flex items-center gap-1.5">
+                          <Clock size={10} />
+                          <span>평일 {knight.weekdayHours}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Clock size={10} />
+                          <span>주말 {knight.weekendHours}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="border-t border-white/6 px-5 pb-5 pt-4">
-                  <p className="text-sm leading-6 text-zinc-400">
-                    {knight.description}
-                  </p>
+                  <div className="border-t border-white/6 px-5 pb-5 pt-4">
+                    <p className="text-sm leading-6 text-zinc-400">
+                      {knight.description}
+                    </p>
 
-                  <div className="mt-4 grid gap-2.5">
-                    {knight.champions && knight.champions.length > 0 && (
+                    <div className="mt-4 grid gap-2.5">
+                      {knight.champions && knight.champions.length > 0 && (
+                        <div className="flex items-start gap-2">
+                          <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">
+                            챔피언
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {knight.champions.map((c) => (
+                              <span
+                                key={c}
+                                className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300"
+                              >
+                                {c}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex items-start gap-2">
-                        <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">챔피언</span>
+                        <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">
+                          작업
+                        </span>
                         <div className="flex flex-wrap gap-1.5">
-                          {knight.champions.map((c) => (
-                            <span key={c} className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300">
-                              {c}
+                          {knight.services.map((s) => (
+                            <span
+                              key={s}
+                              className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300"
+                            >
+                              {s}
                             </span>
                           ))}
                         </div>
                       </div>
-                    )}
-
-                    <div className="flex items-start gap-2">
-                      <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">작업</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {knight.services.map((s) => (
-                          <span key={s} className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300">
-                            {s}
-                          </span>
-                        ))}
-                      </div>
                     </div>
                   </div>
-                </div>
-              </article>
+                </article>
+              </Link>
             </Reveal>
           ))}
         </div>
@@ -155,9 +170,21 @@ export default async function LineupPage() {
         <Reveal>
           <div className="mt-12 grid gap-4 md:grid-cols-3">
             {[
-              { icon: <Shield size={22} />, label: "티어 인증", desc: "모든 기사는 현 시즌 티어 인증 후 배정됩니다." },
-              { icon: <Medal size={22} />, label: "전적 검토", desc: "최근 솔랭 전적 및 챔피언 숙련도를 검토합니다." },
-              { icon: <Clock size={22} />, label: "시간 배정", desc: "요청 일정에 맞는 기사를 우선 배정합니다." },
+              {
+                icon: <Shield size={22} />,
+                label: "티어 인증",
+                desc: "모든 기사는 현 시즌 티어 인증 후 배정됩니다.",
+              },
+              {
+                icon: <Medal size={22} />,
+                label: "전적 검토",
+                desc: "최근 솔랭 전적 및 챔피언 숙련도를 검토합니다.",
+              },
+              {
+                icon: <Clock size={22} />,
+                label: "시간 배정",
+                desc: "요청 일정에 맞는 기사를 우선 배정합니다.",
+              },
             ].map(({ icon, label, desc }) => (
               <div
                 key={label}
