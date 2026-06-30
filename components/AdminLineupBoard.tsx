@@ -12,16 +12,8 @@ const MAX_IMAGE_HEIGHT = 1600;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const TIER_OPTIONS = [
-  { label: "아이언",       value: "/images/tier/1-iron.png" },
-  { label: "브론즈",       value: "/images/tier/2-bronze.png" },
-  { label: "실버",         value: "/images/tier/3-silver.png" },
-  { label: "골드",         value: "/images/tier/4-gold.png" },
-  { label: "플래티넘",     value: "/images/tier/5-platinum.png" },
-  { label: "에메랄드",     value: "/images/tier/6-emerald.png" },
-  { label: "다이아몬드",   value: "/images/tier/7-diamond.png" },
-  { label: "마스터",       value: "/images/tier/8-master.png" },
-  { label: "그랜드마스터", value: "/images/tier/9-grandmaster.png" },
   { label: "챌린저",       value: "/images/tier/10-challenger.png" },
+  { label: "그랜드마스터", value: "/images/tier/9-grandmaster.png" },
 ];
 
 const blankForm = {
@@ -263,7 +255,7 @@ export default function AdminLineupBoard({
           <div className="grid gap-4 sm:grid-cols-2">
             <label className={labelCls}>포지션 (쉼표 구분)<input value={form.positions} onChange={set("positions")} className={inputCls} placeholder="정글,탑" /></label>
             <label className={labelCls}>
-              티어 이미지
+              티어
               <select value={form.tier} onChange={set("tier")} className={inputCls}>
                 {TIER_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
