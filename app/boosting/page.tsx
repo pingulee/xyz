@@ -103,7 +103,7 @@ export default function BoostingPage() {
         eyebrow="boosting"
         title="롤 대리"
         desc="목표 티어까지 안정적인 진행을 원하는 고객을 위한 서비스입니다."
-        featureTitle="프리미엄 부가 서비스"
+        featureTitle="부가 서비스"
         points={[
           "기사님 지정",
           "라인 및 챔피언 지정",

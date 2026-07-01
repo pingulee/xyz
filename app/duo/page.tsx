@@ -64,6 +64,7 @@ export default function DuoPage() {
           "플레이 피드백 가능",
         ]}
         cta="듀오 문의하기"
+        showPriceTable
       />
     </>
   );
