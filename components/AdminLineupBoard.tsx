@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import KnightAvatar from "@/components/KnightAvatar";
 import { getLineupPath } from "@/lib/lineup-model";
 import type { Lineup } from "@/lib/lineup-model";
 
@@ -694,17 +695,12 @@ function KnightCard({ knight }: { knight: Lineup }) {
   return (
     <article className={`card-premium overflow-hidden rounded-[28px] ${!knight.active ? "opacity-50" : ""}`}>
       <div className="flex gap-4 p-5">
-        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-black">
-          {knight.image && (
-            <Image
-              src={knight.image}
-              alt={knight.name}
-              fill
-              className="object-cover opacity-90"
-              unoptimized
-            />
-          )}
-        </div>
+        <KnightAvatar
+          availability={knight}
+          image={knight.image}
+          name={knight.name}
+          size={80}
+        />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             {knight.positions.map((pos) => (

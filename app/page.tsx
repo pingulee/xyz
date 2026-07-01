@@ -13,6 +13,7 @@ import {
 import Container from "@/components/Container";
 import FaqItem from "@/components/FaqItem";
 import HeroSlider from "@/components/HeroSlider";
+import KnightAvatar from "@/components/KnightAvatar";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import ServiceCard from "@/components/ServiceCard";
@@ -327,28 +328,23 @@ export default async function Home() {
             />
           </Reveal>
           <div className="grid gap-6 lg:grid-cols-3">
-            {lineups.map(({ name, rank, image }, i) => (
-              <Reveal key={name} delay={i * 0.08}>
+            {lineups.map((lineup, i) => (
+              <Reveal key={lineup.name} delay={i * 0.08}>
                 <article className="card-premium overflow-hidden rounded-[34px]">
-                  <div className="relative aspect-4/3 bg-black">
-                    {image && (
-                      <Image
-                        src={image}
-                        alt={`${name} 프로필 이미지`}
-                        fill
-                        sizes="(max-width: 1024px) 100vw, 33vw"
-                        className="object-cover opacity-90"
-                        unoptimized
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent" />
+                  <div className="grid place-items-center bg-black/35 px-7 pt-8">
+                    <KnightAvatar
+                      availability={lineup}
+                      image={lineup.image}
+                      name={lineup.name}
+                      size={128}
+                    />
                   </div>
                   <div className="p-7">
                     <span className="rounded-full bg-gold/10 px-3 py-1 text-xs font-black text-gold">
-                      {rank}
+                      {lineup.rank}
                     </span>
                     <h3 className="mt-5 text-2xl font-black text-white">
-                      {name}
+                      {lineup.name}
                     </h3>
                     <p className="mt-3 leading-7 text-zinc-400">
                       포지션별 숙련도와 진행 안정성을 기준으로 배정합니다.

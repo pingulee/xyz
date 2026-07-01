@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Clock, Medal, Shield, Star } from "lucide-react";
 import Container from "@/components/Container";
 import AdminLineupBoard from "@/components/AdminLineupBoard";
+import KnightAvatar from "@/components/KnightAvatar";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import { getLineups, getLineupPath } from "@/lib/lineups";
@@ -70,17 +71,12 @@ export default async function LineupPage() {
               <Link href={getLineupPath(knight)} className="block">
                 <article className="card-premium overflow-hidden rounded-[28px] transition-transform duration-200 hover:-translate-y-1">
                   <div className="flex gap-4 p-5">
-                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-black">
-                      {knight.image && (
-                        <Image
-                          src={knight.image}
-                          alt={knight.name}
-                          fill
-                          className="object-cover opacity-90"
-                          unoptimized
-                        />
-                      )}
-                    </div>
+                    <KnightAvatar
+                      availability={knight}
+                      image={knight.image}
+                      name={knight.name}
+                      size={80}
+                    />
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         {knight.positions.map((pos) => (

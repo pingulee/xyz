@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, Plus, Star, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import KnightAvatar, { type KnightAvailability } from "@/components/KnightAvatar";
 import type { Review, ReviewNavItem, ReviewReply, TierRecord } from "@/lib/reviews";
 
 const TIER_OPTIONS = [
@@ -226,6 +227,7 @@ export default function ReviewDetailView({
   knightLineupId,
   knightName,
   knightImage,
+  knightAvailability,
   previousReview,
   nextReview,
 }: {
@@ -233,6 +235,7 @@ export default function ReviewDetailView({
   knightLineupId: number | null;
   knightName: string;
   knightImage: string;
+  knightAvailability?: KnightAvailability | null;
   previousReview?: ReviewNavItem;
   nextReview?: ReviewNavItem;
 }) {
@@ -596,22 +599,12 @@ export default function ReviewDetailView({
         <div className="relative grid gap-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-gold/25 bg-black/30">
-                {knightImage ? (
-                  <Image
-                    src={knightImage}
-                    alt={displayKnightName}
-                    fill
-                    className="object-cover"
-                    sizes="56px"
-                    unoptimized
-                  />
-                ) : (
-                  <span className="grid h-full w-full place-items-center text-lg font-black text-gold">
-                    {displayKnightName.slice(0, 1)}
-                  </span>
-                )}
-              </div>
+              <KnightAvatar
+                availability={knightAvailability}
+                image={knightImage}
+                name={displayKnightName}
+                size={56}
+              />
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-gold">
                   knight reply

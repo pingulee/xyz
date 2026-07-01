@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { Clock, Star } from "lucide-react";
 import Container from "@/components/Container";
+import KnightAvatar from "@/components/KnightAvatar";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import LineupReviews from "@/components/LineupReviews";
@@ -97,21 +98,15 @@ export default async function LineupDetailPage({ params }: Props) {
         <Reveal>
           <div className="card-premium overflow-hidden rounded-4xl p-6 md:p-8">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-              {lineup.image && (
-                <div className="shrink-0">
-                  <div className="relative mx-auto overflow-hidden rounded-[28px] bg-black"
-                    style={{ width: 300, height: 300, maxWidth: "100%" }}
-                  >
-                    <Image
-                      src={lineup.image}
-                      alt={lineup.name}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </div>
-                </div>
-              )}
+              <div className="mx-auto shrink-0 lg:mx-0">
+                <KnightAvatar
+                  availability={lineup}
+                  image={lineup.image}
+                  name={lineup.name}
+                  priority
+                  size={260}
+                />
+              </div>
 
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -291,6 +286,7 @@ export default async function LineupDetailPage({ params }: Props) {
               knightLineupId={knightLineupId}
               knightName={lineup.name}
               knightImage={lineup.image ?? ""}
+              knightAvailability={lineup}
             />
           </div>
         </Reveal>

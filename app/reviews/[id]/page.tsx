@@ -140,6 +140,7 @@ export default async function ReviewDetailPage({ params }: Props) {
             knightLineupId={knightLineupId}
             knightName={knightName}
             knightImage={lineup?.image ?? ""}
+            knightAvailability={lineup ?? null}
             previousReview={navigation.previous}
             nextReview={navigation.next}
           />

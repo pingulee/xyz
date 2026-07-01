@@ -11,6 +11,7 @@ import {
   Star,
   Trash2,
 } from "lucide-react";
+import KnightAvatar, { type KnightAvailability } from "@/components/KnightAvatar";
 import type { Review, ReviewReply, TierRecord } from "@/lib/reviews";
 
 const PER_PAGE = 5;
@@ -298,11 +299,13 @@ function ReplyBlock({
   knightLineupId,
   knightName,
   knightImage,
+  knightAvailability,
 }: {
   review: Review;
   knightLineupId: number | null;
   knightName: string;
   knightImage: string;
+  knightAvailability?: KnightAvailability | null;
 }) {
   const [replyData, setReplyData] = useState(review.reply);
   const [editing, setEditing] = useState(false);
@@ -372,20 +375,12 @@ function ReplyBlock({
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.88),rgba(0,0,0,0.62)_52%,rgba(0,0,0,0.30))]" />
       <div className="relative mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          {knightImage ? (
-            <Image
-              src={knightImage}
-              alt={replyData?.knightName ?? knightName}
-              width={44}
-              height={44}
-              className="h-11 w-11 rounded-2xl border border-gold/25 object-cover"
-              unoptimized
-            />
-          ) : (
-            <div className="grid h-11 w-11 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-sm font-black text-gold">
-              {(replyData?.knightName ?? knightName).slice(0, 1)}
-            </div>
-          )}
+          <KnightAvatar
+            availability={knightAvailability}
+            image={knightImage}
+            name={replyData?.knightName ?? knightName}
+            size={44}
+          />
           <div>
             <p className="text-base font-black text-white">
               {replyData?.knightName ?? knightName}
@@ -451,11 +446,13 @@ export default function LineupReviews({
   knightLineupId = null,
   knightName = "",
   knightImage = "",
+  knightAvailability = null,
 }: {
   reviews: Review[];
   knightLineupId?: number | null;
   knightName?: string;
   knightImage?: string;
+  knightAvailability?: KnightAvailability | null;
 }) {
   const [page, setPage] = useState(1);
 
@@ -506,6 +503,7 @@ export default function LineupReviews({
             knightLineupId={knightLineupId}
             knightName={knightName}
             knightImage={knightImage}
+            knightAvailability={knightAvailability}
           />
         </div>
       ))}

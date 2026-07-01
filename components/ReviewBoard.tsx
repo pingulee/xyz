@@ -14,6 +14,7 @@ import {
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import KnightAvatar, { type KnightAvailability } from "@/components/KnightAvatar";
 
 type TierRecord = {
   tier: string;
@@ -193,6 +194,9 @@ export default function ReviewBoard({
     name: string;
     services: string[];
     image?: string | null;
+    active: boolean;
+    weekdayHours: string;
+    weekendHours: string;
   }>;
   knightLineupId?: number | null;
 }) {
@@ -222,11 +226,11 @@ export default function ReviewBoard({
   const [deletingReplyId, setDeletingReplyId] = useState("");
   const mousedownOnOverlay = useRef(false);
   const router = useRouter();
-  const lineupImageById = useMemo(
+  const lineupById = useMemo(
     () =>
       Object.fromEntries(
-        lineups.map((lineup) => [lineup.id, lineup.image ?? ""]),
-      ) as Record<string, string>,
+        lineups.map((lineup) => [lineup.id, lineup]),
+      ) as Record<string, (typeof lineups)[number]>,
     [lineups],
   );
 
@@ -849,23 +853,13 @@ export default function ReviewBoard({
       )}
 
       <div className="mx-auto max-w-6xl space-y-5">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
-              reviews
-            </p>
-            <h2 className="mt-2 text-2xl font-black text-white">
-              전체 후기 {visibleReviews.length}개
-            </h2>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setWriteOpen(true)}
-            className="cursor-pointer rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black shadow-gold-sm transition"
-          >
-            후기 남기기
-          </button>
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
+            reviews
+          </p>
+          <h2 className="mt-2 text-2xl font-black text-white">
+            전체 후기 {visibleReviews.length}개
+          </h2>
         </div>
 
         {loading ? (
@@ -899,10 +893,15 @@ export default function ReviewBoard({
             knightName={knightName}
             replying={replyingId === selectedReview.id}
             deletingReply={deletingReplyId === selectedReview.id}
-            knightImage={
-              lineupImageById[
+            knightAvailability={
+              lineupById[
                 selectedReview.reply?.lineupId ?? selectedReview.lineupId ?? ""
-              ] ?? ""
+              ] ?? null
+            }
+            knightImage={
+              lineupById[
+                selectedReview.reply?.lineupId ?? selectedReview.lineupId ?? ""
+              ]?.image ?? ""
             }
             onSubmitReply={(content, tierRecords) =>
               void submitReply(selectedReview.id, content, tierRecords)
@@ -1088,7 +1087,20 @@ export default function ReviewBoard({
                 </button>
               </div>
             )}
+
           </>
+        )}
+
+        {!selectedReview && (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setWriteOpen(true)}
+              className="cursor-pointer rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black shadow-gold-sm transition hover:-translate-y-0.5"
+            >
+              후기 남기기
+            </button>
+          </div>
         )}
       </div>
     </div>
@@ -1194,6 +1206,7 @@ function ReplySection({
   knightLineupId,
   knightName,
   knightImage,
+  knightAvailability,
   replying,
   deletingReply,
   onSubmitReply,
@@ -1203,6 +1216,7 @@ function ReplySection({
   knightLineupId: number | null;
   knightName: string;
   knightImage: string;
+  knightAvailability?: KnightAvailability | null;
   replying: boolean;
   deletingReply: boolean;
   onSubmitReply: (content: string, tierRecords: TierRecord[]) => void;
@@ -1248,20 +1262,12 @@ function ReplySection({
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.88),rgba(0,0,0,0.62)_52%,rgba(0,0,0,0.30))]" />
       <div className="relative mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          {knightImage ? (
-            <Image
-              src={knightImage}
-              alt={review.reply?.knightName ?? knightName}
-              width={44}
-              height={44}
-              className="h-11 w-11 rounded-2xl border border-gold/25 object-cover"
-              unoptimized
-            />
-          ) : (
-            <div className="grid h-11 w-11 place-items-center rounded-2xl border border-gold/20 bg-gold/10 text-sm font-black text-gold">
-              {(review.reply?.knightName ?? knightName).slice(0, 1)}
-            </div>
-          )}
+          <KnightAvatar
+            availability={knightAvailability}
+            image={knightImage}
+            name={review.reply?.knightName ?? knightName}
+            size={44}
+          />
           <div>
             <p className="text-base font-black text-white">
               {review.reply?.knightName ?? knightName}
@@ -1420,6 +1426,7 @@ function ReviewDetail({
   knightLineupId,
   knightName,
   knightImage,
+  knightAvailability,
   replying,
   deletingReply,
   onSubmitReply,
@@ -1450,6 +1457,7 @@ function ReviewDetail({
   knightLineupId: number | null;
   knightName: string;
   knightImage: string;
+  knightAvailability?: KnightAvailability | null;
   replying: boolean;
   deletingReply: boolean;
   onSubmitReply: (content: string, tierRecords: TierRecord[]) => void;
@@ -1637,6 +1645,7 @@ function ReviewDetail({
             knightLineupId={knightLineupId}
             knightName={knightName}
             knightImage={knightImage}
+            knightAvailability={knightAvailability}
             replying={replying}
             deletingReply={deletingReply}
             onSubmitReply={onSubmitReply}
