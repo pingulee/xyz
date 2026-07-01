@@ -39,9 +39,34 @@ const process = [
 ];
 
 const reviews = [
-  ["다이아 목표였는데 일정 맞춰서 깔끔하게 끝났어요.", "boosting"],
-  ["듀오로 하니까 피드백이 바로 와서 훨씬 편했습니다.", "duo"],
-  ["상담이 빠르고 조건 설명이 투명해서 믿고 진행했어요.", "account"],
+  [
+    "마빵 구간 다른 곳은 드럽게 비싸던데 이렇게 저렴해도 되나 싶다..",
+    "롤 대리",
+  ],
+  ["플래티넘 구간 듀오로 20연승함 이 가격에 말이 안됨", "롤 듀오"],
+  ["아직도 업디 파는 곳이 있네 잘 안팔려고 하는데 잘쓰는 중 굿굿", "롤 계정"],
+  [
+    "다른 대리팀도 많이 이용해봤는데 좀 신기한 시스템이긴 하네요 앞으로 여기만 이용할 듯",
+    "롤 대리",
+  ],
+  [
+    "평소에 제가 보던 분이 이 업체에 계시네요 ㅎㅎ.. 저야 뭐 싸게 이용해서 좋습니다.",
+    "롤 듀오",
+  ],
+  ["시간제라는거 첨들어보는데 그냥 해봤더니 다 이기시네요 ㅋㅋㅋ", "롤 대리"],
+  [
+    "챔프 연습용으로 싸게 사서 쓰던 중 본주가 비번 바꿨는데 바로 보상해주심 ㄷㄷ;",
+    "롤 계정",
+  ],
+  [
+    "이 가격이면 마진이 거의 없을 것 같은데 기사님들께는 어떻게 페이를 지급하시나요?",
+    "롤 듀오",
+  ],
+  [
+    "제가 찾는 기사님은 일정이 항상 꽉 차있어서 아쉽네요.. 어쩔 수 없는 부분 ㅠㅠ",
+    "롤 대리",
+  ],
+  ["랜덤 계정 샀는데 생배 받음 개꿀딱ㅋ", "롤 계정"],
 ];
 
 const faqs = [
@@ -413,25 +438,45 @@ export default async function Home() {
           <Reveal>
             <SectionTitle eyebrow="reviews" title="진행 후기" />
           </Reveal>
-          <div className="grid gap-5 lg:grid-cols-3">
-            {reviews.map(([text, tag]) => (
-              <Reveal key={text}>
-                <article className="rounded-3xl border border-gold/15 bg-white/[.035] p-7">
-                  <div className="flex gap-1 text-gold">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} size={18} fill="currentColor" />
+          <Reveal>
+            <div className="review-marquee-mask mt-10 space-y-5">
+              {[reviews.slice(0, 5), reviews.slice(5, 10)].map(
+                (row, rowIndex) => (
+                  <div
+                    key={rowIndex === 0 ? "top" : "bottom"}
+                    className={`review-marquee-track ${
+                      rowIndex === 0
+                        ? "animate-review-marquee-ltr"
+                        : "animate-review-marquee-rtl"
+                    }`}
+                  >
+                    {[...row, ...row].map(([text, tag], i) => (
+                      <article
+                        key={`${tag}-${i}`}
+                        className="w-[280px] shrink-0 rounded-3xl border border-gold/15 bg-white/[.035] p-7 sm:w-[360px]"
+                      >
+                        <div className="flex gap-1 text-gold">
+                          {Array.from({ length: 5 }).map((_, starIndex) => (
+                            <Star
+                              key={starIndex}
+                              size={18}
+                              fill="currentColor"
+                            />
+                          ))}
+                        </div>
+                      <p className="mt-5 min-h-18 leading-7 text-zinc-100">
+                        {text}
+                      </p>
+                        <p className="mt-5 text-xs font-black uppercase tracking-[0.22em] text-gold">
+                          {tag}
+                        </p>
+                      </article>
                     ))}
                   </div>
-                  <p className="mt-5 min-h-18 leading-7 text-zinc-300">
-                    {text}
-                  </p>
-                  <p className="mt-5 text-xs font-black uppercase tracking-[0.22em] text-gold">
-                    {tag}
-                  </p>
-                </article>
-              </Reveal>
-            ))}
-          </div>
+                ),
+              )}
+            </div>
+          </Reveal>
         </Container>
       </section>
 
