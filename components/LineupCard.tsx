@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Clock, Star } from "lucide-react";
+import { Clock, Crown, Star } from "lucide-react";
 import KnightAvatar from "@/components/KnightAvatar";
 import type { Lineup } from "@/lib/lineup-model";
 import { getLineupPath } from "@/lib/lineups";
@@ -15,12 +15,44 @@ function nationalityLabel(code: number) {
 
 export default function LineupCard({
   knight,
+  placement,
 }: {
   knight: Lineup;
+  placement?: number;
 }) {
+  const crown =
+    placement && placement <= 3
+      ? [
+          {
+            label: "1",
+            className:
+              "border-yellow-300/45 bg-yellow-300/15 text-yellow-200 shadow-[0_0_18px_rgba(250,204,21,0.22)]",
+          },
+          {
+            label: "2",
+            className:
+              "border-zinc-200/35 bg-zinc-100/12 text-zinc-100 shadow-[0_0_18px_rgba(228,228,231,0.16)]",
+          },
+          {
+            label: "3",
+            className:
+              "border-amber-700/45 bg-amber-700/18 text-amber-200 shadow-[0_0_18px_rgba(180,83,9,0.18)]",
+          },
+        ][placement - 1]
+      : null;
+
   return (
     <Link href={getLineupPath(knight)} className="block">
-      <article className="card-premium overflow-hidden rounded-[28px] transition-transform duration-200 hover:-translate-y-1">
+      <article className="card-premium relative overflow-hidden rounded-[28px] transition-transform duration-200 hover:-translate-y-1">
+        {crown && (
+          <div
+            className={`absolute right-4 top-4 z-10 inline-flex h-10 min-w-10 items-center justify-center gap-1 rounded-full border px-2.5 text-xs font-black ${crown.className}`}
+            aria-label={`${crown.label}위 기사`}
+          >
+            <Crown size={15} className="fill-current" />
+            <span>{crown.label}</span>
+          </div>
+        )}
         <div className="flex gap-4 p-5">
           <KnightAvatar
             availability={knight}

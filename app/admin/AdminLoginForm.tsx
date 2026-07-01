@@ -12,6 +12,16 @@ function AdminLoginFormInner({ fallbackFrom = "/" }: { fallbackFrom?: string }) 
   const searchParams = useSearchParams();
   const from = searchParams.get("from") ?? fallbackFrom;
 
+  const isSafeReturnPath = (value: string) => {
+    if (!value.startsWith("/")) return false;
+    try {
+      const url = new URL(value, window.location.origin);
+      return url.pathname !== "/admin" && url.pathname !== "/admax";
+    } catch {
+      return false;
+    }
+  };
+
   const inputCls =
     "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
 
@@ -39,7 +49,7 @@ function AdminLoginFormInner({ fallbackFrom = "/" }: { fallbackFrom?: string }) 
         return;
       }
 
-      router.push(from && from.startsWith("/") && from !== "/admin" ? from : "/");
+      router.push(isSafeReturnPath(from) ? from : "/");
     } catch {
       setMessage("로그인에 실패했습니다.");
     } finally {

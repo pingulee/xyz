@@ -30,9 +30,9 @@ export default async function LineupPage() {
         <Container>
           <Reveal>
             <SectionTitle
-              eyebrow="admin"
-              title="기사 라인업 관리"
-              desc="관리자 모드 — 추가, 수정, 삭제가 가능합니다."
+              eyebrow="lineup"
+              title="기사 라인업"
+              desc="검증된 상위 티어 기사진이 직접 진행합니다."
             />
           </Reveal>
           <Reveal>
@@ -57,7 +57,7 @@ export default async function LineupPage() {
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {lineups.map((knight, i) => (
             <Reveal key={knight.name} delay={i * 0.04}>
-              <LineupCard knight={knight} />
+              <LineupCard knight={knight} placement={i + 1} />
             </Reveal>
           ))}
         </div>

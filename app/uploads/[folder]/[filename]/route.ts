@@ -4,7 +4,7 @@ import { join, resolve, basename } from "path";
 
 export const runtime = "nodejs";
 
-const ALLOWED_FOLDERS = new Set(["reviews", "notices", "lineups"]);
+const ALLOWED_FOLDERS = new Set(["reviews", "lineups"]);
 
 const MIME_MAP: Record<string, string> = {
   jpg: "image/jpeg",

@@ -6,7 +6,7 @@ import { join, resolve, basename } from "path";
 
 export const runtime = "nodejs";
 
-const ALLOWED_FOLDERS = new Set(["notices", "lineups"]);
+const ALLOWED_FOLDERS = new Set(["lineups"]);
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_MIME = new Set([

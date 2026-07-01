@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import Container from "@/components/Container";
 import Reveal from "@/components/Reveal";
-import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
 import AdminLoginForm from "./AdminLoginForm";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +18,11 @@ function getReturnPath(referer: string, host: string) {
     const url = new URL(referer);
     const path = `${url.pathname}${url.search}${url.hash}`;
 
-    if (url.host !== host || path.startsWith("/admin")) {
+    if (
+      url.host !== host ||
+      path.startsWith("/admin") ||
+      path.startsWith("/admax")
+    ) {
       return "/";
     }
 
@@ -32,18 +33,11 @@ function getReturnPath(referer: string, host: string) {
 }
 
 export default async function AdminPage() {
-  const cookieStore = await cookies();
   const headerStore = await headers();
-  const token = cookieStore.get(SESSION_COOKIE)?.value ?? "";
   const returnPath = getReturnPath(
     headerStore.get("referer") ?? "",
     headerStore.get("host") ?? "",
   );
-
-  if (validateSession(token)) {
-    cookieStore.delete(SESSION_COOKIE);
-    redirect(returnPath);
-  }
 
   return (
     <section className="py-20">

@@ -18,6 +18,3 @@ ADMIN_PASSWORD=your_admin_password
 
 The reviews API uses `/api/reviews` and requires a Node.js runtime. A static-only
 deployment will not be able to write reviews to MySQL.
-
-For notices, also run `database/notices.sql`. The notices API uses
-`/api/notice` and only accepts writes when `ADMIN_PASSWORD` matches.
