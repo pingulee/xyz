@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { MessageCircle, ShieldCheck, Sparkles, Trophy } from "lucide-react";
 import Container from "@/components/Container";
+import KnightAuthControls from "@/components/KnightAuthControls";
 import { navItems, services, site } from "@/lib/site";
 
 export default function Footer() {
@@ -34,8 +35,8 @@ export default function Footer() {
                 {i === 0
                   ? "안전 진행"
                   : i === 1
-                  ? "상위 기사"
-                  : "프리미엄 관리"}
+                    ? "상위 기사"
+                    : "프리미엄 관리"}
               </span>
             ))}
           </div>
@@ -70,15 +71,18 @@ export default function Footer() {
             현재 티어, 목표 티어, 원하는 서비스를 알려주시면 빠르게
             안내해드립니다.
           </p>
-          <a
-            href={site.kakaoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-5 inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black"
-          >
-            <MessageCircle size={17} />
-            카카오톡 상담
-          </a>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <KnightAuthControls className="w-full sm:w-auto" />
+            <a
+              href={site.kakaoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black"
+            >
+              <MessageCircle size={17} />
+              카카오톡 상담
+            </a>
+          </div>
         </div>
       </Container>
       <div className="border-t border-gold/10 py-6 text-center text-xs text-zinc-400">

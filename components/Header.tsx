@@ -8,6 +8,7 @@ import { useState } from "react";
 import type { MouseEvent } from "react";
 import clsx from "clsx";
 import { navItems, services, site } from "@/lib/site";
+import KnightAuthControls from "@/components/KnightAuthControls";
 
 type MenuItem = {
   label: string;
@@ -56,7 +57,10 @@ export default function Header() {
   };
 
   const isActive = (href: string) => {
-    if (href === "#price") return ["/boosting", "/duo", "/account"].some((p) => pathname.startsWith(p));
+    if (href === "#price")
+      return ["/boosting", "/duo", "/account"].some((p) =>
+        pathname.startsWith(p),
+      );
     return href === "/" ? pathname === "/" : pathname.startsWith(href);
   };
 
@@ -147,12 +151,6 @@ export default function Header() {
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
-          <Link
-            href="/contact"
-            className="rounded-full border border-gold/20 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:border-gold/60 hover:text-white"
-          >
-            문의 페이지
-          </Link>
           <a
             href={site.kakaoUrl}
             target="_blank"
@@ -161,6 +159,7 @@ export default function Header() {
           >
             빠른 상담
           </a>
+          <KnightAuthControls />
         </div>
 
         <button
@@ -244,6 +243,7 @@ export default function Header() {
             </div>
           ))}
 
+          <KnightAuthControls className="mt-4 block w-full" />
           <a
             href={site.kakaoUrl}
             target="_blank"

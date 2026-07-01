@@ -4,9 +4,10 @@ import { navItems, services, site } from "@/lib/site";
 export default function sitemap(): MetadataRoute.Sitemap {
   const paths = [
     "",
-    ...navItems.filter((item) => item.href !== "/" && !item.href.startsWith("#")).map((item) => item.href),
+    ...navItems
+      .filter((item) => item.href !== "/" && !item.href.startsWith("#"))
+      .map((item) => item.href),
     ...services.map((service) => service.href),
-    "/contact",
   ];
 
   return paths.map((path) => ({
