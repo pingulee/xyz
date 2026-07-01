@@ -28,14 +28,13 @@ const TIER_OPTIONS = [
   },
 ];
 
-const positionColors: Record<string, string> = {
-  정글: "bg-emerald-500/15 text-emerald-400",
-  미드: "bg-blue-500/15 text-blue-400",
-  바텀: "bg-purple-500/15 text-purple-400",
-  서포터: "bg-pink-500/15 text-pink-400",
-  서폿: "bg-pink-500/15 text-pink-400",
-  탑: "bg-orange-500/15 text-orange-400",
-};
+function nationalityFlag(code: number) {
+  return code === 2 ? "/images/flags/cn.svg" : "/images/flags/kr.svg";
+}
+
+function nationalityLabel(code: number) {
+  return code === 2 ? "중국" : "대한민국";
+}
 
 const LOL_CHAMPIONS = [
   "가렌", "갈리오", "강플랭크", "그라가스", "그레이브즈", "나미", "나서스",
@@ -60,6 +59,10 @@ const LOL_CHAMPIONS = [
 ];
 
 const POSITIONS = ["탑", "정글", "미드", "바텀", "서포터"] as const;
+const NATIONALITIES = [
+  { value: "1", label: "대한민국" },
+  { value: "2", label: "중국" },
+] as const;
 const TIME_SLOTS = [
   "00","01","02","03","04","05","06","07","08","09","10","11",
   "12","13","14","15","16","17","18","19","20","21","22","23",
@@ -70,6 +73,7 @@ const blankForm = {
   positionSet: new Set<string>(),
   rank: "Challenger",
   tier: "/images/tier/10-challenger.png",
+  nationality: "1",
   description: "",
   weekdayStart: "18",
   weekdayEnd: "23",
@@ -208,6 +212,7 @@ export default function AdminLineupBoard({
       positionSet: new Set(lineup.positions),
       rank: lineup.rank,
       tier: lineup.tier,
+      nationality: String(lineup.nationality),
       description: lineup.description,
       weekdayStart: wd.start,
       weekdayEnd: wd.end,
@@ -250,6 +255,7 @@ export default function AdminLineupBoard({
     services: [form.serviceBoost && "대리", form.serviceDuo && "듀오"]
       .filter(Boolean)
       .join(","),
+    nationality: Number(form.nationality),
     image: imageUrl,
     active: form.active,
     knightPassword: form.knightPassword || undefined,
@@ -437,6 +443,21 @@ export default function AdminLineupBoard({
                     {TIER_OPTIONS.map((opt) => (
                       <option key={opt.tier} value={opt.tier}>
                         {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className={labelCls}>
+                  국적
+                  <select
+                    value={form.nationality}
+                    onChange={set("nationality")}
+                    className={inputCls}
+                  >
+                    {NATIONALITIES.map((nationality) => (
+                      <option key={nationality.value} value={nationality.value}>
+                        {nationality.label}
                       </option>
                     ))}
                   </select>
@@ -689,14 +710,6 @@ function KnightCard({ knight }: { knight: Lineup }) {
         />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            {knight.positions.map((pos) => (
-              <span
-                key={pos}
-                className={`rounded-full px-2.5 py-0.5 text-xs font-black ${positionColors[pos] ?? "bg-gold/10 text-gold"}`}
-              >
-                {pos}
-              </span>
-            ))}
             <div className="flex items-center gap-1">
               <Image
                 src={knight.tier}
@@ -714,7 +727,17 @@ function KnightCard({ knight }: { knight: Lineup }) {
               </span>
             )}
           </div>
-          <p className="mt-1.5 font-black text-white">{knight.name}</p>
+          <p className="mt-1.5 flex items-center gap-2 font-black text-white">
+            <span className="truncate">{knight.name}</span>
+            <Image
+              src={nationalityFlag(knight.nationality)}
+              alt={nationalityLabel(knight.nationality)}
+              title={nationalityLabel(knight.nationality)}
+              width={24}
+              height={16}
+              className="shrink-0 rounded-[3px] border border-white/10 object-cover"
+            />
+          </p>
           <div className="mt-1 grid gap-0.5 text-xs text-zinc-500">
             <div className="flex items-center gap-1.5">
               <Clock size={10} />
@@ -730,10 +753,23 @@ function KnightCard({ knight }: { knight: Lineup }) {
       <div className="border-t border-white/6 px-5 pb-5 pt-4">
         <p className="text-sm leading-6 text-zinc-400">{knight.description}</p>
         <div className="mt-4 grid gap-2.5">
+          <div className="flex items-center gap-2">
+            <span className="w-12 shrink-0 text-xs font-black text-zinc-500">라인</span>
+            <div className="flex min-h-6 flex-wrap items-center gap-1.5">
+              {knight.positions.map((position) => (
+                <span
+                  key={position}
+                  className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300"
+                >
+                  {position}
+                </span>
+              ))}
+            </div>
+          </div>
           {knight.champions.length > 0 && (
-            <div className="flex items-start gap-2">
-              <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">챔피언</span>
-              <div className="flex flex-wrap gap-1.5">
+            <div className="flex items-center gap-2">
+              <span className="w-12 shrink-0 text-xs font-black text-zinc-500">챔피언</span>
+              <div className="flex min-h-6 flex-wrap items-center gap-1.5">
                 {knight.champions.map((c) => (
                   <span
                     key={c}
@@ -745,9 +781,9 @@ function KnightCard({ knight }: { knight: Lineup }) {
               </div>
             </div>
           )}
-          <div className="flex items-start gap-2">
-            <span className="mt-0.5 w-12 shrink-0 text-xs font-black text-zinc-500">작업</span>
-            <div className="flex flex-wrap gap-1.5">
+          <div className="flex items-center gap-2">
+            <span className="w-12 shrink-0 text-xs font-black text-zinc-500">작업</span>
+            <div className="flex min-h-6 flex-wrap items-center gap-1.5">
               {knight.services.map((s) => (
                 <span
                   key={s}

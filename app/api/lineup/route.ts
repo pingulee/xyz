@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ResultSetHeader } from "mysql2";
 import { scryptSync, randomBytes } from "crypto";
 import { getPool } from "@/lib/db";
-import { getLineups, getLineupById } from "@/lib/lineups";
+import { ensureLineupsSchema, getLineups, getLineupById } from "@/lib/lineups";
 import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession";
 
 export const runtime = "nodejs";
@@ -19,6 +19,7 @@ type LineupPayload = {
   weekendHours?: string;
   champions?: string;
   services?: string;
+  nationality?: string | number;
   image?: string | null;
   sortOrder?: number;
   active?: boolean;
@@ -51,6 +52,13 @@ function validateLineup(payload: LineupPayload) {
   const weekendHours = payload.weekendHours?.trim() ?? "";
   const champions = payload.champions?.trim() ?? "";
   const services = payload.services?.trim() ?? "";
+  const rawNationality = payload.nationality ?? 1;
+  const nationality =
+    rawNationality === "중국"
+      ? 2
+      : rawNationality === "대한민국"
+        ? 1
+        : Number(rawNationality);
   const image = payload.image ?? null;
 
   if (!name || name.length > 60) return { message: "이름을 입력해주세요. (최대 60자)" };
@@ -61,9 +69,12 @@ function validateLineup(payload: LineupPayload) {
   if (!weekdayHours || weekdayHours.length > 30) return { message: "평일 시간을 입력해주세요." };
   if (!weekendHours || weekendHours.length > 30) return { message: "주말 시간을 입력해주세요." };
   if (!services) return { message: "작업 종류를 입력해주세요." };
+  if (![1, 2].includes(nationality)) {
+    return { message: "국적을 다시 선택해주세요." };
+  }
   if (!isValidImageUrl(image)) return { message: "이미지 URL 형식이 올바르지 않습니다." };
 
-  return { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, image };
+  return { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, nationality, image };
 }
 
 export async function GET() {
@@ -89,17 +100,18 @@ export async function POST(request: Request) {
 
   const v = validateLineup(payload);
   if ("message" in v) return NextResponse.json({ message: v.message }, { status: 400 });
-  const { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, image } = v;
+  const { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, nationality, image } = v;
 
   const knightPasswordHash = payload.knightPassword?.trim()
     ? hashPassword(payload.knightPassword.trim())
     : null;
 
   try {
+    await ensureLineupsSchema();
     const [result] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO lineups (name, positions, rank, tier, description, weekday_hours, weekend_hours, champions, services, image_url, sort_order, active, knight_password_hash)
-       VALUES (:name, :positions, :rank, :tier, :description, :weekdayHours, :weekendHours, :champions, :services, :image, :sortOrder, :active, :knightPasswordHash)`,
-      { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, image, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, knightPasswordHash },
+      `INSERT INTO lineups (name, positions, rank, tier, description, weekday_hours, weekend_hours, champions, services, nationality, image_url, sort_order, active, knight_password_hash)
+       VALUES (:name, :positions, :rank, :tier, :description, :weekdayHours, :weekendHours, :champions, :services, :nationality, :image, :sortOrder, :active, :knightPasswordHash)`,
+      { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, nationality, image, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, knightPasswordHash },
     );
     const lineup = await getLineupById(result.insertId);
     return NextResponse.json({ lineup }, { status: 201 });
@@ -128,7 +140,7 @@ export async function PUT(request: Request) {
 
   const v = validateLineup(payload);
   if ("message" in v) return NextResponse.json({ message: v.message }, { status: 400 });
-  const { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, image } = v;
+  const { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, nationality, image } = v;
 
   const newPasswordHash = payload.knightPassword?.trim()
     ? hashPassword(payload.knightPassword.trim())
@@ -139,13 +151,14 @@ export async function PUT(request: Request) {
     : "";
 
   try {
+    await ensureLineupsSchema();
     await getPool().execute(
       `UPDATE lineups
        SET name=:name, positions=:positions, rank=:rank, tier=:tier, description=:description,
            weekday_hours=:weekdayHours, weekend_hours=:weekendHours, champions=:champions,
-           services=:services, image_url=:image, sort_order=:sortOrder, active=:active${passwordClause}
+           services=:services, nationality=:nationality, image_url=:image, sort_order=:sortOrder, active=:active${passwordClause}
        WHERE id=:id`,
-      { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, image, id, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, ...(newPasswordHash !== undefined ? { knightPasswordHash: newPasswordHash } : {}) },
+      { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, nationality, image, id, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, ...(newPasswordHash !== undefined ? { knightPasswordHash: newPasswordHash } : {}) },
     );
     const lineup = await getLineupById(id);
     if (!lineup) return NextResponse.json({ message: "기사를 찾을 수 없습니다." }, { status: 404 });

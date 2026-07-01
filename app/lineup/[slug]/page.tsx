@@ -15,15 +15,6 @@ import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSessio
 
 export const dynamic = "force-dynamic";
 
-const positionColors: Record<string, string> = {
-  정글: "bg-emerald-500/15 text-emerald-400",
-  미드: "bg-blue-500/15 text-blue-400",
-  바텀: "bg-purple-500/15 text-purple-400",
-  서포터: "bg-pink-500/15 text-pink-400",
-  서폿: "bg-pink-500/15 text-pink-400",
-  탑: "bg-orange-500/15 text-orange-400",
-};
-
 const tierIconByName: Record<string, string> = {
   아이언: "/images/tier/1-iron.png",
   브론즈: "/images/tier/2-bronze.png",
@@ -36,6 +27,14 @@ const tierIconByName: Record<string, string> = {
   그랜드마스터: "/images/tier/9-grandmaster.png",
   챌린저: "/images/tier/10-challenger.png",
 };
+
+function nationalityFlag(code: number) {
+  return code === 2 ? "/images/flags/cn.svg" : "/images/flags/kr.svg";
+}
+
+function nationalityLabel(code: number) {
+  return code === 2 ? "중국" : "대한민국";
+}
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -110,14 +109,6 @@ export default async function LineupDetailPage({ params }: Props) {
 
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  {lineup.positions.map((pos) => (
-                    <span
-                      key={pos}
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-black ${positionColors[pos] ?? "bg-gold/10 text-gold"}`}
-                    >
-                      {pos}
-                    </span>
-                  ))}
                   <div className="flex items-center gap-1">
                     <Image
                       src={lineup.tier}
@@ -130,6 +121,17 @@ export default async function LineupDetailPage({ params }: Props) {
                       {lineup.rank}
                     </span>
                   </div>
+                </div>
+                <div className="mt-3 flex items-center gap-2 text-2xl font-black text-white">
+                  <span>{lineup.name}</span>
+                  <Image
+                    src={nationalityFlag(lineup.nationality)}
+                    alt={nationalityLabel(lineup.nationality)}
+                    title={nationalityLabel(lineup.nationality)}
+                    width={30}
+                    height={20}
+                    className="rounded-[3px] border border-white/10 object-cover"
+                  />
                 </div>
 
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -244,8 +246,22 @@ export default async function LineupDetailPage({ params }: Props) {
 
                 <div className="mt-6 grid gap-6 md:grid-cols-2">
                   <div>
+                    <div className="text-sm font-black text-zinc-500">라인</div>
+                    <div className="mt-3 flex min-h-8 flex-wrap items-center gap-2">
+                      {lineup.positions.map((position) => (
+                        <span
+                          key={position}
+                          className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-sm font-semibold text-zinc-300"
+                        >
+                          {position}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
                     <div className="text-sm font-black text-zinc-500">대표 챔피언</div>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-3 flex min-h-8 flex-wrap items-center gap-2">
                       {lineup.champions.map((champion) => (
                         <span
                           key={champion}
@@ -259,7 +275,7 @@ export default async function LineupDetailPage({ params }: Props) {
 
                   <div>
                     <div className="text-sm font-black text-zinc-500">진행 서비스</div>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-3 flex min-h-8 flex-wrap items-center gap-2">
                       {lineup.services.map((service) => (
                         <span
                           key={service}

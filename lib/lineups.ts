@@ -15,11 +15,16 @@ type LineupRow = RowDataPacket & {
   weekend_hours: string;
   champions: string;
   services: string;
+  nationality: number | string | null;
   image_url: string | null;
   sort_order: number;
   active: 0 | 1;
   average_rating: number | null;
   review_count: number | null;
+};
+
+type ColumnRow = RowDataPacket & {
+  DATA_TYPE: string;
 };
 
 function split(val: string): string[] {
@@ -35,6 +40,40 @@ function displayRank(rank: string): string {
   return rank;
 }
 
+function nationalityCode(value: number | string | null | undefined): number {
+  if (value === 2 || value === "2" || value === "중국") return 2;
+  return 1;
+}
+
+export async function ensureLineupsSchema() {
+  await getPool().execute(
+    `ALTER TABLE lineups ADD COLUMN IF NOT EXISTS nationality TINYINT UNSIGNED NOT NULL DEFAULT 1`,
+  );
+
+  const [columns] = await getPool().execute<ColumnRow[]>(
+    `SELECT DATA_TYPE
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'lineups'
+       AND COLUMN_NAME = 'nationality'
+     LIMIT 1`,
+  );
+
+  const dataType = columns[0]?.DATA_TYPE;
+  if (dataType && dataType !== "tinyint") {
+    await getPool().execute(
+      `UPDATE lineups
+       SET nationality = CASE
+         WHEN CAST(nationality AS CHAR) IN ('중국', '2') THEN '2'
+         ELSE '1'
+       END`,
+    );
+    await getPool().execute(
+      `ALTER TABLE lineups MODIFY COLUMN nationality TINYINT UNSIGNED NOT NULL DEFAULT 1`,
+    );
+  }
+}
+
 export function toLineup(row: LineupRow): Lineup {
   return {
     id: String(row.id),
@@ -47,6 +86,7 @@ export function toLineup(row: LineupRow): Lineup {
     weekendHours: row.weekend_hours,
     champions: split(row.champions),
     services: split(row.services),
+    nationality: nationalityCode(row.nationality),
     image: row.image_url ?? null,
     sortOrder: row.sort_order,
     active: Boolean(row.active),
@@ -61,6 +101,7 @@ export async function getLineups(
   sortByReviews = false,
 ): Promise<Lineup[]> {
   await ensureReviewsSchema();
+  await ensureLineupsSchema();
   const [rows] = await getPool().execute<LineupRow[]>(
     `SELECT l.*, COALESCE(stats.average_rating, 0) AS average_rating, COALESCE(stats.review_count, 0) AS review_count
      FROM lineups l
@@ -82,6 +123,7 @@ export async function getLineups(
 
 export async function getLineupById(id: number): Promise<Lineup | null> {
   await ensureReviewsSchema();
+  await ensureLineupsSchema();
   const [rows] = await getPool().execute<LineupRow[]>(
     `SELECT l.*, COALESCE(stats.average_rating, 0) AS average_rating, COALESCE(stats.review_count, 0) AS review_count
      FROM lineups l

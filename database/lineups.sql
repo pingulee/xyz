@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS lineups (
   weekend_hours VARCHAR(30)  NOT NULL DEFAULT '',
   champions     VARCHAR(300) NOT NULL DEFAULT '' COMMENT 'comma-separated',
   services      VARCHAR(120) NOT NULL DEFAULT '' COMMENT 'comma-separated',
+  nationality   TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '1=대한민국, 2=중국',
   image_url     VARCHAR(255) NULL,
   sort_order    SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   active        BOOLEAN NOT NULL DEFAULT TRUE,
@@ -21,3 +22,10 @@ CREATE TABLE IF NOT EXISTS lineups (
 ALTER TABLE lineups ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL;
 ALTER TABLE lineups DROP COLUMN IF EXISTS image_data;
 ALTER TABLE lineups ADD COLUMN IF NOT EXISTS knight_password_hash VARCHAR(200) NULL;
+ALTER TABLE lineups ADD COLUMN IF NOT EXISTS nationality TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '1=대한민국, 2=중국';
+UPDATE lineups
+SET nationality = CASE
+  WHEN CAST(nationality AS CHAR) IN ('중국', '2') THEN 2
+  ELSE 1
+END;
+ALTER TABLE lineups MODIFY COLUMN nationality TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '1=대한민국, 2=중국';

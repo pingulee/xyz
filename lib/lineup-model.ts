@@ -9,6 +9,7 @@ export type Lineup = {
   weekendHours: string;
   champions: string[];
   services: string[];
+  nationality: number;
   image: string | null;
   sortOrder: number;
   active: boolean;
