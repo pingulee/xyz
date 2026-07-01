@@ -327,7 +327,7 @@ export default async function Home() {
           <Reveal>
             <SectionTitle
               eyebrow="lineup"
-              title="기사 TOP 3"
+              title="BEST 기사"
               desc="XYZ에서 가장 인기있는 기사 3명을 소개합니다."
             />
           </Reveal>
