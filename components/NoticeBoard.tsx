@@ -7,6 +7,7 @@ import type { Notice } from "@/lib/notices";
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -87,7 +88,14 @@ export default function NoticeBoard({
           </time>
           {selectedNotice.image && (
             <div className="mt-4 overflow-hidden rounded-2xl">
-              <Image src={selectedNotice.image} alt="공지 이미지" width={600} height={400} className="w-full object-cover" unoptimized />
+              <Image
+                src={selectedNotice.image}
+                alt="공지 이미지"
+                width={600}
+                height={400}
+                className="w-full object-cover"
+                unoptimized
+              />
             </div>
           )}
           <p className="mt-6 whitespace-pre-wrap leading-8 text-zinc-300">

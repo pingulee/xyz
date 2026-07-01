@@ -5,8 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, Plus, Star, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import KnightAvatar, { type KnightAvailability } from "@/components/KnightAvatar";
-import type { Review, ReviewNavItem, ReviewReply, TierRecord } from "@/lib/reviews";
+import KnightAvatar, {
+  type KnightAvailability,
+} from "@/components/KnightAvatar";
+import type {
+  Review,
+  ReviewNavItem,
+  ReviewReply,
+  TierRecord,
+} from "@/lib/reviews";
 
 const TIER_OPTIONS = [
   "아이언",
@@ -40,6 +47,7 @@ const REVIEW_CONTENT_MAX_LENGTH = 100;
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -126,9 +134,13 @@ function NavLink({
 }) {
   if (!review) {
     return (
-      <div className={`grid min-h-11 place-items-center rounded-full border border-white/8 bg-black/15 px-3 py-2 opacity-50 sm:block sm:min-h-0 sm:rounded-3xl sm:p-4 ${align === "right" ? "sm:text-right" : ""}`}>
+      <div
+        className={`grid min-h-11 place-items-center rounded-full border border-white/8 bg-black/15 px-3 py-2 opacity-50 sm:block sm:min-h-0 sm:rounded-3xl sm:p-4 ${align === "right" ? "sm:text-right" : ""}`}
+      >
         <p className="text-xs font-black text-zinc-500">{label}</p>
-        <p className="mt-1 hidden text-sm font-bold text-zinc-500 sm:block">이동할 글이 없습니다.</p>
+        <p className="mt-1 hidden text-sm font-bold text-zinc-500 sm:block">
+          이동할 글이 없습니다.
+        </p>
       </div>
     );
   }
@@ -139,8 +151,12 @@ function NavLink({
       className={`grid min-h-11 place-items-center rounded-full border border-white/8 bg-white/[.035] px-3 py-2 transition hover:border-gold/30 hover:bg-white/[.055] sm:block sm:min-h-0 sm:rounded-3xl sm:p-4 ${align === "right" ? "sm:text-right" : ""}`}
     >
       <p className="text-xs font-black text-gold">{label}</p>
-      <p className="mt-1 hidden text-sm font-black text-white sm:line-clamp-1">{review.name}</p>
-      <p className="mt-1 hidden text-xs text-zinc-500 sm:line-clamp-1">{review.content}</p>
+      <p className="mt-1 hidden text-sm font-black text-white sm:line-clamp-1">
+        {review.name}
+      </p>
+      <p className="mt-1 hidden text-xs text-zinc-500 sm:line-clamp-1">
+        {review.content}
+      </p>
     </Link>
   );
 }
@@ -152,10 +168,13 @@ function TierRecordEditor({
   records: TierRecord[];
   onChange: (records: TierRecord[]) => void;
 }) {
-  const add = () => onChange([...records, { tier: "골드", wins: 0, losses: 0 }]);
+  const add = () =>
+    onChange([...records, { tier: "골드", wins: 0, losses: 0 }]);
   const remove = (i: number) => onChange(records.filter((_, idx) => idx !== i));
   const update = (i: number, field: keyof TierRecord, value: string | number) =>
-    onChange(records.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
+    onChange(
+      records.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)),
+    );
 
   return (
     <div className="grid gap-2">
@@ -333,7 +352,9 @@ export default function ReviewDetailView({
       setReviewPassword("");
     } catch (caught) {
       setReviewError(
-        caught instanceof Error ? caught.message : "후기를 수정하지 못했습니다.",
+        caught instanceof Error
+          ? caught.message
+          : "후기를 수정하지 못했습니다.",
       );
     } finally {
       setReviewSaving(false);
@@ -361,7 +382,9 @@ export default function ReviewDetailView({
       router.push("/reviews");
     } catch (caught) {
       setReviewError(
-        caught instanceof Error ? caught.message : "후기를 삭제하지 못했습니다.",
+        caught instanceof Error
+          ? caught.message
+          : "후기를 삭제하지 못했습니다.",
       );
     } finally {
       setReviewSaving(false);
@@ -431,7 +454,11 @@ export default function ReviewDetailView({
               <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold text-zinc-500">
                 <span>{review.service}</span>
                 <span>/</span>
-                <span>{review.lineupName ?? review.reply?.knightName ?? "기사 선택 안 함"}</span>
+                <span>
+                  {review.lineupName ??
+                    review.reply?.knightName ??
+                    "기사 선택 안 함"}
+                </span>
               </div>
               <h1 className="text-2xl font-black text-white">
                 {review.name}님의 후기
@@ -489,7 +516,9 @@ export default function ReviewDetailView({
             <div className="grid gap-4 rounded-3xl border border-gold/20 bg-black/20 p-4">
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="grid gap-2">
-                  <span className="text-sm font-bold text-zinc-300">서비스</span>
+                  <span className="text-sm font-bold text-zinc-300">
+                    서비스
+                  </span>
                   <select
                     value={editService}
                     onChange={(event) => setEditService(event.target.value)}
@@ -501,7 +530,9 @@ export default function ReviewDetailView({
                   </select>
                 </label>
                 <label className="grid gap-2">
-                  <span className="text-sm font-bold text-zinc-300">비밀번호</span>
+                  <span className="text-sm font-bold text-zinc-300">
+                    비밀번호
+                  </span>
                   <input
                     type="password"
                     value={reviewPassword}
@@ -536,7 +567,9 @@ export default function ReviewDetailView({
                   disabled={reviewSaving}
                   className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-2.5 text-sm font-black text-black disabled:opacity-60"
                 >
-                  {reviewSaving && <Loader2 size={14} className="animate-spin" />}
+                  {reviewSaving && (
+                    <Loader2 size={14} className="animate-spin" />
+                  )}
                   수정 저장
                 </button>
               </div>
@@ -562,7 +595,9 @@ export default function ReviewDetailView({
                   disabled={reviewSaving}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-400 px-5 py-3 font-black text-black transition hover:bg-red-300 disabled:opacity-60"
                 >
-                  {reviewSaving && <Loader2 size={14} className="animate-spin" />}
+                  {reviewSaving && (
+                    <Loader2 size={14} className="animate-spin" />
+                  )}
                   삭제
                 </button>
               </div>
@@ -690,7 +725,10 @@ export default function ReviewDetailView({
             </>
           ) : formOpen && canReply ? (
             <div className="grid gap-4">
-              <TierRecordEditor records={tierRecords} onChange={setTierRecords} />
+              <TierRecordEditor
+                records={tierRecords}
+                onChange={setTierRecords}
+              />
               <textarea
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
@@ -733,7 +771,9 @@ export default function ReviewDetailView({
               onClick={openReplyForm}
               className="justify-self-start text-xs font-bold text-zinc-500 transition hover:text-gold"
             >
-              {isLoggedIn ? "이 기사의 후기에만 답변 가능합니다" : "기사님만 답변 가능 - 로그인하기"}
+              {isLoggedIn
+                ? "이 기사의 후기에만 답변 가능합니다"
+                : "기사님만 답변 가능 - 로그인하기"}
             </button>
           )}
         </div>

@@ -14,7 +14,9 @@ import {
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import KnightAvatar, { type KnightAvailability } from "@/components/KnightAvatar";
+import KnightAvatar, {
+  type KnightAvailability,
+} from "@/components/KnightAvatar";
 
 type TierRecord = {
   tier: string;
@@ -124,6 +126,7 @@ function getPageItems(currentPage: number, totalPages: number) {
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -812,7 +815,9 @@ export default function ReviewBoard({
 
                 <label className="grid gap-2">
                   <span className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-bold text-zinc-300">후기</span>
+                    <span className="text-sm font-bold text-zinc-300">
+                      후기
+                    </span>
                     <span className="text-xs font-bold text-zinc-600">
                       {form.content.length}/{REVIEW_CONTENT_MAX_LENGTH}
                     </span>
@@ -990,7 +995,8 @@ export default function ReviewBoard({
                         {review.content}
                       </span>
                       <span className="truncate text-xs font-bold text-zinc-500 lg:hidden">
-                        작성자 {review.name} · 작업 기사 {lineupName || "선택 안 함"}
+                        작성자 {review.name} · 작업 기사{" "}
+                        {lineupName || "선택 안 함"}
                       </span>
                     </span>
 
@@ -1087,7 +1093,6 @@ export default function ReviewBoard({
                 </button>
               </div>
             )}
-
           </>
         )}
 
