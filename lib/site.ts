@@ -11,7 +11,7 @@ export const navItems = [
   { label: "공지사항", href: "/notice" },
   { label: "기사 라인업", href: "/lineup" },
   { label: "가격 안내", href: "#price" },
-  { label: "후기 작성", href: "/reviews" },
+  { label: "작업 후기", href: "/reviews" },
   { label: "기사 모집", href: "/recruit" },
 ];
 

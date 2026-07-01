@@ -12,12 +12,12 @@ import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSessio
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "후기 작성",
+  title: "작업 후기",
   description:
     "XYZ 실제 후기를 확인하고 직접 남겨보세요.",
   alternates: { canonical: "/reviews" },
   openGraph: {
-    title: "후기 작성 | XYZ",
+    title: "작업 후기 | XYZ",
     description:
       "XYZ 실제 후기를 확인하고 직접 남겨보세요.",
     url: "/reviews",
@@ -64,7 +64,7 @@ export default async function ReviewsPage() {
         <Reveal>
           <SectionTitle
             eyebrow="reviews"
-            title="후기 작성"
+            title="작업 후기"
             desc="조작 없는 100% 리얼 후기를 확인하고 직접 남겨보세요."
           />
         </Reveal>

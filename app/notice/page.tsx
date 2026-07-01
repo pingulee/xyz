@@ -56,15 +56,11 @@ export default async function NoticesPage() {
           <SectionTitle
             eyebrow="notice"
             title="공지사항"
-            desc={
-              isAdmin
-                ? "관리자 모드 — 작성, 수정, 삭제가 가능합니다."
-                : "서비스 운영 안내와 주요 변경사항을 확인할 수 있습니다."
-            }
+            desc="서비스 운영 안내와 주요 변경사항을 확인할 수 있습니다."
           />
         </Reveal>
         <Reveal>
-          <NoticeBoard initialNotices={notices} />
+          <NoticeBoard initialNotices={notices} isAdmin={isAdmin} />
         </Reveal>
       </Container>
     </section>

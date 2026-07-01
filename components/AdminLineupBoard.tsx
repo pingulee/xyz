@@ -5,7 +5,6 @@ import {
   Clock,
   EyeOff,
   Loader2,
-  LogOut,
   Pencil,
   Plus,
   Trash2,
@@ -169,11 +168,6 @@ export default function AdminLineupBoard({
     setImageName("");
     setForm((f) => ({ ...f, imageUrl: null }));
     if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const logout = async () => {
-    await fetch("/api/admin/logout", { method: "POST" });
-    router.refresh();
   };
 
   const resetImageState = () => {
@@ -641,14 +635,6 @@ export default function AdminLineupBoard({
             >
               <Plus size={16} />
               기사 추가
-            </button>
-            <button
-              type="button"
-              onClick={() => void logout()}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-3 text-sm font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white"
-            >
-              <LogOut size={16} />
-              로그아웃
             </button>
           </div>
         </div>

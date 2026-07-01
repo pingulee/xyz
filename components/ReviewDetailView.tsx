@@ -249,6 +249,7 @@ export default function ReviewDetailView({
   knightAvailability,
   previousReview,
   nextReview,
+  isAdmin = false,
 }: {
   initialReview: Review;
   knightLineupId: number | null;
@@ -257,6 +258,7 @@ export default function ReviewDetailView({
   knightAvailability?: KnightAvailability | null;
   previousReview?: ReviewNavItem;
   nextReview?: ReviewNavItem;
+  isAdmin?: boolean;
 }) {
   const router = useRouter();
   const [review, setReview] = useState(initialReview);
@@ -282,7 +284,7 @@ export default function ReviewDetailView({
   const isLoggedIn = knightLineupId !== null;
   const displayKnightName =
     review.reply?.knightName || knightName || "기사 답변";
-  const canModifyReview = !review.reply;
+  const canModifyReview = isAdmin || !review.reply;
 
   useEffect(() => {
     if (viewTrackedRef.current) return;
@@ -322,7 +324,7 @@ export default function ReviewDetailView({
   const updateReview = async () => {
     const password = reviewPassword.trim();
     const content = editContent.trim();
-    if (!password || !content) {
+    if ((!isAdmin && !password) || !content) {
       setReviewError("수정하려면 비밀번호와 후기 내용을 입력해주세요.");
       return;
     }
@@ -363,7 +365,7 @@ export default function ReviewDetailView({
 
   const deleteReview = async () => {
     const password = reviewPassword.trim();
-    if (!password) {
+    if (!isAdmin && !password) {
       setReviewError("삭제하려면 비밀번호를 입력해주세요.");
       return;
     }
@@ -531,15 +533,23 @@ export default function ReviewDetailView({
                 </label>
                 <label className="grid gap-2">
                   <span className="text-sm font-bold text-zinc-300">
-                    비밀번호
+                    {isAdmin ? "관리자 권한" : "비밀번호"}
                   </span>
-                  <input
-                    type="password"
-                    value={reviewPassword}
-                    onChange={(event) => setReviewPassword(event.target.value)}
-                    className={inputCls}
-                    placeholder="작성 시 입력한 비밀번호"
-                  />
+                  {isAdmin ? (
+                    <div className="rounded-2xl border border-gold/20 bg-gold/10 px-4 py-3 text-sm font-bold text-gold">
+                      비밀번호 없이 강제 수정
+                    </div>
+                  ) : (
+                    <input
+                      type="password"
+                      value={reviewPassword}
+                      onChange={(event) =>
+                        setReviewPassword(event.target.value)
+                      }
+                      className={inputCls}
+                      placeholder="작성 시 입력한 비밀번호"
+                    />
+                  )}
                 </label>
               </div>
               <div className="grid gap-2">
@@ -579,16 +589,24 @@ export default function ReviewDetailView({
           {reviewDeleteOpen && canModifyReview && (
             <div className="grid gap-3 rounded-3xl border border-red-400/20 bg-red-500/8 p-4">
               <p className="text-sm font-bold text-zinc-300">
-                삭제하려면 작성 시 입력한 비밀번호를 입력해주세요.
+                {isAdmin
+                  ? "관리자 권한으로 이 후기를 삭제합니다."
+                  : "삭제하려면 작성 시 입력한 비밀번호를 입력해주세요."}
               </p>
               <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                <input
-                  type="password"
-                  value={reviewPassword}
-                  onChange={(event) => setReviewPassword(event.target.value)}
-                  className={inputCls}
-                  placeholder="삭제 비밀번호"
-                />
+                {isAdmin ? (
+                  <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-100">
+                    비밀번호 없이 강제 삭제
+                  </div>
+                ) : (
+                  <input
+                    type="password"
+                    value={reviewPassword}
+                    onChange={(event) => setReviewPassword(event.target.value)}
+                    className={inputCls}
+                    placeholder="삭제 비밀번호"
+                  />
+                )}
                 <button
                   type="button"
                   onClick={deleteReview}

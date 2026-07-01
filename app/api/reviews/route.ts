@@ -302,7 +302,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    if (existingReview.reply_id) {
+    if (!adminRequest && existingReview.reply_id) {
       return NextResponse.json(
         { message: "기사 답변이 달린 후기는 수정할 수 없습니다." },
         { status: 409 },
@@ -441,7 +441,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    if (review.reply_id) {
+    if (!adminRequest && review.reply_id) {
       return NextResponse.json(
         { message: "기사 답변이 달린 후기는 삭제할 수 없습니다." },
         { status: 409 },

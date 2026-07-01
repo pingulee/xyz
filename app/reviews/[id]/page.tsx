@@ -8,6 +8,7 @@ import ReviewDetailView from "@/components/ReviewDetailView";
 import { getLineups } from "@/lib/lineups";
 import { getReviewById, getReviewNavigation } from "@/lib/reviews";
 import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSession";
+import { SESSION_COOKIE, validateSession } from "@/lib/adminSession";
 import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -82,6 +83,8 @@ export default async function ReviewDetailPage({ params }: Props) {
   }
 
   const cookieStore = await cookies();
+  const adminToken = cookieStore.get(SESSION_COOKIE)?.value ?? "";
+  const isAdmin = validateSession(adminToken);
   const knightToken = cookieStore.get(KNIGHT_SESSION_COOKIE)?.value ?? "";
   const knightLineupId = validateKnightSession(knightToken);
   const replyLineupId = review.reply?.lineupId ?? review.lineupId ?? "";
@@ -143,6 +146,7 @@ export default async function ReviewDetailPage({ params }: Props) {
             knightAvailability={lineup ?? null}
             previousReview={navigation.previous}
             nextReview={navigation.next}
+            isAdmin={isAdmin}
           />
         </Reveal>
       </Container>

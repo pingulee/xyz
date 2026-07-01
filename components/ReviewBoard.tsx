@@ -673,10 +673,10 @@ export default function ReviewBoard({
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
-                  write review
+                  work review
                 </p>
                 <h2 className="mt-3 text-2xl font-black text-white">
-                  후기 남기기
+                  후기 등록
                 </h2>
               </div>
 
@@ -684,7 +684,7 @@ export default function ReviewBoard({
                 type="button"
                 onClick={() => setWriteOpen(false)}
                 className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white"
-                aria-label="후기 작성 닫기"
+                aria-label="후기 등록 닫기"
               >
                 <X size={18} />
               </button>
@@ -849,7 +849,7 @@ export default function ReviewBoard({
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {submitting && <Loader2 size={18} className="animate-spin" />}
-                  등록하기
+                  후기 등록
                 </button>
               </div>
             </form>
@@ -1103,7 +1103,7 @@ export default function ReviewBoard({
               onClick={() => setWriteOpen(true)}
               className="cursor-pointer rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black shadow-gold-sm transition hover:-translate-y-0.5"
             >
-              후기 남기기
+              후기 등록
             </button>
           </div>
         )}
