@@ -105,13 +105,13 @@ export default function BoostingPage() {
         desc="목표 티어까지 안정적인 진행을 원하는 고객을 위한 서비스입니다."
         featureTitle="부가 서비스"
         points={[
-          "기사님 지정",
+          "기사 지정",
           "라인 및 챔피언 지정",
           "스펠 및 아이템 위치 지정",
           "디스코드 화면 공유",
         ]}
         cta="견적 문의하기"
-        pointIcon="plus"
+        pointIcon="check"
         showPriceTable
       />
 
