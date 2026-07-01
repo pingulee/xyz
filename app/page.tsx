@@ -4,6 +4,7 @@ import {
   ArrowDown,
   ArrowRight,
   BadgeCheck,
+  Clock,
   MessageCircle,
   ShieldCheck,
   Sparkles,
@@ -23,10 +24,10 @@ import { services, site } from "@/lib/site";
 import { getLineups } from "@/lib/lineups";
 
 const stats = [
-  ["상위 티어", "검증 기사"],
-  ["100%", "수동 진행"],
-  ["24h", "상담 접수"],
-  ["1:1", "맞춤 견적"],
+  { value: "상위 티어", label: "검증 기사", icon: ShieldCheck },
+  { value: "100%", label: "수동 진행", icon: Sparkles },
+  { value: "24h", label: "상담 접수", icon: Clock },
+  { value: "1:1", label: "맞춤 견적", icon: Star },
 ];
 
 const process = [
@@ -230,11 +231,14 @@ export default async function Home() {
         <Container>
           <Reveal>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {stats.map(([value, label]) => (
+              {stats.map(({ value, label, icon: Icon }) => (
                 <div
                   key={value}
                   className="rounded-3xl border border-gold/12 bg-white/[.035] p-5 text-center"
                 >
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gold/10 text-gold">
+                    <Icon size={20} />
+                  </div>
                   <b className="text-2xl font-black text-gold sm:text-3xl">
                     {value}
                   </b>
