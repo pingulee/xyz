@@ -159,7 +159,7 @@ export default function Header() {
             href={site.kakaoUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full bg-gold-gradient px-6 py-3 text-sm font-black text-black shadow-gold transition hover:-translate-y-0.5"
+            className="rounded-full bg-gold-gradient px-6 py-3 text-sm font-black text-black transition hover:-translate-y-0.5"
           >
             빠른 상담
           </a>
