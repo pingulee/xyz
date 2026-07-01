@@ -113,6 +113,7 @@ export default function BoostingPage() {
         cta="대리 문의하기"
         pointIcon="check"
         showPriceTable
+        priceTableVariant="boosting"
       />
 
       <section className="pb-20">

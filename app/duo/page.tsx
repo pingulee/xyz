@@ -3,7 +3,7 @@ import ServiceDetail from "@/components/ServiceDetail";
 import { site } from "@/lib/site";
 
 const description =
-  "XYZ 롤 듀오 랭크 서비스의 가격과 진행 방식을 안내합니다. 시간제 듀오 랭크와 점수 보장 듀오 랭크 두 가지 서비스를 제공합니다.";
+  "XYZ 롤 듀오 랭크 서비스의 가격과 진행 방식을 안내합니다. 시간제 듀오 랭크 서비스를 제공합니다.";
 
 export const metadata: Metadata = {
   title: "듀오 랭크 가격 | 검증 기사 듀오 서비스 안내",
@@ -55,8 +55,8 @@ export default function DuoPage() {
       <ServiceDetail
         eyebrow="duo queue"
         title="듀오 랭크 가격"
-        desc="시간제 듀오 랭크와 점수 보장 듀오 랭크를 확인할 수 있는 서비스 안내입니다."
-        featureTitle="듀오 서비스 특징"
+        desc="시간제 듀오 랭크를 확인할 수 있는 서비스 안내입니다."
+        featureTitle="부가 서비스"
         points={[
           "기사 지정",
           "기사 라인 및 챔피언 지정",

@@ -387,7 +387,7 @@ export default async function Home() {
           </Reveal>
           <div className="space-y-12">
             <Reveal>
-              <PriceTable />
+              <PriceTable variant="boosting" />
             </Reveal>
             <Reveal>
               <PriceTable variant="duo" />

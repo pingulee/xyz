@@ -5,29 +5,38 @@ import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import { site } from "@/lib/site";
 
-type ServiceDetailProps = {
+type ServiceDetailBaseProps = {
   eyebrow: string;
   title: string;
   desc: string;
   featureTitle: string;
   points: string[];
   cta: string;
-  showPriceTable?: boolean;
   pointIcon?: "check" | "plus";
-  priceTableVariant?: "boosting" | "duo";
 };
 
-export default function ServiceDetail({
-  eyebrow,
-  title,
-  desc,
-  featureTitle,
-  points,
-  cta,
-  showPriceTable = false,
-  pointIcon = "check",
-  priceTableVariant = "boosting",
-}: ServiceDetailProps) {
+type ServiceDetailProps = ServiceDetailBaseProps &
+  (
+    | {
+        showPriceTable: true;
+        priceTableVariant: "boosting" | "duo";
+      }
+    | {
+        showPriceTable?: false;
+        priceTableVariant?: never;
+      }
+  );
+
+export default function ServiceDetail(props: ServiceDetailProps) {
+  const {
+    eyebrow,
+    title,
+    desc,
+    featureTitle,
+    points,
+    cta,
+    pointIcon = "check",
+  } = props;
   const Icon = pointIcon === "plus" ? PlusCircle : CheckCircle2;
   return (
     <section className="py-20">
@@ -67,9 +76,9 @@ export default function ServiceDetail({
               </a>
             </div>
           </Reveal>
-          {showPriceTable && (
+          {props.showPriceTable && (
             <Reveal delay={0.1}>
-              <PriceTable variant={priceTableVariant} />
+              <PriceTable variant={props.priceTableVariant} />
             </Reveal>
           )}
         </div>
