@@ -17,6 +17,10 @@ const slides = [
     alt: "롤 대리 서비스를 상징하는 프리미엄 게임 이미지",
     secondary: "가격 보기",
     secondaryHref: "/boosting",
+    cardEyebrow: "BOOSTING PLAN",
+    cardTitle: "목표 티어까지 전담 관리",
+    cardDesc: "계정 상태와 일정에 맞춰 무리 없는 진행 루트를 잡습니다.",
+    cardTags: ["1:1 배정", "상황 공유"],
   },
   {
     eyebrow: "PREMIUM DUO",
@@ -28,6 +32,10 @@ const slides = [
     alt: "롤 듀오 서비스를 상징하는 프리미엄 게임 이미지",
     secondary: "듀오 가격",
     secondaryHref: "/duo",
+    cardEyebrow: "DUO SESSION",
+    cardTitle: "같이 뛰면서 바로 피드백",
+    cardDesc: "라인전, 합류 타이밍, 오브젝트 판단을 실시간으로 맞춥니다.",
+    cardTags: ["실시간 피드백", "승률 케어"],
   },
   {
     eyebrow: "CUSTOM ACCOUNT",
@@ -39,6 +47,10 @@ const slides = [
     alt: "롤 계정 서비스를 상징하는 프리미엄 게임 이미지",
     secondary: "서비스 보기",
     secondaryHref: "/account",
+    cardEyebrow: "ACCOUNT MATCH",
+    cardTitle: "원하는 조건만 골라 추천",
+    cardDesc: "티어, 서버, 챔피언, 스킨 조건을 기준으로 계정을 검수합니다.",
+    cardTags: ["조건 검수", "맞춤 추천"],
   },
 ];
 
@@ -118,13 +130,16 @@ export default function HeroSlider() {
                   <p className="inline-flex w-fit rounded-full border border-gold/20 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-gold-soft/90">
                     {slide.eyebrow}
                   </p>
-                  <h1 className="mt-6 text-3xl font-bold leading-[1.16] text-zinc-50 sm:text-5xl lg:text-6xl">
+                  <h1 className="mt-6 text-3xl font-black leading-[1.16] text-zinc-50 [text-shadow:0_0_28px_rgba(255,255,255,0.16)] sm:text-5xl lg:text-6xl">
                     {slide.titlePrefix}
-                    <span className="text-gold-soft">
-                      {slide.titleHighlight}
+                    <span className="relative inline-block">
+                      <span className="absolute -inset-x-1 bottom-1 h-[0.24em] rounded-md bg-gold/35 shadow-gold-sm" />
+                      <span className="gold-text relative [text-shadow:0_0_30px_rgba(222,176,67,0.38)]">
+                        {slide.titleHighlight}
+                      </span>
                     </span>
                   </h1>
-                  <p className="mt-6 h-24 max-w-xl text-base leading-8 text-zinc-300/90 sm:h-28 sm:text-lg">
+                  <p className="mt-6 h-24 max-w-xl text-base font-medium leading-8 text-zinc-100/95 [text-shadow:0_0_18px_rgba(222,176,67,0.14)] sm:h-28 sm:text-lg">
                     {slide.desc}
                   </p>
                 </div>
@@ -200,11 +215,24 @@ export default function HeroSlider() {
               <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/15 to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 rounded-[26px] border border-gold/20 bg-black/58 p-5 backdrop-blur-xl">
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-gold">
-                  verified service
+                  {slide.cardEyebrow}
                 </p>
-                <h2 className="mt-2 text-2xl font-black text-white">
-                  {slide.title}
+                <h2 className="mt-2 text-2xl font-black text-white [text-shadow:0_0_22px_rgba(222,176,67,0.28)]">
+                  {slide.cardTitle}
                 </h2>
+                <p className="mt-2 leading-6 text-zinc-300">
+                  {slide.cardDesc}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {slide.cardTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-xs font-bold text-gold-soft"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
