@@ -43,7 +43,6 @@ export default function KnightAvatar({
             priority={priority}
             sizes={`${size}px`}
             className="object-cover"
-            unoptimized
           />
         ) : (
           <span className="grid h-full w-full place-items-center bg-gold/10 text-lg font-black text-gold">
@@ -62,7 +61,7 @@ export default function KnightAvatar({
           bottom: dotOffset,
           border: `${borderSize}px solid #111`,
         }}
-        aria-label={status.label}
+        aria-hidden="true"
         title={status.label}
       />
     </span>

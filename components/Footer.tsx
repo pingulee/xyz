@@ -81,7 +81,7 @@ export default function Footer() {
           </a>
         </div>
       </Container>
-      <div className="border-t border-gold/10 py-6 text-center text-xs text-zinc-600">
+      <div className="border-t border-gold/10 py-6 text-center text-xs text-zinc-400">
         © 2025 XYZ. All rights reserved.
       </div>
     </footer>

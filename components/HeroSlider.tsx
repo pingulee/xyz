@@ -91,6 +91,7 @@ export default function HeroSlider() {
             alt={slide.alt}
             fill
             priority={index === 0}
+            fetchPriority={index === 0 ? "high" : "auto"}
             sizes="100vw"
             className="object-cover opacity-50"
           />
@@ -190,6 +191,7 @@ export default function HeroSlider() {
                     alt={slide.alt}
                     fill
                     priority={index === 0}
+                    fetchPriority={index === 0 ? "high" : "auto"}
                     sizes="(max-width: 1024px) 100vw, 48vw"
                     className="object-cover opacity-95"
                   />
