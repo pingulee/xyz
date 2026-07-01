@@ -77,13 +77,7 @@ export default function HeroSlider() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <Image
-        src="/images/background.webp"
-        alt="슬라이더 배경 이미지"
-        fill
-        className="absolute inset-0 object-cover opacity-80"
-        priority
-      />
+      <div className="absolute inset-0 animate-gradient-wave opacity-40 pointer-events-none" />
       <div className="absolute inset-0 bg-black/30" />
       <AnimatePresence mode="wait">
         <motion.div
@@ -106,9 +100,8 @@ export default function HeroSlider() {
           <div className="absolute inset-0 bg-linear-to-t from-black via-black/55 to-black/30" />
         </motion.div>
       </AnimatePresence>
-      <div className="grid-bg absolute inset-0 opacity-70" />
-      <div className="absolute left-[12%] top-20 h-72 w-72 rounded-full bg-gold/18 blur-[110px]" />
-      <div className="absolute bottom-8 right-[10%] h-96 w-96 rounded-full bg-gold-soft/12 blur-[130px]" />
+      <div className="absolute left-[12%] top-20 h-72 w-72 rounded-full bg-gold/18 blur-[110px] animate-background-float" />
+      <div className="absolute bottom-8 right-[10%] h-96 w-96 rounded-full bg-gold-soft/12 blur-[130px] animate-background-float-alt" />
 
       <div className="relative mx-auto grid h-full max-w-7xl items-center gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:gap-10 lg:px-8 lg:py-14">
         <div className="flex h-full max-w-3xl flex-col justify-center">
