@@ -29,12 +29,18 @@ function split(val: string): string[] {
     .filter(Boolean);
 }
 
+function displayRank(rank: string): string {
+  if (rank === "챌린저") return "Challenger";
+  if (rank === "그랜드마스터") return "Grandmaster";
+  return rank;
+}
+
 export function toLineup(row: LineupRow): Lineup {
   return {
     id: String(row.id),
     name: row.name,
     positions: split(row.positions),
-    rank: row.rank,
+    rank: displayRank(row.rank),
     tier: row.tier,
     description: row.description,
     weekdayHours: row.weekday_hours,

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Container from "@/components/Container";
 import NoticeBoard from "@/components/NoticeBoard";
-import AdminNoticeBoard from "@/components/AdminNoticeBoard";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import { getNotices } from "@/lib/notices";
@@ -65,11 +64,7 @@ export default async function NoticesPage() {
           />
         </Reveal>
         <Reveal>
-          {isAdmin ? (
-            <AdminNoticeBoard initialNotices={notices} />
-          ) : (
-            <NoticeBoard initialNotices={notices} />
-          )}
+          <NoticeBoard initialNotices={notices} />
         </Reveal>
       </Container>
     </section>

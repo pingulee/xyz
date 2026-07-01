@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description,
   keywords: [
     "롤 계정 가격",
-    "롤 계정 상담",
+    "롤 업디",
     "롤 계정 구매",
     "롤 티어 계정",
     "롤 스킨 계정",
@@ -35,7 +35,7 @@ export default function AccountPage() {
   const serviceJsonLd = {
     "@context": "https://schema.org",
     "@type": "Service",
-    name: "롤 계정 상담",
+    name: "롤 계정",
     description,
     provider: {
       "@type": "Organization",

@@ -185,7 +185,7 @@ const faqs = [
   ],
   [
     "롤 계정 구매도 가능한가요?",
-    "맞춤형 롤 계정 상담이 가능합니다. 원하는 티어, 챔피언, 스킨, 서버 조건을 알려주시면 됩니다.",
+    "맞춤형 롤 계정 구매가 가능합니다. 원하는 티어, 챔피언, 스킨, 서버 조건을 알려주시면 됩니다.",
   ],
   [
     "계정은 즉시 받을 수 있나요?",
@@ -283,7 +283,7 @@ export default async function Home() {
             <SectionTitle
               eyebrow="services"
               title="서비스 안내"
-              desc="대리, 듀오, 계정 상담까지 목적에 맞는 서비스를 빠르게 선택할 수 있습니다."
+              desc="대리, 듀오, 계정 까지 목적에 맞는 서비스를 빠르게 선택할 수 있습니다."
             />
           </Reveal>
           <div className="grid gap-6 lg:grid-cols-3">
@@ -464,9 +464,9 @@ export default async function Home() {
                             />
                           ))}
                         </div>
-                      <p className="mt-5 min-h-18 leading-7 text-zinc-100">
-                        {text}
-                      </p>
+                        <p className="mt-5 min-h-18 leading-7 text-zinc-100">
+                          {text}
+                        </p>
                         <p className="mt-5 text-xs font-black uppercase tracking-[0.22em] text-gold">
                           {tag}
                         </p>

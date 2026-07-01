@@ -21,10 +21,10 @@ const MAX_IMAGE_SIZE = 1024 * 1024 * 5;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const TIER_OPTIONS = [
-  { label: "챌린저", rank: "챌린저", tier: "/images/tier/10-challenger.png" },
+  { label: "챌린저", rank: "Challenger", tier: "/images/tier/10-challenger.png" },
   {
     label: "그랜드마스터",
-    rank: "그랜드마스터",
+    rank: "Grandmaster",
     tier: "/images/tier/9-grandmaster.png",
   },
 ];
@@ -69,7 +69,7 @@ const TIME_SLOTS = [
 const blankForm = {
   name: "",
   positionSet: new Set<string>(),
-  rank: "챌린저",
+  rank: "Challenger",
   tier: "/images/tier/10-challenger.png",
   description: "",
   weekdayStart: "18",

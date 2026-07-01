@@ -1,9 +1,28 @@
 "use client";
 
-import Image from "next/image";
-import { Pin } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Notice } from "@/lib/notices";
+
+const NOTICES_PER_PAGE = 10;
+
+function getPageItems(currentPage: number, totalPages: number) {
+  const items: Array<number | "..."> = [];
+
+  for (let page = 1; page <= totalPages; page += 1) {
+    const visible =
+      page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1;
+
+    if (visible) {
+      items.push(page);
+    } else if (items[items.length - 1] !== "...") {
+      items.push("...");
+    }
+  }
+
+  return items;
+}
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("ko-KR", {
@@ -19,13 +38,29 @@ export default function NoticeBoard({
 }: {
   initialNotices?: Notice[];
 }) {
-  const [selectedId, setSelectedId] = useState(initialNotices[0]?.id ?? "");
-  const selectedNotice = useMemo(
-    () =>
-      initialNotices.find((notice) => notice.id === selectedId) ??
-      initialNotices[0],
-    [initialNotices, selectedId],
+  const [page, setPage] = useState(1);
+  const router = useRouter();
+  const totalPages = Math.max(
+    1,
+    Math.ceil(initialNotices.length / NOTICES_PER_PAGE),
   );
+  const currentPage = Math.min(page, totalPages);
+  const paginatedNotices = useMemo(() => {
+    const start = (currentPage - 1) * NOTICES_PER_PAGE;
+    return initialNotices.slice(start, start + NOTICES_PER_PAGE);
+  }, [currentPage, initialNotices]);
+  const pageItems = useMemo(
+    () => getPageItems(currentPage, totalPages),
+    [currentPage, totalPages],
+  );
+
+  const goToPage = (nextPage: number) => {
+    setPage(Math.min(Math.max(nextPage, 1), totalPages));
+  };
+
+  const openNotice = (noticeId: string) => {
+    router.push(`/notice/${noticeId}`);
+  };
 
   if (initialNotices.length === 0) {
     return (
@@ -36,72 +71,120 @@ export default function NoticeBoard({
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+    <div className="grid gap-8">
       <div className="overflow-hidden rounded-[30px] border border-gold/15 bg-white/[.035]">
-        {initialNotices.map((notice) => (
-          <button
-            key={notice.id}
-            type="button"
-            onClick={() => setSelectedId(notice.id)}
-            className={`grid w-full gap-2 border-b border-white/8 p-4 text-left transition last:border-b-0 hover:bg-white/4 ${
-              selectedNotice?.id === notice.id ? "bg-white/4.5" : ""
-            }`}
-          >
-            <span className="flex flex-wrap items-center gap-2">
-              {notice.pinned && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2.5 py-1 text-[11px] font-black text-gold">
-                  <Pin size={12} />
-                  고정
-                </span>
-              )}
-              <span className="font-black text-white">{notice.title}</span>
-            </span>
-            <span className="line-clamp-1 text-sm leading-6 text-zinc-400">
-              {notice.content}
-            </span>
-            <time
-              className="text-xs font-bold text-zinc-500"
-              dateTime={notice.createdAt}
+        <div className="hidden grid-cols-[3.25rem_minmax(0,1.4fr)_minmax(0,1.6fr)_8rem_6rem] gap-4 border-b border-white/8 bg-black/20 px-5 py-3 text-xs font-black text-zinc-500 lg:grid">
+          <span>번호</span>
+          <span>제목</span>
+          <span>내용</span>
+          <span>작성일</span>
+          <span>상태</span>
+        </div>
+
+        {paginatedNotices.map((notice, i) => {
+          const displayNumber =
+            initialNotices.length -
+            ((currentPage - 1) * NOTICES_PER_PAGE + i);
+
+          return (
+            <button
+              key={notice.id}
+              type="button"
+              onClick={() => openNotice(notice.id)}
+              className="group grid w-full cursor-pointer gap-4 border-b border-white/8 px-5 py-5 text-left transition last:border-b-0 hover:bg-white/[.055] lg:grid-cols-[3.25rem_minmax(0,1.4fr)_minmax(0,1.6fr)_8rem_6rem] lg:items-center"
             >
-              {formatDate(notice.createdAt)}
-            </time>
-          </button>
-        ))}
+              <span className="hidden text-sm font-black text-zinc-500 transition group-hover:text-gold lg:block">
+                {displayNumber}
+              </span>
+
+              <span className="grid min-w-0 gap-2">
+                <span className="flex items-start justify-between gap-3 lg:hidden">
+                  <span className="shrink-0 text-sm font-black text-zinc-500">
+                    {displayNumber}
+                  </span>
+                  <span className="whitespace-nowrap text-xs font-bold text-zinc-500">
+                    {formatDate(notice.createdAt)}
+                  </span>
+                </span>
+
+                <span className="block truncate text-sm font-bold leading-6 text-white transition group-hover:text-gold">
+                  {notice.title}
+                </span>
+                <span className="truncate text-xs font-bold text-zinc-500 lg:hidden">
+                  {notice.content}
+                </span>
+              </span>
+
+              <span className="hidden truncate text-sm font-bold text-zinc-400 lg:block">
+                {notice.content}
+              </span>
+
+              <span className="hidden whitespace-nowrap text-xs font-bold leading-5 text-zinc-400 lg:block">
+                <time dateTime={notice.createdAt}>
+                  {formatDate(notice.createdAt)}
+                </time>
+              </span>
+
+              <span
+                className={`inline-flex w-fit rounded-full border px-2.5 py-1 text-[11px] font-black ${
+                  notice.pinned
+                    ? "border-gold/20 bg-gold/10 text-gold"
+                    : "border-white/10 bg-white/5 text-zinc-500"
+                }`}
+              >
+                {notice.pinned ? "고정" : "일반"}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      {selectedNotice && (
-        <article className="rounded-[30px] border border-gold/15 bg-white/[.035] p-6">
-          {selectedNotice.pinned && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gold/10 px-3 py-1 text-xs font-black text-gold">
-              <Pin size={13} />
-              고정
-            </span>
-          )}
-          <h3 className="mt-3 text-2xl font-black text-white">
-            {selectedNotice.title}
-          </h3>
-          <time
-            className="mt-2 block text-sm font-bold text-zinc-500"
-            dateTime={selectedNotice.createdAt}
+      {totalPages > 1 && (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="inline-flex items-center gap-1 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {formatDate(selectedNotice.createdAt)}
-          </time>
-          {selectedNotice.image && (
-            <div className="mt-4 overflow-hidden rounded-2xl">
-              <Image
-                src={selectedNotice.image}
-                alt="공지 이미지"
-                width={600}
-                height={400}
-                className="w-full object-cover"
-                unoptimized
-              />
-            </div>
+            <ChevronLeft size={16} />
+            이전
+          </button>
+
+          {pageItems.map((item, i) =>
+            item === "..." ? (
+              <span
+                key={`ellipsis-${i}`}
+                className="px-2 text-sm font-black text-zinc-600"
+              >
+                ...
+              </span>
+            ) : (
+              <button
+                key={item}
+                type="button"
+                onClick={() => goToPage(item)}
+                className={`grid h-10 w-10 place-items-center rounded-full text-sm font-black transition ${
+                  item === currentPage
+                    ? "bg-gold text-black"
+                    : "border border-white/10 text-zinc-300 hover:border-gold/40 hover:text-white"
+                }`}
+              >
+                {item}
+              </button>
+            ),
           )}
-          <p className="mt-6 whitespace-pre-wrap leading-8 text-zinc-300">
-            {selectedNotice.content}
-          </p>
-        </article>
+
+          <button
+            type="button"
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="inline-flex items-center gap-1 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            다음
+            <ChevronRight size={16} />
+          </button>
+        </div>
       )}
     </div>
   );

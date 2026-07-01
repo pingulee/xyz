@@ -36,8 +36,7 @@ export const services = [
     title: "롤 계정",
     href: "/account",
     eyebrow: "account",
-    description:
-      "원하는 티어, 챔피언, 일정 조건에 맞춘 계정 상담을 진행합니다.",
+    description: "원하는 티어, 챔피언, 일정 조건에 맞춘 계정을 구해드립니다.",
     image: "/images/account.png",
   },
 ];
