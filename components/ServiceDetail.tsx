@@ -14,6 +14,7 @@ type ServiceDetailProps = {
   cta: string;
   showPriceTable?: boolean;
   pointIcon?: "check" | "plus";
+  priceTableVariant?: "boosting" | "duo";
 };
 
 export default function ServiceDetail({
@@ -25,6 +26,7 @@ export default function ServiceDetail({
   cta,
   showPriceTable = false,
   pointIcon = "check",
+  priceTableVariant = "boosting",
 }: ServiceDetailProps) {
   const Icon = pointIcon === "plus" ? PlusCircle : CheckCircle2;
   return (
@@ -50,7 +52,8 @@ export default function ServiceDetail({
               </div>
               {pointIcon === "plus" && (
                 <p className="mt-5 text-sm leading-6 text-zinc-400">
-                  일부 부가 서비스는 추가 비용이 발생할 수 있습니다. 정확한 금액은 상담 시 안내드립니다.
+                  일부 부가 서비스는 추가 비용이 발생할 수 있습니다. 정확한
+                  금액은 상담 시 안내드립니다.
                 </p>
               )}
               <a
@@ -66,7 +69,7 @@ export default function ServiceDetail({
           </Reveal>
           {showPriceTable && (
             <Reveal delay={0.1}>
-              <PriceTable />
+              <PriceTable variant={priceTableVariant} />
             </Reveal>
           )}
         </div>

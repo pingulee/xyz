@@ -1,10 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { boostingPrices } from "@/lib/site";
+import { boostingPrices, duoPrices } from "@/lib/site";
 
-export default function PriceTable() {
-  const { hourly, score } = boostingPrices;
+type PriceTableProps = {
+  variant?: "boosting" | "duo";
+};
+
+export default function PriceTable({ variant = "boosting" }: PriceTableProps) {
+  const pricing = variant === "duo" ? duoPrices : boostingPrices;
+  const { hourly, score } = pricing;
 
   return (
     <div className="grid gap-10">

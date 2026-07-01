@@ -97,11 +97,31 @@ export const boostingPrices = {
     cols: ["구간", "금액"] as const,
     note: "· 100점 상승 당 가격입니다.\n· 점수는 10단위 반올림을 적용합니다. (예: 92점 상승, 106점 상승 → 100점으로 계산)\n· 그랜드마스터 이상 구간은 실시간 시세를 반영하여 가격이 결정됩니다.",
   },
-  normal: {
-    title: "일반 게임 · 칼바람",
-    badge: "- 1판 단위 -",
-    rows: [{ icons: [], cells: ["티어 무관", "5,000원"] }] as PriceRow[],
-    cols: ["항목", "금액"] as const,
-    note: "",
+};
+
+export const duoPrices = {
+  hourly: {
+    ...boostingPrices.hourly,
+    title: "시간제 듀오 랭크",
+    badge: "- 1시간 단위 -",
+  },
+  score: {
+    ...boostingPrices.score,
+    title: "점수 보장 듀오 랭크",
+    badge: "- 100점 단위 -",
+    rows: [
+      {
+        icons: [T.iron, T.bronze, T.silver],
+        cells: ["아이언 · 브론즈 · 실버", "ㅅ"],
+      },
+      { icons: [T.gold], cells: ["골드", "상담"] },
+      { icons: [T.platinum], cells: ["플래티넘", "상담"] },
+      { icons: [T.emerald], cells: ["에메랄드", "상담"] },
+      {
+        icons: [T.diamond],
+        cells: ["다이아몬드 4~2", "상담"],
+      },
+      { icons: [T.grandmaster], cells: ["그랜드마스터↑", "상담"] },
+    ] as PriceRow[],
   },
 };

@@ -110,7 +110,7 @@ export default function BoostingPage() {
           "스펠 및 아이템 위치 지정",
           "디스코드 화면 공유",
         ]}
-        cta="견적 문의하기"
+        cta="대리 문의하기"
         pointIcon="check"
         showPriceTable
       />
