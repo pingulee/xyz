@@ -13,7 +13,7 @@ import {
 import Container from "@/components/Container";
 import FaqItem from "@/components/FaqItem";
 import HeroSlider from "@/components/HeroSlider";
-import KnightAvatar from "@/components/KnightAvatar";
+import LineupCard from "@/components/LineupCard";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import ServiceCard from "@/components/ServiceCard";
@@ -219,7 +219,7 @@ const faqs = [
 ];
 
 export default async function Home() {
-  const lineups = await getLineups();
+  const lineups = (await getLineups(true, true)).slice(0, 3);
 
   return (
     <>
@@ -323,34 +323,14 @@ export default async function Home() {
           <Reveal>
             <SectionTitle
               eyebrow="lineup"
-              title="기사 라인업 미리보기"
-              desc="포지션과 티어 기준으로 검증된 기사 풀을 운영합니다."
+              title="기사 TOP 3"
+              desc="XYZ에서 가장 인기있는 기사 3명을 소개합니다."
             />
           </Reveal>
           <div className="grid gap-6 lg:grid-cols-3">
             {lineups.map((lineup, i) => (
               <Reveal key={lineup.name} delay={i * 0.08}>
-                <article className="card-premium overflow-hidden rounded-[34px]">
-                  <div className="grid place-items-center bg-black/35 px-7 pt-8">
-                    <KnightAvatar
-                      availability={lineup}
-                      image={lineup.image}
-                      name={lineup.name}
-                      size={128}
-                    />
-                  </div>
-                  <div className="p-7">
-                    <span className="rounded-full bg-gold/10 px-3 py-1 text-xs font-black text-gold">
-                      {lineup.rank}
-                    </span>
-                    <h3 className="mt-5 text-2xl font-black text-white">
-                      {lineup.name}
-                    </h3>
-                    <p className="mt-3 leading-7 text-zinc-400">
-                      포지션별 숙련도와 진행 안정성을 기준으로 배정합니다.
-                    </p>
-                  </div>
-                </article>
+                <LineupCard knight={lineup} />
               </Reveal>
             ))}
           </div>
@@ -360,7 +340,7 @@ export default async function Home() {
                 href="/lineup"
                 className="inline-flex items-center gap-2 rounded-full border border-gold/20 px-6 py-3 font-bold text-white transition hover:border-gold/60"
               >
-                기사 라인업 보기 <ArrowRight size={18} />
+                기사 라인업 더보기 <ArrowRight size={18} />
               </Link>
             </div>
           </Reveal>
