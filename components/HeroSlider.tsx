@@ -77,6 +77,14 @@ export default function HeroSlider() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
+      <Image
+        src="/images/background.webp"
+        alt="슬라이더 배경 이미지"
+        fill
+        className="absolute inset-0 object-cover opacity-80"
+        priority
+      />
+      <div className="absolute inset-0 bg-black/30" />
       <AnimatePresence mode="wait">
         <motion.div
           key={slide.image}
