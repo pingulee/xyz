@@ -4,13 +4,13 @@ import { Loader2 } from "lucide-react";
 import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-function AdminLoginFormInner() {
+function AdminLoginFormInner({ fallbackFrom = "/" }: { fallbackFrom?: string }) {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const from = searchParams.get("from");
+  const from = searchParams.get("from") ?? fallbackFrom;
 
   const inputCls =
     "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
@@ -39,7 +39,7 @@ function AdminLoginFormInner() {
         return;
       }
 
-      router.push(from && from.startsWith("/") && from !== "/admin" ? from : "/lineup");
+      router.push(from && from.startsWith("/") && from !== "/admin" ? from : "/");
     } catch {
       setMessage("로그인에 실패했습니다.");
     } finally {
@@ -88,10 +88,14 @@ function AdminLoginFormInner() {
   );
 }
 
-export default function AdminLoginForm() {
+export default function AdminLoginForm({
+  fallbackFrom = "/",
+}: {
+  fallbackFrom?: string;
+}) {
   return (
     <Suspense>
-      <AdminLoginFormInner />
+      <AdminLoginFormInner fallbackFrom={fallbackFrom} />
     </Suspense>
   );
 }
