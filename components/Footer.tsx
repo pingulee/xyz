@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { MessageCircle, ShieldCheck, Sparkles, Trophy } from "lucide-react";
 import Container from "@/components/Container";
-import KnightAuthControls from "@/components/KnightAuthControls";
 import { navItems, services, site } from "@/lib/site";
 
 export default function Footer() {
@@ -71,13 +70,12 @@ export default function Footer() {
             현재 티어, 목표 티어, 원하는 서비스를 알려주시면 빠르게
             안내해드립니다.
           </p>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            <KnightAuthControls className="w-full sm:w-auto" />
+          <div className="mt-5">
             <a
               href={site.kakaoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black"
+              className="inline-flex items-center gap-2 rounded-full bg-slate-800 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-700"
             >
               <MessageCircle size={17} />
               카카오톡 상담

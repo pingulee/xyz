@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { LogIn, LogOut } from "lucide-react";
 
 type AuthStatus = { loggedIn: boolean };
 
@@ -62,9 +63,10 @@ export default function KnightAuthControls({
         type="button"
         disabled={loading}
         onClick={handleLogout}
-        className={`rounded-full border border-gold/20 bg-white/5 px-5 py-3 text-sm font-black text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+        aria-label="기사 로그아웃"
+        className={`inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
       >
-        로그아웃
+        <LogOut size={18} />
       </button>
     );
   }
@@ -72,9 +74,10 @@ export default function KnightAuthControls({
   return (
     <Link
       href="/login"
-      className={`rounded-full bg-gold-gradient px-6 py-3 text-sm font-black text-black shadow-gold transition hover:-translate-y-0.5 ${className}`}
+      aria-label="기사 로그인"
+      className={`inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10 ${className}`}
     >
-      로그인
+      <LogIn size={18} />
     </Link>
   );
 }
