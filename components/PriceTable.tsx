@@ -46,8 +46,14 @@ export default function PriceTable({ variant = "boosting" }: PriceTableProps) {
                 <p className="text-xs text-zinc-500">승률 {row.cells[1]}</p>
               </div>
               <div className="flex shrink-0 flex-col items-end text-right">
-                <span className="font-black text-gold">{row.cells[2]}</span>
-                <span className="text-[11px] text-zinc-500">1시간 단위</span>
+                {row.cells[2] ? (
+                  <>
+                    <span className="font-black text-gold">{row.cells[2]}</span>
+                    <span className="text-[11px] text-zinc-500">
+                      1시간 단위
+                    </span>
+                  </>
+                ) : null}
               </div>
             </div>
           ))}
@@ -87,8 +93,14 @@ export default function PriceTable({ variant = "boosting" }: PriceTableProps) {
                 {row.cells[0]}
               </p>
               <div className="flex shrink-0 flex-col items-end text-right">
-                <span className="font-black text-gold">{row.cells[1]}</span>
-                <span className="text-[11px] text-zinc-500">+100점 단위</span>
+                {row.cells[1] ? (
+                  <>
+                    <span className="font-black text-gold">{row.cells[1]}</span>
+                    <span className="text-[11px] text-zinc-500">
+                      +100점 단위
+                    </span>
+                  </>
+                ) : null}
               </div>
             </div>
           ))}

@@ -385,9 +385,14 @@ export default async function Home() {
               desc="실제 견적은 상담 후 확정되며, 아래 표는 구간별 안내 기준입니다."
             />
           </Reveal>
-          <Reveal>
-            <PriceTable />
-          </Reveal>
+          <div className="space-y-12">
+            <Reveal>
+              <PriceTable />
+            </Reveal>
+            <Reveal>
+              <PriceTable variant="duo" />
+            </Reveal>
+          </div>
         </Container>
       </section>
 
