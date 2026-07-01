@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { MessageCircle, ShieldCheck, Sparkles, Trophy } from "lucide-react";
@@ -9,7 +11,16 @@ export default function Footer() {
     <footer className="border-t border-gold/10 bg-black">
       <Container className="grid gap-12 py-16 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
-          <Link href="/" className="group">
+          <Link
+            href="/"
+            className="group"
+            onClick={(event) => {
+              if (window.location.pathname === "/") {
+                event.preventDefault();
+                window.location.assign("/");
+              }
+            }}
+          >
             <div className="relative h-14 w-48">
               <Image
                 src="/images/logo.webp"

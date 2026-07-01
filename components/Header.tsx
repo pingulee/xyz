@@ -70,9 +70,13 @@ export default function Header() {
         <Link
           href="/"
           className="relative h-12 w-40 sm:w-44"
-          onClick={() => {
+          onClick={(event) => {
             setOpen(false);
             setMobileOpenItem("");
+            if (pathname === "/") {
+              event.preventDefault();
+              window.location.assign("/");
+            }
           }}
         >
           <Image
