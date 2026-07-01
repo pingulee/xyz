@@ -55,7 +55,7 @@ export default function DuoPage() {
       <ServiceDetail
         eyebrow="duo queue"
         title="롤 듀오 가격"
-        desc="검증된 기사와 함께 플레이하며 승률과 안정성을 동시에 챙기는 서비스입니다."
+        desc="가격과 진행 방식을 한눈에 확인할 수 있는 듀오 서비스 안내입니다."
         featureTitle="듀오 서비스 특징"
         points={[
           "기사와 함께 직접 플레이",

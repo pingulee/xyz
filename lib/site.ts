@@ -57,8 +57,8 @@ export type PriceRow = { icons: string[]; cells: string[] };
 
 export const boostingPrices = {
   hourly: {
-    title: "대리 랭크 시간제",
-    badge: "⏱️ 1시간",
+    title: "시간제 대리랭크",
+    badge: "⏱️ 1시간 단위",
     rows: [
       {
         icons: [T.iron, T.bronze, T.silver],
@@ -84,8 +84,8 @@ export const boostingPrices = {
     note: "· 1시간 당 가격입니다.\n· 승률 보장 서비스는 10시간 이상 신청 시 적용됩니다.\n· 마스터 티어 이상부터는 기사의 과실이 없는 패배는 승리로 인정하여 승률을 산정합니다. (기사 과실 판단 기준: KDA 5.0 이상)",
   },
   score: {
-    title: "고티어 점수 보장제",
-    badge: "💯 100점",
+    title: "고티어 점수 보장",
+    badge: "💯 100점 단위",
     rows: [
       { icons: [T.diamond], cells: ["다이아몬드 1", "140,000원"] },
       { icons: [T.master], cells: ["마스터 0~199 LP", "180,000원"] },
@@ -99,7 +99,7 @@ export const boostingPrices = {
   },
   normal: {
     title: "일반 게임 · 칼바람",
-    badge: "✅ 1판",
+    badge: "✅ 1판 단위",
     rows: [{ icons: [], cells: ["티어 무관", "5,000원"] }] as PriceRow[],
     cols: ["항목", "금액"] as const,
     note: "",

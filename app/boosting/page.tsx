@@ -101,7 +101,7 @@ export default function BoostingPage() {
       />
       <ServiceDetail
         eyebrow="boosting"
-        title="롤 대리"
+        title="롤 대리 가격"
         desc="목표 티어까지 안정적인 진행을 원하는 고객을 위한 서비스입니다."
         featureTitle="부가 서비스"
         points={[
