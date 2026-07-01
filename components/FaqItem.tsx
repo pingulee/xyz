@@ -20,7 +20,9 @@ export default function FaqItem({ q, a }: { q: string; a: string }) {
           </svg>
         </span>
       </div>
-      {open && <p className="mt-4 leading-7 text-zinc-400">{a}</p>}
+      {open && (
+        <p className="mt-4 whitespace-pre-line leading-7 text-zinc-400">{a}</p>
+      )}
     </div>
   );
 }
