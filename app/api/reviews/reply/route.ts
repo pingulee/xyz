@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { getKnightLineupId } from "@/lib/knightSession";
-import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession";
+import {
+  getSessionTokenFromRequest,
+  validateSession,
+} from "@/lib/adminSession";
 import type { TierRecord } from "@/lib/reviews";
 
 export const runtime = "nodejs";
@@ -32,31 +35,45 @@ function isValidTierRecords(records: unknown): records is TierRecord[] {
 export async function POST(request: Request) {
   const knightLineupId = getKnightLineupId(request);
   if (!knightLineupId) {
-    return NextResponse.json({ message: "기사 로그인이 필요합니다." }, { status: 401 });
+    return NextResponse.json(
+      { message: "로그인이 필요합니다." },
+      { status: 401 },
+    );
   }
 
   let payload: { reviewId?: string; content?: string; tierRecords?: unknown };
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ message: "요청 형식이 올바르지 않습니다." }, { status: 400 });
+    return NextResponse.json(
+      { message: "요청 형식이 올바르지 않습니다." },
+      { status: 400 },
+    );
   }
 
   const reviewId = Number(payload.reviewId);
   const content = payload.content?.trim() ?? "";
   const tierRecords: TierRecord[] = isValidTierRecords(payload.tierRecords)
-    ? payload.tierRecords.map((r) => ({
-        tier: r.tier.trim(),
-        wins: Math.floor(r.wins),
-        losses: Math.floor(r.losses),
-      })).filter((r) => r.tier)
+    ? payload.tierRecords
+        .map((r) => ({
+          tier: r.tier.trim(),
+          wins: Math.floor(r.wins),
+          losses: Math.floor(r.losses),
+        }))
+        .filter((r) => r.tier)
     : [];
 
   if (!Number.isInteger(reviewId) || reviewId < 1) {
-    return NextResponse.json({ message: "후기를 찾을 수 없습니다." }, { status: 400 });
+    return NextResponse.json(
+      { message: "후기를 찾을 수 없습니다." },
+      { status: 400 },
+    );
   }
   if (content.length < 1 || content.length > 500) {
-    return NextResponse.json({ message: "답변은 1~500자로 입력해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "답변은 1~500자로 입력해주세요." },
+      { status: 400 },
+    );
   }
 
   const [reviewRows] = await getPool().execute<ReviewRow[]>(
@@ -65,10 +82,16 @@ export async function POST(request: Request) {
   );
   const review = reviewRows[0];
   if (!review) {
-    return NextResponse.json({ message: "후기를 찾을 수 없습니다." }, { status: 404 });
+    return NextResponse.json(
+      { message: "후기를 찾을 수 없습니다." },
+      { status: 404 },
+    );
   }
   if (review.lineup_id !== knightLineupId) {
-    return NextResponse.json({ message: "해당 후기에 답변 권한이 없습니다." }, { status: 403 });
+    return NextResponse.json(
+      { message: "해당 후기에 답변 권한이 없습니다." },
+      { status: 403 },
+    );
   }
 
   const [lineupRows] = await getPool().execute<LineupRow[]>(
@@ -95,19 +118,24 @@ export async function POST(request: Request) {
   );
   const r = replyRows[0];
   const parsedTier = r.tier_records
-    ? (typeof r.tier_records === "string" ? JSON.parse(r.tier_records) : r.tier_records) as TierRecord[]
+    ? ((typeof r.tier_records === "string"
+        ? JSON.parse(r.tier_records)
+        : r.tier_records) as TierRecord[])
     : [];
 
-  return NextResponse.json({
-    reply: {
-      id: String(r.id),
-      lineupId: String(r.lineup_id),
-      knightName: r.knight_name,
-      content: r.content,
-      tierRecords: parsedTier,
-      createdAt: (r.created_at as Date).toISOString(),
+  return NextResponse.json(
+    {
+      reply: {
+        id: String(r.id),
+        lineupId: String(r.lineup_id),
+        knightName: r.knight_name,
+        content: r.content,
+        tierRecords: parsedTier,
+        createdAt: (r.created_at as Date).toISOString(),
+      },
     },
-  }, { status: 201 });
+    { status: 201 },
+  );
 }
 
 export async function DELETE(request: Request) {
@@ -121,12 +149,18 @@ export async function DELETE(request: Request) {
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ message: "요청 형식이 올바르지 않습니다." }, { status: 400 });
+    return NextResponse.json(
+      { message: "요청 형식이 올바르지 않습니다." },
+      { status: 400 },
+    );
   }
 
   const reviewId = Number(payload.reviewId);
   if (!Number.isInteger(reviewId) || reviewId < 1) {
-    return NextResponse.json({ message: "후기를 찾을 수 없습니다." }, { status: 400 });
+    return NextResponse.json(
+      { message: "후기를 찾을 수 없습니다." },
+      { status: 400 },
+    );
   }
 
   if (!admin) {
@@ -135,10 +169,16 @@ export async function DELETE(request: Request) {
       { reviewId },
     );
     if (rows[0]?.lineup_id !== knightLineupId) {
-      return NextResponse.json({ message: "삭제 권한이 없습니다." }, { status: 403 });
+      return NextResponse.json(
+        { message: "삭제 권한이 없습니다." },
+        { status: 403 },
+      );
     }
   }
 
-  await getPool().execute(`DELETE FROM review_replies WHERE review_id = :reviewId`, { reviewId });
+  await getPool().execute(
+    `DELETE FROM review_replies WHERE review_id = :reviewId`,
+    { reviewId },
+  );
   return NextResponse.json({ ok: true });
 }

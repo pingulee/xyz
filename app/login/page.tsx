@@ -3,13 +3,16 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Container from "@/components/Container";
 import Reveal from "@/components/Reveal";
-import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSession";
+import {
+  KNIGHT_SESSION_COOKIE,
+  validateKnightSession,
+} from "@/lib/knightSession";
 import KnightLoginForm from "./KnightLoginForm";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "기사 로그인",
+  title: "로그인",
   robots: { index: false, follow: false },
 };
 

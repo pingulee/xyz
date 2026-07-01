@@ -53,10 +53,9 @@ export default function KnightLoginForm() {
       className="card-premium mx-auto max-w-xl rounded-[34px] p-6 sm:p-8"
     >
       <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
-        knight
+        LOGIN
       </p>
-      <h2 className="mt-3 text-2xl font-black text-white">기사 로그인</h2>
-      <p className="mt-2 text-sm text-zinc-500">기사 전용 페이지입니다. 후기에 답변을 달 수 있습니다.</p>
+      <h2 className="mt-3 text-2xl font-black text-white">로그인</h2>
 
       <div className="mt-7 grid gap-4">
         <label className="grid gap-2">
