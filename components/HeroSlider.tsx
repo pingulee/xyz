@@ -214,7 +214,7 @@ export default function HeroSlider() {
       <button
         type="button"
         onClick={prev}
-        className="absolute left-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/20 bg-black/35 text-white backdrop-blur transition hover:border-gold hover:text-gold sm:left-8 lg:left-10"
+        className="absolute left-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/20 bg-black/35 text-white backdrop-blur transition hover:border-gold hover:text-gold cursor-pointer sm:left-8 lg:left-10"
         aria-label="이전 슬라이드"
       >
         <ChevronLeft />
@@ -222,7 +222,7 @@ export default function HeroSlider() {
       <button
         type="button"
         onClick={next}
-        className="absolute right-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/20 bg-black/35 text-white backdrop-blur transition hover:border-gold hover:text-gold sm:right-8 lg:right-10"
+        className="absolute right-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/20 bg-black/35 text-white backdrop-blur transition hover:border-gold hover:text-gold cursor-pointer sm:right-8 lg:right-10"
         aria-label="다음 슬라이드"
       >
         <ChevronRight />
