@@ -19,7 +19,7 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = navItems.map((item) =>
-  item.href === "/price"
+  item.href === "#price"
     ? {
         ...item,
         children: services.map(({ title, href }) => ({ label: title, href })),
@@ -55,8 +55,10 @@ export default function Header() {
     }
   };
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const isActive = (href: string) => {
+    if (href === "#price") return ["/boosting", "/duo", "/account"].some((p) => pathname.startsWith(p));
+    return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  };
 
   return (
     <header className="fixed left-0 top-0 z-50 w-full border-b border-gold/10 bg-void/80 backdrop-blur-2xl">
@@ -86,9 +88,8 @@ export default function Header() {
             if (item.children) {
               return (
                 <div key={item.href} className="group relative">
-                  <Link
-                    href={item.href}
-                    onClick={(event) => handleNavClick(item.href, event)}
+                  <button
+                    type="button"
                     className={clsx(
                       "flex items-center gap-1 text-sm font-bold transition",
                       active ? "text-gold" : "text-zinc-300 hover:text-white",
@@ -99,7 +100,7 @@ export default function Header() {
                       size={15}
                       className="transition group-hover:rotate-180"
                     />
-                  </Link>
+                  </button>
 
                   <div className="invisible absolute left-1/2 top-8 w-48 -translate-x-1/2 rounded-2xl border border-gold/10 bg-[#090806]/95 p-2 opacity-0 shadow-2xl backdrop-blur-xl transition-all duration-200 group-hover:visible group-hover:top-10 group-hover:opacity-100">
                     {item.children.map((child) => (
@@ -223,18 +224,6 @@ export default function Header() {
 
               {item.children && mobileOpenItem === item.href && (
                 <div className="ml-4 mt-1 space-y-1 border-l border-gold/10 pl-3">
-                  <Link
-                    href={item.href}
-                    onClick={(event) => handleNavClick(item.href, event)}
-                    className={clsx(
-                      "block rounded-xl px-4 py-3 text-sm font-bold",
-                      pathname === item.href
-                        ? "bg-gold/12 text-gold"
-                        : "text-zinc-400 hover:bg-white/5 hover:text-white",
-                    )}
-                  >
-                    전체 보기
-                  </Link>
                   {item.children.map((child) => (
                     <Link
                       key={child.href}

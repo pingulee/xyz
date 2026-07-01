@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     "롤 듀오 후기",
     "XYZ 롤 듀오",
   ],
-  alternates: { canonical: "/price/duo" },
+  alternates: { canonical: "/duo" },
   openGraph: {
     title: "롤 듀오 가격 | XYZ",
     description,

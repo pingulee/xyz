@@ -10,7 +10,7 @@ export const navItems = [
   { label: "메인", href: "/" },
   { label: "공지사항", href: "/notice" },
   { label: "기사 라인업", href: "/lineup" },
-  { label: "가격 안내", href: "/price" },
+  { label: "가격 안내", href: "#price" },
   { label: "후기 작성", href: "/reviews" },
   { label: "기사 모집", href: "/recruit" },
 ];
@@ -18,7 +18,7 @@ export const navItems = [
 export const services = [
   {
     title: "롤 대리",
-    href: "/price/boosting",
+    href: "/boosting",
     eyebrow: "boosting",
     description:
       "현재 티어와 목표 티어를 기준으로 검증된 기사가 안정적으로 진행합니다.",
@@ -26,7 +26,7 @@ export const services = [
   },
   {
     title: "롤 듀오",
-    href: "/price/duo",
+    href: "/duo",
     eyebrow: "duo queue",
     description:
       "상위 티어 기사와 함께 플레이하며 승률과 피드백을 동시에 챙깁니다.",
@@ -34,7 +34,7 @@ export const services = [
   },
   {
     title: "롤 계정",
-    href: "/price/account",
+    href: "/account",
     eyebrow: "account",
     description:
       "원하는 티어, 챔피언, 일정 조건에 맞춘 계정 상담을 진행합니다.",

@@ -16,7 +16,7 @@ const slides = [
     image: "/images/hero/boosting.webp",
     alt: "롤 대리 서비스를 상징하는 프리미엄 게임 이미지",
     secondary: "가격 보기",
-    secondaryHref: "/price/boosting",
+    secondaryHref: "/boosting",
   },
   {
     eyebrow: "PREMIUM DUO",
@@ -27,7 +27,7 @@ const slides = [
     image: "/images/hero/duo.webp",
     alt: "롤 듀오 서비스를 상징하는 프리미엄 게임 이미지",
     secondary: "듀오 가격",
-    secondaryHref: "/price/duo",
+    secondaryHref: "/duo",
   },
   {
     eyebrow: "CUSTOM ACCOUNT",
@@ -38,7 +38,7 @@ const slides = [
     image: "/images/hero/account.webp",
     alt: "롤 계정 서비스를 상징하는 프리미엄 게임 이미지",
     secondary: "서비스 보기",
-    secondaryHref: "/price/account",
+    secondaryHref: "/account",
   },
 ];
 

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     "롤 작업 가격",
     "XYZ 롤 대리",
   ],
-  alternates: { canonical: "/price/boosting" },
+  alternates: { canonical: "/boosting" },
   openGraph: {
     title: "롤 대리 가격 | XYZ",
     description,

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     "롤 스킨 계정",
     "XYZ 롤 계정",
   ],
-  alternates: { canonical: "/price/account" },
+  alternates: { canonical: "/account" },
   openGraph: {
     title: "롤 계정 가격 | XYZ",
     description,
