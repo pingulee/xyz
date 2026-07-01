@@ -34,15 +34,15 @@ export default function KnightAvatar({
       className={`relative block shrink-0 overflow-visible rounded-full ${className}`}
       style={{ width: size, height: size }}
     >
-      <span className="block h-full w-full overflow-hidden rounded-full border border-gold/20 bg-black">
+      <span className="relative block h-full w-full overflow-hidden rounded-full border border-gold/20 bg-black">
         {image ? (
           <Image
             src={image}
             alt={name}
-            fill
+            width={size}
+            height={size}
             priority={priority}
-            sizes={`${size}px`}
-            className="object-cover"
+            className="h-full w-full object-cover rounded-full"
           />
         ) : (
           <span className="grid h-full w-full place-items-center bg-gold/10 text-lg font-black text-gold">

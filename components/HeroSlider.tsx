@@ -77,7 +77,6 @@ export default function HeroSlider() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="absolute inset-0 animate-gradient-wave opacity-40 pointer-events-none" />
       <div className="absolute inset-0 bg-black/30" />
       <AnimatePresence mode="wait">
         <motion.div
