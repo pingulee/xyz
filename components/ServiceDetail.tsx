@@ -65,15 +65,17 @@ export default function ServiceDetail(props: ServiceDetailProps) {
                   금액은 상담 시 안내드립니다.
                 </p>
               )}
-              <a
-                href={site.kakaoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-gold-gradient px-6 py-4 font-black text-black"
-              >
-                {cta}
-                <ArrowRight size={18} />
-              </a>
+              <div className="mt-6 flex justify-end">
+                <a
+                  href={site.kakaoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-6 py-4 font-black text-black"
+                >
+                  {cta}
+                  <ArrowRight size={18} />
+                </a>
+              </div>
             </div>
           </Reveal>
           {props.showPriceTable && (
