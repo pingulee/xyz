@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSession, getSessionCookieHeader } from "@/lib/adminSession";
+import { syncChampionsFromRiot } from "@/lib/champions";
 
 export const runtime = "nodejs";
 
@@ -18,8 +19,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "비밀번호가 일치하지 않습니다." }, { status: 403 });
   }
 
+  let championSync = true;
+  try {
+    await syncChampionsFromRiot();
+  } catch (error) {
+    championSync = false;
+    console.error("Failed to sync champions on admin login", error);
+  }
+
   const token = createSession();
-  return NextResponse.json({ ok: true }, {
+  return NextResponse.json({ ok: true, championSync }, {
     status: 200,
     headers: { "Set-Cookie": getSessionCookieHeader(token) },
   });
