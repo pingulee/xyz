@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
-import { clearSessionCookieHeader, deleteSession, getSessionTokenFromRequest } from "@/lib/adminSession";
+import { clearSessionCookieHeader } from "@/lib/adminSession";
 
 export const runtime = "nodejs";
 
-export async function POST(request: Request) {
-  const token = getSessionTokenFromRequest(request);
-  if (token) deleteSession(token);
-
+export async function POST() {
   return NextResponse.json({ ok: true }, {
     headers: { "Set-Cookie": clearSessionCookieHeader() },
   });

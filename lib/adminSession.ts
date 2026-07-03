@@ -33,10 +33,6 @@ export function validateSession(token: string): boolean {
   return timingSafeEqual(sigBuf, expectedBuf) && sig === expectedSig;
 }
 
-export function deleteSession(_token: string): void {
-  // stateless — cookie cleared client-side is sufficient
-}
-
 export function getSessionCookieHeader(token: string): string {
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
   return `${SESSION_COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400${secure}`;

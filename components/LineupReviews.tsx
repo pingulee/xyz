@@ -7,44 +7,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  Plus,
   Star,
-  Trash2,
 } from "lucide-react";
 import KnightAvatar, { type KnightAvailability } from "@/components/KnightAvatar";
-import { useChampionOptions } from "@/components/useChampionOptions";
+import { TierRecordBadges, TierRecordEditor } from "@/components/TierRecords";
 import type { Review, ReviewReply, TierRecord } from "@/lib/reviews";
 
 const PER_PAGE = 5;
-
-const TIER_OPTIONS = [
-  "아이언",
-  "브론즈",
-  "실버",
-  "골드",
-  "플래티넘",
-  "에메랄드",
-  "다이아몬드",
-  "마스터",
-  "그랜드마스터",
-  "챌린저",
-];
-
-const TIER_ICON_BY_NAME: Record<string, string> = {
-  아이언: "/images/tier/1-iron.png",
-  브론즈: "/images/tier/2-bronze.png",
-  실버: "/images/tier/3-silver.png",
-  골드: "/images/tier/4-gold.png",
-  플래티넘: "/images/tier/5-platinum.png",
-  에메랄드: "/images/tier/6-emerald.png",
-  다이아몬드: "/images/tier/7-diamond.png",
-  마스터: "/images/tier/8-master.png",
-  그랜드마스터: "/images/tier/9-grandmaster.png",
-  챌린저: "/images/tier/10-challenger.png",
-};
-
-const inputCls =
-  "rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50";
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -69,45 +38,6 @@ function formatDate(date: string) {
   }).format(new Date(date));
 }
 
-function TierBadges({ records }: { records: TierRecord[] }) {
-  if (records.length === 0) return null;
-  return (
-    <div className="mt-3 grid gap-2 sm:grid-cols-2">
-      {records.map((r, i) => {
-        const icon = TIER_ICON_BY_NAME[r.tier];
-        const total = r.wins + r.losses;
-        const rate = total > 0 ? Math.round((r.wins / total) * 100) : 0;
-        return (
-          <span
-            key={i}
-            className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/20 px-3 py-2"
-          >
-            {icon && (
-              <Image
-                src={icon}
-                alt={r.tier}
-                width={26}
-                height={26}
-                className="rounded-full bg-zinc-900"
-              />
-            )}
-            <span className="min-w-0 flex-1">
-              <span className="block text-xs font-black text-gold">
-                {r.tier}
-              </span>
-              <span className="block text-xs font-bold text-zinc-400">
-                {r.champion ? `${r.champion} · ` : ""}
-                {r.wins}승 {r.losses}패
-              </span>
-            </span>
-            <span className="text-sm font-black text-white">{rate}%</span>
-          </span>
-        );
-      })}
-    </div>
-  );
-}
-
 function ReplyDisplay({
   reply,
   canEdit,
@@ -123,7 +53,10 @@ function ReplyDisplay({
 }) {
   return (
     <div>
-      <TierBadges records={reply.tierRecords} />
+      <TierRecordBadges
+        records={reply.tierRecords}
+        className="mt-3 grid gap-2 sm:grid-cols-2"
+      />
       <p className="mt-2 text-sm leading-7 whitespace-pre-wrap text-zinc-300">
         {reply.content}
       </p>
@@ -151,104 +84,6 @@ function ReplyDisplay({
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function TierRecordEditor({
-  records,
-  onChange,
-}: {
-  records: TierRecord[];
-  onChange: (records: TierRecord[]) => void;
-}) {
-  const { champions, loading: championsLoading } = useChampionOptions();
-  const add = () =>
-    onChange([...records, { tier: "골드", champion: "", wins: 0, losses: 0 }]);
-
-  const remove = (i: number) => onChange(records.filter((_, idx) => idx !== i));
-
-  const update = (i: number, field: keyof TierRecord, value: string | number) =>
-    onChange(
-      records.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)),
-    );
-
-  return (
-    <div className="grid gap-2">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-black text-zinc-400">작업 기록</span>
-        <button
-          type="button"
-          onClick={add}
-          className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white"
-        >
-          <Plus size={11} /> 추가
-        </button>
-      </div>
-      {records.map((r, i) => (
-        <div
-          key={i}
-          className="grid gap-2 rounded-2xl border border-white/8 bg-white/[.025] p-2 sm:grid-cols-[1fr_1fr_auto_auto_auto_auto_auto] sm:items-center"
-        >
-          <select
-            value={r.tier}
-            onChange={(e) => update(i, "tier", e.target.value)}
-            className={`${inputCls} flex-1`}
-          >
-            {TIER_OPTIONS.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-          <select
-            value={r.champion ?? ""}
-            onChange={(e) => update(i, "champion", e.target.value)}
-            className={`${inputCls} min-w-0`}
-            disabled={championsLoading}
-          >
-            <option value="">
-              {championsLoading ? "불러오는 중" : "챔피언 없음"}
-            </option>
-            {champions.map((champion) => (
-              <option key={champion.id} value={champion.name}>
-                {champion.name}
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            min={0}
-            max={999}
-            value={r.wins}
-            onChange={(e) =>
-              update(i, "wins", Math.max(0, Number(e.target.value) || 0))
-            }
-            className={`${inputCls} w-16 text-center`}
-            placeholder="승"
-          />
-          <span className="text-xs text-zinc-500 shrink-0">승</span>
-          <input
-            type="number"
-            min={0}
-            max={999}
-            value={r.losses}
-            onChange={(e) =>
-              update(i, "losses", Math.max(0, Number(e.target.value) || 0))
-            }
-            className={`${inputCls} w-16 text-center`}
-            placeholder="패"
-          />
-          <span className="text-xs text-zinc-500 shrink-0">패</span>
-          <button
-            type="button"
-            onClick={() => remove(i)}
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-white/10 text-zinc-500 transition hover:border-red-400/40 hover:text-red-300"
-          >
-            <Trash2 size={11} />
-          </button>
-        </div>
-      ))}
     </div>
   );
 }

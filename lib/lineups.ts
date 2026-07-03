@@ -2,6 +2,7 @@ import { RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { ensureReviewsSchema } from "@/lib/reviews";
 import type { TierRecord } from "@/lib/reviews";
+import { getLineupSlug } from "@/lib/lineup-model";
 import type { Lineup } from "@/lib/lineup-model";
 
 type LineupRow = RowDataPacket & {
@@ -139,18 +140,14 @@ export async function getLineupById(id: number): Promise<Lineup | null> {
   return rows[0] ? toLineup(rows[0]) : null;
 }
 
-export function getLineupPath(lineup: { name: string }): string {
-  const slug = lineup.name.toLowerCase().replace(/[^a-z0-9가-힣]+/g, "-");
-  return `/lineup/${slug}`;
-}
+export { getLineupPath } from "@/lib/lineup-model";
 
 export async function getLineupBySlug(slug: string): Promise<Lineup | null> {
   const decoded = decodeURIComponent(slug);
   const lineups = await getLineups(false);
   return (
     lineups.find(
-      (lineup) =>
-        lineup.name.toLowerCase().replace(/[^a-z0-9가-힣]+/g, "-") === decoded,
+      (lineup) => getLineupSlug(lineup.name) === decoded,
     ) ?? null
   );
 }
