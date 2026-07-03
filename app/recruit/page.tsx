@@ -49,7 +49,7 @@ export default function RecruitPage() {
               href={site.kakaoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-9 inline-flex items-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black"
+              className="mt-9 inline-flex items-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black transition hover:brightness-110"
             >
               <Send size={18} /> 기사 지원하기
             </a>

@@ -17,9 +17,11 @@ import { useRouter } from "next/navigation";
 import KnightAvatar, {
   type KnightAvailability,
 } from "@/components/KnightAvatar";
+import { useChampionOptions } from "@/components/useChampionOptions";
 
 type TierRecord = {
   tier: string;
+  champion?: string;
   wins: number;
   losses: number;
 };
@@ -846,7 +848,7 @@ export default function ReviewBoard({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {submitting && <Loader2 size={18} className="animate-spin" />}
                   후기 등록
@@ -1101,7 +1103,7 @@ export default function ReviewBoard({
             <button
               type="button"
               onClick={() => setWriteOpen(true)}
-              className="cursor-pointer rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black shadow-gold-sm transition hover:-translate-y-0.5"
+              className="cursor-pointer rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black transition hover:brightness-110"
             >
               후기 등록
             </button>
@@ -1135,8 +1137,9 @@ function TierRecordEditorRB({
   records: TierRecord[];
   onChange: (r: TierRecord[]) => void;
 }) {
+  const { champions, loading: championsLoading } = useChampionOptions();
   const add = () =>
-    onChange([...records, { tier: "골드", wins: 0, losses: 0 }]);
+    onChange([...records, { tier: "골드", champion: "", wins: 0, losses: 0 }]);
   const remove = (i: number) => onChange(records.filter((_, idx) => idx !== i));
   const update = (i: number, field: keyof TierRecord, val: string | number) =>
     onChange(records.map((r, idx) => (idx === i ? { ...r, [field]: val } : r)));
@@ -1156,7 +1159,7 @@ function TierRecordEditorRB({
       {records.map((r, i) => (
         <div
           key={i}
-          className="grid gap-2 rounded-2xl border border-white/8 bg-white/[.025] p-2 sm:grid-cols-[1fr_auto_auto_auto_auto_auto] sm:items-center"
+          className="grid gap-2 rounded-2xl border border-white/8 bg-white/[.025] p-2 sm:grid-cols-[1fr_1fr_auto_auto_auto_auto_auto] sm:items-center"
         >
           <select
             value={r.tier}
@@ -1166,6 +1169,21 @@ function TierRecordEditorRB({
             {TIER_OPTIONS_RB.map((t) => (
               <option key={t} value={t}>
                 {t}
+              </option>
+            ))}
+          </select>
+          <select
+            value={r.champion ?? ""}
+            onChange={(e) => update(i, "champion", e.target.value)}
+            className={`${inputClsRB} min-w-0`}
+            disabled={championsLoading}
+          >
+            <option value="">
+              {championsLoading ? "불러오는 중" : "챔피언 없음"}
+            </option>
+            {champions.map((champion) => (
+              <option key={champion.id} value={champion.name}>
+                {champion.name}
               </option>
             ))}
           </select>
@@ -1314,6 +1332,7 @@ function ReplySection({
                         {r.tier}
                       </div>
                       <div className="text-xs font-bold text-zinc-400">
+                        {r.champion ? `${r.champion} · ` : ""}
                         {r.wins}승 {r.losses}패
                       </div>
                     </div>

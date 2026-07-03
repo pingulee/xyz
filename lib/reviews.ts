@@ -3,6 +3,7 @@ import { getPool } from "@/lib/db";
 
 export type TierRecord = {
   tier: string;
+  champion?: string;
   wins: number;
   losses: number;
 };
@@ -95,6 +96,7 @@ function parseTierRecords(raw: string | null | unknown): TierRecord[] {
       const obj = r as Record<string, unknown>;
       return {
         tier: String(obj.tier ?? ""),
+        champion: String(obj.champion ?? ""),
         wins: Number(obj.wins ?? 0),
         losses: Number(obj.losses ?? 0),
       };

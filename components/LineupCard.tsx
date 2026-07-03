@@ -43,7 +43,7 @@ export default function LineupCard({
 
   return (
     <Link href={getLineupPath(knight)} className="block">
-      <article className="card-premium relative overflow-hidden rounded-[28px] transition-transform duration-200 hover:-translate-y-1">
+      <article className="card-premium relative overflow-hidden rounded-[28px] transition duration-200">
         {crown && (
           <div
             className={`absolute right-4 top-4 z-10 inline-flex h-10 min-w-10 items-center justify-center gap-1 rounded-full border px-2.5 text-xs font-black ${crown.className}`}

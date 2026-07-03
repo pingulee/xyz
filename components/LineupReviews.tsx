@@ -12,6 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import KnightAvatar, { type KnightAvailability } from "@/components/KnightAvatar";
+import { useChampionOptions } from "@/components/useChampionOptions";
 import type { Review, ReviewReply, TierRecord } from "@/lib/reviews";
 
 const PER_PAGE = 5;
@@ -95,6 +96,7 @@ function TierBadges({ records }: { records: TierRecord[] }) {
                 {r.tier}
               </span>
               <span className="block text-xs font-bold text-zinc-400">
+                {r.champion ? `${r.champion} · ` : ""}
                 {r.wins}승 {r.losses}패
               </span>
             </span>
@@ -160,8 +162,9 @@ function TierRecordEditor({
   records: TierRecord[];
   onChange: (records: TierRecord[]) => void;
 }) {
+  const { champions, loading: championsLoading } = useChampionOptions();
   const add = () =>
-    onChange([...records, { tier: "골드", wins: 0, losses: 0 }]);
+    onChange([...records, { tier: "골드", champion: "", wins: 0, losses: 0 }]);
 
   const remove = (i: number) => onChange(records.filter((_, idx) => idx !== i));
 
@@ -185,7 +188,7 @@ function TierRecordEditor({
       {records.map((r, i) => (
         <div
           key={i}
-          className="grid gap-2 rounded-2xl border border-white/8 bg-white/[.025] p-2 sm:grid-cols-[1fr_auto_auto_auto_auto_auto] sm:items-center"
+          className="grid gap-2 rounded-2xl border border-white/8 bg-white/[.025] p-2 sm:grid-cols-[1fr_1fr_auto_auto_auto_auto_auto] sm:items-center"
         >
           <select
             value={r.tier}
@@ -195,6 +198,21 @@ function TierRecordEditor({
             {TIER_OPTIONS.map((t) => (
               <option key={t} value={t}>
                 {t}
+              </option>
+            ))}
+          </select>
+          <select
+            value={r.champion ?? ""}
+            onChange={(e) => update(i, "champion", e.target.value)}
+            className={`${inputCls} min-w-0`}
+            disabled={championsLoading}
+          >
+            <option value="">
+              {championsLoading ? "불러오는 중" : "챔피언 없음"}
+            </option>
+            {champions.map((champion) => (
+              <option key={champion.id} value={champion.name}>
+                {champion.name}
               </option>
             ))}
           </select>

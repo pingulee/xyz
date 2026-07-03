@@ -41,7 +41,7 @@ export default function FloatingContact() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="grid h-16 w-16 place-items-center rounded-full bg-gold-gradient text-black shadow-gold transition hover:scale-105"
+        className="grid h-16 w-16 place-items-center rounded-full bg-gold-gradient text-black transition hover:scale-105"
         aria-label="상담 버튼"
       >
         {open ? <X size={28} /> : <MessageCircle size={28} />}

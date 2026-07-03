@@ -25,6 +25,10 @@ function isValidTierRecords(records: unknown): records is TierRecord[] {
       typeof r === "object" &&
       r !== null &&
       typeof (r as Record<string, unknown>).tier === "string" &&
+      (
+        (r as Record<string, unknown>).champion === undefined ||
+        typeof (r as Record<string, unknown>).champion === "string"
+      ) &&
       typeof (r as Record<string, unknown>).wins === "number" &&
       typeof (r as Record<string, unknown>).losses === "number" &&
       Number((r as Record<string, unknown>).wins) >= 0 &&
@@ -57,6 +61,7 @@ export async function POST(request: Request) {
     ? payload.tierRecords
         .map((r) => ({
           tier: r.tier.trim(),
+          champion: r.champion?.trim().slice(0, 40) ?? "",
           wins: Math.floor(r.wins),
           losses: Math.floor(r.losses),
         }))

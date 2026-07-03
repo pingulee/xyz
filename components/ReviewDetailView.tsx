@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import KnightAvatar, {
   type KnightAvailability,
 } from "@/components/KnightAvatar";
+import { useChampionOptions } from "@/components/useChampionOptions";
 import type {
   Review,
   ReviewNavItem,
@@ -168,8 +169,9 @@ function TierRecordEditor({
   records: TierRecord[];
   onChange: (records: TierRecord[]) => void;
 }) {
+  const { champions, loading: championsLoading } = useChampionOptions();
   const add = () =>
-    onChange([...records, { tier: "골드", wins: 0, losses: 0 }]);
+    onChange([...records, { tier: "골드", champion: "", wins: 0, losses: 0 }]);
   const remove = (i: number) => onChange(records.filter((_, idx) => idx !== i));
   const update = (i: number, field: keyof TierRecord, value: string | number) =>
     onChange(
@@ -191,7 +193,7 @@ function TierRecordEditor({
       {records.map((record, i) => (
         <div
           key={i}
-          className="grid gap-2 rounded-2xl border border-white/8 bg-white/[.025] p-2 sm:grid-cols-[1fr_auto_auto_auto_auto_auto] sm:items-center"
+          className="grid gap-2 rounded-2xl border border-white/8 bg-white/[.025] p-2 sm:grid-cols-[1fr_1fr_auto_auto_auto_auto_auto] sm:items-center"
         >
           <select
             value={record.tier}
@@ -201,6 +203,21 @@ function TierRecordEditor({
             {TIER_OPTIONS.map((tier) => (
               <option key={tier} value={tier}>
                 {tier}
+              </option>
+            ))}
+          </select>
+          <select
+            value={record.champion ?? ""}
+            onChange={(event) => update(i, "champion", event.target.value)}
+            className={`${inputCls} min-w-0`}
+            disabled={championsLoading}
+          >
+            <option value="">
+              {championsLoading ? "불러오는 중" : "챔피언 없음"}
+            </option>
+            {champions.map((champion) => (
+              <option key={champion.id} value={champion.name}>
+                {champion.name}
               </option>
             ))}
           </select>
@@ -720,6 +737,7 @@ export default function ReviewDetailView({
                             {record.tier}
                           </p>
                           <p className="text-xs font-bold text-zinc-400">
+                            {record.champion ? `${record.champion} · ` : ""}
                             {record.wins}승 {record.losses}패
                           </p>
                         </div>

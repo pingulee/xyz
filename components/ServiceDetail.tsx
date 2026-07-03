@@ -70,7 +70,7 @@ export default function ServiceDetail(props: ServiceDetailProps) {
                   href={site.kakaoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-6 py-4 font-black text-black"
+                  className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-6 py-4 font-black text-black transition hover:brightness-110"
                 >
                   {cta}
                   <ArrowRight size={18} />

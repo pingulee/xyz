@@ -1,7 +1,8 @@
 # Reviews MySQL Setup
 
 1. In Hostinger, open the MySQL database `u370032164_xyz`.
-2. Run `database/reviews.sql` in phpMyAdmin or the Hostinger SQL console.
+2. Run `database/reviews.sql`, `database/lineups.sql`, and
+   `database/champions.sql` in phpMyAdmin or the Hostinger SQL console.
 3. Add these environment variables to the Node.js deployment:
 
 ```env

@@ -13,6 +13,7 @@ import {
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import KnightAvatar from "@/components/KnightAvatar";
+import { useChampionOptions } from "@/components/useChampionOptions";
 import { getLineupPath } from "@/lib/lineup-model";
 import type { Lineup } from "@/lib/lineup-model";
 
@@ -35,28 +36,6 @@ function nationalityFlag(code: number) {
 function nationalityLabel(code: number) {
   return code === 2 ? "중국" : "대한민국";
 }
-
-const LOL_CHAMPIONS = [
-  "가렌", "갈리오", "강플랭크", "그라가스", "그레이브즈", "나미", "나서스",
-  "나피리", "녹턴", "누누와 윌럼프", "니달리", "니코", "다리우스", "드레이븐",
-  "라이즈", "라칸", "람머스", "럭스", "럼블", "레나타 글라스크", "레넥톤",
-  "레오나", "렉사이", "렐", "로크", "루시안", "룰루", "르블랑", "리 신",
-  "리산드라", "리벤", "릴리아", "마스터 이", "마오카이", "말파이트", "말자하",
-  "모데카이저", "모르가나", "문도 박사", "미스 포츈", "바드", "바루스", "베이가",
-  "베인", "벡스", "벨베스", "벨코즈", "볼리베어", "브라움", "브라이어",
-  "블라디미르", "블리츠크랭크", "비에고", "빅토르", "사미라", "사일러스",
-  "세라핀", "세주아니", "세트", "소나", "소라카", "쉔", "쉬바나", "스몰더",
-  "스웨인", "시비르", "신드라", "신지드", "신짜오", "아리", "아무무",
-  "아우렐리온 솔", "아지르", "아칼리", "아크샨", "아트록스", "아펠리오스",
-  "애니", "야스오", "에코", "엘리스", "오공", "오로라", "오른", "오리아나",
-  "올라프", "우디르", "우르곳", "워윅", "유미", "이렐리아", "이블린",
-  "이즈리얼", "일라오이", "잔나", "잭스", "제드", "제이스", "조이", "진",
-  "질리언", "징크스", "카르마", "카밀", "카사딘", "카서스", "카이사", "카직스",
-  "카타리나", "칼리스타", "케넨", "케이틀린", "코그모", "코르키", "퀸",
-  "크산테", "클레드", "타릭", "탈론", "탈리야", "탐 켄치", "트런들",
-  "트리스타나", "트린다미어", "트위스티드 페이트", "트위치", "티모", "파이크",
-  "판테온", "피오라", "피즈", "하이머딩거", "헤카림", "흐웨이",
-];
 
 const POSITIONS = ["탑", "정글", "미드", "바텀", "서포터"] as const;
 const NATIONALITIES = [
@@ -114,6 +93,7 @@ export default function AdminLineupBoard({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mousedownOnOverlay = useRef(false);
   const router = useRouter();
+  const { champions, loading: championsLoading } = useChampionOptions();
 
   useEffect(() => {
     if (modalOpen) {
@@ -341,7 +321,7 @@ export default function AdminLineupBoard({
   const currentImage = imagePreview || form.imageUrl;
 
   const champOptions = (exclude1: string, exclude2: string) =>
-    LOL_CHAMPIONS.filter((c) => c !== exclude1 && c !== exclude2);
+    champions.filter((c) => c.name !== exclude1 && c.name !== exclude2);
 
   return (
     <>
@@ -553,10 +533,18 @@ export default function AdminLineupBoard({
                       const other1 = i === 0 ? form.champ2 : form.champ1;
                       const other2 = i === 1 ? form.champ3 : i === 0 ? form.champ3 : form.champ2;
                       return (
-                        <select key={key} value={form[key]} onChange={set(key)} className={inputCls}>
-                          <option value="">없음</option>
+                        <select
+                          key={key}
+                          value={form[key]}
+                          onChange={set(key)}
+                          className={inputCls}
+                          disabled={championsLoading}
+                        >
+                          <option value="">
+                            {championsLoading ? "불러오는 중" : "없음"}
+                          </option>
                           {champOptions(other1, other2).map((c) => (
-                            <option key={c} value={c}>{c}</option>
+                            <option key={c.id} value={c.name}>{c.name}</option>
                           ))}
                         </select>
                       );
@@ -632,7 +620,7 @@ export default function AdminLineupBoard({
                 <button
                   type="submit"
                   disabled={saving || uploading}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {(saving || uploading) && (
                     <Loader2 size={18} className="animate-spin" />
@@ -652,7 +640,7 @@ export default function AdminLineupBoard({
             <button
               type="button"
               onClick={openWrite}
-              className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black shadow-gold-sm transition"
+              className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black transition hover:brightness-110"
             >
               <Plus size={16} />
               기사 추가

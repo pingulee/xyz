@@ -92,7 +92,7 @@ export default function KnightLoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black shadow-gold-sm transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading && <Loader2 size={18} className="animate-spin" />}
         로그인
