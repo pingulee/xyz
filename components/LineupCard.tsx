@@ -36,7 +36,7 @@ export default function LineupCard({
           {
             label: "3",
             className:
-              "border-amber-700/45 bg-amber-700/18 text-amber-200 shadow-[0_0_18px_rgba(180,83,9,0.18)]",
+              "border-[#9a5a32]/55 bg-[#5f321f]/35 text-[#c27a48] shadow-[0_0_18px_rgba(120,62,34,0.2)]",
           },
         ][placement - 1]
       : null;

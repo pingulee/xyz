@@ -12,6 +12,7 @@ MYSQL_DATABASE=u370032164_xyz
 MYSQL_USER=u370032164_xyz
 MYSQL_PASSWORD=your_mysql_password
 ADMIN_PASSWORD=your_admin_password
+CRON_SECRET=your_cron_secret
 ```
 
 4. If connecting from your local computer, add your public IP address to
@@ -19,3 +20,19 @@ ADMIN_PASSWORD=your_admin_password
 
 The reviews API uses `/api/reviews` and requires a Node.js runtime. A static-only
 deployment will not be able to write reviews to MySQL.
+
+## Hostinger Cron Jobs
+
+Champion names are synced from Riot Data Dragon into MySQL by calling the
+protected cron endpoint once per day.
+
+In Hostinger, open **Advanced > Cron Jobs** and add this command:
+
+```sh
+curl -fsS -H "Authorization: Bearer your_cron_secret" https://롤대리.xyz/api/cron/champions
+```
+
+Recommended schedule: once per day around 04:00 KST.
+
+The normal `/api/champions` endpoint only reads from MySQL and does not call
+Riot during user requests.

@@ -15,10 +15,6 @@ type ChampionRow = RowDataPacket & {
   ddragon_version: string;
 };
 
-type CountRow = RowDataPacket & {
-  count: number;
-};
-
 type DataDragonChampion = {
   id: string;
   key: string;
@@ -30,8 +26,6 @@ type DataDragonChampionResponse = {
 };
 
 const DDRAGON_BASE = "https://ddragon.leagueoflegends.com";
-const SYNC_INTERVAL_MS = 1000 * 60 * 60 * 24;
-let lastSyncAttempt = 0;
 
 export async function ensureChampionsSchema() {
   await getPool().execute(`
@@ -115,19 +109,6 @@ export async function syncChampionsFromRiot() {
 
 export async function getChampions(): Promise<Champion[]> {
   await ensureChampionsSchema();
-
-  const [countRows] = await getPool().execute<CountRow[]>(
-    `SELECT COUNT(*) AS count FROM champions WHERE active = TRUE`,
-  );
-
-  if (Number(countRows[0]?.count ?? 0) === 0) {
-    await syncChampionsFromRiot();
-  } else if (Date.now() - lastSyncAttempt > SYNC_INTERVAL_MS) {
-    lastSyncAttempt = Date.now();
-    syncChampionsFromRiot().catch((error) => {
-      console.error("Failed to sync champions from Riot", error);
-    });
-  }
 
   const [rows] = await getPool().execute<ChampionRow[]>(
     `SELECT riot_id, riot_key, name, ddragon_version
