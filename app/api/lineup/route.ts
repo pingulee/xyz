@@ -7,6 +7,9 @@ import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession"
 
 export const runtime = "nodejs";
 
+const DEFAULT_PROFILE_IMAGE = "/images/profile.webp";
+const KNIGHT_PASSWORD_MIN_LENGTH = 4;
+const LINEUP_DESCRIPTION_MIN_LENGTH = 10;
 
 type LineupPayload = {
   id?: string;
@@ -39,7 +42,10 @@ function isAdminRequest(request: Request): boolean {
 
 function isValidImageUrl(image: string | null | undefined): boolean {
   if (!image) return true;
-  return image.startsWith("/uploads/lineups/") && image.length <= 255;
+  return (
+    (image === DEFAULT_PROFILE_IMAGE || image.startsWith("/uploads/lineups/")) &&
+    image.length <= 255
+  );
 }
 
 function validateLineup(payload: LineupPayload) {
@@ -59,15 +65,19 @@ function validateLineup(payload: LineupPayload) {
       : rawNationality === "대한민국"
         ? 1
         : Number(rawNationality);
-  const image = payload.image ?? null;
+  const image = payload.image || DEFAULT_PROFILE_IMAGE;
 
   if (!name || name.length > 60) return { message: "이름을 입력해주세요. (최대 60자)" };
   if (!positions) return { message: "포지션을 입력해주세요." };
   if (!rank || rank.length > 30) return { message: "랭크를 입력해주세요." };
   if (!tier) return { message: "티어 이미지를 선택해주세요." };
+  if (description.length < LINEUP_DESCRIPTION_MIN_LENGTH) {
+    return { message: "소개는 10자 이상 입력해주세요." };
+  }
   if (description.length > 300) return { message: "소개는 300자 이내로 입력해주세요." };
   if (!weekdayHours || weekdayHours.length > 30) return { message: "평일 시간을 입력해주세요." };
   if (!weekendHours || weekendHours.length > 30) return { message: "주말 시간을 입력해주세요." };
+  if (!champions) return { message: "챔피언을 1개 이상 선택해주세요." };
   if (!services) return { message: "작업 종류를 입력해주세요." };
   if (![1, 2].includes(nationality)) {
     return { message: "국적을 다시 선택해주세요." };
@@ -102,9 +112,11 @@ export async function POST(request: Request) {
   if ("message" in v) return NextResponse.json({ message: v.message }, { status: 400 });
   const { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, nationality, image } = v;
 
-  const knightPasswordHash = payload.knightPassword?.trim()
-    ? hashPassword(payload.knightPassword.trim())
-    : null;
+  const rawKnightPassword = payload.knightPassword?.trim() ?? "";
+  if (rawKnightPassword.length < KNIGHT_PASSWORD_MIN_LENGTH) {
+    return NextResponse.json({ message: "기사 비밀번호는 4자 이상 입력해주세요." }, { status: 400 });
+  }
+  const knightPasswordHash = hashPassword(rawKnightPassword);
 
   try {
     await ensureLineupsSchema();
@@ -142,8 +154,12 @@ export async function PUT(request: Request) {
   if ("message" in v) return NextResponse.json({ message: v.message }, { status: 400 });
   const { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, nationality, image } = v;
 
-  const newPasswordHash = payload.knightPassword?.trim()
-    ? hashPassword(payload.knightPassword.trim())
+  const rawKnightPassword = payload.knightPassword?.trim() ?? "";
+  if (rawKnightPassword && rawKnightPassword.length < KNIGHT_PASSWORD_MIN_LENGTH) {
+    return NextResponse.json({ message: "기사 비밀번호는 4자 이상 입력해주세요." }, { status: 400 });
+  }
+  const newPasswordHash = rawKnightPassword
+    ? hashPassword(rawKnightPassword)
     : undefined;
 
   const passwordClause = newPasswordHash !== undefined

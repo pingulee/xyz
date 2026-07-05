@@ -14,6 +14,7 @@ import { TierRecordBadges, TierRecordEditor } from "@/components/TierRecords";
 import type { Review, ReviewReply, TierRecord } from "@/lib/reviews";
 
 const PER_PAGE = 5;
+const REPLY_CONTENT_MIN_LENGTH = 10;
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -102,9 +103,15 @@ function ReplyForm({
   onCancel?: () => void;
 }) {
   const [content, setContent] = useState(initial?.content ?? "");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [tierRecords, setTierRecords] = useState<TierRecord[]>(
     initial?.tierRecords ?? [],
   );
+  const contentLength = content.trim().length;
+  const invalidContent =
+    submitAttempted &&
+    contentLength > 0 &&
+    contentLength < REPLY_CONTENT_MIN_LENGTH;
 
   return (
     <div className="grid gap-3">
@@ -119,8 +126,15 @@ function ReplyForm({
         rows={3}
         maxLength={500}
         placeholder="고객에게 답변을 남겨주세요."
-        className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full"
+        className={`resize-none rounded-2xl border bg-black/30 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full ${
+          invalidContent ? "border-red-400/50" : "border-white/10"
+        }`}
       />
+      {invalidContent && (
+        <p className="text-xs font-bold text-red-300">
+          답변은 10자 이상 입력해주세요.
+        </p>
+      )}
       <div className="flex justify-end gap-2">
         {onCancel && (
           <button
@@ -134,9 +148,11 @@ function ReplyForm({
         <button
           type="button"
           onClick={() => {
-            if (content.trim()) onSubmit(content.trim(), tierRecords);
+            setSubmitAttempted(true);
+            if (contentLength >= REPLY_CONTENT_MIN_LENGTH)
+              onSubmit(content.trim(), tierRecords);
           }}
-          disabled={saving || !content.trim()}
+          disabled={saving || contentLength < REPLY_CONTENT_MIN_LENGTH}
           className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-4 py-2 text-xs font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving && <Loader2 size={12} className="animate-spin" />}
@@ -168,6 +184,8 @@ function ReplyBlock({
   const canReply =
     knightLineupId !== null && review.lineupId === String(knightLineupId);
   const isLoggedIn = knightLineupId !== null;
+
+  const replyFormVisible = canReply && (formOpen || editing || !replyData);
 
   const submitReply = async (content: string, tierRecords: TierRecord[]) => {
     setSaving(true);
@@ -259,7 +277,7 @@ function ReplyBlock({
       )}
 
       {/* 폼 (신규 or 수정) */}
-      {canReply && (formOpen || editing) && (
+      {replyFormVisible && (
         <div className="relative">
           <ReplyForm
             knightName={knightName}
@@ -277,7 +295,7 @@ function ReplyBlock({
       )}
 
       {/* 답변 없고 폼 안 열린 상태 → 버튼 */}
-      {!replyData && !formOpen && !editing && (
+      {!replyData && !replyFormVisible && !editing && (
         <button
           type="button"
           onClick={handleReplyButtonClick}

@@ -10,6 +10,8 @@ import type { TierRecord } from "@/lib/reviews";
 
 export const runtime = "nodejs";
 
+const REPLY_CONTENT_MIN_LENGTH = 10;
+
 type ReviewRow = RowDataPacket & { lineup_id: number | null };
 type LineupRow = RowDataPacket & { name: string };
 
@@ -74,9 +76,9 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  if (content.length < 1 || content.length > 500) {
+  if (content.length < REPLY_CONTENT_MIN_LENGTH || content.length > 500) {
     return NextResponse.json(
-      { message: "답변은 1~500자로 입력해주세요." },
+      { message: "답변은 10~500자로 입력해주세요." },
       { status: 400 },
     );
   }

@@ -1,6 +1,8 @@
 import Image from "next/image";
 import { getLineupAvailability } from "@/lib/lineup-availability";
 
+const DEFAULT_PROFILE_IMAGE = "/images/profile.webp";
+
 export type KnightAvailability = {
   active: boolean;
   weekdayHours: string;
@@ -28,6 +30,7 @@ export default function KnightAvatar({
   const dotSize = size >= 160 ? 34 : size >= 80 ? 22 : 17;
   const borderSize = size >= 160 ? 5 : size >= 80 ? 4 : 3;
   const dotOffset = Math.round(size * 0.1465 - dotSize / 2);
+  const imageSrc = image || DEFAULT_PROFILE_IMAGE;
 
   return (
     <span
@@ -35,20 +38,14 @@ export default function KnightAvatar({
       style={{ width: size, height: size }}
     >
       <span className="relative block h-full w-full overflow-hidden rounded-full border border-gold/20 bg-black">
-        {image ? (
-          <Image
-            src={image}
-            alt={name}
-            width={size}
-            height={size}
-            priority={priority}
-            className="h-full w-full object-cover rounded-full"
-          />
-        ) : (
-          <span className="grid h-full w-full place-items-center bg-gold/10 text-lg font-black text-gold">
-            {name.slice(0, 1)}
-          </span>
-        )}
+        <Image
+          src={imageSrc}
+          alt={name}
+          width={size}
+          height={size}
+          priority={priority}
+          className="h-full w-full object-cover rounded-full"
+        />
       </span>
       <span
         className={`absolute rounded-full shadow-lg ${

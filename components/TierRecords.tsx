@@ -59,7 +59,7 @@ export function TierRecordEditor({
         <button
           type="button"
           onClick={add}
-          className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-zinc-400 transition hover:border-gold/40 hover:text-white"
+          className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/12 px-4 py-2 text-xs font-black text-gold shadow-[0_0_18px_rgba(214,184,111,0.12)] transition hover:border-gold/70 hover:bg-gold/18 hover:text-white"
         >
           <Plus size={11} /> 추가
         </button>

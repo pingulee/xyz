@@ -17,6 +17,7 @@ import type {
 } from "@/lib/reviews";
 
 const REVIEW_CONTENT_MAX_LENGTH = 100;
+const REPLY_CONTENT_MIN_LENGTH = 10;
 const inputCls =
   "rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50";
 
@@ -172,6 +173,9 @@ export default function ReviewDetailView({
   const [tierRecords, setTierRecords] = useState<TierRecord[]>(
     review.reply?.tierRecords ?? [],
   );
+  const draftLength = draft.trim().length;
+  const invalidDraft =
+    draftLength > 0 && draftLength < REPLY_CONTENT_MIN_LENGTH;
   const viewTrackedRef = useRef(false);
 
   const canReply =
@@ -180,6 +184,7 @@ export default function ReviewDetailView({
   const displayKnightName =
     review.reply?.knightName || knightName || "기사 답변";
   const canModifyReview = isAdmin || !review.reply;
+  const replyFormVisible = canReply && (formOpen || !review.reply);
 
   useEffect(() => {
     if (viewTrackedRef.current) return;
@@ -300,7 +305,7 @@ export default function ReviewDetailView({
   };
 
   const submitReply = async () => {
-    if (!draft.trim()) return;
+    if (draftLength < REPLY_CONTENT_MIN_LENGTH) return;
     setSaving(true);
     try {
       const response = await fetch("/api/reviews/reply", {
@@ -354,7 +359,7 @@ export default function ReviewDetailView({
                 <span>
                   {review.lineupName ??
                     review.reply?.knightName ??
-                    "기사 선택 안 함"}
+                    "선택 안함"}
                 </span>
               </div>
               <h1 className="text-2xl font-black text-white">
@@ -563,7 +568,7 @@ export default function ReviewDetailView({
               </div>
             </div>
 
-            {canReply && !formOpen && (
+            {canReply && review.reply && !formOpen && (
               <div className="flex gap-2">
                 {review.reply && (
                   <button
@@ -587,7 +592,7 @@ export default function ReviewDetailView({
             )}
           </div>
 
-          {review.reply && !formOpen ? (
+          {review.reply && !replyFormVisible ? (
             <>
               <TierRecordBadges
                 records={review.reply.tierRecords}
@@ -603,7 +608,7 @@ export default function ReviewDetailView({
                 {formatDate(review.reply.createdAt)}
               </time>
             </>
-          ) : formOpen && canReply ? (
+          ) : replyFormVisible ? (
             <div className="grid gap-4">
               <TierRecordEditor
                 records={tierRecords}
@@ -615,8 +620,15 @@ export default function ReviewDetailView({
                 rows={5}
                 maxLength={500}
                 placeholder="고객에게 답변을 남겨주세요."
-                className="resize-none rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
+                className={`resize-none rounded-2xl border bg-black/35 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 ${
+                  invalidDraft ? "border-red-400/50" : "border-white/10"
+                }`}
               />
+              {invalidDraft && (
+                <p className="text-xs font-bold text-red-300">
+                  답변은 10자 이상 입력해주세요.
+                </p>
+              )}
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
@@ -631,7 +643,7 @@ export default function ReviewDetailView({
                 <button
                   type="button"
                   onClick={submitReply}
-                  disabled={saving || !draft.trim()}
+                  disabled={saving || draftLength < REPLY_CONTENT_MIN_LENGTH}
                   className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-2.5 text-sm font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saving && <Loader2 size={14} className="animate-spin" />}

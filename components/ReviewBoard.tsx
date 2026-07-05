@@ -65,12 +65,15 @@ type EditForm = {
 
 const REVIEWS_PER_PAGE = 10;
 const REVIEW_NAME_MAX_LENGTH = 7;
+const REVIEW_PASSWORD_MIN_LENGTH = 4;
+const REVIEW_CONTENT_MIN_LENGTH = 10;
 const REVIEW_CONTENT_MAX_LENGTH = 100;
+const REPLY_CONTENT_MIN_LENGTH = 10;
 
 const blankForm = {
   name: "",
   password: "",
-  service: "롤 대리",
+  service: "",
   lineupId: "",
   lineupName: "",
   rating: 5,
@@ -201,6 +204,7 @@ export default function ReviewBoard({
   );
   const [selectedReviewId, setSelectedReviewId] = useState("");
   const [writeOpen, setWriteOpen] = useState(false);
+  const [reviewSubmitAttempted, setReviewSubmitAttempted] = useState(false);
   const [page, setPage] = useState(1);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(initialReviews.length === 0);
@@ -247,6 +251,24 @@ export default function ReviewBoard({
     () => getPageItems(currentPage, totalPages),
     [currentPage, totalPages],
   );
+  const canSubmitReview = Boolean(
+    form.name.trim() &&
+      form.password.trim().length >= REVIEW_PASSWORD_MIN_LENGTH &&
+      form.lineupId &&
+      form.service &&
+      form.content.trim().length >= REVIEW_CONTENT_MIN_LENGTH,
+  );
+  const missingReviewName = reviewSubmitAttempted && !form.name.trim();
+  const missingReviewPassword = reviewSubmitAttempted && !form.password.trim();
+  const invalidReviewPassword =
+    form.password.trim().length > 0 &&
+    form.password.trim().length < REVIEW_PASSWORD_MIN_LENGTH;
+  const missingReviewLineup = reviewSubmitAttempted && !form.lineupId;
+  const missingReviewService = reviewSubmitAttempted && !form.service;
+  const missingReviewContent = reviewSubmitAttempted && !form.content.trim();
+  const invalidReviewContent =
+    form.content.trim().length > 0 &&
+    form.content.trim().length < REVIEW_CONTENT_MIN_LENGTH;
 
   const openReview = (reviewId: string) => {
     router.push(`/reviews/${reviewId}`);
@@ -379,6 +401,7 @@ export default function ReviewBoard({
   const submitReview = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
+    setReviewSubmitAttempted(true);
 
     const name = form.name.trim();
     const password = form.password.trim();
@@ -389,8 +412,28 @@ export default function ReviewBoard({
       return;
     }
 
+    if (!form.lineupId) {
+      setError("작업 기사를 선택해주세요.");
+      return;
+    }
+
+    if (!form.service) {
+      setError("서비스를 선택해주세요.");
+      return;
+    }
+
+    if (password.length < REVIEW_PASSWORD_MIN_LENGTH) {
+      setError(`비밀번호는 ${REVIEW_PASSWORD_MIN_LENGTH}자 이상 입력해주세요.`);
+      return;
+    }
+
     if (name.length > REVIEW_NAME_MAX_LENGTH) {
       setError(`닉네임은 ${REVIEW_NAME_MAX_LENGTH}자 이하로 입력해주세요.`);
+      return;
+    }
+
+    if (content.length < REVIEW_CONTENT_MIN_LENGTH) {
+      setError(`후기는 ${REVIEW_CONTENT_MIN_LENGTH}자 이상 입력해주세요.`);
       return;
     }
 
@@ -425,6 +468,7 @@ export default function ReviewBoard({
 
       setReviews((current) => [data.review, ...current]);
       setForm(blankForm);
+      setReviewSubmitAttempted(false);
       setPage(1);
       setWriteOpen(false);
       router.push(`/reviews/${data.review.id}`);
@@ -647,8 +691,10 @@ export default function ReviewBoard({
             mousedownOnOverlay.current = e.target === e.currentTarget;
           }}
           onClick={(e) => {
-            if (e.target === e.currentTarget && mousedownOnOverlay.current)
+            if (e.target === e.currentTarget && mousedownOnOverlay.current) {
+              setReviewSubmitAttempted(false);
               setWriteOpen(false);
+            }
           }}
         >
           <div className="w-full max-w-xl rounded-[34px] border border-gold/20 bg-[#111] p-6 shadow-2xl sm:p-8 max-h-[90dvh] overflow-y-auto sm:max-h-[95dvh]">
@@ -664,7 +710,10 @@ export default function ReviewBoard({
 
               <button
                 type="button"
-                onClick={() => setWriteOpen(false)}
+                onClick={() => {
+                  setReviewSubmitAttempted(false);
+                  setWriteOpen(false);
+                }}
                 className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white"
                 aria-label="후기 등록 닫기"
               >
@@ -693,9 +742,16 @@ export default function ReviewBoard({
                         }))
                       }
                       maxLength={REVIEW_NAME_MAX_LENGTH}
-                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
+                      className={`rounded-2xl border bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 ${
+                        missingReviewName ? "border-red-400/50" : "border-white/10"
+                      }`}
                       placeholder="예: 다이아 목표"
                     />
+                    {missingReviewName && (
+                      <p className="text-xs font-bold text-red-300">
+                        닉네임을 입력해주세요.
+                      </p>
+                    )}
                   </label>
 
                   <label className="grid gap-2">
@@ -712,9 +768,23 @@ export default function ReviewBoard({
                         }))
                       }
                       maxLength={40}
-                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
+                      className={`rounded-2xl border bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 ${
+                        missingReviewPassword || invalidReviewPassword
+                          ? "border-red-400/50"
+                          : "border-white/10"
+                      }`}
                       placeholder="후기 삭제 시 필요"
                     />
+                    {missingReviewPassword && (
+                      <p className="text-xs font-bold text-red-300">
+                        비밀번호를 입력해주세요.
+                      </p>
+                    )}
+                    {invalidReviewPassword && (
+                      <p className="text-xs font-bold text-red-300">
+                        비밀번호는 {REVIEW_PASSWORD_MIN_LENGTH}자 이상 입력해주세요.
+                      </p>
+                    )}
                   </label>
                 </div>
 
@@ -738,18 +808,30 @@ export default function ReviewBoard({
                           lineupId: id,
                           service: availableServices.includes(current.service)
                             ? current.service
-                            : (availableServices[0] ?? "롤 대리"),
+                            : "",
                         }));
                       }}
-                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
+                      className={`rounded-2xl border bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50 ${
+                        missingReviewLineup
+                          ? "border-red-400/50"
+                          : "border-white/10"
+                      }`}
+                      required
                     >
-                      <option value="">기사 선택 안 함</option>
+                      <option value="" disabled>
+                        선택해주세요
+                      </option>
                       {lineups.map((lineup) => (
                         <option key={lineup.id} value={lineup.id}>
                           {lineup.name}
                         </option>
                       ))}
                     </select>
+                    {missingReviewLineup && (
+                      <p className="text-xs font-bold text-red-300">
+                        작업 기사를 선택해주세요.
+                      </p>
+                    )}
                   </label>
 
                   <label className="grid gap-2">
@@ -774,14 +856,28 @@ export default function ReviewBoard({
                               service: event.target.value,
                             }))
                           }
-                          className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50"
+                          className={`rounded-2xl border bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50 ${
+                            missingReviewService
+                              ? "border-red-400/50"
+                              : "border-white/10"
+                          }`}
                         >
+                          <option value="" disabled>
+                            선택해주세요
+                          </option>
                           {opts.map((s) => (
-                            <option key={s}>{s}</option>
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
                           ))}
                         </select>
                       );
                     })()}
+                    {missingReviewService && (
+                      <p className="text-xs font-bold text-red-300">
+                        서비스를 선택해주세요.
+                      </p>
+                    )}
                   </label>
                 </div>
 
@@ -814,9 +910,23 @@ export default function ReviewBoard({
                     }
                     maxLength={REVIEW_CONTENT_MAX_LENGTH}
                     rows={4}
-                    className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50"
+                    className={`resize-none rounded-2xl border bg-black/30 px-4 py-3 leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 ${
+                      missingReviewContent || invalidReviewContent
+                        ? "border-red-400/50"
+                        : "border-white/10"
+                    }`}
                     placeholder="진행 과정, 상담, 만족했던 점을 남겨주세요."
                   />
+                  {missingReviewContent && (
+                    <p className="text-xs font-bold text-red-300">
+                      후기를 입력해주세요.
+                    </p>
+                  )}
+                  {invalidReviewContent && (
+                    <p className="text-xs font-bold text-red-300">
+                      후기는 {REVIEW_CONTENT_MIN_LENGTH}자 이상 입력해주세요.
+                    </p>
+                  )}
                 </label>
 
                 {error && (
@@ -828,7 +938,11 @@ export default function ReviewBoard({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-7 py-4 font-black text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                  className={`inline-flex items-center justify-center gap-2 rounded-full px-7 py-4 font-black transition disabled:cursor-not-allowed ${
+                    canSubmitReview
+                      ? "bg-gold-gradient text-black hover:brightness-110 disabled:opacity-60"
+                      : "border border-white/10 bg-zinc-700/45 text-zinc-400"
+                  }`}
                 >
                   {submitting && <Loader2 size={18} className="animate-spin" />}
                   후기 등록
@@ -1082,7 +1196,10 @@ export default function ReviewBoard({
           <div className="flex justify-end">
             <button
               type="button"
-              onClick={() => setWriteOpen(true)}
+              onClick={() => {
+                setReviewSubmitAttempted(false);
+                setWriteOpen(true);
+              }}
               className="cursor-pointer rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black transition hover:brightness-110"
             >
               후기 등록
@@ -1122,9 +1239,14 @@ function ReplySection({
   const [tierRecords, setTierRecords] = useState<TierRecord[]>(
     review.reply?.tierRecords ?? [],
   );
+  const draftLength = draft.trim().length;
+  const invalidDraft =
+    draftLength > 0 && draftLength < REPLY_CONTENT_MIN_LENGTH;
   const canReply =
     knightLineupId !== null && review.lineupId === String(knightLineupId);
   const isLoggedIn = knightLineupId !== null;
+
+  const replyFormVisible = canReply && (formOpen || editing || !review.reply);
 
   const startEdit = () => {
     setDraft(review.reply?.content ?? "");
@@ -1215,7 +1337,7 @@ function ReplySection({
       )}
 
       {/* 폼 (신규 or 수정) */}
-      {canReply && (formOpen || editing) && (
+      {replyFormVisible && (
         <div className="relative grid gap-3">
           <div className="flex items-center gap-2">
             <span className="text-xs font-black text-gold">{knightName}</span>
@@ -1228,8 +1350,15 @@ function ReplySection({
             rows={3}
             maxLength={500}
             placeholder="고객에게 답변을 남겨주세요."
-            className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full"
+            className={`resize-none rounded-2xl border bg-black/30 px-4 py-3 text-sm leading-7 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full ${
+              invalidDraft ? "border-red-400/50" : "border-white/10"
+            }`}
           />
+          {invalidDraft && (
+            <p className="text-xs font-bold text-red-300">
+              답변은 10자 이상 입력해주세요.
+            </p>
+          )}
           <div className="flex justify-end gap-2">
             <button
               type="button"
@@ -1244,9 +1373,10 @@ function ReplySection({
             <button
               type="button"
               onClick={() => {
-                if (draft.trim()) onSubmitReply(draft.trim(), tierRecords);
+                if (draftLength >= REPLY_CONTENT_MIN_LENGTH)
+                  onSubmitReply(draft.trim(), tierRecords);
               }}
-              disabled={replying || !draft.trim()}
+              disabled={replying || draftLength < REPLY_CONTENT_MIN_LENGTH}
               className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-2.5 text-sm font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60"
             >
               {replying && <Loader2 size={14} className="animate-spin" />}
@@ -1257,7 +1387,7 @@ function ReplySection({
       )}
 
       {/* 답변 없고 폼 안 열린 상태 → 버튼 */}
-      {!review.reply && !formOpen && !editing && (
+      {!review.reply && !replyFormVisible && !editing && (
         <button
           type="button"
           onClick={handleReplyButtonClick}

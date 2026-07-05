@@ -19,6 +19,9 @@ import type { Lineup } from "@/lib/lineup-model";
 
 const MAX_IMAGE_SIZE = 1024 * 1024 * 5;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const DEFAULT_PROFILE_IMAGE = "/images/profile.webp";
+const KNIGHT_PASSWORD_MIN_LENGTH = 4;
+const LINEUP_DESCRIPTION_MIN_LENGTH = 10;
 
 const TIER_OPTIONS = [
   { label: "챌린저", rank: "Challenger", tier: "/images/tier/10-challenger.png" },
@@ -50,16 +53,16 @@ const TIME_SLOTS = [
 const blankForm = {
   name: "",
   positionSet: new Set<string>(),
-  rank: "Challenger",
-  tier: "/images/tier/10-challenger.png",
-  nationality: "1",
+  rank: "",
+  tier: "",
+  nationality: "",
   description: "",
-  weekdayStart: "18",
+  weekdayStart: "00",
   weekdayEnd: "23",
   weekdayAll: false,
   weekendStart: "00",
   weekendEnd: "23",
-  weekendAll: true,
+  weekendAll: false,
   champ1: "",
   champ2: "",
   champ3: "",
@@ -86,6 +89,7 @@ export default function AdminLineupBoard({
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState("");
   const [message, setMessage] = useState("");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [imageName, setImageName] = useState("");
@@ -124,7 +128,11 @@ export default function AdminLineupBoard({
 
   const setTierOption = (tierValue: string) => {
     const opt = TIER_OPTIONS.find((o) => o.tier === tierValue);
-    if (opt) setForm((f) => ({ ...f, tier: opt.tier, rank: opt.rank }));
+    setForm((f) => ({
+      ...f,
+      tier: opt?.tier ?? "",
+      rank: opt?.rank ?? "",
+    }));
   };
 
   const handleImage = (e: ChangeEvent<HTMLInputElement>) => {
@@ -165,8 +173,10 @@ export default function AdminLineupBoard({
   const openWrite = () => {
     setEditingId("");
     setForm(blankForm);
+    setSubmitAttempted(false);
     resetImageState();
     setMessage("");
+    setSubmitAttempted(false);
     setModalOpen(true);
   };
 
@@ -236,7 +246,7 @@ export default function AdminLineupBoard({
       .filter(Boolean)
       .join(","),
     nationality: Number(form.nationality),
-    image: imageUrl,
+    image: imageUrl || DEFAULT_PROFILE_IMAGE,
     active: form.active,
     knightPassword: form.knightPassword || undefined,
   });
@@ -244,6 +254,26 @@ export default function AdminLineupBoard({
   const saveLineup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setMessage("");
+    setSubmitAttempted(true);
+
+    const missingRequired =
+      !form.name.trim() ||
+      !form.tier ||
+      !form.nationality ||
+      form.positionSet.size === 0 ||
+      form.description.trim().length < LINEUP_DESCRIPTION_MIN_LENGTH ||
+      ![form.champ1, form.champ2, form.champ3].some(Boolean) ||
+      (!form.serviceBoost && !form.serviceDuo) ||
+      (!editingId && form.knightPassword.trim().length < KNIGHT_PASSWORD_MIN_LENGTH) ||
+      (Boolean(editingId) &&
+        form.knightPassword.trim().length > 0 &&
+        form.knightPassword.trim().length < KNIGHT_PASSWORD_MIN_LENGTH);
+
+    if (missingRequired) {
+      setMessage("필수 항목을 모두 입력해주세요.");
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -318,7 +348,26 @@ export default function AdminLineupBoard({
   const inputCls =
     "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
   const labelCls = "grid gap-2 text-sm font-bold text-zinc-300";
+  const invalidCls = "border-red-400/50 focus:border-red-400/70";
+  const requiredMessage = (show: boolean, text: string) =>
+    show ? <p className="text-xs font-bold text-red-300">{text}</p> : null;
   const currentImage = imagePreview || form.imageUrl;
+  const missingName = submitAttempted && !form.name.trim();
+  const missingTier = submitAttempted && !form.tier;
+  const missingNationality = submitAttempted && !form.nationality;
+  const missingPosition = submitAttempted && form.positionSet.size === 0;
+  const missingChampion =
+    submitAttempted && ![form.champ1, form.champ2, form.champ3].some(Boolean);
+  const missingService =
+    submitAttempted && !form.serviceBoost && !form.serviceDuo;
+  const invalidDescription =
+    submitAttempted &&
+    form.description.trim().length > 0 &&
+    form.description.trim().length < LINEUP_DESCRIPTION_MIN_LENGTH;
+  const invalidKnightPassword =
+    submitAttempted &&
+    form.knightPassword.trim().length > 0 &&
+    form.knightPassword.trim().length < KNIGHT_PASSWORD_MIN_LENGTH;
 
   const champOptions = (exclude1: string, exclude2: string) =>
     champions.filter((c) => c.name !== exclude1 && c.name !== exclude2);
@@ -408,9 +457,10 @@ export default function AdminLineupBoard({
                     value={form.name}
                     onChange={set("name")}
                     maxLength={60}
-                    className={inputCls}
+                    className={`${inputCls} ${missingName ? invalidCls : ""}`}
                     placeholder="닉네임"
                   />
+                  {requiredMessage(missingName, "이름을 입력해주세요.")}
                 </label>
 
                 <label className={labelCls}>
@@ -418,14 +468,18 @@ export default function AdminLineupBoard({
                   <select
                     value={form.tier}
                     onChange={(e) => setTierOption(e.target.value)}
-                    className={inputCls}
+                    className={`${inputCls} ${missingTier ? invalidCls : ""}`}
                   >
+                    <option value="" disabled>
+                      선택해주세요
+                    </option>
                     {TIER_OPTIONS.map((opt) => (
                       <option key={opt.tier} value={opt.tier}>
                         {opt.label}
                       </option>
                     ))}
                   </select>
+                  {requiredMessage(missingTier, "티어를 선택해주세요.")}
                 </label>
 
                 <label className={labelCls}>
@@ -433,19 +487,31 @@ export default function AdminLineupBoard({
                   <select
                     value={form.nationality}
                     onChange={set("nationality")}
-                    className={inputCls}
+                    className={`${inputCls} ${
+                      missingNationality ? invalidCls : ""
+                    }`}
                   >
+                    <option value="" disabled>
+                      선택해주세요
+                    </option>
                     {NATIONALITIES.map((nationality) => (
                       <option key={nationality.value} value={nationality.value}>
                         {nationality.label}
                       </option>
                     ))}
                   </select>
+                  {requiredMessage(missingNationality, "국적을 선택해주세요.")}
                 </label>
 
                 <div className="grid gap-2">
                   <span className="text-sm font-bold text-zinc-300">포지션</span>
-                  <div className="flex flex-wrap gap-x-4 gap-y-2">
+                  <div
+                    className={`flex flex-wrap gap-x-4 gap-y-2 rounded-2xl border p-3 ${
+                      missingPosition
+                        ? "border-red-400/50"
+                        : "border-transparent"
+                    }`}
+                  >
                     {POSITIONS.map((pos) => (
                       <label
                         key={pos}
@@ -461,6 +527,7 @@ export default function AdminLineupBoard({
                       </label>
                     ))}
                   </div>
+                  {requiredMessage(missingPosition, "포지션을 선택해주세요.")}
                 </div>
               </div>
 
@@ -527,7 +594,9 @@ export default function AdminLineupBoard({
                 </div>
 
                 <div className="grid gap-2">
-                  <span className="text-sm font-bold text-zinc-300">챔피언 (최대 3개)</span>
+                  <span className="text-sm font-bold text-zinc-300">
+                    챔피언 (최소 1개, 최대 3개)
+                  </span>
                   <div className="grid grid-cols-3 gap-2">
                     {(["champ1", "champ2", "champ3"] as const).map((key, i) => {
                       const other1 = i === 0 ? form.champ2 : form.champ1;
@@ -537,7 +606,9 @@ export default function AdminLineupBoard({
                           key={key}
                           value={form[key]}
                           onChange={set(key)}
-                          className={inputCls}
+                          className={`${inputCls} ${
+                            missingChampion ? invalidCls : ""
+                          }`}
                           disabled={championsLoading}
                         >
                           <option value="">
@@ -550,11 +621,18 @@ export default function AdminLineupBoard({
                       );
                     })}
                   </div>
+                  {requiredMessage(missingChampion, "챔피언을 1개 이상 선택해주세요.")}
                 </div>
 
                 <div className="grid gap-2">
                   <span className="text-sm font-bold text-zinc-300">작업 종류</span>
-                  <div className="flex gap-6">
+                  <div
+                    className={`flex gap-6 rounded-2xl border p-3 ${
+                      missingService
+                        ? "border-red-400/50"
+                        : "border-transparent"
+                    }`}
+                  >
                     <label className="flex items-center gap-2 text-sm font-bold text-zinc-300 cursor-pointer">
                       <input
                         type="checkbox"
@@ -574,6 +652,7 @@ export default function AdminLineupBoard({
                       듀오
                     </label>
                   </div>
+                  {requiredMessage(missingService, "작업 종류를 선택해주세요.")}
                 </div>
 
                 <label className={labelCls}>
@@ -583,9 +662,15 @@ export default function AdminLineupBoard({
                     onChange={set("description")}
                     maxLength={300}
                     rows={3}
-                    className={`${inputCls} resize-none leading-7`}
+                    className={`${inputCls} resize-none leading-7 ${
+                      invalidDescription ? invalidCls : ""
+                    }`}
                     placeholder="기사 소개를 입력해주세요."
                   />
+                  {requiredMessage(
+                    invalidDescription,
+                    "소개는 10자 이상 입력해주세요.",
+                  )}
                 </label>
 
                 <label className={labelCls}>
@@ -595,10 +680,16 @@ export default function AdminLineupBoard({
                     value={form.knightPassword}
                     onChange={set("knightPassword")}
                     maxLength={60}
-                    className={inputCls}
+                    className={`${inputCls} ${
+                      invalidKnightPassword ? invalidCls : ""
+                    }`}
                     placeholder="변경 시에만 입력 (비워두면 유지)"
                     autoComplete="new-password"
                   />
+                  {requiredMessage(
+                    invalidKnightPassword,
+                    "기사 비밀번호는 4자 이상 입력해주세요.",
+                  )}
                 </label>
 
                 <label className="flex items-center gap-2 text-sm font-bold text-zinc-300 cursor-pointer">
