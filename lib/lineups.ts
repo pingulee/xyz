@@ -99,6 +99,54 @@ export function toLineup(row: LineupRow): Lineup {
   };
 }
 
+/** 기사별 작업 기록에서 플레이 판수 기준 모스트 챔피언 TOP3를 집계 */
+async function getMostChampionsByLineup(): Promise<Map<number, string[]>> {
+  const [rows] = await getPool().execute<RowDataPacket[]>(
+    `SELECT lineup_id, tier_records
+       FROM review_replies
+       WHERE tier_records IS NOT NULL`,
+  );
+
+  const counts = new Map<number, Map<string, { games: number; wins: number }>>();
+  for (const row of rows) {
+    let records: TierRecord[] = [];
+    try {
+      const raw = row.tier_records;
+      records = (typeof raw === "string" ? JSON.parse(raw) : raw) as TierRecord[];
+    } catch { continue; }
+    const lineupId = Number(row.lineup_id);
+    if (!Number.isInteger(lineupId)) continue;
+    let acc = counts.get(lineupId);
+    if (!acc) {
+      acc = new Map();
+      counts.set(lineupId, acc);
+    }
+    for (const r of records) {
+      const champion = (r.champion ?? "").trim();
+      if (!champion) continue;
+      const isPerGame = typeof r.win === "boolean";
+      const wins = isPerGame ? (r.win ? 1 : 0) : Number(r.wins) || 0;
+      const losses = isPerGame ? (r.win ? 0 : 1) : Number(r.losses) || 0;
+      const entry = acc.get(champion) ?? { games: 0, wins: 0 };
+      entry.games += wins + losses;
+      entry.wins += wins;
+      acc.set(champion, entry);
+    }
+  }
+
+  const result = new Map<number, string[]>();
+  for (const [lineupId, acc] of counts) {
+    result.set(
+      lineupId,
+      [...acc.entries()]
+        .sort(([, a], [, b]) => b.games - a.games || b.wins - a.wins)
+        .slice(0, 3)
+        .map(([champion]) => champion),
+    );
+  }
+  return result;
+}
+
 export async function getLineups(
   activeOnly = true,
   sortByReviews = false,
@@ -121,7 +169,11 @@ export async function getLineups(
          : "l.sort_order ASC, l.id ASC"
      }`,
   );
-  return rows.map(toLineup);
+  const mostChampions = await getMostChampionsByLineup();
+  return rows.map((row) => ({
+    ...toLineup(row),
+    champions: mostChampions.get(row.id) ?? [],
+  }));
 }
 
 export async function getLineupById(id: number): Promise<Lineup | null> {
@@ -139,7 +191,12 @@ export async function getLineupById(id: number): Promise<Lineup | null> {
      WHERE l.id = :id`,
     { id },
   );
-  return rows[0] ? toLineup(rows[0]) : null;
+  if (!rows[0]) return null;
+  const mostChampions = await getMostChampionsByLineup();
+  return {
+    ...toLineup(rows[0]),
+    champions: mostChampions.get(rows[0].id) ?? [],
+  };
 }
 
 export { getLineupPath } from "@/lib/lineup-model";

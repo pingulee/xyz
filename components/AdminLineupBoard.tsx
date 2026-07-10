@@ -13,7 +13,6 @@ import {
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import KnightAvatar from "@/components/KnightAvatar";
-import { useChampionOptions } from "@/components/useChampionOptions";
 import { getLineupPath } from "@/lib/lineup-model";
 import type { Lineup } from "@/lib/lineup-model";
 
@@ -63,9 +62,6 @@ const blankForm = {
   weekendStart: "00",
   weekendEnd: "23",
   weekendAll: false,
-  champ1: "",
-  champ2: "",
-  champ3: "",
   serviceBoost: false,
   serviceDuo: false,
   imageUrl: null as string | null,
@@ -97,7 +93,6 @@ export default function AdminLineupBoard({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mousedownOnOverlay = useRef(false);
   const router = useRouter();
-  const { champions, loading: championsLoading } = useChampionOptions();
 
   useEffect(() => {
     if (modalOpen) {
@@ -210,9 +205,6 @@ export default function AdminLineupBoard({
       weekendStart: we.start,
       weekendEnd: we.end,
       weekendAll: we.all,
-      champ1: lineup.champions[0] ?? "",
-      champ2: lineup.champions[1] ?? "",
-      champ3: lineup.champions[2] ?? "",
       serviceBoost: lineup.services.includes("대리"),
       serviceDuo: lineup.services.includes("듀오"),
       imageUrl: lineup.image,
@@ -241,7 +233,6 @@ export default function AdminLineupBoard({
     description: form.description,
     weekdayHours: formatHours(form.weekdayStart, form.weekdayEnd, form.weekdayAll),
     weekendHours: formatHours(form.weekendStart, form.weekendEnd, form.weekendAll),
-    champions: [form.champ1, form.champ2, form.champ3].filter(Boolean).join(","),
     services: [form.serviceBoost && "대리", form.serviceDuo && "듀오"]
       .filter(Boolean)
       .join(","),
@@ -262,7 +253,6 @@ export default function AdminLineupBoard({
       !form.nationality ||
       form.positionSet.size === 0 ||
       form.description.trim().length < LINEUP_DESCRIPTION_MIN_LENGTH ||
-      ![form.champ1, form.champ2, form.champ3].some(Boolean) ||
       (!form.serviceBoost && !form.serviceDuo) ||
       (!editingId && form.knightPassword.trim().length < KNIGHT_PASSWORD_MIN_LENGTH) ||
       (Boolean(editingId) &&
@@ -356,8 +346,6 @@ export default function AdminLineupBoard({
   const missingTier = submitAttempted && !form.tier;
   const missingNationality = submitAttempted && !form.nationality;
   const missingPosition = submitAttempted && form.positionSet.size === 0;
-  const missingChampion =
-    submitAttempted && ![form.champ1, form.champ2, form.champ3].some(Boolean);
   const missingService =
     submitAttempted && !form.serviceBoost && !form.serviceDuo;
   const invalidDescription =
@@ -368,9 +356,6 @@ export default function AdminLineupBoard({
     submitAttempted &&
     form.knightPassword.trim().length > 0 &&
     form.knightPassword.trim().length < KNIGHT_PASSWORD_MIN_LENGTH;
-
-  const champOptions = (exclude1: string, exclude2: string) =>
-    champions.filter((c) => c.name !== exclude1 && c.name !== exclude2);
 
   return (
     <>
@@ -591,37 +576,6 @@ export default function AdminLineupBoard({
                       ALL
                     </label>
                   </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <span className="text-sm font-bold text-zinc-300">
-                    챔피언 (최소 1개, 최대 3개)
-                  </span>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(["champ1", "champ2", "champ3"] as const).map((key, i) => {
-                      const other1 = i === 0 ? form.champ2 : form.champ1;
-                      const other2 = i === 1 ? form.champ3 : i === 0 ? form.champ3 : form.champ2;
-                      return (
-                        <select
-                          key={key}
-                          value={form[key]}
-                          onChange={set(key)}
-                          className={`${inputCls} ${
-                            missingChampion ? invalidCls : ""
-                          }`}
-                          disabled={championsLoading}
-                        >
-                          <option value="">
-                            {championsLoading ? "불러오는 중" : "없음"}
-                          </option>
-                          {champOptions(other1, other2).map((c) => (
-                            <option key={c.id} value={c.name}>{c.name}</option>
-                          ))}
-                        </select>
-                      );
-                    })}
-                  </div>
-                  {requiredMessage(missingChampion, "챔피언을 1개 이상 선택해주세요.")}
                 </div>
 
                 <div className="grid gap-2">

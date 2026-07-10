@@ -9,8 +9,8 @@ import { navItems, services, site } from "@/lib/site";
 export default function Footer() {
   return (
     <footer className="border-t border-gold/10 bg-black">
-      <Container className="grid gap-12 py-16 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
-        <div>
+      <Container className="grid grid-cols-2 gap-x-8 gap-y-12 py-16 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-12">
+        <div className="col-span-2 lg:col-span-1">
           <Link
             href="/"
             className="group"
@@ -75,7 +75,7 @@ export default function Footer() {
             ))}
           </ul>
         </div>
-        <div>
+        <div className="col-span-2 lg:col-span-1">
           <h3 className="font-black text-white">문의</h3>
           <p className="mt-5 text-sm leading-7 text-zinc-400">
             현재 티어, 목표 티어, 원하는 서비스를 알려주시면 빠르게

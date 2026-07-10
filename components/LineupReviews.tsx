@@ -235,7 +235,7 @@ function ReplyBlock({
   };
 
   return (
-    <div className="relative mt-4 overflow-hidden rounded-3xl border border-gold/20 bg-zinc-950 p-5">
+    <div className="relative mt-4 overflow-hidden rounded-3xl border border-gold/20 bg-zinc-950 p-4 sm:p-5">
       {knightImage && (
         <Image
           src={knightImage}

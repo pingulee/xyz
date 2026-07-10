@@ -20,7 +20,6 @@ type LineupPayload = {
   description?: string;
   weekdayHours?: string;
   weekendHours?: string;
-  champions?: string;
   services?: string;
   nationality?: string | number;
   image?: string | null;
@@ -56,7 +55,6 @@ function validateLineup(payload: LineupPayload) {
   const description = payload.description?.trim() ?? "";
   const weekdayHours = payload.weekdayHours?.trim() ?? "";
   const weekendHours = payload.weekendHours?.trim() ?? "";
-  const champions = payload.champions?.trim() ?? "";
   const services = payload.services?.trim() ?? "";
   const rawNationality = payload.nationality ?? 1;
   const nationality =
@@ -77,14 +75,13 @@ function validateLineup(payload: LineupPayload) {
   if (description.length > 300) return { message: "소개는 300자 이내로 입력해주세요." };
   if (!weekdayHours || weekdayHours.length > 30) return { message: "평일 시간을 입력해주세요." };
   if (!weekendHours || weekendHours.length > 30) return { message: "주말 시간을 입력해주세요." };
-  if (!champions) return { message: "챔피언을 1개 이상 선택해주세요." };
   if (!services) return { message: "작업 종류를 입력해주세요." };
   if (![1, 2].includes(nationality)) {
     return { message: "국적을 다시 선택해주세요." };
   }
   if (!isValidImageUrl(image)) return { message: "이미지 URL 형식이 올바르지 않습니다." };
 
-  return { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, nationality, image };
+  return { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image };
 }
 
 export async function GET() {
@@ -110,7 +107,7 @@ export async function POST(request: Request) {
 
   const v = validateLineup(payload);
   if ("message" in v) return NextResponse.json({ message: v.message }, { status: 400 });
-  const { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, nationality, image } = v;
+  const { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image } = v;
 
   const rawKnightPassword = payload.knightPassword?.trim() ?? "";
   if (rawKnightPassword.length < KNIGHT_PASSWORD_MIN_LENGTH) {
@@ -122,8 +119,8 @@ export async function POST(request: Request) {
     await ensureLineupsSchema();
     const [result] = await getPool().execute<ResultSetHeader>(
       `INSERT INTO lineups (name, positions, rank, tier, description, weekday_hours, weekend_hours, champions, services, nationality, image_url, sort_order, active, knight_password_hash)
-       VALUES (:name, :positions, :rank, :tier, :description, :weekdayHours, :weekendHours, :champions, :services, :nationality, :image, :sortOrder, :active, :knightPasswordHash)`,
-      { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, nationality, image, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, knightPasswordHash },
+       VALUES (:name, :positions, :rank, :tier, :description, :weekdayHours, :weekendHours, '', :services, :nationality, :image, :sortOrder, :active, :knightPasswordHash)`,
+      { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, knightPasswordHash },
     );
     const lineup = await getLineupById(result.insertId);
     return NextResponse.json({ lineup }, { status: 201 });
@@ -152,7 +149,7 @@ export async function PUT(request: Request) {
 
   const v = validateLineup(payload);
   if ("message" in v) return NextResponse.json({ message: v.message }, { status: 400 });
-  const { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, nationality, image } = v;
+  const { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image } = v;
 
   const rawKnightPassword = payload.knightPassword?.trim() ?? "";
   if (rawKnightPassword && rawKnightPassword.length < KNIGHT_PASSWORD_MIN_LENGTH) {
@@ -171,10 +168,10 @@ export async function PUT(request: Request) {
     await getPool().execute(
       `UPDATE lineups
        SET name=:name, positions=:positions, rank=:rank, tier=:tier, description=:description,
-           weekday_hours=:weekdayHours, weekend_hours=:weekendHours, champions=:champions,
+           weekday_hours=:weekdayHours, weekend_hours=:weekendHours,
            services=:services, nationality=:nationality, image_url=:image, sort_order=:sortOrder, active=:active${passwordClause}
        WHERE id=:id`,
-      { name, positions, rank, tier, description, weekdayHours, weekendHours, champions, services, nationality, image, id, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, ...(newPasswordHash !== undefined ? { knightPasswordHash: newPasswordHash } : {}) },
+      { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image, id, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, ...(newPasswordHash !== undefined ? { knightPasswordHash: newPasswordHash } : {}) },
     );
     const lineup = await getLineupById(id);
     if (!lineup) return NextResponse.json({ message: "기사를 찾을 수 없습니다." }, { status: 404 });

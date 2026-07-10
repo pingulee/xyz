@@ -350,7 +350,7 @@ export function TierRecordBadges({
         return (
           <div
             key={group.tier}
-            className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/20 px-3 py-2.5"
+            className="flex items-center gap-2 rounded-2xl border border-white/8 bg-black/20 px-3 py-2.5 sm:gap-3"
           >
             {icon && (
               <Image
@@ -365,17 +365,17 @@ export function TierRecordBadges({
               {group.tier}
             </p>
             {avg && (
-              <div className="flex-1 shrink-0 text-center">
-                <p className={`text-xs font-black ${kdaRatingClass(avg)}`}>
+              <div className="min-w-0 flex-1 text-center">
+                <p className={`text-xs font-black whitespace-nowrap ${kdaRatingClass(avg)}`}>
                   {rating === "Perfect" ? "Perfect" : `${rating} 평점`}
                 </p>
-                <p className="text-[11px] font-bold text-zinc-400">
+                <p className="text-[11px] font-bold whitespace-nowrap text-zinc-400">
                   {avg.kills.toFixed(1)} / {avg.deaths.toFixed(1)} /{" "}
                   {avg.assists.toFixed(1)}
                 </p>
               </div>
             )}
-            <div className="w-20 shrink-0 text-right">
+            <div className="w-14 shrink-0 text-right sm:w-20">
               <p
                 className={`text-xs ${
                   pct >= 60 ? "text-red-400" : "text-lol-gray-500"

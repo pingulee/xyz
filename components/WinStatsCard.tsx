@@ -87,7 +87,7 @@ export default function WinStatsCard({
           </div>
           <div className="pb-1 text-xs font-bold text-zinc-500">총 {games}판</div>
         </div>
-        <div className="mt-3 flex h-6 overflow-hidden rounded-md text-xs font-black text-white">
+        <div className="mt-3 flex h-6 overflow-hidden rounded-md text-xs text-white">
           {active.data.wins > 0 && (
             <div
               className="flex items-center bg-[#5383e8] pl-2.5 transition-all duration-500"
@@ -121,7 +121,7 @@ export default function WinStatsCard({
               const pct = total > 0 ? Math.round((t.wins / total) * 100) : 0;
               return (
                 <div key={tier} className="flex items-center gap-3">
-                  <span className="flex w-32 shrink-0 items-center gap-2 text-xs font-black text-zinc-300">
+                  <span className="flex w-32 shrink-0 items-center gap-2 text-xs text-zinc-300">
                     {TIER_ICON_BY_NAME[tier] && (
                       <Image
                         src={TIER_ICON_BY_NAME[tier]}
@@ -133,7 +133,7 @@ export default function WinStatsCard({
                     )}
                     {TIER_EN_BY_NAME[tier] ?? tier}
                   </span>
-                  <div className="flex h-5 flex-1 overflow-hidden rounded-md bg-white/6 text-[11px] font-black text-white">
+                  <div className="flex h-5 flex-1 overflow-hidden rounded-md bg-white/6 text-[11px] text-white">
                     {t.wins > 0 && (
                       <div
                         className="flex items-center bg-[#5383e8] pl-2 transition-all duration-500"
@@ -261,7 +261,7 @@ export default function WinStatsCard({
               return (
                 <div
                   key={`${game.date}-${index}`}
-                  className={`flex items-center gap-3 rounded-2xl border px-3 py-2.5 ${
+                  className={`grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 rounded-2xl border px-3 py-2.5 sm:flex sm:gap-3 ${
                     game.win
                       ? "border-[#5383e8]/25 bg-[#5383e8]/12"
                       : "border-[#e84057]/25 bg-[#e84057]/12"
@@ -279,10 +279,10 @@ export default function WinStatsCard({
                   </span>
 
                   {/* 여백: 승패 ↔ 챔피언 */}
-                  <div className="flex-1" />
+                  <div className="hidden flex-1 sm:block" />
 
                   {/* 챔피언 이미지 + 이름 */}
-                  <div className="flex w-36 shrink-0 items-center gap-2.5">
+                  <div className="flex min-w-0 items-center gap-2.5 sm:w-36 sm:shrink-0">
                     {game.image ? (
                       <Image
                         src={game.image}
@@ -318,10 +318,10 @@ export default function WinStatsCard({
                   </div>
 
                   {/* 여백: KDA ↔ 티어 */}
-                  <div className="flex-1" />
+                  <div className="hidden flex-1 sm:block" />
 
                   {/* 티어 이미지 + 티어 */}
-                  <div className="flex w-28 shrink-0 items-center justify-center gap-1.5">
+                  <div className="flex items-center gap-1.5 sm:w-28 sm:shrink-0 sm:justify-center">
                     {TIER_ICON_BY_NAME[game.tier] && (
                       <Image
                         src={TIER_ICON_BY_NAME[game.tier]}
@@ -336,7 +336,7 @@ export default function WinStatsCard({
                   </div>
 
                   {/* 대리/듀오 */}
-                  <span className="w-11 shrink-0 text-center">
+                  <span className="w-11 shrink-0 justify-self-center text-center">
                     {game.service && (
                       <span className="rounded-full border border-white/12 bg-black/30 px-2 py-0.5 text-[10px] font-black text-zinc-300">
                         {game.service}
