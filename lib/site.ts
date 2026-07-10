@@ -72,7 +72,7 @@ export const boostingPrices = {
       },
       { icons: [T.diamond], cells: ["다이아몬드 2~1", "65% 보장", "24,000원"] },
       { icons: [T.diamond], cells: ["듀오 불가", "60% 보장", "26,000원"] },
-      { icons: [T.master], cells: ["마스터 0~99 LP", "60% 보장", "26,000원"] },
+      { icons: [T.master], cells: ["마스터 0~199 LP", "60% 보장", "26,000원"] },
       { icons: [T.master], cells: ["200 LP 당", "60% 보장", "+2,000원"] },
       { icons: [T.grandmaster], cells: ["그랜드마스터↑", "50%", "상담"] },
     ] as PriceRow[],
