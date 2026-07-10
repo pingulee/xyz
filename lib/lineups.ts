@@ -155,7 +155,7 @@ export async function getLineupBySlug(slug: string): Promise<Lineup | null> {
 }
 
 const TIER_ORDER = [
-  "아이언", "브론즈", "실버", "골드", "플래티넘",
+  "언랭크", "아이언", "브론즈", "실버", "골드", "플래티넘",
   "에메랄드", "다이아몬드", "마스터", "그랜드마스터", "챌린저",
 ];
 
@@ -254,13 +254,17 @@ export async function getLineupWinStats(lineupId: number): Promise<{
         : null;
     for (const r of records) {
       if (!r.tier) continue;
-      const wins = Number(r.wins) || 0;
-      const losses = Number(r.losses) || 0;
+      const isPerGame = typeof r.win === "boolean";
+      // 신규(판별 기록): 기록 1개 = 1판, 구형식: 승/패 집계
+      const wins = isPerGame ? (r.win ? 1 : 0) : Number(r.wins) || 0;
+      const losses = isPerGame ? (r.win ? 0 : 1) : Number(r.losses) || 0;
       const games = wins + losses;
       const champion = (r.champion ?? "").trim();
       const hasKda =
         games > 0 &&
         (r.kills !== undefined || r.deaths !== undefined || r.assists !== undefined);
+      // 판별 기록은 그대로, 구형식(평균)은 판수 가중치를 곱해 합산
+      const kdaWeight = isPerGame ? 1 : games;
       for (const acc of serviceAcc ? [total, serviceAcc] : [total]) {
         if (!acc.byTier[r.tier]) acc.byTier[r.tier] = { wins: 0, losses: 0 };
         acc.byTier[r.tier].wins += wins;
@@ -282,11 +286,10 @@ export async function getLineupWinStats(lineupId: number): Promise<{
           champAcc.wins += wins;
           champAcc.losses += losses;
           if (hasKda) {
-            // 평균 KDA는 판수 가중 평균으로 합산
-            champAcc.killsSum += (Number(r.kills) || 0) * games;
-            champAcc.deathsSum += (Number(r.deaths) || 0) * games;
-            champAcc.assistsSum += (Number(r.assists) || 0) * games;
-            champAcc.kdaGames += games;
+            champAcc.killsSum += (Number(r.kills) || 0) * kdaWeight;
+            champAcc.deathsSum += (Number(r.deaths) || 0) * kdaWeight;
+            champAcc.assistsSum += (Number(r.assists) || 0) * kdaWeight;
+            champAcc.kdaGames += kdaWeight;
           }
         }
       }

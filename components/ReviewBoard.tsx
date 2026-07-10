@@ -16,7 +16,11 @@ import { useRouter } from "next/navigation";
 import KnightAvatar, {
   type KnightAvailability,
 } from "@/components/KnightAvatar";
-import { TierRecordBadges, TierRecordEditor } from "@/components/TierRecords";
+import {
+  TierRecordBadges,
+  TierRecordEditor,
+  normalizeTierRecords,
+} from "@/components/TierRecords";
 import type { TierRecord } from "@/lib/reviews";
 
 type ReviewReply = {
@@ -1237,7 +1241,7 @@ function ReplySection({
   const [formOpen, setFormOpen] = useState(false);
   const [draft, setDraft] = useState(review.reply?.content ?? "");
   const [tierRecords, setTierRecords] = useState<TierRecord[]>(
-    review.reply?.tierRecords ?? [],
+    normalizeTierRecords(review.reply?.tierRecords ?? []),
   );
   const draftLength = draft.trim().length;
   const invalidDraft =
@@ -1250,7 +1254,7 @@ function ReplySection({
 
   const startEdit = () => {
     setDraft(review.reply?.content ?? "");
-    setTierRecords(review.reply?.tierRecords ?? []);
+    setTierRecords(normalizeTierRecords(review.reply?.tierRecords ?? []));
     setEditing(true);
   };
 

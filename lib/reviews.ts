@@ -5,12 +5,15 @@ import { oncePerProcess } from "@/lib/schema-once";
 export type TierRecord = {
   tier: string;
   champion?: string;
-  wins: number;
-  losses: number;
-  /** 게임당 평균 킬/데스/어시 (선택 입력) */
+  /** 판별 기록: 해당 게임 승리 여부 (신규 형식) */
+  win?: boolean;
+  /** 해당 게임의 킬/데스/어시 (신규 형식) — 구형식에서는 게임당 평균 */
   kills?: number;
   deaths?: number;
   assists?: number;
+  /** @deprecated 구형식(집계 기록) 호환용 — 신규 기록은 win 사용 */
+  wins?: number;
+  losses?: number;
 };
 
 export type ReviewReply = {
@@ -107,11 +110,12 @@ function parseTierRecords(raw: string | null | unknown): TierRecord[] {
       return {
         tier: String(obj.tier ?? ""),
         champion: String(obj.champion ?? ""),
-        wins: Number(obj.wins ?? 0),
-        losses: Number(obj.losses ?? 0),
+        win: typeof obj.win === "boolean" ? obj.win : undefined,
         kills: toAvg(obj.kills),
         deaths: toAvg(obj.deaths),
         assists: toAvg(obj.assists),
+        wins: toAvg(obj.wins),
+        losses: toAvg(obj.losses),
       };
     });
   } catch {

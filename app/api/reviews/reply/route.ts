@@ -20,6 +20,8 @@ function isAdminRequest(request: Request): boolean {
   return token ? validateSession(token) : false;
 }
 
+const MAX_TIER_RECORDS = 200;
+
 function isOptionalNonNegativeNumber(value: unknown): boolean {
   return (
     value === undefined ||
@@ -28,8 +30,9 @@ function isOptionalNonNegativeNumber(value: unknown): boolean {
   );
 }
 
+// 판별 기록: 게임 1판 = 기록 1개 (tier, champion?, win, kills?/deaths?/assists?)
 function isValidTierRecords(records: unknown): records is TierRecord[] {
-  if (!Array.isArray(records)) return false;
+  if (!Array.isArray(records) || records.length > MAX_TIER_RECORDS) return false;
   return records.every(
     (r) =>
       typeof r === "object" &&
@@ -39,19 +42,16 @@ function isValidTierRecords(records: unknown): records is TierRecord[] {
         (r as Record<string, unknown>).champion === undefined ||
         typeof (r as Record<string, unknown>).champion === "string"
       ) &&
-      typeof (r as Record<string, unknown>).wins === "number" &&
-      typeof (r as Record<string, unknown>).losses === "number" &&
-      Number((r as Record<string, unknown>).wins) >= 0 &&
-      Number((r as Record<string, unknown>).losses) >= 0 &&
+      typeof (r as Record<string, unknown>).win === "boolean" &&
       isOptionalNonNegativeNumber((r as Record<string, unknown>).kills) &&
       isOptionalNonNegativeNumber((r as Record<string, unknown>).deaths) &&
       isOptionalNonNegativeNumber((r as Record<string, unknown>).assists),
   );
 }
 
-function toAvgStat(value: number | undefined | null): number | undefined {
+function toCountStat(value: number | undefined | null): number | undefined {
   if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
-  return Math.min(99.9, Math.max(0, Math.round(value * 10) / 10));
+  return Math.min(99, Math.max(0, Math.floor(value)));
 }
 
 export async function POST(request: Request) {
@@ -80,11 +80,10 @@ export async function POST(request: Request) {
         .map((r) => ({
           tier: r.tier.trim(),
           champion: r.champion?.trim().slice(0, 40) ?? "",
-          wins: Math.floor(r.wins),
-          losses: Math.floor(r.losses),
-          kills: toAvgStat(r.kills),
-          deaths: toAvgStat(r.deaths),
-          assists: toAvgStat(r.assists),
+          win: r.win === true,
+          kills: toCountStat(r.kills),
+          deaths: toCountStat(r.deaths),
+          assists: toCountStat(r.assists),
         }))
         .filter((r) => r.tier)
     : [];

@@ -10,7 +10,11 @@ import {
   Star,
 } from "lucide-react";
 import KnightAvatar, { type KnightAvailability } from "@/components/KnightAvatar";
-import { TierRecordBadges, TierRecordEditor } from "@/components/TierRecords";
+import {
+  TierRecordBadges,
+  TierRecordEditor,
+  normalizeTierRecords,
+} from "@/components/TierRecords";
 import type { Review, ReviewReply, TierRecord } from "@/lib/reviews";
 
 const PER_PAGE = 5;
@@ -105,7 +109,7 @@ function ReplyForm({
   const [content, setContent] = useState(initial?.content ?? "");
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [tierRecords, setTierRecords] = useState<TierRecord[]>(
-    initial?.tierRecords ?? [],
+    normalizeTierRecords(initial?.tierRecords ?? []),
   );
   const contentLength = content.trim().length;
   const invalidContent =

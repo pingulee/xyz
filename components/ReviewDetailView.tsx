@@ -8,7 +8,11 @@ import { useEffect, useRef, useState } from "react";
 import KnightAvatar, {
   type KnightAvailability,
 } from "@/components/KnightAvatar";
-import { TierRecordBadges, TierRecordEditor } from "@/components/TierRecords";
+import {
+  TierRecordBadges,
+  TierRecordEditor,
+  normalizeTierRecords,
+} from "@/components/TierRecords";
 import type {
   Review,
   ReviewNavItem,
@@ -171,7 +175,7 @@ export default function ReviewDetailView({
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState(review.reply?.content ?? "");
   const [tierRecords, setTierRecords] = useState<TierRecord[]>(
-    review.reply?.tierRecords ?? [],
+    normalizeTierRecords(review.reply?.tierRecords ?? []),
   );
   const draftLength = draft.trim().length;
   const invalidDraft =
@@ -299,7 +303,7 @@ export default function ReviewDetailView({
       return;
     }
     setDraft(review.reply?.content ?? "");
-    setTierRecords(review.reply?.tierRecords ?? []);
+    setTierRecords(normalizeTierRecords(review.reply?.tierRecords ?? []));
     setEditingReply(Boolean(review.reply));
     setFormOpen(true);
   };
