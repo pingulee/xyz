@@ -20,6 +20,14 @@ function isAdminRequest(request: Request): boolean {
   return token ? validateSession(token) : false;
 }
 
+function isOptionalNonNegativeNumber(value: unknown): boolean {
+  return (
+    value === undefined ||
+    value === null ||
+    (typeof value === "number" && Number.isFinite(value) && value >= 0)
+  );
+}
+
 function isValidTierRecords(records: unknown): records is TierRecord[] {
   if (!Array.isArray(records)) return false;
   return records.every(
@@ -34,8 +42,16 @@ function isValidTierRecords(records: unknown): records is TierRecord[] {
       typeof (r as Record<string, unknown>).wins === "number" &&
       typeof (r as Record<string, unknown>).losses === "number" &&
       Number((r as Record<string, unknown>).wins) >= 0 &&
-      Number((r as Record<string, unknown>).losses) >= 0,
+      Number((r as Record<string, unknown>).losses) >= 0 &&
+      isOptionalNonNegativeNumber((r as Record<string, unknown>).kills) &&
+      isOptionalNonNegativeNumber((r as Record<string, unknown>).deaths) &&
+      isOptionalNonNegativeNumber((r as Record<string, unknown>).assists),
   );
+}
+
+function toAvgStat(value: number | undefined | null): number | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
+  return Math.min(99.9, Math.max(0, Math.round(value * 10) / 10));
 }
 
 export async function POST(request: Request) {
@@ -66,6 +82,9 @@ export async function POST(request: Request) {
           champion: r.champion?.trim().slice(0, 40) ?? "",
           wins: Math.floor(r.wins),
           losses: Math.floor(r.losses),
+          kills: toAvgStat(r.kills),
+          deaths: toAvgStat(r.deaths),
+          assists: toAvgStat(r.assists),
         }))
         .filter((r) => r.tier)
     : [];

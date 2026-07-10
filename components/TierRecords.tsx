@@ -34,6 +34,18 @@ export const TIER_ICON_BY_NAME: Record<string, string> = {
 const inputCls =
   "rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50";
 
+export function kdaRatioLabel(record: Pick<TierRecord, "kills" | "deaths" | "assists">): string | null {
+  const { kills, deaths, assists } = record;
+  if (kills === undefined && deaths === undefined && assists === undefined) {
+    return null;
+  }
+  const k = kills ?? 0;
+  const d = deaths ?? 0;
+  const a = assists ?? 0;
+  if (d <= 0) return "Perfect";
+  return ((k + a) / d).toFixed(2);
+}
+
 export function TierRecordEditor({
   records,
   onChange,
@@ -45,12 +57,20 @@ export function TierRecordEditor({
   const add = () =>
     onChange([...records, { tier: "골드", champion: "", wins: 0, losses: 0 }]);
   const remove = (i: number) => onChange(records.filter((_, idx) => idx !== i));
-  const update = (i: number, field: keyof TierRecord, value: string | number) =>
+  const update = (
+    i: number,
+    field: keyof TierRecord,
+    value: string | number | undefined,
+  ) =>
     onChange(
       records.map((record, idx) =>
         idx === i ? { ...record, [field]: value } : record,
       ),
     );
+  const parseAvg = (raw: string): number | undefined => {
+    if (raw === "") return undefined;
+    return Math.max(0, Number(raw) || 0);
+  };
 
   return (
     <div className="grid gap-2">
@@ -68,66 +88,108 @@ export function TierRecordEditor({
       {records.map((record, i) => (
         <div
           key={i}
-          className="grid gap-2 rounded-2xl border border-white/8 bg-white/[.025] p-2 sm:grid-cols-[1fr_1fr_auto_auto_auto_auto_auto] sm:items-center"
+          className="grid gap-2 rounded-2xl border border-white/8 bg-white/[.025] p-3"
         >
-          <select
-            value={record.tier}
-            onChange={(event) => update(i, "tier", event.target.value)}
-            className={`${inputCls} flex-1`}
-          >
-            {TIER_OPTIONS.map((tier) => (
-              <option key={tier} value={tier}>
-                {tier}
+          <div className="flex items-center gap-2">
+            <select
+              value={record.tier}
+              onChange={(event) => update(i, "tier", event.target.value)}
+              className={`${inputCls} min-w-0 flex-1`}
+            >
+              {TIER_OPTIONS.map((tier) => (
+                <option key={tier} value={tier}>
+                  {tier}
+                </option>
+              ))}
+            </select>
+            <select
+              value={record.champion ?? ""}
+              onChange={(event) => update(i, "champion", event.target.value)}
+              className={`${inputCls} min-w-0 flex-1`}
+              disabled={championsLoading}
+            >
+              <option value="">
+                {championsLoading ? "불러오는 중" : "챔피언 없음"}
               </option>
-            ))}
-          </select>
-          <select
-            value={record.champion ?? ""}
-            onChange={(event) => update(i, "champion", event.target.value)}
-            className={`${inputCls} min-w-0`}
-            disabled={championsLoading}
-          >
-            <option value="">
-              {championsLoading ? "불러오는 중" : "챔피언 없음"}
-            </option>
-            {champions.map((champion) => (
-              <option key={champion.id} value={champion.name}>
-                {champion.name}
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            min={0}
-            max={999}
-            value={record.wins}
-            onChange={(event) =>
-              update(i, "wins", Math.max(0, Number(event.target.value) || 0))
-            }
-            className={`${inputCls} w-16 text-center`}
-            placeholder="승"
-          />
-          <span className="shrink-0 text-xs text-zinc-500">승</span>
-          <input
-            type="number"
-            min={0}
-            max={999}
-            value={record.losses}
-            onChange={(event) =>
-              update(i, "losses", Math.max(0, Number(event.target.value) || 0))
-            }
-            className={`${inputCls} w-16 text-center`}
-            placeholder="패"
-          />
-          <span className="shrink-0 text-xs text-zinc-500">패</span>
-          <button
-            type="button"
-            onClick={() => remove(i)}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/10 text-zinc-500 transition hover:border-red-400/40 hover:text-red-300"
-            aria-label="작업 기록 삭제"
-          >
-            <Trash2 size={12} />
-          </button>
+              {champions.map((champion) => (
+                <option key={champion.id} value={champion.name}>
+                  {champion.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 text-zinc-500 transition hover:border-red-400/40 hover:text-red-300"
+              aria-label="작업 기록 삭제"
+            >
+              <Trash2 size={12} />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            <label className="grid gap-1">
+              <span className="text-[10px] font-black text-zinc-500">승</span>
+              <input
+                type="number"
+                min={0}
+                max={999}
+                value={record.wins}
+                onChange={(event) =>
+                  update(i, "wins", Math.max(0, Number(event.target.value) || 0))
+                }
+                className={`${inputCls} w-full text-center`}
+              />
+            </label>
+            <label className="grid gap-1">
+              <span className="text-[10px] font-black text-zinc-500">패</span>
+              <input
+                type="number"
+                min={0}
+                max={999}
+                value={record.losses}
+                onChange={(event) =>
+                  update(i, "losses", Math.max(0, Number(event.target.value) || 0))
+                }
+                className={`${inputCls} w-full text-center`}
+              />
+            </label>
+            <label className="grid gap-1">
+              <span className="text-[10px] font-black text-zinc-500">평균 킬</span>
+              <input
+                type="number"
+                min={0}
+                step={0.1}
+                value={record.kills ?? ""}
+                onChange={(event) => update(i, "kills", parseAvg(event.target.value))}
+                className={`${inputCls} w-full text-center`}
+                placeholder="-"
+              />
+            </label>
+            <label className="grid gap-1">
+              <span className="text-[10px] font-black text-zinc-500">평균 데스</span>
+              <input
+                type="number"
+                min={0}
+                step={0.1}
+                value={record.deaths ?? ""}
+                onChange={(event) => update(i, "deaths", parseAvg(event.target.value))}
+                className={`${inputCls} w-full text-center`}
+                placeholder="-"
+              />
+            </label>
+            <label className="grid gap-1">
+              <span className="text-[10px] font-black text-zinc-500">평균 어시</span>
+              <input
+                type="number"
+                min={0}
+                step={0.1}
+                value={record.assists ?? ""}
+                onChange={(event) => update(i, "assists", parseAvg(event.target.value))}
+                className={`${inputCls} w-full text-center`}
+                placeholder="-"
+              />
+            </label>
+          </div>
         </div>
       ))}
     </div>
@@ -149,6 +211,7 @@ export function TierRecordBadges({
         const icon = TIER_ICON_BY_NAME[record.tier];
         const total = record.wins + record.losses;
         const rate = total > 0 ? Math.round((record.wins / total) * 100) : 0;
+        const kdaRatio = kdaRatioLabel(record);
 
         return (
           <div
@@ -170,6 +233,14 @@ export function TierRecordBadges({
                 {record.champion ? `${record.champion} · ` : ""}
                 {record.wins}승 {record.losses}패
               </p>
+              {kdaRatio && (
+                <p className="text-xs font-bold text-zinc-500">
+                  KDA {(record.kills ?? 0).toFixed(1)} /{" "}
+                  {(record.deaths ?? 0).toFixed(1)} /{" "}
+                  {(record.assists ?? 0).toFixed(1)}
+                  <span className="ml-1 text-gold">({kdaRatio})</span>
+                </p>
+              )}
             </div>
             <span className="text-sm font-black text-white">{rate}%</span>
           </div>

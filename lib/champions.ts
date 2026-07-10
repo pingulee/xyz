@@ -1,5 +1,6 @@
 import { RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
+import { oncePerProcess } from "@/lib/schema-once";
 
 export type Champion = {
   id: string;
@@ -27,7 +28,7 @@ type DataDragonChampionResponse = {
 
 const DDRAGON_BASE = "https://ddragon.leagueoflegends.com";
 
-export async function ensureChampionsSchema() {
+export const ensureChampionsSchema = oncePerProcess(async () => {
   await getPool().execute(`
     CREATE TABLE IF NOT EXISTS champions (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -43,7 +44,7 @@ export async function ensureChampionsSchema() {
       INDEX idx_champions_active_name (active, name)
     ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
-}
+});
 
 function toChampion(row: ChampionRow): Champion {
   return {
@@ -105,9 +106,29 @@ export async function syncChampionsFromRiot() {
     `UPDATE champions SET active = FALSE WHERE ddragon_version <> :version`,
     { version },
   );
+
+  championCache = null;
 }
 
+/** 챔피언 한글 이름 → 로컬 이미지 경로(/images/champion/{riot_id}.png) 매핑 */
+export async function getChampionImageMap(): Promise<Record<string, string>> {
+  const champions = await getChampions();
+  const map: Record<string, string> = {};
+  for (const champion of champions) {
+    map[champion.name] = `/images/champion/${champion.id}.png`;
+  }
+  return map;
+}
+
+// 챔피언 목록은 거의 변하지 않으므로 원격 DB 조회를 줄이기 위해 메모리에 캐시한다.
+let championCache: { at: number; champions: Champion[] } | null = null;
+const CHAMPION_CACHE_TTL_MS = 10 * 60 * 1000;
+
 export async function getChampions(): Promise<Champion[]> {
+  if (championCache && Date.now() - championCache.at < CHAMPION_CACHE_TTL_MS) {
+    return championCache.champions;
+  }
+
   await ensureChampionsSchema();
 
   const [rows] = await getPool().execute<ChampionRow[]>(
@@ -117,5 +138,7 @@ export async function getChampions(): Promise<Champion[]> {
      ORDER BY name ASC`,
   );
 
-  return rows.map(toChampion);
+  const champions = rows.map(toChampion);
+  championCache = { at: Date.now(), champions };
+  return champions;
 }

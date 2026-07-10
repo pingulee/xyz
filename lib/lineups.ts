@@ -2,6 +2,8 @@ import { RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { ensureReviewsSchema } from "@/lib/reviews";
 import type { TierRecord } from "@/lib/reviews";
+import { getChampionImageMap } from "@/lib/champions";
+import { oncePerProcess } from "@/lib/schema-once";
 import { getLineupSlug } from "@/lib/lineup-model";
 import type { Lineup } from "@/lib/lineup-model";
 
@@ -46,7 +48,7 @@ function nationalityCode(value: number | string | null | undefined): number {
   return 1;
 }
 
-export async function ensureLineupsSchema() {
+export const ensureLineupsSchema = oncePerProcess(async () => {
   await getPool().execute(
     `ALTER TABLE lineups ADD COLUMN IF NOT EXISTS nationality TINYINT UNSIGNED NOT NULL DEFAULT 1`,
   );
@@ -73,7 +75,7 @@ export async function ensureLineupsSchema() {
       `ALTER TABLE lineups MODIFY COLUMN nationality TINYINT UNSIGNED NOT NULL DEFAULT 1`,
     );
   }
-}
+});
 
 export function toLineup(row: LineupRow): Lineup {
   return {
@@ -157,10 +159,31 @@ const TIER_ORDER = [
   "에메랄드", "다이아몬드", "마스터", "그랜드마스터", "챌린저",
 ];
 
+export type ChampionStat = {
+  champion: string;
+  image: string | null;
+  wins: number;
+  losses: number;
+  /** 게임당 평균 킬/데스/어시 — 입력된 기록이 없으면 null */
+  kills: number | null;
+  deaths: number | null;
+  assists: number | null;
+};
+
 export type WinStatsGroup = {
   wins: number;
   losses: number;
   byTier: { tier: string; wins: number; losses: number }[];
+  byChampion: ChampionStat[];
+};
+
+type ChampionAcc = {
+  wins: number;
+  losses: number;
+  killsSum: number;
+  deathsSum: number;
+  assistsSum: number;
+  kdaGames: number;
 };
 
 function createWinStatsAccumulator() {
@@ -168,16 +191,35 @@ function createWinStatsAccumulator() {
     wins: 0,
     losses: 0,
     byTier: {} as Record<string, { wins: number; losses: number }>,
+    byChampion: {} as Record<string, ChampionAcc>,
   };
 }
 
-function toWinStatsGroup(acc: ReturnType<typeof createWinStatsAccumulator>): WinStatsGroup {
+function toWinStatsGroup(
+  acc: ReturnType<typeof createWinStatsAccumulator>,
+  championImages: Record<string, string>,
+): WinStatsGroup {
+  const round1 = (value: number) => Math.round(value * 10) / 10;
   return {
     wins: acc.wins,
     losses: acc.losses,
     byTier: Object.entries(acc.byTier)
       .map(([tier, v]) => ({ tier, ...v }))
       .sort((a, b) => TIER_ORDER.indexOf(b.tier) - TIER_ORDER.indexOf(a.tier)),
+    byChampion: Object.entries(acc.byChampion)
+      .map(([champion, v]) => ({
+        champion,
+        image: championImages[champion] ?? null,
+        wins: v.wins,
+        losses: v.losses,
+        kills: v.kdaGames > 0 ? round1(v.killsSum / v.kdaGames) : null,
+        deaths: v.kdaGames > 0 ? round1(v.deathsSum / v.kdaGames) : null,
+        assists: v.kdaGames > 0 ? round1(v.assistsSum / v.kdaGames) : null,
+      }))
+      .sort(
+        (a, b) =>
+          b.wins + b.losses - (a.wins + a.losses) || b.wins - a.wins,
+      ),
   };
 }
 
@@ -214,20 +256,49 @@ export async function getLineupWinStats(lineupId: number): Promise<{
       if (!r.tier) continue;
       const wins = Number(r.wins) || 0;
       const losses = Number(r.losses) || 0;
+      const games = wins + losses;
+      const champion = (r.champion ?? "").trim();
+      const hasKda =
+        games > 0 &&
+        (r.kills !== undefined || r.deaths !== undefined || r.assists !== undefined);
       for (const acc of serviceAcc ? [total, serviceAcc] : [total]) {
         if (!acc.byTier[r.tier]) acc.byTier[r.tier] = { wins: 0, losses: 0 };
         acc.byTier[r.tier].wins += wins;
         acc.byTier[r.tier].losses += losses;
         acc.wins += wins;
         acc.losses += losses;
+        if (champion) {
+          if (!acc.byChampion[champion]) {
+            acc.byChampion[champion] = {
+              wins: 0,
+              losses: 0,
+              killsSum: 0,
+              deathsSum: 0,
+              assistsSum: 0,
+              kdaGames: 0,
+            };
+          }
+          const champAcc = acc.byChampion[champion];
+          champAcc.wins += wins;
+          champAcc.losses += losses;
+          if (hasKda) {
+            // 평균 KDA는 판수 가중 평균으로 합산
+            champAcc.killsSum += (Number(r.kills) || 0) * games;
+            champAcc.deathsSum += (Number(r.deaths) || 0) * games;
+            champAcc.assistsSum += (Number(r.assists) || 0) * games;
+            champAcc.kdaGames += games;
+          }
+        }
       }
     }
   }
 
+  const championImages = await getChampionImageMap();
+
   return {
-    total: toWinStatsGroup(total),
-    boost: toWinStatsGroup(boost),
-    duo: toWinStatsGroup(duo),
+    total: toWinStatsGroup(total, championImages),
+    boost: toWinStatsGroup(boost, championImages),
+    duo: toWinStatsGroup(duo, championImages),
   };
 }
 

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node shot.mjs \"https://1v9.gg/@Ozil\" ozil.png 1440)",
+      "Bash(node shot2.mjs)"
+    ]
+  }
+}

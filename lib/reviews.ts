@@ -1,11 +1,16 @@
 import { RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
+import { oncePerProcess } from "@/lib/schema-once";
 
 export type TierRecord = {
   tier: string;
   champion?: string;
   wins: number;
   losses: number;
+  /** 게임당 평균 킬/데스/어시 (선택 입력) */
+  kills?: number;
+  deaths?: number;
+  assists?: number;
 };
 
 export type ReviewReply = {
@@ -55,7 +60,7 @@ type ReviewRow = RowDataPacket & {
   reply_created_at: Date | null;
 };
 
-export async function ensureReviewsSchema() {
+export const ensureReviewsSchema = oncePerProcess(async () => {
   await getPool().execute(
     `ALTER TABLE reviews ADD COLUMN IF NOT EXISTS lineup_id BIGINT UNSIGNED NULL`,
   );
@@ -85,13 +90,18 @@ export async function ensureReviewsSchema() {
   await getPool().execute(
     `ALTER TABLE review_replies ADD COLUMN IF NOT EXISTS tier_records JSON NULL`,
   );
-}
+});
 
 function parseTierRecords(raw: string | null | unknown): TierRecord[] {
   if (!raw) return [];
   try {
     const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
     if (!Array.isArray(parsed)) return [];
+    const toAvg = (value: unknown): number | undefined => {
+      if (value === undefined || value === null || value === "") return undefined;
+      const num = Number(value);
+      return Number.isFinite(num) ? num : undefined;
+    };
     return parsed.map((r: unknown) => {
       const obj = r as Record<string, unknown>;
       return {
@@ -99,6 +109,9 @@ function parseTierRecords(raw: string | null | unknown): TierRecord[] {
         champion: String(obj.champion ?? ""),
         wins: Number(obj.wins ?? 0),
         losses: Number(obj.losses ?? 0),
+        kills: toAvg(obj.kills),
+        deaths: toAvg(obj.deaths),
+        assists: toAvg(obj.assists),
       };
     });
   } catch {

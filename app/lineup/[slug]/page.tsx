@@ -11,6 +11,7 @@ import SectionTitle from "@/components/SectionTitle";
 import LineupReviews from "@/components/LineupReviews";
 import WinStatsCard from "@/components/WinStatsCard";
 import { getLineupBySlug, getLineupReviewStats, getLineupWinStats } from "@/lib/lineups";
+import { getChampionImageMap } from "@/lib/champions";
 import { getReviewsByLineupId } from "@/lib/reviews";
 import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSession";
 
@@ -55,10 +56,11 @@ export default async function LineupDetailPage({ params }: Props) {
   const knightToken = cookieStore.get(KNIGHT_SESSION_COOKIE)?.value ?? "";
   const knightLineupId = validateKnightSession(knightToken);
 
-  const [stats, reviews, winStats] = await Promise.all([
+  const [stats, reviews, winStats, championImages] = await Promise.all([
     getLineupReviewStats(Number(lineup.id)),
     getReviewsByLineupId(Number(lineup.id)),
     getLineupWinStats(Number(lineup.id)),
+    getChampionImageMap(),
   ]);
 
   const totalGames = winStats.total.wins + winStats.total.losses;
@@ -217,8 +219,17 @@ export default async function LineupDetailPage({ params }: Props) {
                         {lineup.champions.map((champion) => (
                           <span
                             key={champion}
-                            className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-bold text-zinc-300"
+                            className="flex items-center gap-1.5 rounded-full border border-white/8 bg-white/4 py-1 pl-1.5 pr-3 text-xs font-bold text-zinc-300"
                           >
+                            {championImages[champion] ? (
+                              <Image
+                                src={championImages[champion]}
+                                alt={champion}
+                                width={20}
+                                height={20}
+                                className="rounded-full border border-white/10 bg-zinc-900 object-cover"
+                              />
+                            ) : null}
                             {champion}
                           </span>
                         ))}

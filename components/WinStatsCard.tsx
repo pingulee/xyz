@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Swords } from "lucide-react";
-import { TIER_ICON_BY_NAME } from "@/components/TierRecords";
+import { TIER_ICON_BY_NAME, kdaRatioLabel } from "@/components/TierRecords";
 import type { WinStatsGroup } from "@/lib/lineups";
 
 type TabKey = "total" | "boost" | "duo";
@@ -107,6 +107,66 @@ export default function WinStatsCard({
                     {t.wins}승 {t.losses}패
                     <span className="ml-1.5 font-black text-white">{pct}%</span>
                   </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {active.data.byChampion.length > 0 && (
+        <div className="mt-6 border-t border-white/6 pt-5">
+          <div className="text-xs font-black text-zinc-500">챔피언별 전적</div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {active.data.byChampion.map((c) => {
+              const total = c.wins + c.losses;
+              const pct = total > 0 ? Math.round((c.wins / total) * 100) : 0;
+              const kdaRatio = kdaRatioLabel({
+                kills: c.kills ?? undefined,
+                deaths: c.deaths ?? undefined,
+                assists: c.assists ?? undefined,
+              });
+              return (
+                <div
+                  key={c.champion}
+                  className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/20 px-3 py-2.5"
+                >
+                  {c.image ? (
+                    <Image
+                      src={c.image}
+                      alt={c.champion}
+                      width={40}
+                      height={40}
+                      className="shrink-0 rounded-xl border border-white/10 bg-zinc-900 object-cover"
+                    />
+                  ) : (
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/10 bg-zinc-900 text-sm font-black text-zinc-500">
+                      {c.champion.charAt(0)}
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-black text-white">
+                      {c.champion}
+                    </p>
+                    <p className="text-xs font-bold text-zinc-500">
+                      {c.wins}승 {c.losses}패
+                      {kdaRatio && (
+                        <>
+                          {" · "}
+                          {(c.kills ?? 0).toFixed(1)} / {(c.deaths ?? 0).toFixed(1)} /{" "}
+                          {(c.assists ?? 0).toFixed(1)}
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-black text-white">{pct}%</p>
+                    {kdaRatio && (
+                      <p className="text-[11px] font-bold text-gold">
+                        {kdaRatio === "Perfect" ? kdaRatio : `${kdaRatio} KDA`}
+                      </p>
+                    )}
+                  </div>
                 </div>
               );
             })}
