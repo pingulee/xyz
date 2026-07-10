@@ -1273,12 +1273,12 @@ function ReplySection({
           src={knightImage}
           alt=""
           fill
-          className="object-cover opacity-20"
+          className="pointer-events-none object-cover opacity-20"
           sizes="(max-width: 768px) 100vw, 720px"
           unoptimized
         />
       )}
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.88),rgba(0,0,0,0.62)_52%,rgba(0,0,0,0.30))]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.88),rgba(0,0,0,0.62)_52%,rgba(0,0,0,0.30))]" />
       <div className="relative mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <KnightAvatar

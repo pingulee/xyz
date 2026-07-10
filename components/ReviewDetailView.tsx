@@ -546,12 +546,12 @@ export default function ReviewDetailView({
             src={knightImage}
             alt=""
             fill
-            className="object-cover opacity-18"
+            className="pointer-events-none object-cover opacity-18"
             sizes="(max-width: 1024px) 100vw, 960px"
             unoptimized
           />
         )}
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.90),rgba(0,0,0,0.72)_55%,rgba(0,0,0,0.45))]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.90),rgba(0,0,0,0.72)_55%,rgba(0,0,0,0.45))]" />
 
         <div className="relative grid gap-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
