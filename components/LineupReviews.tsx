@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import {
   ChevronLeft,
   ChevronRight,
@@ -13,6 +12,7 @@ import KnightAvatar, { type KnightAvailability } from "@/components/KnightAvatar
 import {
   TierRecordBadges,
   TierRecordEditor,
+  isTierRecordsComplete,
   normalizeTierRecords,
 } from "@/components/TierRecords";
 import type { Review, ReviewReply, TierRecord } from "@/lib/reviews";
@@ -116,14 +116,19 @@ function ReplyForm({
     submitAttempted &&
     contentLength > 0 &&
     contentLength < REPLY_CONTENT_MIN_LENGTH;
+  const recordsComplete = isTierRecordsComplete(tierRecords);
 
   return (
     <div className="grid gap-3">
       <div className="flex items-center gap-2">
         <span className="text-xs font-black text-gold">{knightName}</span>
-        <span className="text-xs text-zinc-600">기사 (닉네임 자동)</span>
       </div>
       <TierRecordEditor records={tierRecords} onChange={setTierRecords} />
+      {!recordsComplete && (
+        <p className="text-xs font-bold text-amber-300/80">
+          작업 기록의 티어·챔피언·킬/데스/어시를 모두 입력해야 등록할 수 있습니다.
+        </p>
+      )}
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
@@ -153,10 +158,14 @@ function ReplyForm({
           type="button"
           onClick={() => {
             setSubmitAttempted(true);
-            if (contentLength >= REPLY_CONTENT_MIN_LENGTH)
+            if (contentLength >= REPLY_CONTENT_MIN_LENGTH && recordsComplete)
               onSubmit(content.trim(), tierRecords);
           }}
-          disabled={saving || contentLength < REPLY_CONTENT_MIN_LENGTH}
+          disabled={
+            saving ||
+            contentLength < REPLY_CONTENT_MIN_LENGTH ||
+            !recordsComplete
+          }
           className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-4 py-2 text-xs font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving && <Loader2 size={12} className="animate-spin" />}
@@ -184,10 +193,8 @@ function ReplyBlock({
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
-  const router = useRouter();
   const canReply =
     knightLineupId !== null && review.lineupId === String(knightLineupId);
-  const isLoggedIn = knightLineupId !== null;
 
   const replyFormVisible = canReply && (formOpen || editing || !replyData);
 
@@ -225,14 +232,6 @@ function ReplyBlock({
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleReplyButtonClick = () => {
-    if (!isLoggedIn) {
-      router.push("/login");
-      return;
-    }
-    setFormOpen(true);
   };
 
   return (
@@ -298,19 +297,11 @@ function ReplyBlock({
         </div>
       )}
 
-      {/* 답변 없고 폼 안 열린 상태 → 버튼 */}
+      {/* 답변 없고 폼 안 열린 상태 → 대기 안내 */}
       {!replyData && !replyFormVisible && !editing && (
-        <button
-          type="button"
-          onClick={handleReplyButtonClick}
-          className="relative text-xs font-bold text-zinc-400 transition hover:text-gold"
-        >
-          {canReply
-            ? "답변 작성"
-            : isLoggedIn
-              ? "이 기사의 후기에만 답변 가능합니다"
-              : "기사님만 답변 가능 — 로그인하기"}
-        </button>
+        <p className="relative text-xs font-bold text-zinc-500">
+          기사 답변 대기 중
+        </p>
       )}
     </div>
   );

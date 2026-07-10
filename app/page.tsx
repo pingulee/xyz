@@ -233,7 +233,7 @@ export default async function Home() {
           <div className="grid gap-6 lg:grid-cols-3">
             {lineups.map((lineup, i) => (
               <Reveal key={lineup.name} delay={i * 0.08}>
-                <LineupCard knight={lineup} />
+                <LineupCard knight={lineup} placement={i + 1} />
               </Reveal>
             ))}
           </div>

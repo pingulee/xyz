@@ -10,7 +10,6 @@ import Reveal from "@/components/Reveal";
 import LineupReviews from "@/components/LineupReviews";
 import WinStatsCard from "@/components/WinStatsCard";
 import { getLineupBySlug, getLineupReviewStats, getLineupWinStats } from "@/lib/lineups";
-import { getChampionImageMap } from "@/lib/champions";
 import { getReviewsByLineupId } from "@/lib/reviews";
 import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSession";
 import { site } from "@/lib/site";
@@ -56,11 +55,10 @@ export default async function LineupDetailPage({ params }: Props) {
   const knightToken = cookieStore.get(KNIGHT_SESSION_COOKIE)?.value ?? "";
   const knightLineupId = validateKnightSession(knightToken);
 
-  const [stats, reviews, winStats, championImages] = await Promise.all([
+  const [stats, reviews, winStats] = await Promise.all([
     getLineupReviewStats(Number(lineup.id)),
     getReviewsByLineupId(Number(lineup.id)),
     getLineupWinStats(Number(lineup.id)),
-    getChampionImageMap(),
   ]);
 
   const totalGames = winStats.total.wins + winStats.total.losses;
@@ -189,30 +187,6 @@ export default async function LineupDetailPage({ params }: Props) {
                     ))}
                   </div>
                 </div>
-                {lineup.champions.length > 0 && (
-                  <div className="sm:col-span-2 lg:col-span-4">
-                    <div className="text-xs font-black text-zinc-500">대표 챔피언</div>
-                    <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      {lineup.champions.map((champion) => (
-                        <span
-                          key={champion}
-                          className="flex items-center gap-1.5 rounded-full border border-white/8 bg-white/4 py-1 pl-1.5 pr-3 text-xs font-bold text-zinc-300"
-                        >
-                          {championImages[champion] ? (
-                            <Image
-                              src={championImages[champion]}
-                              alt={champion}
-                              width={20}
-                              height={20}
-                              className="rounded-full border border-white/10 bg-zinc-900 object-cover"
-                            />
-                          ) : null}
-                          {champion}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>

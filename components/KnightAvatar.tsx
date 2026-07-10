@@ -27,8 +27,9 @@ export default function KnightAvatar({
   const status = availability
     ? getLineupAvailability(availability)
     : { available: false, label: "비활동" };
-  const dotSize = size >= 160 ? 34 : size >= 80 ? 22 : 17;
-  const borderSize = size >= 160 ? 5 : size >= 80 ? 4 : 3;
+  // 아바타 크기에 비례해 상태 원 크기 결정 (작은 아바타는 최소 크기 보장)
+  const dotSize = Math.max(17, Math.round(size * 0.275));
+  const borderSize = Math.max(3, Math.round(dotSize * 0.18));
   const dotOffset = Math.round(size * 0.1465 - dotSize / 2);
   const imageSrc = image || DEFAULT_PROFILE_IMAGE;
 

@@ -11,6 +11,7 @@ import KnightAvatar, {
 import {
   TierRecordBadges,
   TierRecordEditor,
+  isTierRecordsComplete,
   normalizeTierRecords,
 } from "@/components/TierRecords";
 import type {
@@ -180,6 +181,7 @@ export default function ReviewDetailView({
   const draftLength = draft.trim().length;
   const invalidDraft =
     draftLength > 0 && draftLength < REPLY_CONTENT_MIN_LENGTH;
+  const recordsComplete = isTierRecordsComplete(tierRecords);
   const viewTrackedRef = useRef(false);
 
   const canReply =
@@ -618,6 +620,11 @@ export default function ReviewDetailView({
                 records={tierRecords}
                 onChange={setTierRecords}
               />
+              {!recordsComplete && (
+                <p className="text-xs font-bold text-amber-300/80">
+                  작업 기록의 티어·챔피언·킬/데스/어시를 모두 입력해야 등록할 수 있습니다.
+                </p>
+              )}
               <textarea
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
@@ -647,7 +654,11 @@ export default function ReviewDetailView({
                 <button
                   type="button"
                   onClick={submitReply}
-                  disabled={saving || draftLength < REPLY_CONTENT_MIN_LENGTH}
+                  disabled={
+                    saving ||
+                    draftLength < REPLY_CONTENT_MIN_LENGTH ||
+                    !recordsComplete
+                  }
                   className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-2.5 text-sm font-black text-black transition disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saving && <Loader2 size={14} className="animate-spin" />}
@@ -657,20 +668,8 @@ export default function ReviewDetailView({
             </div>
           ) : (
             <div className="rounded-2xl border border-white/8 bg-black/25 px-4 py-8 text-center text-sm font-bold text-zinc-500">
-              아직 기사 답변이 없습니다.
+              기사 답변 대기 중
             </div>
-          )}
-
-          {!formOpen && !canReply && !review.reply && (
-            <button
-              type="button"
-              onClick={openReplyForm}
-              className="justify-self-start text-xs font-bold text-zinc-500 transition hover:text-gold"
-            >
-              {isLoggedIn
-                ? "이 기사의 후기에만 답변 가능합니다"
-                : "기사님만 답변 가능 - 로그인하기"}
-            </button>
           )}
         </div>
       </section>

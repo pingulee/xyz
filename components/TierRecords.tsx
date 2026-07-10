@@ -36,6 +36,18 @@ export const TIER_ICON_BY_NAME: Record<string, string> = {
 const inputCls =
   "rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50";
 
+/** 모든 게임 기록에 티어·챔피언·킬/데스/어시가 빠짐없이 입력되었는지 확인 */
+export function isTierRecordsComplete(records: TierRecord[]): boolean {
+  return records.every(
+    (record) =>
+      record.tier !== "" &&
+      (record.champion ?? "") !== "" &&
+      record.kills !== undefined &&
+      record.deaths !== undefined &&
+      record.assists !== undefined,
+  );
+}
+
 /** OP.GG 스타일 평점 색상: 3 미만 회색, 3점대 초록, 4점대 파랑, 5 이상(Perfect 포함) 주황 */
 export function kdaRatingClass(
   record: Pick<TierRecord, "kills" | "deaths" | "assists">,

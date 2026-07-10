@@ -22,35 +22,31 @@ function isAdminRequest(request: Request): boolean {
 
 const MAX_TIER_RECORDS = 200;
 
-function isOptionalNonNegativeNumber(value: unknown): boolean {
-  return (
-    value === undefined ||
-    value === null ||
-    (typeof value === "number" && Number.isFinite(value) && value >= 0)
-  );
+function isNonNegativeNumber(value: unknown): boolean {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
 }
 
-// 판별 기록: 게임 1판 = 기록 1개 (tier, champion?, win, kills?/deaths?/assists?)
+// 판별 기록: 게임 1판 = 기록 1개 — 티어·챔피언·승패·킬/데스/어시 모두 필수
 function isValidTierRecords(records: unknown): records is TierRecord[] {
   if (!Array.isArray(records) || records.length > MAX_TIER_RECORDS) return false;
-  return records.every(
-    (r) =>
-      typeof r === "object" &&
-      r !== null &&
-      typeof (r as Record<string, unknown>).tier === "string" &&
-      (
-        (r as Record<string, unknown>).champion === undefined ||
-        typeof (r as Record<string, unknown>).champion === "string"
-      ) &&
-      typeof (r as Record<string, unknown>).win === "boolean" &&
-      isOptionalNonNegativeNumber((r as Record<string, unknown>).kills) &&
-      isOptionalNonNegativeNumber((r as Record<string, unknown>).deaths) &&
-      isOptionalNonNegativeNumber((r as Record<string, unknown>).assists),
-  );
+  return records.every((r) => {
+    if (typeof r !== "object" || r === null) return false;
+    const obj = r as Record<string, unknown>;
+    return (
+      typeof obj.tier === "string" &&
+      obj.tier.trim() !== "" &&
+      typeof obj.champion === "string" &&
+      obj.champion.trim() !== "" &&
+      typeof obj.win === "boolean" &&
+      isNonNegativeNumber(obj.kills) &&
+      isNonNegativeNumber(obj.deaths) &&
+      isNonNegativeNumber(obj.assists)
+    );
+  });
 }
 
-function toCountStat(value: number | undefined | null): number | undefined {
-  if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
+function toCountStat(value: number | undefined | null): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 0;
   return Math.min(99, Math.max(0, Math.floor(value)));
 }
 
@@ -75,18 +71,22 @@ export async function POST(request: Request) {
 
   const reviewId = Number(payload.reviewId);
   const content = payload.content?.trim() ?? "";
-  const tierRecords: TierRecord[] = isValidTierRecords(payload.tierRecords)
-    ? payload.tierRecords
-        .map((r) => ({
-          tier: r.tier.trim(),
-          champion: r.champion?.trim().slice(0, 40) ?? "",
-          win: r.win === true,
-          kills: toCountStat(r.kills),
-          deaths: toCountStat(r.deaths),
-          assists: toCountStat(r.assists),
-        }))
-        .filter((r) => r.tier)
-    : [];
+
+  const rawRecords = payload.tierRecords ?? [];
+  if (!isValidTierRecords(rawRecords)) {
+    return NextResponse.json(
+      { message: "작업 기록의 티어·챔피언·킬/데스/어시를 모두 입력해주세요." },
+      { status: 400 },
+    );
+  }
+  const tierRecords: TierRecord[] = rawRecords.map((r) => ({
+    tier: r.tier.trim(),
+    champion: r.champion?.trim().slice(0, 40) ?? "",
+    win: r.win === true,
+    kills: toCountStat(r.kills),
+    deaths: toCountStat(r.deaths),
+    assists: toCountStat(r.assists),
+  }));
 
   if (!Number.isInteger(reviewId) || reviewId < 1) {
     return NextResponse.json(
