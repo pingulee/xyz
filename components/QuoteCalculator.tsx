@@ -122,7 +122,7 @@ const SERVICES = [
   },
   {
     key: "low-win",
-    label: "저티어 승리 보장제",
+    label: "저티어 티어 보장제",
     category: "대리",
     unit: "승",
     min: 1,
@@ -257,9 +257,7 @@ function RankPicker({
     return [
       { item, index, label: item.name, choiceDivision: item.divisions[0] },
     ];
-  }).filter(
-    ({ index }) => index >= minTierIndex && index <= maxTierIndex,
-  );
+  }).filter(({ index }) => index >= minTierIndex && index <= maxTierIndex);
 
   return (
     <div className="rounded-3xl border border-white/8 bg-black/20 p-5 sm:p-6">
@@ -376,7 +374,7 @@ function RankPicker({
                   : `다이아몬드 ${division >= 3 ? "4~3" : "2~1"}`
                 : splitMaster && tier.key === "master"
                   ? `마스터 ${division}~${division + 199} LP`
-                : `${tier.name} ${hideDivision || tier.divisions.length === 1 ? "" : ["", "I", "II", "III", "IV"][division]}`}
+                  : `${tier.name} ${hideDivision || tier.divisions.length === 1 ? "" : ["", "I", "II", "III", "IV"][division]}`}
             </p>
           </div>
         </div>
@@ -673,7 +671,7 @@ export default function QuoteCalculator() {
         : `다이아몬드 ${division >= 3 ? "4~3" : "2~1"}`
       : serviceKey === "hourly" && tier.key === "master"
         ? `마스터 ${division}~${division + 199} LP`
-      : rankLabel(tier, division);
+        : rankLabel(tier, division);
   const currentRankLabel =
     serviceKey === "placement"
       ? current.name
@@ -695,8 +693,8 @@ export default function QuoteCalculator() {
               ? currentDivision === -1
                 ? 60
                 : currentDivision >= 3
-                ? 70
-                : 65
+                  ? 70
+                  : 65
               : currentTier === 7
                 ? 60
                 : null;
@@ -937,16 +935,14 @@ export default function QuoteCalculator() {
               }}
               onDivisionChange={setTargetDivision}
               minTierIndex={serviceKey === "high-score" ? 6 : 0}
-              maxTierIndex={
-                serviceKey === "low-win" ? 6 : TIERS.length - 1
-              }
+              maxTierIndex={serviceKey === "low-win" ? 6 : TIERS.length - 1}
             />
           )}
 
           {!serviceRankValid && (
             <p className="rounded-2xl border border-red-400/20 bg-red-400/8 px-4 py-3 text-sm font-bold text-red-300">
               {serviceKey === "low-win"
-                ? "저티어 승리 보장제는 에메랄드 이하만 신청할 수 있습니다."
+                ? "저티어 티어 보장제는 다이아몬드 이하만 신청할 수 있습니다."
                 : "고티어 점수 보장제는 다이아몬드 이상만 신청할 수 있습니다."}
             </p>
           )}
@@ -1155,14 +1151,28 @@ export default function QuoteCalculator() {
           </div>
 
           {serviceKey === "hourly" && (
-            <div className={`mt-4 rounded-xl border px-3 py-3 ${quantity >= 10 ? "border-emerald-400/25 bg-emerald-400/[.07]" : "border-white/8 bg-black/20"}`}>
+            <div
+              className={`mt-4 rounded-xl border px-3 py-3 ${quantity >= 10 ? "border-emerald-400/25 bg-emerald-400/[.07]" : "border-white/8 bg-black/20"}`}
+            >
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className={`text-[11px] font-black ${quantity >= 10 ? "text-emerald-300" : "text-zinc-400"}`}>승률 보장</p>
-                  <p className="mt-1 text-[10px] text-zinc-600">{guaranteeRate === null ? "보장 승률은 상담 후 안내" : "10시간 이상 신청 시 자동 적용"}</p>
+                  <p
+                    className={`text-[11px] font-black ${quantity >= 10 ? "text-emerald-300" : "text-zinc-400"}`}
+                  >
+                    승률 보장
+                  </p>
+                  <p className="mt-1 text-[10px] text-zinc-600">
+                    {guaranteeRate === null
+                      ? "보장 승률은 상담 후 안내"
+                      : "10시간 이상 신청 시 자동 적용"}
+                  </p>
                 </div>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black ${quantity >= 10 ? "bg-emerald-400/15 text-emerald-300" : "bg-white/5 text-zinc-500"}`}>
-                  {quantity >= 10 ? guaranteeLabel : `${10 - quantity}시간 더 필요`}
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black ${quantity >= 10 ? "bg-emerald-400/15 text-emerald-300" : "bg-white/5 text-zinc-500"}`}
+                >
+                  {quantity >= 10
+                    ? guaranteeLabel
+                    : `${10 - quantity}시간 더 필요`}
                 </span>
               </div>
             </div>
@@ -1313,7 +1323,9 @@ export default function QuoteCalculator() {
           {needsCurrentRank && (
             <div className="mt-6 flex items-center justify-between gap-3">
               <div className="text-center">
-                {serviceKey === "hourly" && currentTier === 6 && currentDivision === -1 ? (
+                {serviceKey === "hourly" &&
+                currentTier === 6 &&
+                currentDivision === -1 ? (
                   <span className="mx-auto flex h-14 items-center justify-center">
                     <span className="grid h-12 w-12 place-items-center rounded-full border border-red-400/30 bg-red-950/85 text-red-300">
                       <Ban size={25} strokeWidth={2.5} />
@@ -1371,12 +1383,13 @@ export default function QuoteCalculator() {
                     : "-"}
               </b>
             </div>
-            {!priceConsultRequired && quote.optionItems.map((item) => (
-              <div key={item.label} className="flex justify-between gap-3">
-                <span className="text-zinc-500">{item.label}</span>
-                <b className="shrink-0 text-red-400">+{won(item.amount)}</b>
-              </div>
-            ))}
+            {!priceConsultRequired &&
+              quote.optionItems.map((item) => (
+                <div key={item.label} className="flex justify-between gap-3">
+                  <span className="text-zinc-500">{item.label}</span>
+                  <b className="shrink-0 text-red-400">+{won(item.amount)}</b>
+                </div>
+              ))}
             {!priceConsultRequired && quote.optionItems.length === 0 && (
               <div className="flex justify-between">
                 <span className="text-zinc-500">추가 옵션</span>
@@ -1384,11 +1397,11 @@ export default function QuoteCalculator() {
               </div>
             )}
             {serviceKey === "hourly" && quantity >= 10 && (
-                <div className="flex justify-between gap-3">
-                  <span className="text-zinc-500">승률 보장</span>
-                  <b className="shrink-0 text-gold">{guaranteeLabel}</b>
-                </div>
-              )}
+              <div className="flex justify-between gap-3">
+                <span className="text-zinc-500">승률 보장</span>
+                <b className="shrink-0 text-gold">{guaranteeLabel}</b>
+              </div>
+            )}
             {!priceConsultRequired && quote.discount > 0 && (
               <div className="flex justify-between">
                 <span className="text-zinc-500">라인 미지정 할인</span>
