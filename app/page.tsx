@@ -18,7 +18,7 @@ import LineupCard from "@/components/LineupCard";
 import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import ServiceCard from "@/components/ServiceCard";
-import PriceTable from "@/components/PriceTable";
+import QuoteCalculator from "@/components/QuoteCalculator";
 import JsonLd from "@/components/JsonLd";
 import { services, site } from "@/lib/site";
 import { getLineups } from "@/lib/lineups";
@@ -255,18 +255,13 @@ export default async function Home() {
           <Reveal>
             <SectionTitle
               eyebrow="price"
-              title="가격 미리보기"
-              desc="실제 견적은 상담 후 확정되며, 아래 표는 구간별 안내 기준입니다."
+              title="견적 계산기"
+              desc="서비스, 진행 방식, 구간을 선택하면 예상 금액을 바로 확인할 수 있습니다. 실제 견적은 상담 후 확정됩니다."
             />
           </Reveal>
-          <div className="space-y-12">
-            <Reveal>
-              <PriceTable variant="boosting" />
-            </Reveal>
-            <Reveal>
-              <PriceTable variant="duo" />
-            </Reveal>
-          </div>
+          <Reveal>
+            <QuoteCalculator />
+          </Reveal>
         </Container>
       </section>
 
