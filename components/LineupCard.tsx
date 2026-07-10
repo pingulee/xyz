@@ -20,6 +20,11 @@ export default function LineupCard({
   knight: Lineup;
   placement?: number;
 }) {
+  const wins = knight.wins ?? 0;
+  const losses = knight.losses ?? 0;
+  const games = wins + losses;
+  const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
+
   const crown =
     placement && placement <= 3
       ? [
@@ -115,7 +120,7 @@ export default function LineupCard({
 
           <div className="mt-4 grid gap-2.5">
             <div className="flex items-center gap-2">
-              <span className="w-12 shrink-0 text-xs font-black text-zinc-500">
+              <span className="w-17 shrink-0 text-xs font-black text-zinc-500">
                 라인
               </span>
               <div className="flex min-h-6 flex-wrap items-center gap-1.5">
@@ -132,7 +137,7 @@ export default function LineupCard({
 
             {knight.champions.length > 0 && (
               <div className="flex items-center gap-2">
-                <span className="w-12 shrink-0 text-xs font-black text-zinc-500">
+                <span className="w-17 shrink-0 text-xs font-black text-zinc-500">
                   챔피언
                 </span>
                 <div className="flex min-h-6 flex-wrap items-center gap-1.5">
@@ -149,8 +154,8 @@ export default function LineupCard({
             )}
 
             <div className="flex items-center gap-2">
-              <span className="w-12 shrink-0 text-xs font-black text-zinc-500">
-                작업
+              <span className="w-17 shrink-0 text-xs font-black text-zinc-500">
+                진행 서비스
               </span>
               <div className="flex min-h-6 flex-wrap items-center gap-1.5">
                 {knight.services.map((service) => (
@@ -163,6 +168,39 @@ export default function LineupCard({
                 ))}
               </div>
             </div>
+
+            {games > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="w-17 shrink-0 text-xs font-black text-zinc-500">
+                  승률
+                </span>
+                <div className="flex h-5 flex-1 overflow-hidden rounded-md bg-white/6 text-[11px] text-white">
+                  {wins > 0 && (
+                    <div
+                      className="flex items-center bg-[#5383e8] pl-2"
+                      style={{ width: `${(wins / games) * 100}%` }}
+                    >
+                      {wins}승
+                    </div>
+                  )}
+                  {losses > 0 && (
+                    <div
+                      className="flex items-center justify-end bg-[#e84057] pr-2"
+                      style={{ width: `${(losses / games) * 100}%` }}
+                    >
+                      {losses}패
+                    </div>
+                  )}
+                </div>
+                <span
+                  className={`w-10 shrink-0 text-right text-xs ${
+                    winRate >= 60 ? "text-red-400" : "text-lol-gray-500"
+                  }`}
+                >
+                  {winRate}%
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </article>

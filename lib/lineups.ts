@@ -99,15 +99,22 @@ export function toLineup(row: LineupRow): Lineup {
   };
 }
 
-/** 기사별 작업 기록에서 플레이 판수 기준 모스트 챔피언 TOP3를 집계 */
-async function getMostChampionsByLineup(): Promise<Map<number, string[]>> {
+type LineupRecordSummary = { champions: string[]; wins: number; losses: number };
+
+/** 기사별 작업 기록에서 승/패 합계와 판수 기준 모스트 챔피언 TOP3를 집계 */
+async function getRecordSummariesByLineup(): Promise<
+  Map<number, LineupRecordSummary>
+> {
   const [rows] = await getPool().execute<RowDataPacket[]>(
     `SELECT lineup_id, tier_records
        FROM review_replies
        WHERE tier_records IS NOT NULL`,
   );
 
-  const counts = new Map<number, Map<string, { games: number; wins: number }>>();
+  const counts = new Map<
+    number,
+    { wins: number; losses: number; champions: Map<string, { games: number; wins: number }> }
+  >();
   for (const row of rows) {
     let records: TierRecord[] = [];
     try {
@@ -118,31 +125,35 @@ async function getMostChampionsByLineup(): Promise<Map<number, string[]>> {
     if (!Number.isInteger(lineupId)) continue;
     let acc = counts.get(lineupId);
     if (!acc) {
-      acc = new Map();
+      acc = { wins: 0, losses: 0, champions: new Map() };
       counts.set(lineupId, acc);
     }
     for (const r of records) {
-      const champion = (r.champion ?? "").trim();
-      if (!champion) continue;
+      if (!r.tier) continue;
       const isPerGame = typeof r.win === "boolean";
       const wins = isPerGame ? (r.win ? 1 : 0) : Number(r.wins) || 0;
       const losses = isPerGame ? (r.win ? 0 : 1) : Number(r.losses) || 0;
-      const entry = acc.get(champion) ?? { games: 0, wins: 0 };
+      acc.wins += wins;
+      acc.losses += losses;
+      const champion = (r.champion ?? "").trim();
+      if (!champion) continue;
+      const entry = acc.champions.get(champion) ?? { games: 0, wins: 0 };
       entry.games += wins + losses;
       entry.wins += wins;
-      acc.set(champion, entry);
+      acc.champions.set(champion, entry);
     }
   }
 
-  const result = new Map<number, string[]>();
+  const result = new Map<number, LineupRecordSummary>();
   for (const [lineupId, acc] of counts) {
-    result.set(
-      lineupId,
-      [...acc.entries()]
+    result.set(lineupId, {
+      wins: acc.wins,
+      losses: acc.losses,
+      champions: [...acc.champions.entries()]
         .sort(([, a], [, b]) => b.games - a.games || b.wins - a.wins)
         .slice(0, 3)
         .map(([champion]) => champion),
-    );
+    });
   }
   return result;
 }
@@ -169,11 +180,16 @@ export async function getLineups(
          : "l.sort_order ASC, l.id ASC"
      }`,
   );
-  const mostChampions = await getMostChampionsByLineup();
-  return rows.map((row) => ({
-    ...toLineup(row),
-    champions: mostChampions.get(row.id) ?? [],
-  }));
+  const summaries = await getRecordSummariesByLineup();
+  return rows.map((row) => {
+    const summary = summaries.get(row.id);
+    return {
+      ...toLineup(row),
+      champions: summary?.champions ?? [],
+      wins: summary?.wins ?? 0,
+      losses: summary?.losses ?? 0,
+    };
+  });
 }
 
 export async function getLineupById(id: number): Promise<Lineup | null> {
@@ -192,10 +208,13 @@ export async function getLineupById(id: number): Promise<Lineup | null> {
     { id },
   );
   if (!rows[0]) return null;
-  const mostChampions = await getMostChampionsByLineup();
+  const summaries = await getRecordSummariesByLineup();
+  const summary = summaries.get(rows[0].id);
   return {
     ...toLineup(rows[0]),
-    champions: mostChampions.get(rows[0].id) ?? [],
+    champions: summary?.champions ?? [],
+    wins: summary?.wins ?? 0,
+    losses: summary?.losses ?? 0,
   };
 }
 

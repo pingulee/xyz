@@ -33,6 +33,20 @@ export const TIER_ICON_BY_NAME: Record<string, string> = {
   챌린저: "/images/tier/10-challenger.png",
 };
 
+export const TIER_EN_BY_NAME: Record<string, string> = {
+  언랭크: "Unranked",
+  아이언: "Iron",
+  브론즈: "Bronze",
+  실버: "Silver",
+  골드: "Gold",
+  플래티넘: "Platinum",
+  에메랄드: "Emerald",
+  다이아몬드: "Diamond",
+  마스터: "Master",
+  그랜드마스터: "Grandmaster",
+  챌린저: "Challenger",
+};
+
 const inputCls =
   "rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50";
 
@@ -362,14 +376,14 @@ export function TierRecordBadges({
               />
             )}
             <p className="min-w-0 flex-1 truncate text-xs font-black text-white">
-              {group.tier}
+              {TIER_EN_BY_NAME[group.tier] ?? group.tier}
             </p>
             {avg && (
               <div className="min-w-0 flex-1 text-center">
                 <p className={`text-xs font-black whitespace-nowrap ${kdaRatingClass(avg)}`}>
                   {rating === "Perfect" ? "Perfect" : `${rating} 평점`}
                 </p>
-                <p className="text-[11px] font-bold whitespace-nowrap text-zinc-400">
+                <p className="text-[11px] whitespace-nowrap text-zinc-400">
                   {avg.kills.toFixed(1)} / {avg.deaths.toFixed(1)} /{" "}
                   {avg.assists.toFixed(1)}
                 </p>
@@ -383,7 +397,7 @@ export function TierRecordBadges({
               >
                 {pct}%
               </p>
-              <p className="text-[11px] font-bold text-zinc-500">
+              <p className="text-[11px] text-zinc-500">
                 {total} 게임
               </p>
             </div>

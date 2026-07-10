@@ -15,6 +15,8 @@ export type Lineup = {
   active: boolean;
   averageRating?: number | null;
   reviewCount?: number;
+  wins?: number;
+  losses?: number;
 };
 
 export function getLineupSlug(name: string): string {

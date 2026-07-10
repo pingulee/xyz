@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Swords } from "lucide-react";
 import {
+  TIER_EN_BY_NAME,
   TIER_ICON_BY_NAME,
   TIER_OPTIONS,
   kdaRatingClass,
@@ -12,20 +13,6 @@ import {
 import type { WinStatsGroup } from "@/lib/lineups";
 
 type TabKey = "total" | "boost" | "duo";
-
-const TIER_EN_BY_NAME: Record<string, string> = {
-  언랭크: "Unranked",
-  아이언: "Iron",
-  브론즈: "Bronze",
-  실버: "Silver",
-  골드: "Gold",
-  플래티넘: "Platinum",
-  에메랄드: "Emerald",
-  다이아몬드: "Diamond",
-  마스터: "Master",
-  그랜드마스터: "Grandmaster",
-  챌린저: "Challenger",
-};
 
 export default function WinStatsCard({
   stats,
@@ -200,7 +187,7 @@ export default function WinStatsCard({
                     <p className="truncate text-xs font-black text-white">
                       {c.champion}
                     </p>
-                    <p className="text-[11px] font-bold text-zinc-500">
+                    <p className="text-[11px] text-zinc-500">
                       Most {index + 1}
                     </p>
                   </div>
@@ -215,7 +202,7 @@ export default function WinStatsCard({
                       >
                         {kdaRatio === "Perfect" ? "Perfect" : `${kdaRatio} 평점`}
                       </p>
-                      <p className="text-[11px] font-bold whitespace-nowrap text-zinc-400">
+                      <p className="text-[11px] whitespace-nowrap text-zinc-400">
                         {(c.kills ?? 0).toFixed(1)} / {(c.deaths ?? 0).toFixed(1)} /{" "}
                         {(c.assists ?? 0).toFixed(1)}
                       </p>
@@ -229,7 +216,7 @@ export default function WinStatsCard({
                     >
                       {pct}%
                     </p>
-                    <p className="text-[11px] font-bold text-zinc-500">
+                    <p className="text-[11px] text-zinc-500">
                       {total} 게임
                     </p>
                   </div>
@@ -330,7 +317,7 @@ export default function WinStatsCard({
                         height={20}
                       />
                     )}
-                    <span className="text-xs font-black text-zinc-300">
+                    <span className="text-xs text-zinc-300">
                       {TIER_EN_BY_NAME[game.tier] ?? game.tier}
                     </span>
                   </div>
@@ -338,14 +325,14 @@ export default function WinStatsCard({
                   {/* 대리/듀오 */}
                   <span className="w-11 shrink-0 justify-self-center text-center">
                     {game.service && (
-                      <span className="rounded-full border border-white/12 bg-black/30 px-2 py-0.5 text-[10px] font-black text-zinc-300">
+                      <span className="rounded-full border border-white/12 bg-black/30 px-2 py-0.5 text-[10px] text-zinc-300">
                         {game.service}
                       </span>
                     )}
                   </span>
 
                   {/* 날짜 */}
-                  <span className="w-20 shrink-0 text-right text-[11px] font-bold whitespace-nowrap text-zinc-500">
+                  <span className="w-20 shrink-0 text-right text-[11px] whitespace-nowrap text-zinc-500">
                     {date}
                   </span>
                 </div>
