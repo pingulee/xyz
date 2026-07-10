@@ -250,11 +250,11 @@ export async function getLineupWinStats(lineupId: number): Promise<{
 }> {
   const [rows] = await getPool().execute<RowDataPacket[]>(
     `SELECT rr.tier_records AS tier_records, r.service AS service,
-            rr.created_at AS created_at
+            r.created_at AS created_at
        FROM review_replies rr
        JOIN reviews r ON r.id = rr.review_id
        WHERE rr.lineup_id = :lineupId AND rr.tier_records IS NOT NULL
-       ORDER BY rr.created_at DESC`,
+       ORDER BY r.created_at DESC, rr.created_at DESC`,
     { lineupId },
   );
 
@@ -275,7 +275,7 @@ export async function getLineupWinStats(lineupId: number): Promise<{
         ? boost
         : null;
 
-    // 최근 전적: 답글 최신순(쿼리 정렬), 답글 내에서는 나중에 추가한 게임부터
+    // 최근 전적: 고객 후기 최신순(쿼리 정렬), 답글 내에서는 나중에 추가한 게임부터
     const createdAt =
       row.created_at instanceof Date
         ? row.created_at.toISOString()
