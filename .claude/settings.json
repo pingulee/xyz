@@ -2,7 +2,21 @@
   "permissions": {
     "allow": [
       "Bash(node shot.mjs \"https://1v9.gg/@Ozil\" ozil.png 1440)",
-      "Bash(node shot2.mjs)"
+      "Bash(node shot2.mjs)",
+      "Bash(node shot.mjs \"http://localhost:3000/lineup/%EB%8F%84%EC%B9%98\" champ-row.png 1600)",
+      "Bash(node -e \"const s=require\\('d:/Dev/xyz/node_modules/sharp'\\);s\\('champ-row.png'\\).extract\\({left:180,top:1130,width:740,height:220}\\).resize\\(1110\\).toFile\\('crop-champ.png'\\).then\\(\\(\\)=>console.log\\('cropped'\\)\\)\")",
+      "Bash(node shot.mjs \"http://localhost:3000/lineup/%EB%8F%84%EC%B9%98\" champ-row2.png 1600)",
+      "Bash(node -e \"const s=require\\('d:/Dev/xyz/node_modules/sharp'\\);s\\('champ-row2.png'\\).extract\\({left:180,top:1130,width:740,height:220}\\).resize\\(1110\\).toFile\\('crop-champ2.png'\\).then\\(\\(\\)=>console.log\\('ok'\\)\\)\")",
+      "Bash(node shot.mjs \"http://localhost:3000/lineup/%EB%8F%84%EC%B9%98\" champ-row3.png 1600)",
+      "Bash(node -e \"const s=require\\('d:/Dev/xyz/node_modules/sharp'\\);s\\('champ-row3.png'\\).extract\\({left:180,top:1130,width:740,height:220}\\).resize\\(1110\\).toFile\\('crop-champ3.png'\\).then\\(\\(\\)=>console.log\\('ok'\\)\\)\")",
+      "Bash(node shot.mjs \"http://localhost:3000/lineup/%EB%8F%84%EC%B9%98\" champ-row4.png 1600)",
+      "Bash(node -e \"const s=require\\('d:/Dev/xyz/node_modules/sharp'\\);s\\('champ-row4.png'\\).extract\\({left:180,top:1130,width:740,height:220}\\).resize\\(1110\\).toFile\\('crop-champ4.png'\\).then\\(\\(\\)=>console.log\\('ok'\\)\\)\")",
+      "Bash(node shot.mjs \"http://localhost:3000/lineup/%EB%8F%84%EC%B9%98\" opgg-bars.png 1600)",
+      "Bash(node -e \"const s=require\\('d:/Dev/xyz/node_modules/sharp'\\);s\\('opgg-bars.png'\\).extract\\({left:180,top:820,width:740,height:560}\\).resize\\(1110\\).toFile\\('crop-bars.png'\\).then\\(\\(\\)=>console.log\\('ok'\\)\\)\")",
+      "Bash(node -e \"const s=require\\('d:/Dev/xyz/node_modules/sharp'\\);\\(async\\(\\)=>{const m=await s\\('opgg-bars.png'\\).metadata\\(\\);console.log\\(m.width,m.height\\);const top=Math.min\\(820,m.height-560\\);await s\\('opgg-bars.png'\\).extract\\({left:180,top,width:740,height:Math.min\\(560,m.height-top\\)}\\).resize\\(1110\\).toFile\\('crop-bars.png'\\);console.log\\('ok'\\)}\\)\\(\\)\")",
+      "Bash(node -e \"const s=require\\('d:/Dev/xyz/node_modules/sharp'\\);s\\('opgg-bars.png'\\).extract\\({left:0,top:0,width:1600,height:700}\\).resize\\(1200\\).toFile\\('crop-err.png'\\).then\\(\\(\\)=>console.log\\('ok'\\)\\)\")",
+      "Bash(node shot.mjs \"http://localhost:3000/lineup/%EB%8F%84%EC%B9%98\" opgg-bars2.png 1600)",
+      "Bash(node -e \"const s=require\\('d:/Dev/xyz/node_modules/sharp'\\);\\(async\\(\\)=>{const m=await s\\('opgg-bars2.png'\\).metadata\\(\\);console.log\\(m.width,'x',m.height\\);if\\(m.height>1600\\){await s\\('opgg-bars2.png'\\).extract\\({left:180,top:820,width:760,height:600}\\).resize\\(1140\\).toFile\\('crop-bars2.png'\\);console.log\\('cropped'\\)}}\\)\\(\\)\")"
     ]
   }
 }

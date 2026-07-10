@@ -7,13 +7,13 @@ import { Clock, MessageCircle, Star, Swords } from "lucide-react";
 import Container from "@/components/Container";
 import KnightAvatar from "@/components/KnightAvatar";
 import Reveal from "@/components/Reveal";
-import SectionTitle from "@/components/SectionTitle";
 import LineupReviews from "@/components/LineupReviews";
 import WinStatsCard from "@/components/WinStatsCard";
 import { getLineupBySlug, getLineupReviewStats, getLineupWinStats } from "@/lib/lineups";
 import { getChampionImageMap } from "@/lib/champions";
 import { getReviewsByLineupId } from "@/lib/reviews";
 import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSession";
+import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -70,10 +70,10 @@ export default async function LineupDetailPage({ params }: Props) {
     : 0;
 
   return (
-    <section className="py-20">
+    <section className="py-16">
       <Container>
         <Reveal>
-          <div className="mb-8 flex items-center gap-3 text-sm text-zinc-500">
+          <div className="mb-6 flex items-center gap-3 text-sm text-zinc-500">
             <Link href="/lineup" className="transition hover:text-gold">
               기사 라인업
             </Link>
@@ -82,188 +82,234 @@ export default async function LineupDetailPage({ params }: Props) {
           </div>
         </Reveal>
 
+        {/* ── 프로필 히어로 (배너 + 아바타 오버랩) ── */}
         <Reveal>
-          <SectionTitle
-            eyebrow="lineup"
-            title={lineup.name}
-            desc={lineup.description}
-          />
-        </Reveal>
+          <div className="card-premium relative overflow-hidden rounded-4xl">
+            <div className="relative h-32 overflow-hidden md:h-40">
+              <div className="absolute inset-0 bg-gold-gradient opacity-[.16]" />
+              <div className="noise absolute inset-0" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            </div>
 
-        <Reveal>
-          <div className="card-premium relative overflow-hidden rounded-4xl p-6 md:p-8">
-            <div
-              className="pointer-events-none absolute -top-40 right-0 h-72 w-72 rounded-full bg-gold/10 blur-3xl"
-              aria-hidden
-            />
-            <div className="relative flex flex-col gap-8 md:flex-row md:items-start">
-              <div className="mx-auto shrink-0 md:mx-0">
-                <KnightAvatar
-                  availability={lineup}
-                  image={lineup.image}
-                  name={lineup.name}
-                  priority
-                  size={220}
-                />
+            <div className="relative px-6 pb-6 md:px-8 md:pb-8">
+              <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+                <div className="-mt-14 flex flex-col items-center gap-4 md:-mt-16 md:flex-row md:items-end">
+                  <KnightAvatar
+                    availability={lineup}
+                    image={lineup.image}
+                    name={lineup.name}
+                    priority
+                    size={148}
+                  />
+                  <div className="text-center md:pb-1 md:text-left">
+                    <div className="inline-flex items-center gap-1.5 rounded-full border border-gold/25 bg-gold/8 px-3 py-1">
+                      <Image
+                        src={lineup.tier}
+                        alt={lineup.rank}
+                        width={16}
+                        height={16}
+                        className="rounded-full bg-zinc-800"
+                      />
+                      <span className="text-xs font-black text-gold">
+                        {lineup.rank}
+                      </span>
+                    </div>
+                    <h1 className="mt-2 flex items-center justify-center gap-2.5 text-3xl font-black text-white md:justify-start">
+                      {lineup.name}
+                      <Image
+                        src={nationalityFlag(lineup.nationality)}
+                        alt={nationalityLabel(lineup.nationality)}
+                        title={nationalityLabel(lineup.nationality)}
+                        width={28}
+                        height={19}
+                        className="rounded-[3px] border border-white/10 object-cover"
+                      />
+                    </h1>
+                    {lineup.description && (
+                      <p className="mt-1.5 text-sm leading-6 text-zinc-400">
+                        {lineup.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <a
+                  href={site.kakaoUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mx-auto inline-flex shrink-0 items-center gap-2 rounded-full bg-gold-gradient px-6 py-3 text-sm font-black text-black transition hover:brightness-110 md:mx-0"
+                >
+                  <MessageCircle size={15} />
+                  기사 배정 문의
+                </a>
               </div>
 
-              <div className="min-w-0 flex-1 text-center md:text-left">
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-gold/25 bg-gold/8 px-3 py-1.5">
-                  <Image
-                    src={lineup.tier}
-                    alt={lineup.rank}
-                    width={18}
-                    height={18}
-                    className="rounded-full bg-zinc-800"
-                  />
-                  <span className="text-xs font-black text-gold">
-                    {lineup.rank}
-                  </span>
+              <div className="mt-6 grid gap-5 border-t border-white/6 pt-6 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs font-black text-zinc-500">
+                    <Clock size={12} />
+                    평일 작업 가능 시간
+                  </div>
+                  <p className="mt-1.5 text-sm font-semibold text-zinc-300">
+                    {lineup.weekdayHours}
+                  </p>
                 </div>
-
-                <div className="mt-3 flex items-center justify-center gap-2.5 md:justify-start">
-                  <span className="text-3xl font-black text-white">
-                    {lineup.name}
-                  </span>
-                  <Image
-                    src={nationalityFlag(lineup.nationality)}
-                    alt={nationalityLabel(lineup.nationality)}
-                    title={nationalityLabel(lineup.nationality)}
-                    width={30}
-                    height={20}
-                    className="rounded-[3px] border border-white/10 object-cover"
-                  />
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs font-black text-zinc-500">
+                    <Clock size={12} />
+                    주말 작업 가능 시간
+                  </div>
+                  <p className="mt-1.5 text-sm font-semibold text-zinc-300">
+                    {lineup.weekendHours}
+                  </p>
                 </div>
-
-                <div className="mt-5 flex flex-wrap justify-center gap-2.5 md:justify-start">
-                  <div className="flex items-center gap-2.5 rounded-2xl border border-white/8 bg-white/4 px-4 py-2.5">
-                    <Star size={16} className="fill-gold text-gold" />
-                    <div className="text-left">
-                      <div className="text-[11px] font-bold text-zinc-500">평균 평점</div>
-                      <div className="text-sm font-black text-white">
-                        {stats.averageRating.toFixed(1)}
-                      </div>
-                    </div>
+                <div>
+                  <div className="text-xs font-black text-zinc-500">라인</div>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {lineup.positions.map((position) => (
+                      <span
+                        key={position}
+                        className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-bold text-zinc-300"
+                      >
+                        {position}
+                      </span>
+                    ))}
                   </div>
-                  <div className="flex items-center gap-2.5 rounded-2xl border border-white/8 bg-white/4 px-4 py-2.5">
-                    <MessageCircle size={16} className="text-gold" />
-                    <div className="text-left">
-                      <div className="text-[11px] font-bold text-zinc-500">전체 후기</div>
-                      <div className="text-sm font-black text-white">
-                        {stats.reviewCount}개
-                      </div>
-                    </div>
-                  </div>
-                  {hasWinRecords && (
-                    <div className="flex items-center gap-2.5 rounded-2xl border border-white/8 bg-white/4 px-4 py-2.5">
-                      <Swords size={16} className="text-gold" />
-                      <div className="text-left">
-                        <div className="text-[11px] font-bold text-zinc-500">전체 승률</div>
-                        <div className="text-sm font-black text-white">
-                          {totalWinRate}%
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
-
-                <div className="mt-6 grid gap-5 border-t border-white/6 pt-6 text-left md:grid-cols-2">
-                  <div>
-                    <div className="flex items-center gap-1.5 text-xs font-black text-zinc-500">
-                      <Clock size={12} />
-                      평일 작업 가능 시간
-                    </div>
-                    <p className="mt-1.5 text-sm font-semibold text-zinc-300">
-                      {lineup.weekdayHours}
-                    </p>
+                <div>
+                  <div className="text-xs font-black text-zinc-500">진행 서비스</div>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {lineup.services.map((service) => (
+                      <span
+                        key={service}
+                        className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-bold text-zinc-300"
+                      >
+                        {service}
+                      </span>
+                    ))}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-1.5 text-xs font-black text-zinc-500">
-                      <Clock size={12} />
-                      주말 작업 가능 시간
-                    </div>
-                    <p className="mt-1.5 text-sm font-semibold text-zinc-300">
-                      {lineup.weekendHours}
-                    </p>
-                  </div>
-                  <div>
-                    <div className="text-xs font-black text-zinc-500">라인</div>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {lineup.positions.map((position) => (
+                </div>
+                {lineup.champions.length > 0 && (
+                  <div className="sm:col-span-2 lg:col-span-4">
+                    <div className="text-xs font-black text-zinc-500">대표 챔피언</div>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {lineup.champions.map((champion) => (
                         <span
-                          key={position}
-                          className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-bold text-zinc-300"
+                          key={champion}
+                          className="flex items-center gap-1.5 rounded-full border border-white/8 bg-white/4 py-1 pl-1.5 pr-3 text-xs font-bold text-zinc-300"
                         >
-                          {position}
+                          {championImages[champion] ? (
+                            <Image
+                              src={championImages[champion]}
+                              alt={champion}
+                              width={20}
+                              height={20}
+                              className="rounded-full border border-white/10 bg-zinc-900 object-cover"
+                            />
+                          ) : null}
+                          {champion}
                         </span>
                       ))}
                     </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-black text-zinc-500">진행 서비스</div>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {lineup.services.map((service) => (
-                        <span
-                          key={service}
-                          className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-bold text-zinc-300"
-                        >
-                          {service}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  {lineup.champions.length > 0 && (
-                    <div className="md:col-span-2">
-                      <div className="text-xs font-black text-zinc-500">대표 챔피언</div>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {lineup.champions.map((champion) => (
-                          <span
-                            key={champion}
-                            className="flex items-center gap-1.5 rounded-full border border-white/8 bg-white/4 py-1 pl-1.5 pr-3 text-xs font-bold text-zinc-300"
-                          >
-                            {championImages[champion] ? (
-                              <Image
-                                src={championImages[champion]}
-                                alt={champion}
-                                width={20}
-                                height={20}
-                                className="rounded-full border border-white/10 bg-zinc-900 object-cover"
-                              />
-                            ) : null}
-                            {champion}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             </div>
           </div>
         </Reveal>
 
+        {/* ── 핵심 지표 타일 ── */}
         <Reveal>
-          <div className="mt-6 grid gap-6 lg:grid-cols-5">
-            <div className={hasWinRecords ? "lg:col-span-2" : "lg:col-span-5"}>
-              <div className="card-premium flex h-full flex-col rounded-4xl p-6 md:p-7">
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            <div className="card-premium rounded-3xl p-5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-zinc-500">평균 평점</span>
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-gold/12 text-gold">
+                  <Star size={14} fill="currentColor" />
+                </span>
+              </div>
+              <div className="mt-2 text-3xl font-black text-white">
+                {stats.averageRating.toFixed(1)}
+              </div>
+              <div className="mt-1 text-xs font-bold text-zinc-500">
+                후기 {stats.reviewCount}개 기준
+              </div>
+            </div>
+            <div className="card-premium rounded-3xl p-5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-zinc-500">전체 후기</span>
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-gold/12 text-gold">
+                  <MessageCircle size={14} />
+                </span>
+              </div>
+              <div className="mt-2 text-3xl font-black text-white">
+                {stats.reviewCount}
+              </div>
+              <div className="mt-1 text-xs font-bold text-zinc-500">
+                고객이 직접 남긴 후기
+              </div>
+            </div>
+            <div className="card-premium rounded-3xl p-5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-zinc-500">전체 승률</span>
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-gold/12 text-gold">
+                  <Swords size={14} />
+                </span>
+              </div>
+              <div className="mt-2 text-3xl font-black text-white">
+                {hasWinRecords ? `${totalWinRate}%` : "-"}
+              </div>
+              <div className="mt-1 text-xs font-bold text-zinc-500">
+                {hasWinRecords
+                  ? `${winStats.total.wins}승 ${winStats.total.losses}패 · 총 ${totalGames}판`
+                  : "아직 작업 기록이 없습니다"}
+              </div>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* ── 본문 2열: 작업 기록 | 후기 ── */}
+        <Reveal>
+          <div className="mt-6 grid items-start gap-6 lg:grid-cols-5">
+            <div className="lg:col-span-3">
+              {hasWinRecords ? (
+                <WinStatsCard stats={winStats} />
+              ) : (
+                <div className="card-premium grid place-items-center rounded-4xl p-10 text-center">
+                  <span className="grid h-12 w-12 place-items-center rounded-full bg-gold/10 text-gold">
+                    <Swords size={20} />
+                  </span>
+                  <p className="mt-4 text-sm font-black text-white">
+                    아직 작업 기록이 없습니다
+                  </p>
+                  <p className="mt-1.5 text-xs leading-6 text-zinc-500">
+                    기사님이 작업을 완료하고 후기에 답변을 남기면
+                    <br />
+                    티어별 승률과 챔피언별 전적이 이곳에 표시됩니다.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="lg:col-span-2">
+              <div className="card-premium rounded-4xl p-6">
                 <div className="flex items-center gap-2 text-sm font-black text-gold">
                   <Star size={16} />
                   후기 평점
                 </div>
-
-                <div className="mt-6 flex items-end justify-between gap-3">
+                <div className="mt-5 flex items-end justify-between gap-3">
                   <div>
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-5xl font-black text-white">
+                      <span className="text-4xl font-black text-white">
                         {stats.averageRating.toFixed(1)}
                       </span>
                       <span className="text-sm font-bold text-zinc-500">/ 5</span>
                     </div>
-                    <div className="mt-2 flex items-center gap-1">
+                    <div className="mt-1.5 flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((value) => (
                         <Star
                           key={value}
-                          size={16}
+                          size={14}
                           className={
                             value <= Math.round(stats.averageRating)
                               ? "fill-gold text-gold"
@@ -275,28 +321,27 @@ export default async function LineupDetailPage({ params }: Props) {
                   </div>
                   <div className="text-right">
                     <div className="text-xs font-black text-zinc-500">전체 후기</div>
-                    <div className="mt-1 text-3xl font-black text-white">
+                    <div className="mt-1 text-2xl font-black text-white">
                       {stats.reviewCount}
                     </div>
                   </div>
                 </div>
-
-                <div className="mt-6 grid gap-2.5 border-t border-white/6 pt-5">
+                <div className="mt-5 grid gap-2 border-t border-white/6 pt-4">
                   {[5, 4, 3, 2, 1].map((value) => {
                     const count = stats.ratingDistribution[value as keyof typeof stats.ratingDistribution];
                     const percentage = stats.reviewCount > 0 ? (count / stats.reviewCount) * 100 : 0;
                     return (
                       <div key={value} className="flex items-center gap-3">
-                        <span className="w-8 shrink-0 text-xs font-black text-zinc-400">
+                        <span className="w-7 shrink-0 text-xs font-black text-zinc-400">
                           {value}★
                         </span>
-                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/8">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/8">
                           <div
                             className="h-full rounded-full bg-gold-gradient"
                             style={{ width: `${percentage}%` }}
                           />
                         </div>
-                        <span className="w-8 shrink-0 text-right text-xs font-bold text-zinc-400">
+                        <span className="w-7 shrink-0 text-right text-xs font-bold text-zinc-400">
                           {count}
                         </span>
                       </div>
@@ -304,28 +349,20 @@ export default async function LineupDetailPage({ params }: Props) {
                   })}
                 </div>
               </div>
-            </div>
 
-            {hasWinRecords && (
-              <div className="lg:col-span-3">
-                <WinStatsCard stats={winStats} />
+              <div className="mt-6">
+                <h2 className="mb-4 text-lg font-black text-white">
+                  후기 <span className="text-gold">{reviews.length}</span>개
+                </h2>
+                <LineupReviews
+                  reviews={reviews}
+                  knightLineupId={knightLineupId}
+                  knightName={lineup.name}
+                  knightImage={lineup.image ?? ""}
+                  knightAvailability={lineup}
+                />
               </div>
-            )}
-          </div>
-        </Reveal>
-
-        <Reveal>
-          <div className="mt-12">
-            <h2 className="mb-6 text-xl font-black text-white">
-              후기 <span className="text-gold">{reviews.length}</span>개
-            </h2>
-            <LineupReviews
-              reviews={reviews}
-              knightLineupId={knightLineupId}
-              knightName={lineup.name}
-              knightImage={lineup.image ?? ""}
-              knightAvailability={lineup}
-            />
+            </div>
           </div>
         </Reveal>
       </Container>

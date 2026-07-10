@@ -3,7 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Swords } from "lucide-react";
-import { TIER_ICON_BY_NAME, kdaRatioLabel } from "@/components/TierRecords";
+import {
+  TIER_ICON_BY_NAME,
+  kdaRatingClass,
+  kdaRatioLabel,
+} from "@/components/TierRecords";
 import type { WinStatsGroup } from "@/lib/lineups";
 
 type TabKey = "total" | "boost" | "duo";
@@ -68,11 +72,23 @@ export default function WinStatsCard({
           </div>
           <div className="pb-1 text-xs font-bold text-zinc-500">총 {games}판</div>
         </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/8">
-          <div
-            className="h-full rounded-full bg-gold-gradient transition-all duration-500"
-            style={{ width: `${winRate}%` }}
-          />
+        <div className="mt-3 flex h-6 overflow-hidden rounded-md text-xs font-black text-white">
+          {active.data.wins > 0 && (
+            <div
+              className="flex items-center bg-[#5383e8] pl-2.5 transition-all duration-500"
+              style={{ width: `${(active.data.wins / games) * 100}%` }}
+            >
+              {active.data.wins}승
+            </div>
+          )}
+          {active.data.losses > 0 && (
+            <div
+              className="flex items-center justify-end bg-[#e84057] pr-2.5 transition-all duration-500"
+              style={{ width: `${(active.data.losses / games) * 100}%` }}
+            >
+              {active.data.losses}패
+            </div>
+          )}
         </div>
       </div>
 
@@ -97,15 +113,30 @@ export default function WinStatsCard({
                     )}
                     {t.tier}
                   </span>
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/8">
-                    <div
-                      className="h-full rounded-full bg-gold-gradient transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
+                  <div className="flex h-5 flex-1 overflow-hidden rounded-md text-[11px] font-black text-white">
+                    {t.wins > 0 && (
+                      <div
+                        className="flex items-center bg-[#5383e8] pl-2 transition-all duration-500"
+                        style={{ width: `${(t.wins / total) * 100}%` }}
+                      >
+                        {t.wins}승
+                      </div>
+                    )}
+                    {t.losses > 0 && (
+                      <div
+                        className="flex items-center justify-end bg-[#e84057] pr-2 transition-all duration-500"
+                        style={{ width: `${(t.losses / total) * 100}%` }}
+                      >
+                        {t.losses}패
+                      </div>
+                    )}
                   </div>
-                  <span className="w-24 shrink-0 text-right text-xs font-bold text-zinc-500">
-                    {t.wins}승 {t.losses}패
-                    <span className="ml-1.5 font-black text-white">{pct}%</span>
+                  <span
+                    className={`w-10 shrink-0 text-right text-xs font-black ${
+                      pct >= 60 ? "text-red-400" : "text-white"
+                    }`}
+                  >
+                    {pct}%
                   </span>
                 </div>
               );
@@ -117,7 +148,7 @@ export default function WinStatsCard({
       {active.data.byChampion.length > 0 && (
         <div className="mt-6 border-t border-white/6 pt-5">
           <div className="text-xs font-black text-zinc-500">챔피언별 전적</div>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <div className="mt-3 grid gap-2">
             {active.data.byChampion.map((c) => {
               const total = c.wins + c.losses;
               const pct = total > 0 ? Math.round((c.wins / total) * 100) : 0;
@@ -144,28 +175,37 @@ export default function WinStatsCard({
                       {c.champion.charAt(0)}
                     </span>
                   )}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-black text-white">
-                      {c.champion}
-                    </p>
-                    <p className="text-xs font-bold text-zinc-500">
-                      {c.wins}승 {c.losses}패
-                      {kdaRatio && (
-                        <>
-                          {" · "}
-                          {(c.kills ?? 0).toFixed(1)} / {(c.deaths ?? 0).toFixed(1)} /{" "}
-                          {(c.assists ?? 0).toFixed(1)}
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-sm font-black text-white">{pct}%</p>
-                    {kdaRatio && (
-                      <p className="text-[11px] font-bold text-gold">
-                        {kdaRatio === "Perfect" ? kdaRatio : `${kdaRatio} KDA`}
+                  <p className="min-w-0 flex-1 truncate text-sm font-black text-white">
+                    {c.champion}
+                  </p>
+                  {kdaRatio && (
+                    <div className="flex-1 shrink-0 text-center">
+                      <p
+                        className={`text-sm font-black ${kdaRatingClass({
+                          kills: c.kills ?? undefined,
+                          deaths: c.deaths ?? undefined,
+                          assists: c.assists ?? undefined,
+                        })}`}
+                      >
+                        {kdaRatio === "Perfect" ? "Perfect" : `평점 ${kdaRatio}`}
                       </p>
-                    )}
+                      <p className="text-[11px] font-bold text-zinc-400">
+                        {(c.kills ?? 0).toFixed(1)} / {(c.deaths ?? 0).toFixed(1)} /{" "}
+                        {(c.assists ?? 0).toFixed(1)}
+                      </p>
+                    </div>
+                  )}
+                  <div className="w-24 shrink-0 text-center">
+                    <p
+                      className={`text-sm font-black ${
+                        pct >= 60 ? "text-red-400" : "text-white"
+                      }`}
+                    >
+                      {pct}%
+                    </p>
+                    <p className="text-[11px] font-bold text-zinc-500">
+                      {total} 게임
+                    </p>
                   </div>
                 </div>
               );

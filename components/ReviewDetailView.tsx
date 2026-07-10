@@ -600,7 +600,7 @@ export default function ReviewDetailView({
             <>
               <TierRecordBadges
                 records={review.reply.tierRecords}
-                className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
+                className="flex flex-wrap gap-2"
               />
               <p className="whitespace-pre-wrap text-base leading-8 text-zinc-200">
                 {review.reply.content}

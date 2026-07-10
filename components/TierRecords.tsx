@@ -36,6 +36,21 @@ export const TIER_ICON_BY_NAME: Record<string, string> = {
 const inputCls =
   "rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50";
 
+/** OP.GG 스타일 평점 색상: 3 미만 회색, 3점대 초록, 4점대 파랑, 5 이상(Perfect 포함) 주황 */
+export function kdaRatingClass(
+  record: Pick<TierRecord, "kills" | "deaths" | "assists">,
+): string {
+  const deaths = record.deaths ?? 0;
+  const ratio =
+    deaths > 0
+      ? ((record.kills ?? 0) + (record.assists ?? 0)) / deaths
+      : Infinity;
+  if (ratio >= 5) return "text-orange-400";
+  if (ratio >= 4) return "text-blue-400";
+  if (ratio >= 3) return "text-emerald-400";
+  return "text-zinc-400";
+}
+
 export function kdaRatioLabel(record: Pick<TierRecord, "kills" | "deaths" | "assists">): string | null {
   const { kills, deaths, assists } = record;
   if (kills === undefined && deaths === undefined && assists === undefined) {
@@ -122,37 +137,39 @@ export function TierRecordEditor({
       {records.map((record, i) => (
         <div
           key={i}
-          className="grid gap-2 rounded-2xl border border-white/8 bg-white/2.5 p-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end"
+          className="grid gap-2 rounded-2xl border border-white/8 bg-white/2.5 p-2"
         >
-          <select
-            value={record.tier}
-            onChange={(event) => update(i, "tier", event.target.value)}
-            className={`${inputCls} min-w-0 ${record.tier ? "" : "border-gold/40! text-zinc-500"}`}
-          >
-            <option value="" disabled={Boolean(record.tier)}>
-              티어 선택
-            </option>
-            {TIER_OPTIONS.map((tier) => (
-              <option key={tier} value={tier}>
-                {tier}
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              value={record.tier}
+              onChange={(event) => update(i, "tier", event.target.value)}
+              className={`${inputCls} min-w-0 ${record.tier ? "" : "border-gold/40! text-zinc-500"}`}
+            >
+              <option value="" disabled={Boolean(record.tier)}>
+                티어 선택
               </option>
-            ))}
-          </select>
-          <select
-            value={record.champion ?? ""}
-            onChange={(event) => update(i, "champion", event.target.value)}
-            className={`${inputCls} min-w-0 ${record.champion ? "" : "border-gold/40! text-zinc-500"}`}
-            disabled={championsLoading}
-          >
-            <option value="" disabled={Boolean(record.champion)}>
-              {championsLoading ? "불러오는 중" : "챔피언 선택"}
-            </option>
-            {champions.map((champion) => (
-              <option key={champion.id} value={champion.name}>
-                {champion.name}
+              {TIER_OPTIONS.map((tier) => (
+                <option key={tier} value={tier}>
+                  {tier}
+                </option>
+              ))}
+            </select>
+            <select
+              value={record.champion ?? ""}
+              onChange={(event) => update(i, "champion", event.target.value)}
+              className={`${inputCls} min-w-0 ${record.champion ? "" : "border-gold/40! text-zinc-500"}`}
+              disabled={championsLoading}
+            >
+              <option value="" disabled={Boolean(record.champion)}>
+                {championsLoading ? "불러오는 중" : "챔피언 선택"}
               </option>
-            ))}
-          </select>
+              {champions.map((champion) => (
+                <option key={champion.id} value={champion.name}>
+                  {champion.name}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="flex items-end gap-2">
             <div className="flex shrink-0 rounded-full border border-white/10 bg-black/30 p-0.5">
               <button
@@ -241,81 +258,112 @@ export function TierRecordEditor({
 
 export function TierRecordBadges({
   records,
-  className = "grid gap-2 sm:grid-cols-2",
+  className = "flex flex-wrap gap-2",
 }: {
   records: TierRecord[];
   className?: string;
 }) {
   if (records.length === 0) return null;
 
+  // 판별 기록을 티어별로 합산해서 보여준다 (예: 실버 3승 0패)
+  type TierGroup = {
+    tier: string;
+    wins: number;
+    losses: number;
+    killsSum: number;
+    deathsSum: number;
+    assistsSum: number;
+    kdaGames: number;
+  };
+  const groups = new Map<string, TierGroup>();
+  for (const record of records) {
+    if (!record.tier) continue;
+    const isPerGame = typeof record.win === "boolean";
+    const wins = isPerGame
+      ? record.win ? 1 : 0
+      : Math.max(0, Math.floor(Number(record.wins) || 0));
+    const losses = isPerGame
+      ? record.win ? 0 : 1
+      : Math.max(0, Math.floor(Number(record.losses) || 0));
+    const weight = isPerGame ? 1 : wins + losses;
+    const hasKda =
+      weight > 0 &&
+      (record.kills !== undefined ||
+        record.deaths !== undefined ||
+        record.assists !== undefined);
+    const group = groups.get(record.tier) ?? {
+      tier: record.tier,
+      wins: 0,
+      losses: 0,
+      killsSum: 0,
+      deathsSum: 0,
+      assistsSum: 0,
+      kdaGames: 0,
+    };
+    group.wins += wins;
+    group.losses += losses;
+    if (hasKda) {
+      group.killsSum += (Number(record.kills) || 0) * weight;
+      group.deathsSum += (Number(record.deaths) || 0) * weight;
+      group.assistsSum += (Number(record.assists) || 0) * weight;
+      group.kdaGames += weight;
+    }
+    groups.set(record.tier, group);
+  }
+
+  // 낮은 티어가 왼쪽에 오도록 오름차순 정렬 (언랭크 → 챌린저)
+  const rows = [...groups.values()].sort(
+    (a, b) => TIER_OPTIONS.indexOf(a.tier) - TIER_OPTIONS.indexOf(b.tier),
+  );
+
   return (
     <div className={className}>
-      {records.map((record, index) => {
-        const icon = TIER_ICON_BY_NAME[record.tier];
-        const kdaRatio = kdaRatioLabel(record);
-        const isPerGame = typeof record.win === "boolean";
-        const wins = record.wins ?? 0;
-        const losses = record.losses ?? 0;
-        const total = wins + losses;
-        const rate = total > 0 ? Math.round((wins / total) * 100) : 0;
-
+      {rows.map((group) => {
+        const icon = TIER_ICON_BY_NAME[group.tier];
+        const avg =
+          group.kdaGames > 0
+            ? {
+                kills: group.killsSum / group.kdaGames,
+                deaths: group.deathsSum / group.kdaGames,
+                assists: group.assistsSum / group.kdaGames,
+              }
+            : null;
+        const rating = avg
+          ? avg.deaths > 0
+            ? ((avg.kills + avg.assists) / avg.deaths).toFixed(2)
+            : "Perfect"
+          : null;
         return (
           <div
-            key={`${record.tier}-${record.champion ?? ""}-${index}`}
-            className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/20 px-3 py-2"
+            key={group.tier}
+            className="inline-flex items-center gap-2.5 rounded-2xl border border-white/8 bg-black/20 px-3 py-2"
           >
             {icon && (
               <Image
                 src={icon}
-                alt={record.tier}
-                width={28}
-                height={28}
+                alt={group.tier}
+                width={26}
+                height={26}
                 className="rounded-full bg-zinc-900"
               />
             )}
-            <div className="min-w-0 flex-1">
+            <div>
               <p className="text-xs font-black text-gold">
-                {record.tier}
-                {record.champion ? (
-                  <span className="ml-1.5 text-zinc-300">{record.champion}</span>
-                ) : null}
+                {group.tier}
+                <span className="ml-1.5 text-white">
+                  {group.wins}승 {group.losses}패
+                </span>
               </p>
-              {isPerGame ? (
-                kdaRatio && (
-                  <p className="text-xs font-bold text-zinc-400">
-                    {record.kills ?? 0} / {record.deaths ?? 0} / {record.assists ?? 0}
-                    <span className="ml-1 text-zinc-500">({kdaRatio})</span>
-                  </p>
-                )
-              ) : (
-                <>
-                  <p className="text-xs font-bold text-zinc-400">
-                    {wins}승 {losses}패
-                  </p>
-                  {kdaRatio && (
-                    <p className="text-xs font-bold text-zinc-500">
-                      KDA {(record.kills ?? 0).toFixed(1)} /{" "}
-                      {(record.deaths ?? 0).toFixed(1)} /{" "}
-                      {(record.assists ?? 0).toFixed(1)}
-                      <span className="ml-1 text-gold">({kdaRatio})</span>
-                    </p>
-                  )}
-                </>
+              {avg && (
+                <p className="text-[11px] font-bold text-zinc-500">
+                  {avg.kills.toFixed(1)} / {avg.deaths.toFixed(1)} /{" "}
+                  {avg.assists.toFixed(1)}
+                  <span className={`ml-1.5 font-black ${kdaRatingClass(avg)}`}>
+                    {rating === "Perfect" ? "Perfect" : `평점 ${rating}`}
+                  </span>
+                </p>
               )}
             </div>
-            {isPerGame ? (
-              <span
-                className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-black ${
-                  record.win
-                    ? "bg-emerald-400/15 text-emerald-300"
-                    : "bg-red-400/15 text-red-300"
-                }`}
-              >
-                {record.win ? "승리" : "패배"}
-              </span>
-            ) : (
-              <span className="text-sm font-black text-white">{rate}%</span>
-            )}
           </div>
         );
       })}

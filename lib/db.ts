@@ -28,6 +28,11 @@ export function getPool() {
       connectionLimit: 5,
       queueLimit: 0,
       namedPlaceholders: true,
+      // 원격 DB가 유휴 커넥션을 끊어도 죽은 커넥션을 재사용하지 않도록 방지
+      enableKeepAlive: true,
+      keepAliveInitialDelay: 10_000,
+      idleTimeout: 60_000,
+      maxIdle: 2,
     });
   }
 

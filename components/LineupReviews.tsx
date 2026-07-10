@@ -60,7 +60,7 @@ function ReplyDisplay({
     <div>
       <TierRecordBadges
         records={reply.tierRecords}
-        className="mt-3 grid gap-2 sm:grid-cols-2"
+        className="mt-3 flex flex-wrap gap-2"
       />
       <p className="mt-2 text-sm leading-7 whitespace-pre-wrap text-zinc-300">
         {reply.content}

@@ -1305,7 +1305,7 @@ function ReplySection({
         <div className="relative">
           <TierRecordBadges
             records={review.reply.tierRecords}
-            className="mb-4 grid gap-2 sm:grid-cols-2"
+            className="mb-4 flex flex-wrap gap-2"
           />
           <p className="text-sm leading-7 whitespace-pre-wrap text-zinc-300">
             {review.reply.content}
