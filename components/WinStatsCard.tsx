@@ -5,12 +5,27 @@ import Image from "next/image";
 import { Swords } from "lucide-react";
 import {
   TIER_ICON_BY_NAME,
+  TIER_OPTIONS,
   kdaRatingClass,
   kdaRatioLabel,
 } from "@/components/TierRecords";
 import type { WinStatsGroup } from "@/lib/lineups";
 
 type TabKey = "total" | "boost" | "duo";
+
+const TIER_EN_BY_NAME: Record<string, string> = {
+  언랭크: "Unranked",
+  아이언: "Iron",
+  브론즈: "Bronze",
+  실버: "Silver",
+  골드: "Gold",
+  플래티넘: "Platinum",
+  에메랄드: "Emerald",
+  다이아몬드: "Diamond",
+  마스터: "Master",
+  그랜드마스터: "Grandmaster",
+  챌린저: "Challenger",
+};
 
 export default function WinStatsCard({
   stats,
@@ -92,28 +107,33 @@ export default function WinStatsCard({
         </div>
       </div>
 
-      {active.data.byTier.length > 0 && (
-        <div className="mt-6 border-t border-white/6 pt-5">
-          <div className="text-xs font-black text-zinc-500">티어별 승률</div>
-          <div className="mt-3 grid gap-2.5">
-            {active.data.byTier.map((t) => {
+      <div className="mt-6 grid items-start gap-6 border-t border-white/6 pt-5 md:grid-cols-2">
+          <div>
+            <div className="text-xs font-black text-zinc-500">티어별 통계</div>
+            <div className="mt-3 grid gap-2.5">
+            {[...TIER_OPTIONS].reverse().map((tier) => {
+              const t = active.data.byTier.find((row) => row.tier === tier) ?? {
+                tier,
+                wins: 0,
+                losses: 0,
+              };
               const total = t.wins + t.losses;
               const pct = total > 0 ? Math.round((t.wins / total) * 100) : 0;
               return (
-                <div key={t.tier} className="flex items-center gap-3">
-                  <span className="flex w-28 shrink-0 items-center gap-2 text-xs font-black text-zinc-300">
-                    {TIER_ICON_BY_NAME[t.tier] && (
+                <div key={tier} className="flex items-center gap-3">
+                  <span className="flex w-32 shrink-0 items-center gap-2 text-xs font-black text-zinc-300">
+                    {TIER_ICON_BY_NAME[tier] && (
                       <Image
-                        src={TIER_ICON_BY_NAME[t.tier]}
-                        alt={t.tier}
+                        src={TIER_ICON_BY_NAME[tier]}
+                        alt={tier}
                         width={22}
                         height={22}
                         className="rounded-full bg-zinc-900"
                       />
                     )}
-                    {t.tier}
+                    {TIER_EN_BY_NAME[tier] ?? tier}
                   </span>
-                  <div className="flex h-5 flex-1 overflow-hidden rounded-md text-[11px] font-black text-white">
+                  <div className="flex h-5 flex-1 overflow-hidden rounded-md bg-white/6 text-[11px] font-black text-white">
                     {t.wins > 0 && (
                       <div
                         className="flex items-center bg-[#5383e8] pl-2 transition-all duration-500"
@@ -132,24 +152,25 @@ export default function WinStatsCard({
                     )}
                   </div>
                   <span
-                    className={`w-10 shrink-0 text-right text-xs font-black ${
-                      pct >= 60 ? "text-red-400" : "text-white"
+                    className={`w-10 shrink-0 text-right text-xs ${
+                      total > 0 && pct >= 60
+                        ? "text-red-400"
+                        : "text-lol-gray-500"
                     }`}
                   >
-                    {pct}%
+                    {total > 0 ? `${pct}%` : "-"}
                   </span>
                 </div>
               );
             })}
+            </div>
           </div>
-        </div>
-      )}
 
-      {active.data.byChampion.length > 0 && (
-        <div className="mt-6 border-t border-white/6 pt-5">
-          <div className="text-xs font-black text-zinc-500">챔피언별 전적</div>
-          <div className="mt-3 grid gap-2">
-            {active.data.byChampion.map((c) => {
+          {active.data.byChampion.length > 0 && (
+            <div>
+              <div className="text-xs font-black text-zinc-500">챔피언별 통계 TOP5</div>
+              <div className="mt-3 grid gap-2">
+            {active.data.byChampion.slice(0, 5).map((c, index) => {
               const total = c.wins + c.losses;
               const pct = total > 0 ? Math.round((c.wins / total) * 100) : 0;
               const kdaRatio = kdaRatioLabel({
@@ -175,30 +196,35 @@ export default function WinStatsCard({
                       {c.champion.charAt(0)}
                     </span>
                   )}
-                  <p className="min-w-0 flex-1 truncate text-sm font-black text-white">
-                    {c.champion}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-black text-white">
+                      {c.champion}
+                    </p>
+                    <p className="text-[11px] font-bold text-zinc-500">
+                      Most {index + 1}
+                    </p>
+                  </div>
                   {kdaRatio && (
                     <div className="flex-1 shrink-0 text-center">
                       <p
-                        className={`text-sm font-black ${kdaRatingClass({
+                        className={`text-xs font-black ${kdaRatingClass({
                           kills: c.kills ?? undefined,
                           deaths: c.deaths ?? undefined,
                           assists: c.assists ?? undefined,
                         })}`}
                       >
-                        {kdaRatio === "Perfect" ? "Perfect" : `평점 ${kdaRatio}`}
+                        {kdaRatio === "Perfect" ? "Perfect" : `${kdaRatio} 평점`}
                       </p>
-                      <p className="text-[11px] font-bold text-zinc-400">
+                      <p className="text-[11px] font-bold whitespace-nowrap text-zinc-400">
                         {(c.kills ?? 0).toFixed(1)} / {(c.deaths ?? 0).toFixed(1)} /{" "}
                         {(c.assists ?? 0).toFixed(1)}
                       </p>
                     </div>
                   )}
-                  <div className="w-24 shrink-0 text-center">
+                  <div className="w-20 shrink-0 text-right">
                     <p
-                      className={`text-sm font-black ${
-                        pct >= 60 ? "text-red-400" : "text-white"
+                      className={`text-xs ${
+                        pct >= 60 ? "text-red-400" : "text-lol-gray-500"
                       }`}
                     >
                       {pct}%
@@ -207,6 +233,121 @@ export default function WinStatsCard({
                       {total} 게임
                     </p>
                   </div>
+                </div>
+              );
+            })}
+              </div>
+            </div>
+          )}
+      </div>
+
+      {active.data.recent.length > 0 && (
+        <div className="mt-6 border-t border-white/6 pt-5">
+          <div className="text-xs font-black text-zinc-500">최근 전적</div>
+          <div className="mt-3 grid gap-2">
+            {active.data.recent.map((game, index) => {
+              const kdaRatio = kdaRatioLabel({
+                kills: game.kills ?? undefined,
+                deaths: game.deaths ?? undefined,
+                assists: game.assists ?? undefined,
+              });
+              const date = game.date
+                ? new Intl.DateTimeFormat("ko-KR", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                  }).format(new Date(game.date))
+                : "";
+              return (
+                <div
+                  key={`${game.date}-${index}`}
+                  className={`flex items-center gap-3 rounded-2xl border px-3 py-2.5 ${
+                    game.win
+                      ? "border-[#5383e8]/25 bg-[#5383e8]/12"
+                      : "border-[#e84057]/25 bg-[#e84057]/12"
+                  }`}
+                >
+                  {/* 승패 */}
+                  <span
+                    className={`w-12 shrink-0 rounded-full px-2 py-0.5 text-center text-[11px] font-black ${
+                      game.win
+                        ? "bg-[#5383e8]/20 text-[#5383e8]"
+                        : "bg-[#e84057]/20 text-[#e84057]"
+                    }`}
+                  >
+                    {game.win ? "승리" : "패배"}
+                  </span>
+
+                  {/* 여백: 승패 ↔ 챔피언 */}
+                  <div className="flex-1" />
+
+                  {/* 챔피언 이미지 + 이름 */}
+                  <div className="flex w-36 shrink-0 items-center gap-2.5">
+                    {game.image ? (
+                      <Image
+                        src={game.image}
+                        alt={game.champion}
+                        width={40}
+                        height={40}
+                        className="shrink-0 rounded-xl border border-white/10 bg-zinc-900 object-cover"
+                      />
+                    ) : (
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/10 bg-zinc-900 text-sm font-black text-zinc-500">
+                        {game.champion.charAt(0) || "?"}
+                      </span>
+                    )}
+                    <p className="min-w-0 truncate text-xs font-black text-white">
+                      {game.champion || "챔피언 미기록"}
+                    </p>
+                  </div>
+
+                  {/* KDA / 평점 */}
+                  <div className="w-24 shrink-0 text-center">
+                    {kdaRatio && (
+                      <>
+                        <p className="text-[15px] font-black whitespace-nowrap text-zinc-300">
+                          {game.kills ?? 0} /{" "}
+                          <span className="text-red-600">{game.deaths ?? 0}</span> /{" "}
+                          {game.assists ?? 0}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {kdaRatio === "Perfect" ? "Perfect" : `${kdaRatio} 평점`}
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  {/* 여백: KDA ↔ 티어 */}
+                  <div className="flex-1" />
+
+                  {/* 티어 이미지 + 티어 */}
+                  <div className="flex w-28 shrink-0 items-center justify-center gap-1.5">
+                    {TIER_ICON_BY_NAME[game.tier] && (
+                      <Image
+                        src={TIER_ICON_BY_NAME[game.tier]}
+                        alt={game.tier}
+                        width={20}
+                        height={20}
+                      />
+                    )}
+                    <span className="text-xs font-black text-zinc-300">
+                      {TIER_EN_BY_NAME[game.tier] ?? game.tier}
+                    </span>
+                  </div>
+
+                  {/* 대리/듀오 */}
+                  <span className="w-11 shrink-0 text-center">
+                    {game.service && (
+                      <span className="rounded-full border border-white/12 bg-black/30 px-2 py-0.5 text-[10px] font-black text-zinc-300">
+                        {game.service}
+                      </span>
+                    )}
+                  </span>
+
+                  {/* 날짜 */}
+                  <span className="w-20 shrink-0 text-right text-[11px] font-bold whitespace-nowrap text-zinc-500">
+                    {date}
+                  </span>
                 </div>
               );
             })}

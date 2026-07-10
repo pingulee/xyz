@@ -270,7 +270,7 @@ export function TierRecordEditor({
 
 export function TierRecordBadges({
   records,
-  className = "flex flex-wrap gap-2",
+  className = "grid gap-2",
 }: {
   records: TierRecord[];
   className?: string;
@@ -323,7 +323,7 @@ export function TierRecordBadges({
     groups.set(record.tier, group);
   }
 
-  // 낮은 티어가 왼쪽에 오도록 오름차순 정렬 (언랭크 → 챌린저)
+  // 낮은 티어가 왼쪽(위)에 오도록 오름차순 정렬 (언랭크 → 챌린저)
   const rows = [...groups.values()].sort(
     (a, b) => TIER_OPTIONS.indexOf(a.tier) - TIER_OPTIONS.indexOf(b.tier),
   );
@@ -332,6 +332,8 @@ export function TierRecordBadges({
     <div className={className}>
       {rows.map((group) => {
         const icon = TIER_ICON_BY_NAME[group.tier];
+        const total = group.wins + group.losses;
+        const pct = total > 0 ? Math.round((group.wins / total) * 100) : 0;
         const avg =
           group.kdaGames > 0
             ? {
@@ -348,33 +350,42 @@ export function TierRecordBadges({
         return (
           <div
             key={group.tier}
-            className="inline-flex items-center gap-2.5 rounded-2xl border border-white/8 bg-black/20 px-3 py-2"
+            className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/20 px-3 py-2.5"
           >
             {icon && (
               <Image
                 src={icon}
                 alt={group.tier}
-                width={26}
-                height={26}
-                className="rounded-full bg-zinc-900"
+                width={28}
+                height={28}
+                className="shrink-0 rounded-full bg-zinc-900"
               />
             )}
-            <div>
-              <p className="text-xs font-black text-gold">
-                {group.tier}
-                <span className="ml-1.5 text-white">
-                  {group.wins}승 {group.losses}패
-                </span>
-              </p>
-              {avg && (
-                <p className="text-[11px] font-bold text-zinc-500">
+            <p className="min-w-0 flex-1 truncate text-xs font-black text-white">
+              {group.tier}
+            </p>
+            {avg && (
+              <div className="flex-1 shrink-0 text-center">
+                <p className={`text-xs font-black ${kdaRatingClass(avg)}`}>
+                  {rating === "Perfect" ? "Perfect" : `${rating} 평점`}
+                </p>
+                <p className="text-[11px] font-bold text-zinc-400">
                   {avg.kills.toFixed(1)} / {avg.deaths.toFixed(1)} /{" "}
                   {avg.assists.toFixed(1)}
-                  <span className={`ml-1.5 font-black ${kdaRatingClass(avg)}`}>
-                    {rating === "Perfect" ? "Perfect" : `평점 ${rating}`}
-                  </span>
                 </p>
-              )}
+              </div>
+            )}
+            <div className="w-20 shrink-0 text-right">
+              <p
+                className={`text-xs ${
+                  pct >= 60 ? "text-red-400" : "text-lol-gray-500"
+                }`}
+              >
+                {pct}%
+              </p>
+              <p className="text-[11px] font-bold text-zinc-500">
+                {total} 게임
+              </p>
             </div>
           </div>
         );

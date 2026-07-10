@@ -8,6 +8,9 @@
   --gold-soft: #fadb74;
 
   --void: #090806;
+
+  /* OP.GG 스타일 통계 회색 (낮은 승률 등) */
+  --lol-gray-500: #758592;
 }
 
 @theme inline {
@@ -16,6 +19,7 @@
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
   --color-void: var(--void);
+  --color-lol-gray-500: var(--lol-gray-500);
   --font-sans: var(--font-pretendard);
   --font-mono: var(--font-pretendard);
   --shadow-gold: 0 18px 65px rgba(222, 176, 67, 0.28);

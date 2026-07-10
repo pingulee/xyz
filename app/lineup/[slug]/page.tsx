@@ -61,11 +61,7 @@ export default async function LineupDetailPage({ params }: Props) {
     getLineupWinStats(Number(lineup.id)),
   ]);
 
-  const totalGames = winStats.total.wins + winStats.total.losses;
-  const hasWinRecords = totalGames > 0;
-  const totalWinRate = hasWinRecords
-    ? Math.round((winStats.total.wins / totalGames) * 100)
-    : 0;
+  const hasWinRecords = winStats.total.wins + winStats.total.losses > 0;
 
   return (
     <section className="py-16">
@@ -187,56 +183,6 @@ export default async function LineupDetailPage({ params }: Props) {
                     ))}
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </Reveal>
-
-        {/* ── 핵심 지표 타일 ── */}
-        <Reveal>
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            <div className="card-premium rounded-3xl p-5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-zinc-500">평균 평점</span>
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-gold/12 text-gold">
-                  <Star size={14} fill="currentColor" />
-                </span>
-              </div>
-              <div className="mt-2 text-3xl font-black text-white">
-                {stats.averageRating.toFixed(1)}
-              </div>
-              <div className="mt-1 text-xs font-bold text-zinc-500">
-                후기 {stats.reviewCount}개 기준
-              </div>
-            </div>
-            <div className="card-premium rounded-3xl p-5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-zinc-500">전체 후기</span>
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-gold/12 text-gold">
-                  <MessageCircle size={14} />
-                </span>
-              </div>
-              <div className="mt-2 text-3xl font-black text-white">
-                {stats.reviewCount}
-              </div>
-              <div className="mt-1 text-xs font-bold text-zinc-500">
-                고객이 직접 남긴 후기
-              </div>
-            </div>
-            <div className="card-premium rounded-3xl p-5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-zinc-500">전체 승률</span>
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-gold/12 text-gold">
-                  <Swords size={14} />
-                </span>
-              </div>
-              <div className="mt-2 text-3xl font-black text-white">
-                {hasWinRecords ? `${totalWinRate}%` : "-"}
-              </div>
-              <div className="mt-1 text-xs font-bold text-zinc-500">
-                {hasWinRecords
-                  ? `${winStats.total.wins}승 ${winStats.total.losses}패 · 총 ${totalGames}판`
-                  : "아직 작업 기록이 없습니다"}
               </div>
             </div>
           </div>

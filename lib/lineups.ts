@@ -170,12 +170,27 @@ export type ChampionStat = {
   assists: number | null;
 };
 
+export type RecentGame = {
+  tier: string;
+  champion: string;
+  image: string | null;
+  win: boolean;
+  kills: number | null;
+  deaths: number | null;
+  assists: number | null;
+  date: string;
+  service: "대리" | "듀오" | null;
+};
+
 export type WinStatsGroup = {
   wins: number;
   losses: number;
   byTier: { tier: string; wins: number; losses: number }[];
   byChampion: ChampionStat[];
+  recent: RecentGame[];
 };
+
+const RECENT_GAMES_LIMIT = 10;
 
 type ChampionAcc = {
   wins: number;
@@ -192,6 +207,7 @@ function createWinStatsAccumulator() {
     losses: 0,
     byTier: {} as Record<string, { wins: number; losses: number }>,
     byChampion: {} as Record<string, ChampionAcc>,
+    recent: [] as Omit<RecentGame, "image">[],
   };
 }
 
@@ -220,6 +236,10 @@ function toWinStatsGroup(
         (a, b) =>
           b.wins + b.losses - (a.wins + a.losses) || b.wins - a.wins,
       ),
+    recent: acc.recent.map((game) => ({
+      ...game,
+      image: game.champion ? championImages[game.champion] ?? null : null,
+    })),
   };
 }
 
@@ -229,10 +249,12 @@ export async function getLineupWinStats(lineupId: number): Promise<{
   duo: WinStatsGroup;
 }> {
   const [rows] = await getPool().execute<RowDataPacket[]>(
-    `SELECT rr.tier_records AS tier_records, r.service AS service
+    `SELECT rr.tier_records AS tier_records, r.service AS service,
+            rr.created_at AS created_at
        FROM review_replies rr
        JOIN reviews r ON r.id = rr.review_id
-       WHERE rr.lineup_id = :lineupId AND rr.tier_records IS NOT NULL`,
+       WHERE rr.lineup_id = :lineupId AND rr.tier_records IS NOT NULL
+       ORDER BY rr.created_at DESC`,
     { lineupId },
   );
 
@@ -252,6 +274,37 @@ export async function getLineupWinStats(lineupId: number): Promise<{
       : service.includes("대리")
         ? boost
         : null;
+
+    // 최근 전적: 답글 최신순(쿼리 정렬), 답글 내에서는 나중에 추가한 게임부터
+    const createdAt =
+      row.created_at instanceof Date
+        ? row.created_at.toISOString()
+        : String(row.created_at ?? "");
+    const perGame = records.filter(
+      (r) => r.tier && typeof r.win === "boolean",
+    );
+    const serviceLabel = service.includes("듀오")
+      ? ("듀오" as const)
+      : service.includes("대리")
+        ? ("대리" as const)
+        : null;
+    for (const r of [...perGame].reverse()) {
+      for (const acc of serviceAcc ? [total, serviceAcc] : [total]) {
+        if (acc.recent.length < RECENT_GAMES_LIMIT) {
+          acc.recent.push({
+            tier: r.tier,
+            champion: (r.champion ?? "").trim(),
+            win: r.win === true,
+            kills: r.kills ?? null,
+            deaths: r.deaths ?? null,
+            assists: r.assists ?? null,
+            date: createdAt,
+            service: serviceLabel,
+          });
+        }
+      }
+    }
+
     for (const r of records) {
       if (!r.tier) continue;
       const isPerGame = typeof r.win === "boolean";

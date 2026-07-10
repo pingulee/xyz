@@ -17,7 +17,7 @@ import {
 } from "@/components/TierRecords";
 import type { Review, ReviewReply, TierRecord } from "@/lib/reviews";
 
-const PER_PAGE = 5;
+const PER_PAGE = 3;
 const REPLY_CONTENT_MIN_LENGTH = 10;
 
 function Stars({ rating }: { rating: number }) {
@@ -60,7 +60,7 @@ function ReplyDisplay({
     <div className="relative">
       <TierRecordBadges
         records={reply.tierRecords}
-        className="mt-3 flex flex-wrap gap-2"
+        className="mt-3 grid gap-2"
       />
       <p className="mt-2 text-sm leading-7 whitespace-pre-wrap text-zinc-300">
         {reply.content}
