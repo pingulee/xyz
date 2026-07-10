@@ -18,7 +18,7 @@ export const TIER_OPTIONS = [
   "챌린저",
 ];
 
-const TIER_ICON_BY_NAME: Record<string, string> = {
+export const TIER_ICON_BY_NAME: Record<string, string> = {
   아이언: "/images/tier/1-iron.png",
   브론즈: "/images/tier/2-bronze.png",
   실버: "/images/tier/3-silver.png",

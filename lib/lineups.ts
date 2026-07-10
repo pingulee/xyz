@@ -157,18 +157,46 @@ const TIER_ORDER = [
   "에메랄드", "다이아몬드", "마스터", "그랜드마스터", "챌린저",
 ];
 
-export async function getLineupWinStats(lineupId: number): Promise<{
-  total: { wins: number; losses: number };
+export type WinStatsGroup = {
+  wins: number;
+  losses: number;
   byTier: { tier: string; wins: number; losses: number }[];
+};
+
+function createWinStatsAccumulator() {
+  return {
+    wins: 0,
+    losses: 0,
+    byTier: {} as Record<string, { wins: number; losses: number }>,
+  };
+}
+
+function toWinStatsGroup(acc: ReturnType<typeof createWinStatsAccumulator>): WinStatsGroup {
+  return {
+    wins: acc.wins,
+    losses: acc.losses,
+    byTier: Object.entries(acc.byTier)
+      .map(([tier, v]) => ({ tier, ...v }))
+      .sort((a, b) => TIER_ORDER.indexOf(b.tier) - TIER_ORDER.indexOf(a.tier)),
+  };
+}
+
+export async function getLineupWinStats(lineupId: number): Promise<{
+  total: WinStatsGroup;
+  boost: WinStatsGroup;
+  duo: WinStatsGroup;
 }> {
   const [rows] = await getPool().execute<RowDataPacket[]>(
-    `SELECT tier_records FROM review_replies WHERE lineup_id = :lineupId AND tier_records IS NOT NULL`,
+    `SELECT rr.tier_records AS tier_records, r.service AS service
+       FROM review_replies rr
+       JOIN reviews r ON r.id = rr.review_id
+       WHERE rr.lineup_id = :lineupId AND rr.tier_records IS NOT NULL`,
     { lineupId },
   );
 
-  const byTier: Record<string, { wins: number; losses: number }> = {};
-  let totalWins = 0;
-  let totalLosses = 0;
+  const total = createWinStatsAccumulator();
+  const boost = createWinStatsAccumulator();
+  const duo = createWinStatsAccumulator();
 
   for (const row of rows) {
     let records: TierRecord[] = [];
@@ -176,21 +204,31 @@ export async function getLineupWinStats(lineupId: number): Promise<{
       const raw = row.tier_records;
       records = (typeof raw === "string" ? JSON.parse(raw) : raw) as TierRecord[];
     } catch { continue; }
+    const service = String(row.service ?? "");
+    const serviceAcc = service.includes("듀오")
+      ? duo
+      : service.includes("대리")
+        ? boost
+        : null;
     for (const r of records) {
       if (!r.tier) continue;
-      if (!byTier[r.tier]) byTier[r.tier] = { wins: 0, losses: 0 };
-      byTier[r.tier].wins += Number(r.wins) || 0;
-      byTier[r.tier].losses += Number(r.losses) || 0;
-      totalWins += Number(r.wins) || 0;
-      totalLosses += Number(r.losses) || 0;
+      const wins = Number(r.wins) || 0;
+      const losses = Number(r.losses) || 0;
+      for (const acc of serviceAcc ? [total, serviceAcc] : [total]) {
+        if (!acc.byTier[r.tier]) acc.byTier[r.tier] = { wins: 0, losses: 0 };
+        acc.byTier[r.tier].wins += wins;
+        acc.byTier[r.tier].losses += losses;
+        acc.wins += wins;
+        acc.losses += losses;
+      }
     }
   }
 
-  const byTierArr = Object.entries(byTier)
-    .map(([tier, v]) => ({ tier, ...v }))
-    .sort((a, b) => TIER_ORDER.indexOf(b.tier) - TIER_ORDER.indexOf(a.tier));
-
-  return { total: { wins: totalWins, losses: totalLosses }, byTier: byTierArr };
+  return {
+    total: toWinStatsGroup(total),
+    boost: toWinStatsGroup(boost),
+    duo: toWinStatsGroup(duo),
+  };
 }
 
 export async function getLineupReviewStats(id: number) {
