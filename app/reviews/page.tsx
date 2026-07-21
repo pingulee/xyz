@@ -8,6 +8,7 @@ import { getReviews } from "@/lib/reviews";
 import { getLineups } from "@/lib/lineups";
 import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
 import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSession";
+import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,14 @@ export const metadata: Metadata = {
       "XYZ 실제 후기를 확인하고 직접 남겨보세요.",
     url: "/reviews",
     type: "website",
+    siteName: site.name,
+    images: [{ url: site.ogImage }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "작업 후기 | XYZ",
+    description: "XYZ 실제 후기를 확인하고 직접 남겨보세요.",
+    images: [site.ogImage],
   },
 };
 
@@ -66,6 +75,7 @@ export default async function ReviewsPage() {
             eyebrow="reviews"
             title="작업 후기"
             desc="조작 없는 100% 리얼 후기를 확인하고 직접 남겨보세요."
+            as="h1"
           />
         </Reveal>
         <Reveal>

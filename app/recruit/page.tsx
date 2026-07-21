@@ -5,10 +5,26 @@ import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import { site } from "@/lib/site";
 
+const description = "xyz에서 함께할 상위 티어 롤 기사님을 모집합니다.";
+
 export const metadata: Metadata = {
   title: "기사 모집",
-  description: "xyz에서 함께할 상위 티어 롤 기사님을 모집합니다.",
+  description,
   alternates: { canonical: "/recruit" },
+  openGraph: {
+    title: "기사 모집 | XYZ",
+    description,
+    url: "/recruit",
+    type: "website",
+    siteName: site.name,
+    images: [{ url: site.ogImage }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "기사 모집 | XYZ",
+    description,
+    images: [site.ogImage],
+  },
 };
 
 const conditions = [
@@ -29,6 +45,7 @@ export default function RecruitPage() {
             eyebrow="recruit"
             title="기사 모집"
             desc="실력과 책임감을 갖춘 상위 티어 기사님을 모집합니다."
+            as="h1"
           />
         </Reveal>
         <Reveal>

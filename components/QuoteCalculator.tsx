@@ -124,7 +124,7 @@ const SERVICES = [
     key: "low-win",
     label: "저티어 티어 보장제",
     category: "대리",
-    unit: "승",
+    unit: "구간",
     min: 1,
     max: 50,
     step: 1,
@@ -224,6 +224,7 @@ function RankPicker({
   maxTierIndex = TIERS.length - 1,
   splitDiamond = false,
   splitMaster = false,
+  divisionOptions,
 }: {
   title: string;
   hint: string;
@@ -236,8 +237,11 @@ function RankPicker({
   maxTierIndex?: number;
   splitDiamond?: boolean;
   splitMaster?: boolean;
+  /** 선택 가능한 단계를 제한할 때 사용 (기본: 티어의 전체 단계) */
+  divisionOptions?: number[];
 }) {
   const tier = TIERS[tierIndex];
+  const divisions = divisionOptions ?? tier.divisions;
   const tierChoices = TIERS.flatMap((item, index) => {
     if (splitDiamond && item.key === "diamond") {
       return [
@@ -309,7 +313,7 @@ function RankPicker({
               ) : (
                 <Image
                   src={item.image}
-                  alt={item.name}
+                  alt=""
                   width={52}
                   height={52}
                   className={`mx-auto h-10 w-10 object-contain transition sm:h-12 sm:w-12 ${active ? "scale-110" : "opacity-70 group-hover:opacity-100"}`}
@@ -325,60 +329,29 @@ function RankPicker({
         })}
       </div>
 
-      <div
-        className={`mt-5 grid gap-3 ${hideDivision ? "" : "sm:grid-cols-[1fr_1fr]"}`}
-      >
-        {!hideDivision && (
-          <div>
-            <p className="mb-2 text-[11px] font-bold text-zinc-500">단계</p>
-            <div className="grid grid-cols-4 gap-2">
-              {tier.divisions.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => onDivisionChange(item)}
-                  className={`rounded-xl border py-2.5 text-sm font-black transition ${
-                    item === division
-                      ? "border-gold bg-gold text-black"
-                      : "border-white/8 text-zinc-400 hover:border-gold/35"
-                  }`}
-                >
-                  {tier.divisions.length === 1
-                    ? "LP"
-                    : ["", "I", "II", "III", "IV"][item]}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        <div className="flex items-end rounded-2xl border border-white/7 bg-white/[.025] px-4 py-3">
-          {splitDiamond && tier.key === "diamond" && division === -1 ? (
-            <span className="mr-3 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-red-400/30 bg-red-950/85 text-red-300">
-              <Ban size={18} strokeWidth={2.5} />
-            </span>
-          ) : (
-            <Image
-              src={tier.image}
-              alt=""
-              width={38}
-              height={38}
-              className="mr-3 h-9 w-9 object-contain"
-            />
-          )}
-          <div>
-            <p className="text-[10px] font-bold text-zinc-500">선택한 티어</p>
-            <p className="mt-0.5 font-black text-white">
-              {splitDiamond && tier.key === "diamond"
-                ? division === -1
-                  ? "듀오 불가"
-                  : `다이아몬드 ${division >= 3 ? "4~3" : "2~1"}`
-                : splitMaster && tier.key === "master"
-                  ? `마스터 ${division}~${division + 199} LP`
-                  : `${tier.name} ${hideDivision || tier.divisions.length === 1 ? "" : ["", "I", "II", "III", "IV"][division]}`}
-            </p>
+      {!hideDivision && (
+        <div className="mt-5">
+          <p className="mb-2 text-[11px] font-bold text-zinc-500">단계</p>
+          <div className="grid grid-cols-4 gap-2">
+            {divisions.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => onDivisionChange(item)}
+                className={`rounded-xl border py-2.5 text-sm font-black transition ${
+                  item === division
+                    ? "border-gold bg-gold text-black"
+                    : "border-white/8 text-zinc-400 hover:border-gold/35"
+                }`}
+              >
+                {tier.divisions.length === 1
+                  ? "LP"
+                  : ["", "I", "II", "III", "IV"][item]}
+              </button>
+            ))}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -412,7 +385,7 @@ export default function QuoteCalculator() {
   );
   const serviceRankValid =
     serviceKey === "low-win"
-      ? currentTier <= 5
+      ? currentTier <= 6
       : serviceKey === "high-score"
         ? currentTier >= 6
         : true;
@@ -435,20 +408,25 @@ export default function QuoteCalculator() {
     let base = 0;
     if (serviceKey === "hourly") {
       const hourlyRates = [
-        12000, 12000, 12000, 14000, 16000, 18000, 22000, 26000, 32000, 40000,
+        12000, 12000, 12000, 14000, 16000, 18000, 20000, 26000, 32000, 40000,
       ];
       const masterLpSurcharge =
         currentTier === 7 ? Math.floor(currentDivision / 200) * 2000 : 0;
+      // 다이아몬드: 4~3 20,000원 · 2~1 24,000원 · 듀오 불가 26,000원 (1시간당)
       const hourlyRate =
-        currentTier === 6 && currentDivision === -1
-          ? hourlyRates[7]
+        currentTier === 6
+          ? currentDivision === -1
+            ? 26000
+            : currentDivision >= 3
+              ? 20000
+              : 24000
           : hourlyRates[currentTier] + masterLpSurcharge;
       base = hourlyRate * quantity;
     } else if (serviceKey === "low-win") {
-      const winRates = [
-        5000, 5000, 5000, 6000, 7000, 8000, 12000, 16000, 20000, 26000,
-      ];
-      base = winRates[currentTier] * quantity;
+      // 신청 수량 없이 현재 → 목표 구간 수로 자동 계산 (구간당 티어별 단가)
+      for (let score = currentScore; score < targetScore; score++) {
+        base += TIERS[Math.floor(score / 4)].divisionPrice;
+      }
     } else if (serviceKey === "high-score") {
       const perHundred =
         currentTier >= 7 ? 180000 : currentTier === 6 ? 150000 : 120000;
@@ -510,7 +488,7 @@ export default function QuoteCalculator() {
     currentTier,
     needsTargetRank,
     quantity,
-    selectedChampions.length,
+    selectedChampions,
     serviceKey,
     targetScore,
     currentScore,
@@ -539,11 +517,26 @@ export default function QuoteCalculator() {
       setTargetTier(7);
       setTargetDivision(1);
     }
-    if (key === "low-win" && currentTier > 5) {
-      setCurrentTier(2);
-      setCurrentDivision(4);
-      setTargetTier(3);
-      setTargetDivision(4);
+    if (key === "low-win") {
+      if (currentTier > 6) {
+        setCurrentTier(2);
+        setCurrentDivision(4);
+        setTargetTier(3);
+        setTargetDivision(4);
+      } else if (
+        currentTier === 6 &&
+        (currentDivision === 1 || currentDivision === -1)
+      ) {
+        // 다이아몬드 1(및 듀오 불가)은 현재 랭크로 선택 불가
+        setCurrentDivision(2);
+      }
+      if (targetTier > 6) {
+        setTargetTier(6);
+        setTargetDivision(1);
+      } else if (targetTier === 0 && targetDivision === 4) {
+        // 아이언 4는 목표 랭크로 선택 불가
+        setTargetDivision(3);
+      }
     }
   };
 
@@ -639,8 +632,6 @@ export default function QuoteCalculator() {
     });
   };
 
-  const current = TIERS[currentTier];
-  const target = TIERS[targetTier];
   const needsCurrentRank = serviceKey !== "normal";
   const needsCurrentLp =
     serviceKey !== "normal" &&
@@ -655,31 +646,17 @@ export default function QuoteCalculator() {
         ? "현재 티어를 선택해주세요. 다이아몬드는 구간이 분리됩니다."
         : "지금 계정의 티어와 단계를 선택해주세요.";
   const quantityTitle =
-    serviceKey === "low-win"
-      ? "신청 승 수"
-      : serviceKey === "hourly"
-        ? "신청 시간"
-        : serviceKey === "high-score"
-          ? "상승 점수"
-          : "신청 게임 수";
-  const rankLabel = (tier: Tier, division: number) =>
-    `${tier.name}${tier.divisions.length === 1 ? "" : ` ${["", "I", "II", "III", "IV"][division]}`}`;
-  const displayRankLabel = (tier: Tier, division: number) =>
-    serviceKey === "hourly" && tier.key === "diamond"
-      ? division === -1
-        ? "듀오 불가"
-        : `다이아몬드 ${division >= 3 ? "4~3" : "2~1"}`
-      : serviceKey === "hourly" && tier.key === "master"
-        ? `마스터 ${division}~${division + 199} LP`
-        : rankLabel(tier, division);
-  const currentRankLabel =
-    serviceKey === "placement"
-      ? current.name
-      : displayRankLabel(current, currentDivision);
+    serviceKey === "hourly"
+      ? "신청 시간"
+      : serviceKey === "high-score"
+        ? "상승 점수"
+        : "신청 게임 수";
   const estimatedDays =
     serviceKey === "high-score"
       ? Math.max(1, Math.ceil(quantity / 100))
-      : Math.max(1, Math.ceil(quantity / 10));
+      : serviceKey === "low-win"
+        ? Math.max(1, Math.ceil(quote.steps / 2))
+        : Math.max(1, Math.ceil(quantity / 10));
   const guaranteeRate =
     currentTier <= 2
       ? 90
@@ -840,6 +817,11 @@ export default function QuoteCalculator() {
                     ? 6
                     : TIERS.length - 1
               }
+              divisionOptions={
+                serviceKey === "low-win" && currentTier === 6
+                  ? [4, 3, 2]
+                  : undefined
+              }
             />
           )}
 
@@ -872,6 +854,7 @@ export default function QuoteCalculator() {
             </div>
           )}
 
+          {serviceKey !== "low-win" && (
           <div className="rounded-3xl border border-white/8 bg-black/20 p-5 sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -884,6 +867,7 @@ export default function QuoteCalculator() {
                 <button
                   type="button"
                   onClick={() => changeQuantity(-service.step)}
+                  aria-label={`신청 수량 ${service.step} ${service.unit} 줄이기`}
                   className="grid h-11 w-11 place-items-center rounded-full border border-white/10 text-zinc-300 hover:border-gold/40"
                 >
                   <Minus size={15} />
@@ -915,6 +899,7 @@ export default function QuoteCalculator() {
                 <button
                   type="button"
                   onClick={() => changeQuantity(service.step)}
+                  aria-label={`신청 수량 ${service.step} ${service.unit} 늘리기`}
                   className="grid h-11 w-11 place-items-center rounded-full border border-white/10 text-zinc-300 hover:border-gold/40"
                 >
                   <Plus size={15} />
@@ -922,6 +907,7 @@ export default function QuoteCalculator() {
               </div>
             </div>
           </div>
+          )}
 
           {needsTargetRank && (
             <RankPicker
@@ -931,11 +917,20 @@ export default function QuoteCalculator() {
               division={targetDivision}
               onTierChange={(index) => {
                 setTargetTier(index);
-                setTargetDivision(TIERS[index].divisions[0]);
+                setTargetDivision(
+                  serviceKey === "low-win" && index === 0
+                    ? 3
+                    : TIERS[index].divisions[0],
+                );
               }}
               onDivisionChange={setTargetDivision}
               minTierIndex={serviceKey === "high-score" ? 6 : 0}
               maxTierIndex={serviceKey === "low-win" ? 6 : TIERS.length - 1}
+              divisionOptions={
+                serviceKey === "low-win" && targetTier === 0
+                  ? [3, 2, 1]
+                  : undefined
+              }
             />
           )}
 
@@ -1145,38 +1140,11 @@ export default function QuoteCalculator() {
               )}
             </p>
             <p className="mt-1 text-xs text-zinc-400">
-              {quantity.toLocaleString("ko-KR")}
-              {service.unit} 신청
+              {serviceKey === "low-win"
+                ? `${validTarget ? quote.steps : 0}구간 신청`
+                : `${quantity.toLocaleString("ko-KR")}${service.unit} 신청`}
             </p>
           </div>
-
-          {serviceKey === "hourly" && (
-            <div
-              className={`mt-4 rounded-xl border px-3 py-3 ${quantity >= 10 ? "border-emerald-400/25 bg-emerald-400/[.07]" : "border-white/8 bg-black/20"}`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p
-                    className={`text-[11px] font-black ${quantity >= 10 ? "text-emerald-300" : "text-zinc-400"}`}
-                  >
-                    승률 보장
-                  </p>
-                  <p className="mt-1 text-[10px] text-zinc-600">
-                    {guaranteeRate === null
-                      ? "보장 승률은 상담 후 안내"
-                      : "10시간 이상 신청 시 자동 적용"}
-                  </p>
-                </div>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black ${quantity >= 10 ? "bg-emerald-400/15 text-emerald-300" : "bg-white/5 text-zinc-500"}`}
-                >
-                  {quantity >= 10
-                    ? guaranteeLabel
-                    : `${10 - quantity}시간 더 필요`}
-                </span>
-              </div>
-            </div>
-          )}
 
           <div className="mt-4 border-t border-white/8 pt-4">
             <p className="text-xs font-black text-white">
@@ -1320,58 +1288,6 @@ export default function QuoteCalculator() {
               </div>
             )}
           </div>
-          {needsCurrentRank && (
-            <div className="mt-6 flex items-center justify-between gap-3">
-              <div className="text-center">
-                {serviceKey === "hourly" &&
-                currentTier === 6 &&
-                currentDivision === -1 ? (
-                  <span className="mx-auto flex h-14 items-center justify-center">
-                    <span className="grid h-12 w-12 place-items-center rounded-full border border-red-400/30 bg-red-950/85 text-red-300">
-                      <Ban size={25} strokeWidth={2.5} />
-                    </span>
-                  </span>
-                ) : (
-                  <Image
-                    src={current.image}
-                    alt=""
-                    width={64}
-                    height={64}
-                    className="mx-auto h-14 w-14 object-contain"
-                  />
-                )}
-                <p className="mt-2 text-xs font-bold text-zinc-300">
-                  {currentRankLabel}
-                </p>
-              </div>
-              {needsTargetRank && (
-                <>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="h-px flex-1 bg-white/10" />
-                      <ArrowRight size={16} className="text-gold" />
-                      <span className="h-px flex-1 bg-white/10" />
-                    </div>
-                    <p className="mt-2 text-center text-[10px] font-bold text-zinc-600">
-                      {validTarget ? `${quote.steps}개 구간` : "목표 확인"}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <Image
-                      src={target.image}
-                      alt=""
-                      width={64}
-                      height={64}
-                      className="mx-auto h-14 w-14 object-contain"
-                    />
-                    <p className="mt-2 text-xs font-bold text-zinc-300">
-                      {displayRankLabel(target, targetDivision)}
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
           <div className="mt-6 space-y-3 border-y border-white/8 py-5 text-sm">
             <div className="flex justify-between">
               <span className="text-zinc-500">기본 금액</span>
@@ -1396,16 +1312,22 @@ export default function QuoteCalculator() {
                 <b className="text-zinc-400">0원</b>
               </div>
             )}
-            {serviceKey === "hourly" && quantity >= 10 && (
-              <div className="flex justify-between gap-3">
-                <span className="text-zinc-500">승률 보장</span>
-                <b className="shrink-0 text-gold">{guaranteeLabel}</b>
-              </div>
-            )}
             {!priceConsultRequired && quote.discount > 0 && (
               <div className="flex justify-between">
                 <span className="text-zinc-500">라인 미지정 할인</span>
                 <b className="text-emerald-400">-{won(quote.discount)}</b>
+              </div>
+            )}
+            {serviceKey === "hourly" && (
+              <div className="flex justify-between gap-3">
+                <span className="text-zinc-500">승률 보장</span>
+                <b
+                  className={`shrink-0 ${quantity >= 10 ? "text-gold" : "text-zinc-400"}`}
+                >
+                  {quantity >= 10
+                    ? guaranteeLabel
+                    : `${10 - quantity}시간 더 필요`}
+                </b>
               </div>
             )}
             <div className="flex justify-between">

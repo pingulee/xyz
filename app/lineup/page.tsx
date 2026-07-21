@@ -8,13 +8,30 @@ import Reveal from "@/components/Reveal";
 import SectionTitle from "@/components/SectionTitle";
 import { getLineups } from "@/lib/lineups";
 import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
+import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
+const description = "xyz의 검증된 상위 티어 롤 기사 라인업 안내 페이지입니다.";
+
 export const metadata: Metadata = {
   title: "기사 라인업",
-  description: "xyz의 검증된 상위 티어 롤 기사 라인업 안내 페이지입니다.",
+  description,
   alternates: { canonical: "/lineup" },
+  openGraph: {
+    title: "기사 라인업 | XYZ",
+    description,
+    url: "/lineup",
+    type: "website",
+    siteName: site.name,
+    images: [{ url: site.ogImage }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "기사 라인업 | XYZ",
+    description,
+    images: [site.ogImage],
+  },
 };
 
 export default async function LineupPage() {
@@ -33,6 +50,7 @@ export default async function LineupPage() {
               eyebrow="lineup"
               title="기사 라인업"
               desc="검증된 상위 티어 기사진이 직접 진행합니다."
+              as="h1"
             />
           </Reveal>
           <Reveal>
@@ -51,6 +69,7 @@ export default async function LineupPage() {
             eyebrow="lineup"
             title="기사 라인업"
             desc="검증된 상위 티어 기사진이 직접 진행합니다."
+            as="h1"
           />
         </Reveal>
 

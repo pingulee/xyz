@@ -36,10 +36,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "기사 정보를 찾을 수 없습니다" };
   }
 
+  const description =
+    lineup.description ||
+    `${lineup.name} 기사 프로필 — ${lineup.rank} 티어, 진행 서비스와 후기를 확인하세요.`;
+  const url = `/lineup/${slug}`;
+  const image = lineup.image || site.ogImage;
+
   return {
     title: `${lineup.name} | 기사 라인업`,
-    description: lineup.description,
-    alternates: { canonical: `/lineup/${slug}` },
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title: `${lineup.name} | 기사 라인업`,
+      description,
+      url,
+      type: "profile",
+      siteName: site.name,
+      images: [{ url: image }],
+    },
+    twitter: {
+      card: "summary",
+      title: `${lineup.name} | 기사 라인업`,
+      description,
+      images: [image],
+    },
   };
 }
 
@@ -63,8 +83,31 @@ export default async function LineupDetailPage({ params }: Props) {
 
   const hasWinRecords = winStats.total.wins + winStats.total.losses > 0;
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "기사 라인업",
+        item: `${site.url}/lineup`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: lineup.name,
+        item: `${site.url}/lineup/${encodeURIComponent(slug)}`,
+      },
+    ],
+  };
+
   return (
     <section className="py-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <Container>
         <Reveal>
           <div className="mb-6 flex items-center gap-3 text-sm text-zinc-500">
@@ -99,7 +142,7 @@ export default async function LineupDetailPage({ params }: Props) {
                     <div className="inline-flex items-center gap-1.5 rounded-full border border-gold/25 bg-gold/8 px-3 py-1">
                       <Image
                         src={lineup.tier}
-                        alt={lineup.rank}
+                        alt=""
                         width={16}
                         height={16}
                         className="rounded-full bg-zinc-800"

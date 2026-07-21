@@ -164,13 +164,18 @@ export default function HeroSlider() {
                   key={item.title}
                   type="button"
                   onClick={() => goTo(i)}
-                  className={`h-2 rounded-full transition-all ${
-                    i === index
-                      ? "w-9 bg-gold"
-                      : "w-2 bg-white/25 hover:bg-white/50"
-                  }`}
+                  className="group flex h-6 items-center px-2"
                   aria-label={`${i + 1}번째 슬라이드 보기`}
-                />
+                  aria-current={i === index}
+                >
+                  <span
+                    className={`h-2 rounded-full transition-all ${
+                      i === index
+                        ? "w-9 bg-gold"
+                        : "w-2 bg-white/25 group-hover:bg-white/50"
+                    }`}
+                  />
+                </button>
               ))}
             </div>
             <span className="text-xs font-black tracking-[0.24em] text-zinc-500">

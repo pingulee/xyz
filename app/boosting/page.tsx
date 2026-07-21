@@ -24,14 +24,16 @@ export const metadata: Metadata = {
   openGraph: {
     title: "롤 대리 가격 | XYZ",
     description,
-    url: "/price/boosting",
+    url: "/boosting",
     type: "website",
     siteName: site.name,
+    images: [{ url: site.ogImage }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "롤 대리 가격 | XYZ",
     description,
+    images: [site.ogImage],
   },
 };
 

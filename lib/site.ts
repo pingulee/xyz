@@ -4,6 +4,8 @@ export const site = {
   description:
     "롤 대리, 롤 듀오, 롤 계정 검증된 상위 티어 기사와 체계적인 운영으로 안내하는 리그 오브 레전드 전문 서비스입니다.",
   kakaoUrl: "https://open.kakao.com/o/sKuEg9zi",
+  ogImage: "/images/profile.webp",
+  logo: "/images/logo.webp",
 };
 
 export const navItems = [
@@ -21,7 +23,7 @@ export const services = [
     eyebrow: "boosting",
     description:
       "현재 티어와 목표 티어를 기준으로 검증된 기사가 안정적으로 진행합니다.",
-    image: "/images/boosting.png",
+    image: "/images/slider/01.webp",
   },
   {
     title: "롤 듀오",
@@ -29,14 +31,14 @@ export const services = [
     eyebrow: "duo queue",
     description:
       "상위 티어 기사와 함께 플레이하며 승률과 피드백을 동시에 챙깁니다.",
-    image: "/images/duo.png",
+    image: "/images/slider/02.webp",
   },
   {
     title: "롤 계정",
     href: "/account",
     eyebrow: "account",
     description: "원하는 티어, 챔피언, 일정 조건에 맞춘 계정을 구해드립니다.",
-    image: "/images/account.png",
+    image: "/images/slider/03.webp",
   },
 ];
 

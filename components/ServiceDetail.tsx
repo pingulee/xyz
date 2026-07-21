@@ -42,7 +42,7 @@ export default function ServiceDetail(props: ServiceDetailProps) {
     <section className="py-20">
       <Container>
         <Reveal>
-          <SectionTitle eyebrow={eyebrow} title={title} desc={desc} />
+          <SectionTitle eyebrow={eyebrow} title={title} desc={desc} as="h1" />
         </Reveal>
         <div className="grid gap-8">
           <Reveal>

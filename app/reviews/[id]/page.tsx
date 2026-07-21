@@ -55,11 +55,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       siteName: site.name,
       publishedTime: review.createdAt,
+      images: [{ url: site.ogImage }],
     },
     twitter: {
       card: "summary",
       title,
       description,
+      images: [site.ogImage],
     },
   };
 }
@@ -121,11 +123,34 @@ export default async function ReviewDetailPage({ params }: Props) {
     },
   };
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "작업 후기",
+        item: `${site.url}/reviews`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: `#${review.id}`,
+        item: `${site.url}/reviews/${review.id}`,
+      },
+    ],
+  };
+
   return (
     <section className="py-20">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <Container>
         <Reveal>
