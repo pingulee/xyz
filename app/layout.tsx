@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { pretendard } from "./fonts";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingContact from "@/components/FloatingContact";
@@ -71,11 +70,14 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="ko"
-      suppressHydrationWarning
-      className={`${pretendard.variable} h-full antialiased`}
-    >
+    <html lang="ko" suppressHydrationWarning className="h-full antialiased">
+      <head>
+        {/* Pretendard 동적 서브셋: 브라우저가 페이지에 쓰인 unicode-range subset만 다운로드 */}
+        <link
+          rel="stylesheet"
+          href="/fonts/pretendard/pretendardvariable-dynamic-subset.css"
+        />
+      </head>
       <body className="flex min-h-full flex-col font-sans">
         <Header />
         <main className="flex-1 pt-20">{children}</main>

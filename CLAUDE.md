@@ -45,6 +45,8 @@
 - `package.json` `browserslist` 최신 타깃(safari 15.4+) — 레거시 폴리필 트랜스파일 방지. 구형 브라우저 지원 필요 시에만 완화.
 - **이미지**: `next/image`, 정확한 `sizes` 필수(과대 다운로드 방지, `object-contain`이면 실제 렌더 폭 기준). 히어로/서비스 이미지는 `/images/slider/*.webp` 공용 — 모바일 4G에서 큼. 전용 소스/`quality` 조정 여지 있음.
 - 애니메이션은 GPU 합성 속성(opacity/transform)만. `width`/`top`/`offsetWidth` 등 레이아웃 유발 속성 애니메이션 금지.
+- **폰트 = Pretendard 동적 서브셋**(`public/fonts/pretendard/`, `pretendardvariable-dynamic-subset.css`를 `layout.tsx` `<head>`에 `<link>`). 단일 2MB `PretendardVariable.woff2`(`next/font/local`)는 **제거됨** — 느린 4G에서 통짜 2MB 프리로드가 모바일 LCP 13초 원인이었음(FCP는 1s인데 폰트 도착 후 h1 스왑까지 지연). 동적 서브셋은 페이지에 실제 쓰인 unicode-range woff2(수십KB)만 다운로드. 폰트 패밀리는 `--font-pretendard`(globals.css `:root`)로 배선, `next/font` 안 씀. 통짜 폰트 재도입 금지.
+- **effect에서 동기 `setState` 금지**(`react-hooks/set-state-in-effect`) — cascading render. "mount 플래그"는 이벤트/타이머 콜백에서 플래그 켜는 방식으로(HeroSlider `animate`), reduced-motion 같은 조건부 표시는 CSS 미디어쿼리로(Reveal `.reveal` + globals.css).
 
 ## Windows 개발 환경 주의
 - `.next/dev` 파일 쓰기 실패 `os error 1224`(ERROR_USER_MAPPED_FILE) → **node 프로세스 과다/좀비**가 `.next`를 메모리 매핑으로 잠근 것. 조치: 잉여 node 종료 → `.next` 삭제 → dev 1회만 실행. `npm run dev`를 여러 터미널에서 중복 실행 금지.

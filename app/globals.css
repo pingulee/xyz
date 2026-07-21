@@ -11,6 +11,10 @@
 
   /* OP.GG 스타일 통계 회색 (낮은 승률 등) */
   --lol-gray-500: #758592;
+
+  /* Pretendard 동적 서브셋(public/fonts/pretendard) + 시스템 폴백 */
+  --font-pretendard: "Pretendard Variable", -apple-system, BlinkMacSystemFont,
+    system-ui, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
 
 @theme inline {
