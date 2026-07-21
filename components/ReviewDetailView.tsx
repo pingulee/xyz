@@ -129,7 +129,7 @@ function NavLink({
   return (
     <Link
       href={`/reviews/${review.id}`}
-      className={`grid min-h-11 place-items-center rounded-full border border-white/8 bg-white/[.035] px-3 py-2 transition hover:border-gold/30 hover:bg-white/[.055] sm:block sm:min-h-0 sm:rounded-3xl sm:p-4 ${align === "right" ? "sm:text-right" : ""}`}
+      className={`grid min-h-11 place-items-center rounded-full border border-white/8 bg-white/3.5 px-3 py-2 transition hover:border-gold/30 hover:bg-white/5.5 sm:block sm:min-h-0 sm:rounded-3xl sm:p-4 ${align === "right" ? "sm:text-right" : ""}`}
     >
       <p className="text-xs font-black text-gold">{label}</p>
       <p className="mt-1 hidden text-sm font-black text-white sm:line-clamp-1">
@@ -355,7 +355,7 @@ export default function ReviewDetailView({
 
   return (
     <div className="mx-auto grid max-w-5xl gap-6">
-      <article className="overflow-hidden rounded-[18px] border border-white/10 bg-white/[.035]">
+      <article className="overflow-hidden rounded-[18px] border border-white/10 bg-white/3.5">
         <div className="border-b border-white/8 bg-black/25 px-6 py-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>

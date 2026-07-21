@@ -133,7 +133,7 @@ export default async function Home() {
               {stats.map(({ value, label, icon: Icon }) => (
                 <div
                   key={value}
-                  className="rounded-3xl border border-gold/12 bg-white/[.035] p-5 text-center"
+                  className="rounded-3xl border border-gold/12 bg-white/3.5 p-5 text-center"
                 >
                   <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gold/10 text-gold">
                     <Icon size={20} />
@@ -187,7 +187,7 @@ export default async function Home() {
                   key={title}
                   className="flex flex-col items-center gap-3 sm:flex-row"
                 >
-                  <div className="flex min-w-45 flex-col items-center gap-3 rounded-3xl border border-gold/15 bg-white/[.035] p-5 text-center">
+                  <div className="flex min-w-45 flex-col items-center gap-3 rounded-3xl border border-gold/15 bg-white/3.5 p-5 text-center">
                     <div className="relative">
                       <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[22px] bg-transparent">
                         <Image
@@ -327,7 +327,7 @@ export default async function Home() {
                     {[...row, ...row].map(([text, tag], i) => (
                       <article
                         key={`${tag}-${i}`}
-                        className="w-[280px] shrink-0 rounded-3xl border border-gold/15 bg-white/[.035] p-7 sm:w-[360px]"
+                        className="w-[280px] shrink-0 rounded-3xl border border-gold/15 bg-white/3.5 p-7 sm:w-[360px]"
                       >
                         <div className="flex gap-1 text-gold">
                           {Array.from({ length: 5 }).map((_, starIndex) => (

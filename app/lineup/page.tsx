@@ -102,7 +102,7 @@ export default async function LineupPage() {
             ].map(({ icon, label, desc }) => (
               <div
                 key={label}
-                className="rounded-3xl border border-gold/15 bg-white/[.035] p-6"
+                className="rounded-3xl border border-gold/15 bg-white/3.5 p-6"
               >
                 <div className="text-gold">{icon}</div>
                 <b className="mt-4 block text-white">{label}</b>

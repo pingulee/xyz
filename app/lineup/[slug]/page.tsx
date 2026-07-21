@@ -123,9 +123,9 @@ export default async function LineupDetailPage({ params }: Props) {
         <Reveal>
           <div className="card-premium relative overflow-hidden rounded-4xl">
             <div className="relative h-32 overflow-hidden md:h-40">
-              <div className="absolute inset-0 bg-gold-gradient opacity-[.16]" />
+              <div className="absolute inset-0 bg-gold-gradient opacity-16" />
               <div className="noise absolute inset-0" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
             </div>
 
             <div className="relative px-6 pb-6 md:px-8 md:pb-8">

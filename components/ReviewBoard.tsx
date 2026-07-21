@@ -969,12 +969,12 @@ export default function ReviewBoard({
         </div>
 
         {loading ? (
-          <div className="flex min-h-60 items-center justify-center rounded-[30px] border border-gold/15 bg-white/[.035] text-zinc-400">
+          <div className="flex min-h-60 items-center justify-center rounded-[30px] border border-gold/15 bg-white/3.5 text-zinc-400">
             <Loader2 size={22} className="mr-2 animate-spin text-gold" />
             후기를 불러오는 중
           </div>
         ) : reviews.length === 0 ? (
-          <div className="rounded-[30px] border border-gold/15 bg-white/[.035] p-8 text-center text-zinc-400">
+          <div className="rounded-[30px] border border-gold/15 bg-white/3.5 p-8 text-center text-zinc-400">
             아직 등록된 후기가 없습니다.
           </div>
         ) : selectedReview ? (
@@ -1053,7 +1053,7 @@ export default function ReviewBoard({
           />
         ) : (
           <>
-            <div className="overflow-hidden rounded-[30px] border border-gold/15 bg-white/[.035]">
+            <div className="overflow-hidden rounded-[30px] border border-gold/15 bg-white/3.5">
               <div className="hidden grid-cols-[3.25rem_minmax(0,1.45fr)_6rem_7rem_5.5rem_10rem_7rem_5rem] gap-4 border-b border-white/8 bg-black/20 px-5 py-3 text-xs font-black text-zinc-500 lg:grid">
                 <span>번호</span>
                 <span>내용</span>
@@ -1076,7 +1076,7 @@ export default function ReviewBoard({
                     key={review.id}
                     type="button"
                     onClick={() => openReview(review.id)}
-                    className="group grid w-full cursor-pointer gap-4 border-b border-white/8 px-5 py-5 text-left transition last:border-b-0 hover:bg-white/[.055] lg:grid-cols-[3.25rem_minmax(0,1.45fr)_6rem_7rem_5.5rem_10rem_7rem_5rem] lg:items-center"
+                    className="group grid w-full cursor-pointer gap-4 border-b border-white/8 px-5 py-5 text-left transition last:border-b-0 hover:bg-white/5.5 lg:grid-cols-[3.25rem_minmax(0,1.45fr)_6rem_7rem_5.5rem_10rem_7rem_5rem] lg:items-center"
                   >
                     <span className="hidden text-sm font-black text-zinc-500 transition group-hover:text-gold lg:block">
                       {displayNumber}
@@ -1464,7 +1464,7 @@ function ReviewDetail({
   review: Review;
 }) {
   return (
-    <article className="overflow-hidden rounded-[30px] border border-gold/15 bg-white/[.035]">
+    <article className="overflow-hidden rounded-[30px] border border-gold/15 bg-white/3.5">
       <div className="p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -1510,7 +1510,7 @@ function ReviewDetail({
         </div>
 
         {editOpen ? (
-          <div className="mt-6 rounded-3xl border border-gold/20 bg-white/[.035] p-4">
+          <div className="mt-6 rounded-3xl border border-gold/20 bg-white/3.5 p-4">
             {!isAdmin && !editVerified ? (
               <div className="grid gap-3">
                 <p className="text-sm font-bold text-zinc-300">
@@ -1735,7 +1735,7 @@ function ReviewNavButton({
     <button
       type="button"
       onClick={onClick}
-      className="grid gap-2 rounded-3xl border border-white/10 bg-white/[.035] p-4 text-left transition hover:border-gold/35 hover:bg-white/5.5"
+      className="grid gap-2 rounded-3xl border border-white/10 bg-white/3.5 p-4 text-left transition hover:border-gold/35 hover:bg-white/5.5"
     >
       <span className="text-xs font-black uppercase tracking-[0.2em] text-gold">
         {label}

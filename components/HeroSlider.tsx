@@ -59,15 +59,16 @@ const SWIPE_THRESHOLD = 70;
 export default function HeroSlider() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  // 첫 렌더는 애니메이션 없이 즉시 표시(SSR opacity:1) → LCP 렌더 지연 제거.
-  // 마운트 후 슬라이드 전환부터 텍스트 진입 애니메이션 적용.
-  const [mounted, setMounted] = useState(false);
+  // 첫 렌더(SSR)는 애니메이션 없이 즉시 표시 → LCP 렌더 지연 제거.
+  // 슬라이드가 한 번이라도 바뀌면 그때부터 텍스트 진입 애니메이션 적용.
+  const [animate, setAnimate] = useState(false);
   const pointerStartX = useRef<number | null>(null);
 
   const slide = slides[index];
   const count = slides.length;
 
   const goTo = (nextIndex: number) => {
+    setAnimate(true);
     setIndex((nextIndex + count) % count);
   };
 
@@ -75,12 +76,9 @@ export default function HeroSlider() {
   const prev = () => goTo(index - 1);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
     if (paused) return;
     const timer = window.setInterval(() => {
+      setAnimate(true);
       setIndex((current) => (current + 1) % count);
     }, AUTOPLAY_MS);
 
@@ -134,7 +132,7 @@ export default function HeroSlider() {
             <div
               key={index}
               className={`flex h-full w-full flex-col ${
-                mounted ? "animate-hero-in" : ""
+                animate ? "animate-hero-in" : ""
               }`}
             >
               <div className="flex flex-1 flex-col justify-center py-7">

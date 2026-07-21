@@ -21,12 +21,7 @@ export default function Reveal({
     const el = ref.current;
     if (!el) return;
 
-    // 모션 최소화 사용자는 즉시 표시
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setVisible(true);
-      return;
-    }
-
+    // 모션 최소화 사용자는 globals.css의 .reveal 미디어쿼리로 즉시 표시(JS 불필요)
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
@@ -43,7 +38,7 @@ export default function Reveal({
   return (
     <div
       ref={ref}
-      className={className}
+      className={className ? `reveal ${className}` : "reveal"}
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? "none" : `translateY(${y}px)`,

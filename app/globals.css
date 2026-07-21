@@ -180,6 +180,12 @@ a {
   .animate-background-float-alt {
     animation: none;
   }
+  /* Reveal: 모션 최소화 시 인라인 스타일 무시하고 즉시 표시 */
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
 
 .card-premium {

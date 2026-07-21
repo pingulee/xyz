@@ -7,7 +7,7 @@ export default function FaqItem({ q, a }: { q: string; a: string }) {
 
   return (
     <div
-      className="cursor-pointer rounded-3xl border border-gold/15 bg-white/[.035] p-6 transition hover:border-gold/25"
+      className="cursor-pointer rounded-3xl border border-gold/15 bg-white/3.5 p-6 transition hover:border-gold/25"
       onClick={() => setOpen((prev) => !prev)}
     >
       <div className="flex items-center justify-between text-lg font-black text-white">

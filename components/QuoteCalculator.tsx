@@ -301,7 +301,7 @@ function RankPicker({
               className={`group relative rounded-2xl border px-1 py-3 transition ${
                 active
                   ? "border-gold/70 bg-gold/12 shadow-[0_0_22px_rgba(222,176,67,.12)]"
-                  : "border-white/7 bg-white/[.025] hover:border-gold/30 hover:bg-white/[.05]"
+                  : "border-white/7 bg-white/2.5 hover:border-gold/30 hover:bg-white/5"
               }`}
             >
               {choiceDivision === -1 ? (
@@ -710,7 +710,7 @@ export default function QuoteCalculator() {
 
       <div className="grid items-start gap-6 p-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_350px] lg:p-7">
         <div className="space-y-4">
-          <div className="rounded-3xl border border-gold/20 bg-gold/[.035] p-5 sm:p-6">
+          <div className="rounded-3xl border border-gold/20 bg-gold/3.5 p-5 sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-lg font-black text-white">서비스 선택</p>
@@ -739,7 +739,7 @@ export default function QuoteCalculator() {
             </div>
             <div
               ref={serviceSliderRef}
-              className="mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 scrollbar-none [&::-webkit-scrollbar]:hidden"
             >
               {SERVICES.map((item) => {
                 const active = item.key === serviceKey;
@@ -855,58 +855,58 @@ export default function QuoteCalculator() {
           )}
 
           {serviceKey !== "low-win" && (
-          <div className="rounded-3xl border border-white/8 bg-black/20 p-5 sm:p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h3 className="font-black text-white">{quantityTitle}</h3>
-                <p className="mt-1 text-xs text-zinc-500">
-                  원하는 신청 수량을 {service.unit} 단위로 입력해주세요.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => changeQuantity(-service.step)}
-                  aria-label={`신청 수량 ${service.step} ${service.unit} 줄이기`}
-                  className="grid h-11 w-11 place-items-center rounded-full border border-white/10 text-zinc-300 hover:border-gold/40"
-                >
-                  <Minus size={15} />
-                </button>
-                <div className="relative">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={quantity}
-                    onChange={(event) => {
-                      const value = Number(
-                        event.target.value.replace(/[^0-9]/g, ""),
-                      );
-                      setQuantity(
-                        Math.min(
-                          service.max,
-                          Math.max(service.min, value || service.min),
-                        ),
-                      );
-                    }}
-                    className="w-32 rounded-2xl border border-gold/25 bg-black/30 py-3 pl-4 pr-12 text-center font-black text-white outline-none focus:border-gold"
-                    aria-label={`신청 ${service.unit}`}
-                  />
-                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gold">
-                    {service.unit}
-                  </span>
+            <div className="rounded-3xl border border-white/8 bg-black/20 p-5 sm:p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="font-black text-white">{quantityTitle}</h3>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    원하는 신청 수량을 {service.unit} 단위로 입력해주세요.
+                  </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => changeQuantity(service.step)}
-                  aria-label={`신청 수량 ${service.step} ${service.unit} 늘리기`}
-                  className="grid h-11 w-11 place-items-center rounded-full border border-white/10 text-zinc-300 hover:border-gold/40"
-                >
-                  <Plus size={15} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => changeQuantity(-service.step)}
+                    aria-label={`신청 수량 ${service.step} ${service.unit} 줄이기`}
+                    className="grid h-11 w-11 place-items-center rounded-full border border-white/10 text-zinc-300 hover:border-gold/40"
+                  >
+                    <Minus size={15} />
+                  </button>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={quantity}
+                      onChange={(event) => {
+                        const value = Number(
+                          event.target.value.replace(/[^0-9]/g, ""),
+                        );
+                        setQuantity(
+                          Math.min(
+                            service.max,
+                            Math.max(service.min, value || service.min),
+                          ),
+                        );
+                      }}
+                      className="w-32 rounded-2xl border border-gold/25 bg-black/30 py-3 pl-4 pr-12 text-center font-black text-white outline-none focus:border-gold"
+                      aria-label={`신청 ${service.unit}`}
+                    />
+                    <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gold">
+                      {service.unit}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => changeQuantity(service.step)}
+                    aria-label={`신청 수량 ${service.step} ${service.unit} 늘리기`}
+                    className="grid h-11 w-11 place-items-center rounded-full border border-white/10 text-zinc-300 hover:border-gold/40"
+                  >
+                    <Plus size={15} />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
           )}
 
           {needsTargetRank && (
@@ -965,7 +965,7 @@ export default function QuoteCalculator() {
                     type="button"
                     disabled={locked}
                     onClick={() => toggleAddon(item.key)}
-                    className={`rounded-2xl border p-4 text-left transition ${locked ? "cursor-not-allowed border-white/5 bg-white/[.01] opacity-35" : active ? "border-gold/60 bg-gold/10" : "border-white/8 bg-white/[.02] hover:border-gold/25"}`}
+                    className={`rounded-2xl border p-4 text-left transition ${locked ? "cursor-not-allowed border-white/5 bg-white/1 opacity-35" : active ? "border-gold/60 bg-gold/10" : "border-white/8 bg-white/2 hover:border-gold/25"}`}
                   >
                     <span className="flex items-center justify-between">
                       <b className="text-sm text-white">{item.label}</b>
@@ -992,7 +992,7 @@ export default function QuoteCalculator() {
               })}
             </div>
             {addons.includes("lane") && (
-              <div className="mt-4 rounded-2xl border border-gold/15 bg-gold/[.04] p-4">
+              <div className="mt-4 rounded-2xl border border-gold/15 bg-gold/4 p-4">
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-black text-white">
@@ -1031,7 +1031,7 @@ export default function QuoteCalculator() {
               </div>
             )}
             {addons.includes("champion") && (
-              <div className="mt-4 rounded-2xl border border-gold/15 bg-gold/[.04] p-4">
+              <div className="mt-4 rounded-2xl border border-gold/15 bg-gold/4 p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="text-sm font-black text-white">
@@ -1055,7 +1055,7 @@ export default function QuoteCalculator() {
                   />
                 </div>
                 {!championSelectionValid && (
-                  <p className="mt-3 rounded-xl border border-red-400/15 bg-red-400/[.06] px-3 py-2 text-[11px] font-bold text-red-300">
+                  <p className="mt-3 rounded-xl border border-red-400/15 bg-red-400/6 px-3 py-2 text-[11px] font-bold text-red-300">
                     챔피언을 {3 - selectedChampions.length}개 더 선택해주세요.
                   </p>
                 )}
@@ -1129,7 +1129,7 @@ export default function QuoteCalculator() {
               <BadgeCheck size={13} /> 실시간 계산
             </span>
           </div>
-          <div className="mt-4 rounded-2xl border border-gold/15 bg-gold/[.06] px-4 py-3">
+          <div className="mt-4 rounded-2xl border border-gold/15 bg-gold/6 px-4 py-3">
             <p className="text-[10px] font-bold text-zinc-500">선택 서비스</p>
             <p className="mt-1 flex items-center gap-2 text-sm font-black text-gold-soft">
               {service.label}
@@ -1227,7 +1227,7 @@ export default function QuoteCalculator() {
             )}
 
             {addons.includes("champion") && (
-              <div className="mt-3 rounded-xl border border-gold/15 bg-gold/[.04] p-3">
+              <div className="mt-3 rounded-xl border border-gold/15 bg-gold/4 p-3">
                 <div className="flex items-center justify-between">
                   <p className="text-[11px] font-black text-white">
                     희망 챔피언

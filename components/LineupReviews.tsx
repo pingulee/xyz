@@ -345,7 +345,7 @@ export default function LineupReviews({
       {slice.map((review) => (
         <div
           key={review.id}
-          className="rounded-3xl border border-white/8 bg-white/[.035] p-5"
+          className="rounded-3xl border border-white/8 bg-white/3.5 p-5"
         >
           <div className="flex items-start justify-between gap-3">
             <div>
