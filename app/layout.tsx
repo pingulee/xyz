@@ -46,6 +46,9 @@ export const metadata: Metadata = {
     description: site.description,
     images: ["/images/profile.webp"],
   },
+  verification: {
+    google: "bd8AUpF-AipHBtAmr4brhshsGfRijvw5TmLDUlMS2rA",
+  },
   robots: {
     index: true,
     follow: true,
