@@ -37,6 +37,15 @@
 - 터치 타깃 ≥24×24px (작은 시각 요소는 래퍼로 히트 영역 확대).
 - 이미지는 전부 `next/image` (raw `<img>` 금지). LCP 이미지엔 `priority`.
 
+## 성능 / 애니메이션 (Core Web Vitals)
+- **framer-motion 안 씀 (제거됨).** 애니메이션은 CSS(opacity/transform) + IntersectionObserver로. 애니메이션 라이브러리 재도입 금지 — 모바일 하이드레이션 비용/강제 리플로우 유발.
+- **스크롤 진입 효과는 `components/Reveal.tsx`** (IntersectionObserver + CSS transition, `prefers-reduced-motion` 존중). 새 애니메이션도 이 패턴.
+- **LCP 보호**: 첫 페인트(above-the-fold, 특히 HeroSlider)는 JS/애니메이션에 가리지 않게. SSR HTML에서 바로 보여야 함. HeroSlider는 `mounted` 플래그로 첫 렌더만 애니메이션 생략.
+- `next.config.ts` `experimental.inlineCss: true` — 렌더 차단 CSS 제거.
+- `package.json` `browserslist` 최신 타깃(safari 15.4+) — 레거시 폴리필 트랜스파일 방지. 구형 브라우저 지원 필요 시에만 완화.
+- **이미지**: `next/image`, 정확한 `sizes` 필수(과대 다운로드 방지, `object-contain`이면 실제 렌더 폭 기준). 히어로/서비스 이미지는 `/images/slider/*.webp` 공용 — 모바일 4G에서 큼. 전용 소스/`quality` 조정 여지 있음.
+- 애니메이션은 GPU 합성 속성(opacity/transform)만. `width`/`top`/`offsetWidth` 등 레이아웃 유발 속성 애니메이션 금지.
+
 ## Windows 개발 환경 주의
 - `.next/dev` 파일 쓰기 실패 `os error 1224`(ERROR_USER_MAPPED_FILE) → **node 프로세스 과다/좀비**가 `.next`를 메모리 매핑으로 잠근 것. 조치: 잉여 node 종료 → `.next` 삭제 → dev 1회만 실행. `npm run dev`를 여러 터미널에서 중복 실행 금지.
 - `D:` 드라이브 "Slow filesystem" 경고 존재.

@@ -2,9 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const slides = [
   {
@@ -55,10 +54,15 @@ const slides = [
 ];
 
 const AUTOPLAY_MS = 5200;
+const SWIPE_THRESHOLD = 70;
 
 export default function HeroSlider() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  // 첫 렌더는 애니메이션 없이 즉시 표시(SSR opacity:1) → LCP 렌더 지연 제거.
+  // 마운트 후 슬라이드 전환부터 텍스트 진입 애니메이션 적용.
+  const [mounted, setMounted] = useState(false);
+  const pointerStartX = useRef<number | null>(null);
 
   const slide = slides[index];
   const count = slides.length;
@@ -71,6 +75,10 @@ export default function HeroSlider() {
   const prev = () => goTo(index - 1);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (paused) return;
     const timer = window.setInterval(() => {
       setIndex((current) => (current + 1) % count);
@@ -78,6 +86,18 @@ export default function HeroSlider() {
 
     return () => window.clearInterval(timer);
   }, [count, paused]);
+
+  const onPointerDown = (event: React.PointerEvent) => {
+    pointerStartX.current = event.clientX;
+  };
+
+  const onPointerUp = (event: React.PointerEvent) => {
+    if (pointerStartX.current === null) return;
+    const dx = event.clientX - pointerStartX.current;
+    pointerStartX.current = null;
+    if (dx < -SWIPE_THRESHOLD) next();
+    else if (dx > SWIPE_THRESHOLD) prev();
+  };
 
   const progressLabel = `${String(index + 1).padStart(2, "0")} / ${String(
     count,
@@ -90,61 +110,54 @@ export default function HeroSlider() {
       onMouseLeave={() => setPaused(false)}
     >
       <div className="absolute inset-0 bg-black/30" />
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={slide.image}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          className="absolute inset-0 lg:hidden"
-        >
+      <div className="absolute inset-0 lg:hidden">
+        {slides.map((item, i) => (
           <Image
-            src={slide.image}
-            alt={slide.alt}
+            key={item.image}
+            src={item.image}
+            alt=""
+            aria-hidden
             fill
-            priority={index === 0}
-            fetchPriority={index === 0 ? "high" : "auto"}
+            priority={i === 0}
+            fetchPriority={i === 0 ? "high" : "auto"}
             sizes="100vw"
-            className="object-cover opacity-50"
+            className={`object-cover transition-opacity duration-700 ${
+              i === index ? "opacity-50" : "opacity-0"
+            }`}
           />
-          <div className="absolute inset-0 bg-linear-to-t from-black via-black/55 to-black/30" />
-        </motion.div>
-      </AnimatePresence>
+        ))}
+        <div className="absolute inset-0 bg-linear-to-t from-black via-black/55 to-black/30" />
+      </div>
       <div className="absolute left-[12%] top-20 h-72 w-72 rounded-full bg-gold/18 blur-[110px] animate-background-float" />
       <div className="absolute bottom-8 right-[10%] h-96 w-96 rounded-full bg-gold-soft/12 blur-[130px] animate-background-float-alt" />
 
       <div className="relative mx-auto grid h-full max-w-7xl items-center gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:gap-10 lg:px-8 lg:py-14">
         <div className="flex h-full max-w-3xl flex-col justify-center">
           <div className="h-92 sm:h-100 lg:h-108">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={slide.title}
-                initial={{ opacity: 0, y: 22 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -18 }}
-                transition={{ duration: 0.55, ease: [0.21, 0.47, 0.32, 0.98] }}
-                className="flex h-full w-full flex-col"
-              >
-                <div className="flex flex-1 flex-col justify-center py-7">
-                  <p className="inline-flex w-fit rounded-full border border-gold/20 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-gold-soft/90">
-                    {slide.eyebrow}
-                  </p>
-                  <h1 className="mt-6 text-3xl font-black leading-[1.16] text-zinc-50 [text-shadow:0_0_28px_rgba(255,255,255,0.16)] sm:text-5xl lg:text-6xl">
-                    {slide.titlePrefix}
-                    <span className="relative inline-block">
-                      <span className="absolute -inset-x-1 bottom-1 h-[0.24em] rounded-md bg-gold/35 shadow-gold-sm" />
-                      <span className="gold-text relative [text-shadow:0_0_30px_rgba(222,176,67,0.38)]">
-                        {slide.titleHighlight}
-                      </span>
+            <div
+              key={index}
+              className={`flex h-full w-full flex-col ${
+                mounted ? "animate-hero-in" : ""
+              }`}
+            >
+              <div className="flex flex-1 flex-col justify-center py-7">
+                <p className="inline-flex w-fit rounded-full border border-gold/20 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-gold-soft/90">
+                  {slide.eyebrow}
+                </p>
+                <h1 className="mt-6 text-3xl font-black leading-[1.16] text-zinc-50 [text-shadow:0_0_28px_rgba(255,255,255,0.16)] sm:text-5xl lg:text-6xl">
+                  {slide.titlePrefix}
+                  <span className="relative inline-block">
+                    <span className="absolute -inset-x-1 bottom-1 h-[0.24em] rounded-md bg-gold/35 shadow-gold-sm" />
+                    <span className="gold-text relative [text-shadow:0_0_30px_rgba(222,176,67,0.38)]">
+                      {slide.titleHighlight}
                     </span>
-                  </h1>
-                  <p className="mt-6 h-24 max-w-xl text-base font-medium leading-8 text-zinc-100/95 [text-shadow:0_0_18px_rgba(222,176,67,0.14)] sm:h-28 sm:text-lg">
-                    {slide.desc}
-                  </p>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+                  </span>
+                </h1>
+                <p className="mt-6 h-24 max-w-xl text-base font-medium leading-8 text-zinc-100/95 [text-shadow:0_0_18px_rgba(222,176,67,0.14)] sm:h-28 sm:text-lg">
+                  {slide.desc}
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="mt-7 flex">
@@ -184,39 +197,29 @@ export default function HeroSlider() {
           </div>
         </div>
 
-        <motion.div
-          className="relative mx-auto hidden w-full max-w-150 cursor-grab active:cursor-grabbing lg:block"
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.18}
-          onDragEnd={(_, info) => {
-            if (info.offset.x < -70) next();
-            if (info.offset.x > 70) prev();
-          }}
+        <div
+          className="relative mx-auto hidden w-full max-w-150 cursor-grab touch-pan-y active:cursor-grabbing lg:block"
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUp}
         >
           <div className="absolute inset-8 rounded-full bg-gold/25 blur-[90px]" />
           <div className="card-premium relative overflow-hidden rounded-[36px] p-3 sm:rounded-[44px] sm:p-4">
             <div className="relative h-90 overflow-hidden rounded-[28px] bg-black sm:h-107.5 sm:rounded-[34px] lg:h-140">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={slide.image}
-                  initial={{ opacity: 0, scale: 1.04 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ duration: 0.7, ease: "easeOut" }}
-                  className="absolute inset-0"
-                >
-                  <Image
-                    src={slide.image}
-                    alt={slide.alt}
-                    fill
-                    priority={index === 0}
-                    fetchPriority={index === 0 ? "high" : "auto"}
-                    sizes="(max-width: 1024px) 100vw, 48vw"
-                    className="object-cover opacity-95"
-                  />
-                </motion.div>
-              </AnimatePresence>
+              {slides.map((item, i) => (
+                <Image
+                  key={item.image}
+                  src={item.image}
+                  alt={item.alt}
+                  aria-hidden={i !== index}
+                  fill
+                  priority={i === 0}
+                  fetchPriority={i === 0 ? "high" : "auto"}
+                  sizes="(max-width: 1024px) 100vw, 48vw"
+                  className={`object-cover transition-opacity duration-700 ${
+                    i === index ? "opacity-95" : "opacity-0"
+                  }`}
+                />
+              ))}
               <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/15 to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 rounded-[26px] border border-gold/20 bg-black/58 p-5 backdrop-blur-xl">
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-gold">
@@ -225,9 +228,7 @@ export default function HeroSlider() {
                 <h2 className="mt-2 text-2xl font-black text-white [text-shadow:0_0_22px_rgba(222,176,67,0.28)]">
                   {slide.cardTitle}
                 </h2>
-                <p className="mt-2 leading-6 text-zinc-300">
-                  {slide.cardDesc}
-                </p>
+                <p className="mt-2 leading-6 text-zinc-300">{slide.cardDesc}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {slide.cardTags.map((tag) => (
                     <span
@@ -241,7 +242,7 @@ export default function HeroSlider() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       <button

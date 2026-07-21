@@ -84,7 +84,7 @@ export default function Header() {
             alt="XYZ 롤 대리, 롤 듀오, 롤 계정"
             fill
             priority
-            sizes="176px"
+            sizes="112px"
             className="object-contain object-left"
           />
         </Link>
