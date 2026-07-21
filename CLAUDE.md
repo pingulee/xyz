@@ -15,6 +15,12 @@
 - `npm run start` — 프로덕션 실행
 - `npm run lint` — eslint
 
+## 디렉토리 구조
+- **컴포넌트는 기능별 폴더**(평면 아님): `components/{layout,ui,home,service,quote,review,lineup}` + `hooks/`. import는 항상 `@/` alias 절대경로(상대경로 `./` 안 씀). 새 컴포넌트는 해당 기능 폴더에.
+  - `layout`(Header/Footer/FloatingContact/Container), `ui`(SectionTitle/Reveal/JsonLd/FaqItem), `home`(HeroSlider/ServiceCard), `service`(ServiceDetail/PriceTable), `quote`(QuoteCalculator+RankPicker/constants/types/utils), `review`(ReviewBoard+ReviewDetail/ReplySection/Stars/StarRating/ReviewNavButton/helpers/types/constants, ReviewDetailView, LineupReviews), `lineup`(AdminLineupBoard+KnightCard/adminLineupConstants, LineupCard/KnightAvatar/KnightAuthControls/WinStatsCard/TierRecords)
+  - `hooks/useChampionOptions.ts` = quote·lineup 공용 챔피언 데이터 훅.
+- 큰 컴포넌트는 하위 컴포넌트/상수/타입/헬퍼를 같은 폴더 내 파일로 분리(예: review/, quote/). `lineup/`은 여러 컴포넌트 공유 폴더라 상수 파일명에 접두사(`adminLineupConstants.ts`).
+
 ## 핵심 규칙 / 컨벤션
 - **`lib/site.ts` = 사이트 단일 진실 소스**: `site`(name/url/description/kakaoUrl/ogImage/logo), `navItems`, `services`, 가격표(`boostingPrices`/`duoPrices`). 도메인/이미지/네비 변경은 여기서.
 - **도메인은 IDN**: `https://롤대리.xyz` → punycode `xn--vk1b65hf2a.xyz`. `metadataBase`가 자동 인코딩.
@@ -27,7 +33,7 @@
 - **페이지당 `<h1>` 정확히 1개.** `SectionTitle`은 기본 `h2`, 주 제목엔 `as="h1"` 전달. `ServiceDetail`은 내부에서 이미 `as="h1"`.
 - 모든 공개 페이지: per-page `metadata` + `alternates.canonical` + `openGraph`(siteName/images) + twitter. 이미지 기본값 `site.ogImage`.
 - 동적 라우트는 `generateMetadata`.
-- 구조화 데이터: `components/JsonLd.tsx`(홈, `@graph`: Organization+WebSite+ProfessionalService), 서비스 페이지 Service/FAQPage, 후기 Review, 상세 페이지 BreadcrumbList.
+- 구조화 데이터: `components/ui/JsonLd.tsx`(홈, `@graph`: Organization+WebSite+ProfessionalService), 서비스 페이지 Service/FAQPage, 후기 Review, 상세 페이지 BreadcrumbList.
 - `app/robots.ts` — `/admin`, `/login`, `/api/` disallow. `app/sitemap.ts` — 정적 + 동적(라인업 slug, 후기 id).
 - 비공개 페이지(admin/login) `robots: { index: false }`.
 
@@ -39,8 +45,8 @@
 
 ## 성능 / 애니메이션 (Core Web Vitals)
 - **framer-motion 안 씀 (제거됨).** 애니메이션은 CSS(opacity/transform) + IntersectionObserver로. 애니메이션 라이브러리 재도입 금지 — 모바일 하이드레이션 비용/강제 리플로우 유발.
-- **스크롤 진입 효과는 `components/Reveal.tsx`** (IntersectionObserver + CSS transition, `prefers-reduced-motion` 존중). 새 애니메이션도 이 패턴.
-- **LCP 보호**: 첫 페인트(above-the-fold, 특히 HeroSlider)는 JS/애니메이션에 가리지 않게. SSR HTML에서 바로 보여야 함. HeroSlider는 `mounted` 플래그로 첫 렌더만 애니메이션 생략.
+- **스크롤 진입 효과는 `components/ui/Reveal.tsx`** (IntersectionObserver + CSS transition, `prefers-reduced-motion` 존중). 새 애니메이션도 이 패턴.
+- **LCP 보호**: 첫 페인트(above-the-fold, 특히 HeroSlider)는 JS/애니메이션에 가리지 않게. SSR HTML에서 바로 보여야 함. HeroSlider는 `animate` 상태로 첫 렌더만 애니메이션 생략(슬라이드 전환 시에만 켜짐).
 - `next.config.ts` `experimental.inlineCss: true` — 렌더 차단 CSS 제거.
 - `package.json` `browserslist` 최신 타깃(safari 15.4+) — 레거시 폴리필 트랜스파일 방지. 구형 브라우저 지원 필요 시에만 완화.
 - **이미지**: `next/image`, 정확한 `sizes` 필수(과대 다운로드 방지, `object-contain`이면 실제 렌더 폭 기준). 히어로/서비스 이미지는 `/images/slider/*.webp` 공용 — 모바일 4G에서 큼. 전용 소스/`quality` 조정 여지 있음.
