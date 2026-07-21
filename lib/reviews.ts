@@ -186,15 +186,6 @@ export async function getReviewById(id: number): Promise<Review | null> {
   return rows[0] ? toReview(rows[0]) : null;
 }
 
-export async function incrementReviewView(id: number): Promise<Review | null> {
-  await ensureReviewsSchema();
-  await getPool().execute(
-    `UPDATE reviews SET view_count = view_count + 1 WHERE id = :id`,
-    { id },
-  );
-  return getReviewById(id);
-}
-
 export async function getReviewNavigation(id: number): Promise<{
   previous?: ReviewNavItem;
   next?: ReviewNavItem;

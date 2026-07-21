@@ -42,7 +42,7 @@ export function clearKnightSessionCookieHeader(): string {
   return `${KNIGHT_SESSION_COOKIE}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0`;
 }
 
-export function getKnightTokenFromRequest(request: Request): string | null {
+function getKnightTokenFromRequest(request: Request): string | null {
   const cookie = request.headers.get("cookie") ?? "";
   const match = cookie.match(new RegExp(`${KNIGHT_SESSION_COOKIE}=([^;]+)`));
   return match?.[1] ?? null;

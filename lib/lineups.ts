@@ -77,7 +77,7 @@ export const ensureLineupsSchema = oncePerProcess(async () => {
   }
 });
 
-export function toLineup(row: LineupRow): Lineup {
+function toLineup(row: LineupRow): Lineup {
   return {
     id: String(row.id),
     name: row.name,
@@ -235,7 +235,7 @@ const TIER_ORDER = [
   "에메랄드", "다이아몬드", "마스터", "그랜드마스터", "챌린저",
 ];
 
-export type ChampionStat = {
+type ChampionStat = {
   champion: string;
   image: string | null;
   wins: number;
@@ -246,7 +246,7 @@ export type ChampionStat = {
   assists: number | null;
 };
 
-export type RecentGame = {
+type RecentGame = {
   tier: string;
   champion: string;
   image: string | null;

@@ -28,7 +28,7 @@ type DataDragonChampionResponse = {
 
 const DDRAGON_BASE = "https://ddragon.leagueoflegends.com";
 
-export const ensureChampionsSchema = oncePerProcess(async () => {
+const ensureChampionsSchema = oncePerProcess(async () => {
   await getPool().execute(`
     CREATE TABLE IF NOT EXISTS champions (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
