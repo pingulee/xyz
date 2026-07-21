@@ -72,7 +72,9 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning className="h-full antialiased">
       <head>
-        {/* Pretendard 동적 서브셋: 브라우저가 페이지에 쓰인 unicode-range subset만 다운로드 */}
+        {/* Pretendard 동적 서브셋: 다중 @font-face(unicode-range) CSS라 next/font로 대체 불가 —
+            브라우저가 페이지에 실제 쓰인 subset woff2만 다운로드 */}
+        {/* eslint-disable-next-line @next/next/no-css-tags */}
         <link
           rel="stylesheet"
           href="/fonts/pretendard/pretendardvariable-dynamic-subset.css"
