@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Container from "@/components/Container";
-import FaqItem from "@/components/FaqItem";
-import Reveal from "@/components/Reveal";
-import SectionTitle from "@/components/SectionTitle";
-import ServiceDetail from "@/components/ServiceDetail";
+import Container from "@/components/layout/Container";
+import FaqItem from "@/components/ui/FaqItem";
+import Reveal from "@/components/ui/Reveal";
+import SectionTitle from "@/components/ui/SectionTitle";
+import ServiceDetail from "@/components/service/ServiceDetail";
 import { site } from "@/lib/site";
 
 const description =

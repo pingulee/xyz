@@ -22,7 +22,7 @@ import {
   Ban,
 } from "lucide-react";
 import { site } from "@/lib/site";
-import { useChampionOptions } from "@/components/useChampionOptions";
+import { useChampionOptions } from "@/hooks/useChampionOptions";
 
 type Tier = {
   key: string;

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import Container from "@/components/Container";
-import Reveal from "@/components/Reveal";
-import ReviewBoard from "@/components/ReviewBoard";
-import SectionTitle from "@/components/SectionTitle";
+import Container from "@/components/layout/Container";
+import Reveal from "@/components/ui/Reveal";
+import ReviewBoard from "@/components/review/ReviewBoard";
+import SectionTitle from "@/components/ui/SectionTitle";
 import { getReviews } from "@/lib/reviews";
 import { getLineups } from "@/lib/lineups";
 import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";

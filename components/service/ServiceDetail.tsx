@@ -1,8 +1,8 @@
 import { ArrowRight, CheckCircle2, PlusCircle } from "lucide-react";
-import Container from "@/components/Container";
-import PriceTable from "@/components/PriceTable";
-import Reveal from "@/components/Reveal";
-import SectionTitle from "@/components/SectionTitle";
+import Container from "@/components/layout/Container";
+import PriceTable from "@/components/service/PriceTable";
+import Reveal from "@/components/ui/Reveal";
+import SectionTitle from "@/components/ui/SectionTitle";
 import { site } from "@/lib/site";
 
 type ServiceDetailBaseProps = {

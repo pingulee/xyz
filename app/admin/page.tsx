@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import Container from "@/components/Container";
-import Reveal from "@/components/Reveal";
+import Container from "@/components/layout/Container";
+import Reveal from "@/components/ui/Reveal";
 import { getSafeReturnPath } from "@/lib/returnPath";
 import AdminLoginForm from "./AdminLoginForm";
 

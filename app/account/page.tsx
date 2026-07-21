@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ServiceDetail from "@/components/ServiceDetail";
+import ServiceDetail from "@/components/service/ServiceDetail";
 import { site } from "@/lib/site";
 
 const description =

@@ -9,7 +9,7 @@ import {
   TIER_OPTIONS,
   kdaRatingClass,
   kdaRatioLabel,
-} from "@/components/TierRecords";
+} from "@/components/lineup/TierRecords";
 import type { WinStatsGroup } from "@/lib/lineups";
 
 type TabKey = "total" | "boost" | "duo";

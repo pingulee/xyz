@@ -8,7 +8,7 @@ import { useState } from "react";
 import type { MouseEvent } from "react";
 import clsx from "clsx";
 import { navItems, services, site } from "@/lib/site";
-import KnightAuthControls from "@/components/KnightAuthControls";
+import KnightAuthControls from "@/components/lineup/KnightAuthControls";
 
 type MenuItem = {
   label: string;

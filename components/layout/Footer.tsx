@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { MessageCircle, ShieldCheck, Sparkles, Trophy } from "lucide-react";
-import Container from "@/components/Container";
+import Container from "@/components/layout/Container";
 import { navItems, services, site } from "@/lib/site";
 
 export default function Footer() {

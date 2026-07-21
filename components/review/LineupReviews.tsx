@@ -8,13 +8,13 @@ import {
   Loader2,
   Star,
 } from "lucide-react";
-import KnightAvatar, { type KnightAvailability } from "@/components/KnightAvatar";
+import KnightAvatar, { type KnightAvailability } from "@/components/lineup/KnightAvatar";
 import {
   TierRecordBadges,
   TierRecordEditor,
   isTierRecordsComplete,
   normalizeTierRecords,
-} from "@/components/TierRecords";
+} from "@/components/lineup/TierRecords";
 import type { Review, ReviewReply, TierRecord } from "@/lib/reviews";
 
 const PER_PAGE = 3;

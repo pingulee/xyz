@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import KnightAvatar from "@/components/KnightAvatar";
+import KnightAvatar from "@/components/lineup/KnightAvatar";
 import { getLineupPath } from "@/lib/lineup-model";
 import type { Lineup } from "@/lib/lineup-model";
 

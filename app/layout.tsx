@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import FloatingContact from "@/components/FloatingContact";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import FloatingContact from "@/components/layout/FloatingContact";
 import { site } from "@/lib/site";
 import "./globals.css";
 

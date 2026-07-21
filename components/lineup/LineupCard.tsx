@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Clock, Crown, Star } from "lucide-react";
-import KnightAvatar from "@/components/KnightAvatar";
+import KnightAvatar from "@/components/lineup/KnightAvatar";
 import type { Lineup } from "@/lib/lineup-model";
 import { getLineupPath } from "@/lib/lineups";
 

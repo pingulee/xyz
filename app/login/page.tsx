@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import Container from "@/components/Container";
-import Reveal from "@/components/Reveal";
+import Container from "@/components/layout/Container";
+import Reveal from "@/components/ui/Reveal";
 import {
   KNIGHT_SESSION_COOKIE,
   validateKnightSession,

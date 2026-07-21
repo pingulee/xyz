@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Copy, Plus, Trash2 } from "lucide-react";
-import { useChampionOptions } from "@/components/useChampionOptions";
+import { useChampionOptions } from "@/hooks/useChampionOptions";
 import type { TierRecord } from "@/lib/reviews";
 
 export const TIER_OPTIONS = [

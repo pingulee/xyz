@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { CheckCircle2, Send } from "lucide-react";
-import Container from "@/components/Container";
-import Reveal from "@/components/Reveal";
-import SectionTitle from "@/components/SectionTitle";
+import Container from "@/components/layout/Container";
+import Reveal from "@/components/ui/Reveal";
+import SectionTitle from "@/components/ui/SectionTitle";
 import { site } from "@/lib/site";
 
 const description = "xyz에서 함께할 상위 티어 롤 기사님을 모집합니다.";

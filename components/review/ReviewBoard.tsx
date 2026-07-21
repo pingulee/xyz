@@ -15,13 +15,13 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import KnightAvatar, {
   type KnightAvailability,
-} from "@/components/KnightAvatar";
+} from "@/components/lineup/KnightAvatar";
 import {
   TierRecordBadges,
   TierRecordEditor,
   isTierRecordsComplete,
   normalizeTierRecords,
-} from "@/components/TierRecords";
+} from "@/components/lineup/TierRecords";
 import type { TierRecord } from "@/lib/reviews";
 
 type ReviewReply = {

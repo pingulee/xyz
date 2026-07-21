@@ -7,13 +7,13 @@ import { Loader2, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import KnightAvatar, {
   type KnightAvailability,
-} from "@/components/KnightAvatar";
+} from "@/components/lineup/KnightAvatar";
 import {
   TierRecordBadges,
   TierRecordEditor,
   isTierRecordsComplete,
   normalizeTierRecords,
-} from "@/components/TierRecords";
+} from "@/components/lineup/TierRecords";
 import type {
   Review,
   ReviewNavItem,

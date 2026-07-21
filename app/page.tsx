@@ -11,15 +11,15 @@ import {
   Star,
   Trophy,
 } from "lucide-react";
-import Container from "@/components/Container";
-import FaqItem from "@/components/FaqItem";
-import HeroSlider from "@/components/HeroSlider";
-import LineupCard from "@/components/LineupCard";
-import Reveal from "@/components/Reveal";
-import SectionTitle from "@/components/SectionTitle";
-import ServiceCard from "@/components/ServiceCard";
-import QuoteCalculator from "@/components/QuoteCalculator";
-import JsonLd from "@/components/JsonLd";
+import Container from "@/components/layout/Container";
+import FaqItem from "@/components/ui/FaqItem";
+import HeroSlider from "@/components/home/HeroSlider";
+import LineupCard from "@/components/lineup/LineupCard";
+import Reveal from "@/components/ui/Reveal";
+import SectionTitle from "@/components/ui/SectionTitle";
+import ServiceCard from "@/components/home/ServiceCard";
+import QuoteCalculator from "@/components/quote/QuoteCalculator";
+import JsonLd from "@/components/ui/JsonLd";
 import { services, site } from "@/lib/site";
 import { getLineups } from "@/lib/lineups";
 import type { Lineup } from "@/lib/lineup-model";

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Clock, Medal, Shield } from "lucide-react";
-import Container from "@/components/Container";
-import AdminLineupBoard from "@/components/AdminLineupBoard";
-import LineupCard from "@/components/LineupCard";
-import Reveal from "@/components/Reveal";
-import SectionTitle from "@/components/SectionTitle";
+import Container from "@/components/layout/Container";
+import AdminLineupBoard from "@/components/lineup/AdminLineupBoard";
+import LineupCard from "@/components/lineup/LineupCard";
+import Reveal from "@/components/ui/Reveal";
+import SectionTitle from "@/components/ui/SectionTitle";
 import { getLineups } from "@/lib/lineups";
 import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
 import { site } from "@/lib/site";
