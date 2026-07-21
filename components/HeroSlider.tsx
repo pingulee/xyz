@@ -111,21 +111,18 @@ export default function HeroSlider() {
     >
       <div className="absolute inset-0 bg-black/30" />
       <div className="absolute inset-0 lg:hidden">
-        {slides.map((item, i) => (
-          <Image
-            key={item.image}
-            src={item.image}
-            alt=""
-            aria-hidden
-            fill
-            priority={i === 0}
-            fetchPriority={i === 0 ? "high" : "auto"}
-            sizes="100vw"
-            className={`object-cover transition-opacity duration-700 ${
-              i === index ? "opacity-50" : "opacity-0"
-            }`}
-          />
-        ))}
+        {/* 현재 슬라이드 이미지만 렌더 → 비활성 슬라이드 다운로드 방지(LCP/대역폭) */}
+        <Image
+          key={slide.image}
+          src={slide.image}
+          alt=""
+          aria-hidden
+          fill
+          priority
+          fetchPriority="high"
+          sizes="100vw"
+          className="object-cover opacity-50"
+        />
         <div className="absolute inset-0 bg-linear-to-t from-black via-black/55 to-black/30" />
       </div>
       <div className="absolute left-[12%] top-20 h-72 w-72 rounded-full bg-gold/18 blur-[110px] animate-background-float" />
@@ -205,21 +202,17 @@ export default function HeroSlider() {
           <div className="absolute inset-8 rounded-full bg-gold/25 blur-[90px]" />
           <div className="card-premium relative overflow-hidden rounded-[36px] p-3 sm:rounded-[44px] sm:p-4">
             <div className="relative h-90 overflow-hidden rounded-[28px] bg-black sm:h-107.5 sm:rounded-[34px] lg:h-140">
-              {slides.map((item, i) => (
-                <Image
-                  key={item.image}
-                  src={item.image}
-                  alt={item.alt}
-                  aria-hidden={i !== index}
-                  fill
-                  priority={i === 0}
-                  fetchPriority={i === 0 ? "high" : "auto"}
-                  sizes="(max-width: 1024px) 100vw, 48vw"
-                  className={`object-cover transition-opacity duration-700 ${
-                    i === index ? "opacity-95" : "opacity-0"
-                  }`}
-                />
-              ))}
+              {/* 현재 슬라이드 이미지만 렌더 → 비활성 슬라이드 다운로드 방지 */}
+              <Image
+                key={slide.image}
+                src={slide.image}
+                alt={slide.alt}
+                fill
+                priority
+                fetchPriority="high"
+                sizes="48vw"
+                className="object-cover opacity-95"
+              />
               <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/15 to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 rounded-[26px] border border-gold/20 bg-black/58 p-5 backdrop-blur-xl">
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-gold">
