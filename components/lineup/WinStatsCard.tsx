@@ -77,15 +77,19 @@ export default function WinStatsCard({
         <div className="mt-3 flex h-6 overflow-hidden rounded-md text-xs text-white">
           {active.data.wins > 0 && (
             <div
-              className="bg-[#5383e8] transition-all duration-500"
+              className="flex min-w-fit items-center bg-[#5383e8] pl-2.5 whitespace-nowrap transition-all duration-500"
               style={{ width: `${(active.data.wins / games) * 100}%` }}
-            />
+            >
+              {active.data.wins}승
+            </div>
           )}
           {active.data.losses > 0 && (
             <div
-              className="bg-[#e84057] transition-all duration-500"
+              className="flex min-w-fit items-center justify-end bg-[#e84057] pr-2.5 whitespace-nowrap transition-all duration-500"
               style={{ width: `${(active.data.losses / games) * 100}%` }}
-            />
+            >
+              {active.data.losses}패
+            </div>
           )}
         </div>
       </div>
@@ -119,15 +123,19 @@ export default function WinStatsCard({
                   <div className="flex h-5 flex-1 overflow-hidden rounded-md bg-white/6 text-[11px] text-white">
                     {t.wins > 0 && (
                       <div
-                        className="bg-[#5383e8] transition-all duration-500"
+                        className="flex min-w-fit items-center bg-[#5383e8] pl-2 whitespace-nowrap transition-all duration-500"
                         style={{ width: `${(t.wins / total) * 100}%` }}
-                      />
+                      >
+                        {t.wins}승
+                      </div>
                     )}
                     {t.losses > 0 && (
                       <div
-                        className="bg-[#e84057] transition-all duration-500"
+                        className="flex min-w-fit items-center justify-end bg-[#e84057] pr-2 whitespace-nowrap transition-all duration-500"
                         style={{ width: `${(t.losses / total) * 100}%` }}
-                      />
+                      >
+                        {t.losses}패
+                      </div>
                     )}
                   </div>
                   <span

@@ -177,15 +177,19 @@ export default function LineupCard({
                 <div className="flex h-5 flex-1 overflow-hidden rounded-md bg-white/6 text-[11px] text-white">
                   {wins > 0 && (
                     <div
-                      className="bg-[#5383e8]"
+                      className="flex min-w-fit items-center bg-[#5383e8] pl-2 whitespace-nowrap"
                       style={{ width: `${(wins / games) * 100}%` }}
-                    />
+                    >
+                      {wins}승
+                    </div>
                   )}
                   {losses > 0 && (
                     <div
-                      className="bg-[#e84057]"
+                      className="flex min-w-fit items-center justify-end bg-[#e84057] pr-2 whitespace-nowrap"
                       style={{ width: `${(losses / games) * 100}%` }}
-                    />
+                    >
+                      {losses}패
+                    </div>
                   )}
                 </div>
                 <span
