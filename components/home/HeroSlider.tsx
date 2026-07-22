@@ -66,6 +66,8 @@ export default function HeroSlider() {
 
   const slide = slides[index];
   const count = slides.length;
+  // 페이지당 h1 1개: 첫 슬라이드(롤 대리)만 h1, 나머지는 h2
+  const TitleTag = index === 0 ? ("h1" as const) : ("h2" as const);
 
   const goTo = (nextIndex: number) => {
     setAnimate(true);
@@ -140,7 +142,8 @@ export default function HeroSlider() {
                 <p className="inline-flex w-fit rounded-full border border-gold/20 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-gold-soft/90">
                   {slide.eyebrow}
                 </p>
-                <h1 className="mt-6 text-3xl font-black leading-[1.16] text-zinc-50 [text-shadow:0_0_28px_rgba(255,255,255,0.16)] sm:text-5xl lg:text-6xl">
+                {/* h1은 첫 슬라이드(롤 대리)에만 — 크롤 시점과 무관하게 페이지 h1을 핵심 키워드로 고정 */}
+                <TitleTag className="mt-6 text-3xl font-black leading-[1.16] text-zinc-50 [text-shadow:0_0_28px_rgba(255,255,255,0.16)] sm:text-5xl lg:text-6xl">
                   {slide.titlePrefix}
                   <span className="relative inline-block">
                     <span className="absolute -inset-x-1 bottom-1 h-[0.24em] rounded-md bg-gold/35 shadow-gold-sm" />
@@ -148,7 +151,7 @@ export default function HeroSlider() {
                       {slide.titleHighlight}
                     </span>
                   </span>
-                </h1>
+                </TitleTag>
                 <p className="mt-6 h-24 max-w-xl text-base font-medium leading-8 text-zinc-100/95 [text-shadow:0_0_18px_rgba(222,176,67,0.14)] sm:h-28 sm:text-lg">
                   {slide.desc}
                 </p>
