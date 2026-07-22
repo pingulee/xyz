@@ -101,12 +101,14 @@ function ReplyForm({
   saving,
   onSubmit,
   onCancel,
+  service,
 }: {
   knightName: string;
   initial?: ReviewReply;
   saving: boolean;
   onSubmit: (content: string, tierRecords: TierRecord[]) => void;
   onCancel?: () => void;
+  service?: string;
 }) {
   const [content, setContent] = useState(initial?.content ?? "");
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -125,7 +127,7 @@ function ReplyForm({
       <div className="flex items-center gap-2">
         <span className="text-xs font-black text-gold">{knightName}</span>
       </div>
-      <TierRecordEditor records={tierRecords} onChange={setTierRecords} />
+      <TierRecordEditor records={tierRecords} onChange={setTierRecords} service={service} />
       {!recordsComplete && (
         <p className="text-xs font-bold text-amber-300/80">
           작업 기록의 티어·챔피언·킬/데스/어시를 모두 입력해야 등록할 수 있습니다.
@@ -288,6 +290,7 @@ function ReplyBlock({
             knightName={knightName}
             initial={editing ? replyData : undefined}
             saving={saving}
+            service={review.service}
             onSubmit={(content, tierRecords) =>
               void submitReply(content, tierRecords)
             }

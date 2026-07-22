@@ -619,6 +619,7 @@ export default function ReviewDetailView({
               <TierRecordEditor
                 records={tierRecords}
                 onChange={setTierRecords}
+                service={review.service}
               />
               {!recordsComplete && (
                 <p className="text-xs font-bold text-amber-300/80">

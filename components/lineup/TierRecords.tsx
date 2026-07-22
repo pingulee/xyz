@@ -19,6 +19,14 @@ export const TIER_OPTIONS = [
   "챌린저",
 ];
 
+// 듀오는 마스터/그랜드마스터/챌린저 불가 → 서비스별 선택 가능 티어
+export const DUO_EXCLUDED_TIERS = ["마스터", "그랜드마스터", "챌린저"];
+export function tierOptionsForService(service?: string) {
+  return service && service.includes("듀오")
+    ? TIER_OPTIONS.filter((t) => !DUO_EXCLUDED_TIERS.includes(t))
+    : TIER_OPTIONS;
+}
+
 export const TIER_ICON_BY_NAME: Record<string, string> = {
   언랭크: "/images/tier/0-unrank.png",
   아이언: "/images/tier/1-iron.png",
@@ -115,11 +123,15 @@ export function normalizeTierRecords(records: TierRecord[]): TierRecord[] {
 export function TierRecordEditor({
   records,
   onChange,
+  service,
 }: {
   records: TierRecord[];
   onChange: (records: TierRecord[]) => void;
+  /** 리뷰 서비스("롤 듀오" 등). 듀오면 마스터/그마/챌린저 선택 불가 */
+  service?: string;
 }) {
   const { champions, loading: championsLoading } = useChampionOptions();
+  const tierOptions = tierOptionsForService(service);
   const add = () =>
     onChange([...records, { tier: "", champion: "", win: true }]);
   const duplicate = (i: number) =>
@@ -174,7 +186,7 @@ export function TierRecordEditor({
               <option value="" disabled={Boolean(record.tier)}>
                 티어 선택
               </option>
-              {TIER_OPTIONS.map((tier) => (
+              {tierOptions.map((tier) => (
                 <option key={tier} value={tier}>
                   {tier}
                 </option>

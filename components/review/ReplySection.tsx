@@ -139,7 +139,7 @@ export default function ReplySection({
           <div className="flex items-center gap-2">
             <span className="text-xs font-black text-gold">{knightName}</span>
           </div>
-          <TierRecordEditor records={tierRecords} onChange={setTierRecords} />
+          <TierRecordEditor records={tierRecords} onChange={setTierRecords} service={review.service} />
           {!recordsComplete && (
             <p className="text-xs font-bold text-amber-300/80">
               작업 기록의 티어·챔피언·킬/데스/어시를 모두 입력해야 등록할 수 있습니다.
