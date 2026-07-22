@@ -1008,10 +1008,9 @@ export default function ReviewBoard({
                   onClick={() => goToPage(currentPage - PAGE_BLOCK)}
                   disabled={Math.ceil(currentPage / PAGE_BLOCK) <= 1}
                   aria-label="이전 10페이지"
-                  className="inline-flex items-center gap-1 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-2 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <ChevronLeft size={16} />
-                  이전
                 </button>
 
                 {pageItems.map((item, i) =>
@@ -1046,9 +1045,8 @@ export default function ReviewBoard({
                     Math.ceil(totalPages / PAGE_BLOCK)
                   }
                   aria-label="다음 10페이지"
-                  className="inline-flex items-center gap-1 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-2 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  다음
                   <ChevronRight size={16} />
                 </button>
               </div>

@@ -386,7 +386,7 @@ export default function LineupReviews({
             type="button"
             onClick={() => setPage(Math.max(currentPage - PAGE_BLOCK, 1))}
             disabled={Math.ceil(currentPage / PAGE_BLOCK) <= 1}
-            aria-label="이전 10페이지"
+            aria-label="이전 5페이지"
             className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronLeft size={16} />
@@ -414,7 +414,7 @@ export default function LineupReviews({
               Math.ceil(currentPage / PAGE_BLOCK) >=
               Math.ceil(totalPages / PAGE_BLOCK)
             }
-            aria-label="다음 10페이지"
+            aria-label="다음 5페이지"
             className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronRight size={16} />

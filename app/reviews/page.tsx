@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ReviewsPage() {
-  const reviews = await getReviews();
+  const reviews = await getReviews(5000);
   const lineups = await getLineups(true);
 
   const cookieStore = await cookies();
