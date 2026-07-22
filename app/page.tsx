@@ -12,8 +12,10 @@ import {
   Trophy,
 } from "lucide-react";
 import Container from "@/components/layout/Container";
-import FaqItem from "@/components/ui/FaqItem";
 import HeroSlider from "@/components/home/HeroSlider";
+import HomeFaq, {
+  type HomeFaqCategory,
+} from "@/components/home/HomeFaq";
 import ServiceGuide from "@/components/home/ServiceGuide";
 import LineupCard from "@/components/lineup/LineupCard";
 import Reveal from "@/components/ui/Reveal";
@@ -71,57 +73,162 @@ const reviews = [
   ["랜덤 계정 샀는데 생배 받음 개꿀딱ㅋ", "롤 계정"],
 ];
 
-const faqs = [
-  [
-    "롤 대리와 롤 듀오는 어떻게 진행되나요?",
-    "상담 후 현재 티어, 원하는 진행 방식, 라인·챔피언 요청, 희망 일정을 확인하고 조건에 맞는 기사님을 배정합니다.\n대리는 기사님이 계정에 접속해 작업을 진행하고, 듀오는 고객님과 기사님이 함께 파티를 맺고 랭크를 진행합니다.",
-  ],
-  [
-    "상담은 어떻게 신청하나요?",
-    "카카오톡 상담을 통해 현재 티어와 원하는 서비스, 희망 시간대를 알려주시면 견적과 진행 가능 여부를 안내드립니다.",
-  ],
-  [
-    "가격은 어떻게 정해지나요?",
-    "가격은 현재 티어, 진행 구간, 신청 시간, 라인·챔피언 요청, 기사 지정 여부 등에 따라 달라질 수 있습니다. 정확한 금액은 상담 시 안내드립니다.",
-  ],
-  [
-    "라인이나 챔피언 요청이 가능한가요?",
-    "네, 가능합니다. 상담 시 원하는 라인·챔피언·플레이 스타일을 말씀해 주시면 최대한 반영합니다. 비주류 챔프나 특정 조합 요청은 추가 요금이 발생할 수 있습니다.",
-  ],
-  [
-    "승률 보장이 안 지켜지면 어떻게 되나요?",
-    "10시간 이상 진행 시 승률 보장 기준이 적용됩니다. 승률 미달 구간은 상담 후 추가 진행으로 보완해드리며, 자세한 기준은 상담 시 안내드립니다.",
-  ],
-  [
-    "진행 중 기사 교체가 가능한가요?",
-    "작업 속도나 플레이 스타일이 맞지 않거나 기사님 일정 조율이 필요한 경우 상담원에게 문의해 주세요.\n현재 진행 상황과 대체 가능한 기사님 여부를 확인한 뒤 가능한 범위에서 기사 교체를 도와드립니다.",
-  ],
-  [
-    "진행 중 현황을 확인할 수 있나요?",
-    "대리는 카카오톡으로 진행 상황을 문의하실 수 있고, 듀오는 고객님이 직접 함께 플레이하기 때문에 진행 상황을 바로 확인하실 수 있습니다.",
-  ],
-  [
-    "시간제는 어떤 방식인가요?",
-    "시간제는 특정 시간 동안 기사님이 대리 작업을 진행하거나, 기사님과 함께 듀오 랭크를 진행하는 방식입니다.\n예를 들어 2시간을 신청하면 2시간 기준으로 작업 또는 듀오가 진행됩니다.",
-  ],
-  [
-    "시간제 결제 후 시간이 남으면 어떻게 되나요?",
-    "남은 시간만으로 다음 게임을 시작하기 어려운 경우 우선 작업은 종료될 수 있습니다. 남은 시간은 적립되며 다음 작업 시 사용할 수 있습니다.",
-  ],
-  [
-    "환불은 가능한가요?",
-    "진행이 시작되기 전에는 환불이 가능하며, 진행이 시작된 이후에는 환불이 불가합니다.",
-  ],
+const faqCategories: HomeFaqCategory[] = [
+  {
+    id: "boosting",
+    label: "롤 대리",
+    title: "롤 대리 이용 전 확인",
+    description:
+      "진행 방식부터 시간제와 승률 보장 기준까지, 계정을 맡기기 전에 필요한 내용을 모았습니다.",
+    detailHref: "/boosting",
+    detailLabel: "롤 대리 가격 자세히 보기",
+    items: [
+      {
+        question: "롤 대리는 어떤 방식으로 진행되나요?",
+        answer:
+          "카카오톡 상담에서 현재 티어와 목표 티어, 희망 일정, 라인·챔피언 요청을 확인합니다. 조건에 맞는 기사를 배정하고 결제 확인 후 기사가 계정에 접속해 작업을 진행합니다.",
+      },
+      {
+        question: "시간제 롤 대리는 무엇인가요?",
+        answer:
+          "신청한 시간 동안 기사가 대리 작업을 진행하는 방식입니다. 예를 들어 2시간을 신청하면 2시간을 기준으로 작업을 진행합니다.",
+      },
+      {
+        question: "롤 대리 승률 보장 기준은 언제 적용되나요?",
+        answer:
+          "시간제 대리의 승률 보장 기준은 10시간 이상 신청할 때 적용됩니다. 티어 구간별 보장률은 가격표에서 확인할 수 있으며, 기준에 미달한 구간은 상담 후 추가 진행으로 보완합니다.",
+      },
+      {
+        question: "롤 대리도 라인과 챔피언을 지정할 수 있나요?",
+        answer:
+          "상담 시 원하는 라인·챔피언·플레이 스타일을 요청할 수 있으며 가능한 범위에서 반영합니다. 비주류 챔피언 요청은 추가 요금이 발생할 수 있습니다.",
+      },
+      {
+        question: "롤 대리 진행 현황은 어떻게 확인하나요?",
+        answer:
+          "진행 중인 대리 작업의 현재 상황은 카카오톡 상담 채널로 문의해 확인할 수 있습니다.",
+      },
+    ],
+  },
+  {
+    id: "duo",
+    label: "롤 듀오",
+    title: "롤 듀오 선택과 진행",
+    description:
+      "직접 플레이하는 듀오의 특징과 기사 배정, 보이스 채팅, 요청 가능한 조건을 확인하세요.",
+    detailHref: "/duo",
+    detailLabel: "롤 듀오 가격 자세히 보기",
+    items: [
+      {
+        question: "롤 듀오는 롤 대리와 무엇이 다른가요?",
+        answer:
+          "롤 대리는 기사가 고객님의 계정으로 작업하고, 롤 듀오는 고객님이 직접 플레이하며 기사와 파티를 맺어 랭크를 진행합니다.",
+      },
+      {
+        question: "롤 듀오 랭크는 어떻게 시작하나요?",
+        answer:
+          "상담에서 현재 티어와 희망 시간대를 확인한 뒤 조건에 맞는 기사를 배정합니다. 결제가 확인되면 기사가 고객님을 초대하고 함께 파티를 맺어 듀오 랭크를 진행합니다.",
+      },
+      {
+        question: "롤 듀오에서 보이스 채팅은 필수인가요?",
+        answer:
+          "필수는 아니며 채팅 위주로도 진행할 수 있습니다. 원활한 콜과 피드백을 원하면 보이스 채팅을 요청할 수 있고, 비용이 추가될 수 있어 상담 시 확인이 필요합니다.",
+      },
+      {
+        question: "롤 듀오도 라인이나 챔피언 요청이 가능한가요?",
+        answer:
+          "원하는 라인·챔피언·플레이 스타일을 상담에서 요청할 수 있습니다. 비주류 챔피언이나 특정 조합은 추가 요금이 발생할 수 있습니다.",
+      },
+      {
+        question: "롤 듀오에도 승률 보장 기준이 있나요?",
+        answer:
+          "10시간 이상 진행할 때 티어 구간별 승률 보장 기준이 적용됩니다. 기준에 미달한 구간은 상담 후 추가 진행으로 보완하며, 구체적인 보장률은 듀오 가격표에서 확인할 수 있습니다.",
+      },
+    ],
+  },
+  {
+    id: "account",
+    label: "롤 계정",
+    title: "롤 계정 맞춤 상담",
+    description:
+      "원하는 계정 조건과 예산을 정리하고, 구매 전 확인할 내용을 상담하는 방법을 안내합니다.",
+    detailHref: "/account",
+    detailLabel: "롤 계정 상담 항목 보기",
+    items: [
+      {
+        question: "롤 계정 상담 시 어떤 조건을 알려주면 되나요?",
+        answer:
+          "원하는 티어와 챔피언, 스킨, 예산 조건을 알려주시면 해당 기준에 맞춰 상담을 진행합니다.",
+      },
+      {
+        question: "원하는 조건에 맞춰 롤 계정을 상담할 수 있나요?",
+        answer:
+          "티어·챔피언·스킨 조건과 예산을 기준으로 맞춤 안내를 받을 수 있습니다. 원하는 조건을 구체적으로 전달할수록 상담 기준을 정하기 쉽습니다.",
+      },
+      {
+        question: "롤 계정 가격은 어떻게 확인하나요?",
+        answer:
+          "계정은 원하는 티어·챔피언·스킨과 예산 조건을 먼저 확인한 뒤 상담을 통해 가격과 진행 가능 여부를 안내합니다.",
+      },
+      {
+        question: "롤 계정 구매 전 확인 항목도 안내받을 수 있나요?",
+        answer:
+          "상담에서 원하는 계정 조건을 확인한 뒤 구매 전에 살펴봐야 할 항목을 함께 안내합니다.",
+      },
+    ],
+  },
+  {
+    id: "payment",
+    label: "결제·진행",
+    title: "견적부터 완료까지",
+    description:
+      "상담과 가격 산정, 남은 시간, 기사 교체와 환불처럼 진행 전후에 자주 생기는 질문입니다.",
+    detailHref: "#price",
+    detailLabel: "예상 견적 계산하기",
+    items: [
+      {
+        question: "상담은 어떻게 신청하나요?",
+        answer:
+          "카카오톡 상담에서 현재 티어와 원하는 서비스, 희망 시간대를 알려주시면 견적과 진행 가능 여부를 안내합니다.",
+      },
+      {
+        question: "롤 대리·듀오 가격은 어떻게 정해지나요?",
+        answer:
+          "현재 티어, 진행 구간과 신청 시간, 라인·챔피언 요청, 기사 지정 여부 등에 따라 달라질 수 있습니다. 화면의 견적 계산기는 예상 금액이며 실제 금액은 상담 후 확정됩니다.",
+      },
+      {
+        question: "시간제 결제 후 시간이 남으면 어떻게 되나요?",
+        answer:
+          "남은 시간만으로 다음 게임을 시작하기 어려우면 우선 진행이 종료될 수 있습니다. 사용하지 못한 시간은 적립되며 다음 작업에서 사용할 수 있습니다.",
+      },
+      {
+        question: "남은 시간보다 다음 게임이 길어질 것 같으면 어떻게 하나요?",
+        answer:
+          "다음 게임에서 결제 시간을 초과할 것으로 예상되면 추가 진행 여부와 비용이 달라질 수 있습니다. 시작 전에 상담원 또는 기사와 진행 여부를 먼저 상의해 주세요.",
+      },
+      {
+        question: "진행 중 기사 교체를 요청할 수 있나요?",
+        answer:
+          "작업 속도나 플레이 스타일이 맞지 않거나 일정 조율이 필요하면 상담원에게 문의해 주세요. 현재 상황과 대체 가능한 기사를 확인한 뒤 가능한 범위에서 교체를 안내합니다.",
+      },
+      {
+        question: "결제 후 환불은 가능한가요?",
+        answer:
+          "진행이 시작되기 전에는 환불이 가능하며, 진행이 시작된 이후에는 환불이 불가합니다.",
+      },
+    ],
+  },
 ];
 
-// 홈 FAQ 리치 결과용 구조화 데이터 (서비스 페이지 FAQ와 질문이 겹치지 않음)
+const faqs = faqCategories.flatMap((category) => category.items);
+
 const faqJsonLd = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: faqs.map(([q, a]) => ({
+  mainEntity: faqs.map(({ question, answer }) => ({
     "@type": "Question",
-    name: q,
-    acceptedAnswer: { "@type": "Answer", text: a },
+    name: question,
+    acceptedAnswer: { "@type": "Answer", text: answer },
   })),
 };
 
@@ -295,7 +402,7 @@ export default async function Home() {
           <div className="grid gap-6 lg:grid-cols-3">
             {lineups.map((lineup, i) => (
               <Reveal key={lineup.name} delay={i * 0.08}>
-                <LineupCard knight={lineup} placement={i + 1} />
+                <LineupCard booster={lineup} placement={i + 1} />
               </Reveal>
             ))}
           </div>
@@ -317,24 +424,9 @@ export default async function Home() {
         <Container>
           <Reveal>
             <SectionTitle
-              eyebrow="price"
-              title="견적 계산기"
-              desc="서비스, 진행 방식, 구간을 선택하면 예상 금액을 바로 확인할 수 있습니다. 실제 견적은 상담 후 확정됩니다."
-            />
-          </Reveal>
-          <Reveal>
-            <QuoteCalculator />
-          </Reveal>
-        </Container>
-      </section>
-
-      <section className="py-20">
-        <Container>
-          <Reveal>
-            <SectionTitle
               eyebrow="reviews"
               title="진행 후기"
-              desc="롤 대리·롤 듀오·롤 계정을 이용한 고객님들의 생생한 후기입니다. 전체 작업 후기는 후기 게시판에서 확인하세요."
+              desc="롤 대리·롤 듀오·롤 계정 이용 후기를 살펴보세요. 후기 게시판에서는 작성일, 이용 서비스와 연결된 작업 기사 정보를 함께 확인할 수 있습니다."
             />
           </Reveal>
           <Reveal>
@@ -349,49 +441,80 @@ export default async function Home() {
                         : "animate-review-marquee-rtl"
                     }`}
                   >
-                    {[...row, ...row].map(([text, tag], i) => (
-                      <article
-                        key={`${tag}-${i}`}
-                        className="w-[42vw] shrink-0 rounded-3xl border border-gold/15 bg-white/3.5 p-4 sm:w-90 sm:p-7"
-                      >
-                        <div className="flex gap-0.5 text-gold sm:gap-1">
-                          {Array.from({ length: 5 }).map((_, starIndex) => (
-                            <Star
-                              key={starIndex}
-                              size={14}
-                              className="sm:h-4.5 sm:w-4.5"
-                              fill="currentColor"
-                            />
-                          ))}
-                        </div>
-                        <p className="mt-3 min-h-24 text-sm leading-6 text-zinc-100 sm:mt-5 sm:min-h-18 sm:text-base sm:leading-7">
-                          {text}
-                        </p>
-                        <p className="mt-3 text-[10px] font-black uppercase tracking-[0.18em] text-gold sm:mt-5 sm:text-xs sm:tracking-[0.22em]">
-                          {tag}
-                        </p>
-                      </article>
-                    ))}
+                    {[...row, ...row].map(([text, tag], i) => {
+                      const isMarqueeClone = i >= row.length;
+
+                      return (
+                        <article
+                          key={`${tag}-${isMarqueeClone ? "clone" : "original"}-${i % row.length}`}
+                          aria-hidden={isMarqueeClone || undefined}
+                          className="w-[42vw] shrink-0 rounded-3xl border border-gold/15 bg-white/3.5 p-4 sm:w-90 sm:p-7"
+                        >
+                          <div className="flex gap-0.5 text-gold sm:gap-1">
+                            {Array.from({ length: 5 }).map((_, starIndex) => (
+                              <Star
+                                key={starIndex}
+                                size={14}
+                                className="sm:h-4.5 sm:w-4.5"
+                                fill="currentColor"
+                              />
+                            ))}
+                          </div>
+                          <p className="mt-3 min-h-24 text-sm leading-6 text-zinc-100 sm:mt-5 sm:min-h-18 sm:text-base sm:leading-7">
+                            {text}
+                          </p>
+                          <p className="mt-3 text-[10px] font-black uppercase tracking-[0.18em] text-gold sm:mt-5 sm:text-xs sm:tracking-[0.22em]">
+                            {tag}
+                          </p>
+                        </article>
+                      );
+                    })}
                   </div>
                 ),
               )}
             </div>
+          </Reveal>
+          <Reveal>
+            <div className="mt-9 text-center">
+              <Link
+                href="/reviews"
+                prefetch={false}
+                className="inline-flex items-center gap-2 rounded-full border border-gold/20 px-6 py-3 font-bold text-white transition hover:border-gold/60"
+              >
+                전체 작업 후기 확인하기 <ArrowRight size={18} />
+              </Link>
+            </div>
+          </Reveal>
+        </Container>
+      </section>
+
+      <section id="price" className="scroll-mt-20 py-20">
+        <Container>
+          <Reveal>
+            <SectionTitle
+              eyebrow="price"
+              title="견적 계산기"
+              desc="서비스, 진행 방식, 구간을 선택하면 예상 금액을 바로 확인할 수 있습니다. 실제 견적은 상담 후 확정됩니다."
+            />
+          </Reveal>
+          <Reveal>
+            <QuoteCalculator />
           </Reveal>
         </Container>
       </section>
 
       <ServiceGuide />
 
-      <section className="py-20">
+      <section id="faq" className="scroll-mt-20 py-20">
         <Container>
           <Reveal>
-            <SectionTitle eyebrow="faq" title="자주 묻는 질문" />
+            <SectionTitle
+              eyebrow="faq"
+              title="궁금한 서비스부터 확인하세요"
+              desc="롤 대리, 롤 듀오, 롤 계정과 결제·진행 질문을 주제별로 모았습니다. 카테고리를 선택해 필요한 답변을 빠르게 찾아보세요."
+            />
           </Reveal>
-          <div className="mx-auto max-w-4xl space-y-4">
-            {faqs.map(([q, a]) => (
-              <FaqItem key={q} q={q} a={a} />
-            ))}
-          </div>
+          <HomeFaq categories={faqCategories} />
         </Container>
       </section>
 
