@@ -327,21 +327,22 @@ export default async function Home() {
                     {[...row, ...row].map(([text, tag], i) => (
                       <article
                         key={`${tag}-${i}`}
-                        className="w-[280px] shrink-0 rounded-3xl border border-gold/15 bg-white/3.5 p-7 sm:w-[360px]"
+                        className="w-[42vw] shrink-0 rounded-3xl border border-gold/15 bg-white/3.5 p-4 sm:w-90 sm:p-7"
                       >
-                        <div className="flex gap-1 text-gold">
+                        <div className="flex gap-0.5 text-gold sm:gap-1">
                           {Array.from({ length: 5 }).map((_, starIndex) => (
                             <Star
                               key={starIndex}
-                              size={18}
+                              size={14}
+                              className="sm:h-4.5 sm:w-4.5"
                               fill="currentColor"
                             />
                           ))}
                         </div>
-                        <p className="mt-5 min-h-18 leading-7 text-zinc-100">
+                        <p className="mt-3 min-h-24 text-sm leading-6 text-zinc-100 sm:mt-5 sm:min-h-18 sm:text-base sm:leading-7">
                           {text}
                         </p>
-                        <p className="mt-5 text-xs font-black uppercase tracking-[0.22em] text-gold">
+                        <p className="mt-3 text-[10px] font-black uppercase tracking-[0.18em] text-gold sm:mt-5 sm:text-xs sm:tracking-[0.22em]">
                           {tag}
                         </p>
                       </article>
