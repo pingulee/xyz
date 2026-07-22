@@ -44,6 +44,7 @@
 - 이미지는 전부 `next/image` (raw `<img>` 금지). LCP 이미지엔 `priority`.
 
 ## 성능 / 애니메이션 (Core Web Vitals)
+- **서버 압축/CDN 필수 (모바일 FCP/LCP 최대 지렛대)**: 홈은 정적이지만 HTML raw ≈ 489KB(RSC flight 235KB + 마크업 181KB + lucide 인라인 SVG 224개 ≈ 86KB + 인라인 CSS 72KB). 무압축이면 느린 4G에서 문서 전송만 ~2.4s → FCP 3.3s/LCP 4.9s. **CDN(압축·엣지캐시) 켜면 brotli ~28KB(17배↓)로 모바일 성능 급상승** — 실측 확인됨. 모바일 성능 문제는 **코드보다 서버 압축부터 확인**(`content-encoding: br/gzip`). 서버가 curl 등 비브라우저에 빈 응답 주므로 크롬 DevTools Network의 문서 Size/Response Headers로 확인.
 - **framer-motion 안 씀 (제거됨).** 애니메이션은 CSS(opacity/transform) + IntersectionObserver로. 애니메이션 라이브러리 재도입 금지 — 모바일 하이드레이션 비용/강제 리플로우 유발.
 - **스크롤 진입 효과는 `components/ui/Reveal.tsx`** (IntersectionObserver + CSS transition, `prefers-reduced-motion` 존중). 새 애니메이션도 이 패턴.
 - **LCP 보호**: 첫 페인트(above-the-fold, 특히 HeroSlider)는 JS/애니메이션에 가리지 않게. SSR HTML에서 바로 보여야 함. HeroSlider는 `animate` 상태로 첫 렌더만 애니메이션 생략(슬라이드 전환 시에만 켜짐).
