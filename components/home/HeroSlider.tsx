@@ -9,8 +9,8 @@ const slides = [
   {
     eyebrow: "PREMIUM BOOSTING",
     title: "프리미엄 롤 대리",
-    titlePrefix: "프리미엄 ",
-    titleHighlight: "롤 대리",
+    titlePrefix: "목표 티어까지 ",
+    titleHighlight: "전담 관리",
     desc: "현재 시즌 기준 챌린저 티어 기사가 목표 티어까지 직접 달성해드립니다. 일부 업체처럼 무작위로 저티어 기사를 배정하는 방식이 아닌, 전담 1:1 기사 배정 시스템을 운영하여 더욱 안전하고 빠른 롤 대리 서비스를 제공합니다.",
     image: "/images/slider/01.webp",
     alt: "롤 대리 서비스를 상징하는 프리미엄 게임 이미지",
@@ -66,8 +66,6 @@ export default function HeroSlider() {
 
   const slide = slides[index];
   const count = slides.length;
-  // 페이지당 h1 1개: 첫 슬라이드(롤 대리)만 h1, 나머지는 h2
-  const TitleTag = index === 0 ? ("h1" as const) : ("h2" as const);
 
   const goTo = (nextIndex: number) => {
     setAnimate(true);
@@ -110,40 +108,28 @@ export default function HeroSlider() {
       onMouseLeave={() => setPaused(false)}
     >
       <div className="absolute inset-0 bg-black/30" />
-      <div className="absolute inset-0 lg:hidden">
-        {/* 현재 슬라이드 이미지만 렌더 → 비활성 슬라이드 다운로드 방지(LCP/대역폭) */}
-        <Image
-          key={slide.image}
-          src={slide.image}
-          alt=""
-          aria-hidden
-          fill
-          priority
-          fetchPriority="high"
-          sizes="100vw"
-          quality={50}
-          className="object-cover opacity-50"
-        />
-        <div className="absolute inset-0 bg-linear-to-t from-black via-black/55 to-black/30" />
-      </div>
       <div className="absolute left-[12%] top-20 h-72 w-72 rounded-full bg-gold/18 blur-[110px] animate-background-float" />
       <div className="absolute bottom-8 right-[10%] h-96 w-96 rounded-full bg-gold-soft/12 blur-[130px] animate-background-float-alt" />
 
       <div className="relative mx-auto grid h-full max-w-7xl items-center gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:gap-10 lg:px-8 lg:py-14">
-        <div className="flex h-full max-w-3xl flex-col justify-center">
-          <div className="h-92 sm:h-100 lg:h-108">
+        <div className="relative z-10 flex h-full max-w-3xl flex-col justify-center">
+          <div className="flex h-92 flex-col sm:h-100 lg:h-108">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="inline-flex w-fit rounded-full border border-gold/30 bg-gold/10 px-4 py-2 text-[11px] font-black tracking-[-0.01em] text-gold-soft">
+                프리미엄 롤 대리
+              </h1>
+              <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500">
+                {slide.eyebrow}
+              </span>
+            </div>
             <div
               key={index}
-              className={`flex h-full w-full flex-col ${
+              className={`flex min-h-0 w-full flex-1 flex-col ${
                 animate ? "animate-hero-in" : ""
               }`}
             >
-              <div className="flex flex-1 flex-col justify-center py-7">
-                <p className="inline-flex w-fit rounded-full border border-gold/20 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-gold-soft/90">
-                  {slide.eyebrow}
-                </p>
-                {/* h1은 첫 슬라이드(롤 대리)에만 — 크롤 시점과 무관하게 페이지 h1을 핵심 키워드로 고정 */}
-                <TitleTag className="mt-6 text-3xl font-black leading-[1.16] text-zinc-50 [text-shadow:0_0_28px_rgba(255,255,255,0.16)] sm:text-5xl lg:text-6xl">
+              <div className="flex flex-1 flex-col justify-center py-5">
+                <h2 className="text-3xl font-black leading-[1.16] text-zinc-50 [text-shadow:0_0_28px_rgba(255,255,255,0.16)] sm:text-5xl lg:text-6xl">
                   {slide.titlePrefix}
                   <span className="relative inline-block">
                     <span className="absolute -inset-x-1 bottom-1 h-[0.24em] rounded-md bg-gold/35 shadow-gold-sm" />
@@ -151,7 +137,7 @@ export default function HeroSlider() {
                       {slide.titleHighlight}
                     </span>
                   </span>
-                </TitleTag>
+                </h2>
                 <p className="mt-6 h-24 max-w-xl text-base font-medium leading-8 text-zinc-100/95 [text-shadow:0_0_18px_rgba(222,176,67,0.14)] sm:h-28 sm:text-lg">
                   {slide.desc}
                 </p>
@@ -197,14 +183,14 @@ export default function HeroSlider() {
         </div>
 
         <div
-          className="relative mx-auto hidden w-full max-w-150 cursor-grab touch-pan-y active:cursor-grabbing lg:block"
+          className="absolute inset-0 z-0 mx-auto w-full cursor-grab touch-pan-y active:cursor-grabbing lg:relative lg:inset-auto lg:z-auto lg:max-w-150"
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
         >
-          <div className="absolute inset-8 rounded-full bg-gold/25 blur-[90px]" />
-          <div className="card-premium relative overflow-hidden rounded-[36px] p-3 sm:rounded-[44px] sm:p-4">
-            <div className="relative h-90 overflow-hidden rounded-[28px] bg-black sm:h-107.5 sm:rounded-[34px] lg:h-140">
-              {/* 현재 슬라이드 이미지만 렌더 → 비활성 슬라이드 다운로드 방지 */}
+          <div className="absolute inset-8 hidden rounded-full bg-gold/25 blur-[90px] lg:block" />
+          <div className="card-premium contents lg:relative lg:block lg:overflow-hidden lg:rounded-[44px] lg:p-4">
+            <div className="absolute inset-0 overflow-hidden bg-black lg:relative lg:inset-auto lg:h-140 lg:rounded-[34px]">
+              {/* 뷰포트와 관계없이 단일 priority 이미지 요청만 생성 */}
               <Image
                 key={slide.image}
                 src={slide.image}
@@ -212,11 +198,11 @@ export default function HeroSlider() {
                 fill
                 priority
                 fetchPriority="high"
-                sizes="48vw"
-                className="object-cover opacity-95"
+                sizes="(max-width: 1023px) 100vw, 48vw"
+                className="object-cover opacity-50 lg:opacity-95"
               />
-              <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/15 to-transparent" />
-              <div className="absolute bottom-5 left-5 right-5 rounded-[26px] border border-gold/20 bg-black/58 p-5 backdrop-blur-xl">
+              <div className="absolute inset-0 bg-linear-to-t from-black via-black/55 to-black/30 lg:from-black/85 lg:via-black/15 lg:to-transparent" />
+              <div className="absolute bottom-5 left-5 right-5 hidden rounded-[26px] border border-gold/20 bg-black/58 p-5 backdrop-blur-xl lg:block">
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-gold">
                   {slide.cardEyebrow}
                 </p>

@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import KnightAvatar, {
-  type KnightAvailability,
-} from "@/components/lineup/KnightAvatar";
+import BoosterAvatar, {
+  type BoosterAvailability,
+} from "@/components/lineup/BoosterAvatar";
 import {
   TierRecordBadges,
   TierRecordEditor,
@@ -144,19 +144,19 @@ function NavLink({
 
 export default function ReviewDetailView({
   initialReview,
-  knightLineupId,
-  knightName,
-  knightImage,
-  knightAvailability,
+  boosterLineupId,
+  boosterName,
+  boosterImage,
+  boosterAvailability,
   previousReview,
   nextReview,
   isAdmin = false,
 }: {
   initialReview: Review;
-  knightLineupId: number | null;
-  knightName: string;
-  knightImage: string;
-  knightAvailability?: KnightAvailability | null;
+  boosterLineupId: number | null;
+  boosterName: string;
+  boosterImage: string;
+  boosterAvailability?: BoosterAvailability | null;
   previousReview?: ReviewNavItem;
   nextReview?: ReviewNavItem;
   isAdmin?: boolean;
@@ -185,10 +185,10 @@ export default function ReviewDetailView({
   const viewTrackedRef = useRef(false);
 
   const canReply =
-    knightLineupId !== null && review.lineupId === String(knightLineupId);
-  const isLoggedIn = knightLineupId !== null;
-  const displayKnightName =
-    review.reply?.knightName || knightName || "기사 답변";
+    boosterLineupId !== null && review.lineupId === String(boosterLineupId);
+  const isLoggedIn = boosterLineupId !== null;
+  const displayBoosterName =
+    review.reply?.boosterName || boosterName || "기사 답변";
   const canModifyReview = isAdmin || !review.reply;
   const replyFormVisible = canReply && (formOpen || !review.reply);
 
@@ -364,7 +364,7 @@ export default function ReviewDetailView({
                 <span>/</span>
                 <span>
                   {review.lineupName ??
-                    review.reply?.knightName ??
+                    review.reply?.boosterName ??
                     "선택 안함"}
                 </span>
               </div>
@@ -543,9 +543,9 @@ export default function ReviewDetailView({
       </article>
 
       <section className="relative overflow-hidden rounded-[30px] border border-gold/20 bg-zinc-950 p-6">
-        {knightImage && (
+        {boosterImage && (
           <Image
-            src={knightImage}
+            src={boosterImage}
             alt=""
             fill
             className="pointer-events-none object-cover opacity-18"
@@ -558,18 +558,18 @@ export default function ReviewDetailView({
         <div className="relative grid gap-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <KnightAvatar
-                availability={knightAvailability}
-                image={knightImage}
-                name={displayKnightName}
+              <BoosterAvatar
+                availability={boosterAvailability}
+                image={boosterImage}
+                name={displayBoosterName}
                 size={56}
               />
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-gold">
-                  knight reply
+                  booster reply
                 </p>
                 <h2 className="mt-1 text-xl font-black text-white">
-                  {displayKnightName}
+                  {displayBoosterName}
                 </h2>
               </div>
             </div>

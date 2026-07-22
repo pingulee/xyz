@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS review_replies (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     review_id BIGINT UNSIGNED NOT NULL,
     lineup_id BIGINT UNSIGNED NOT NULL,
-    knight_name VARCHAR(60) NOT NULL DEFAULT '',
+    booster_name VARCHAR(60) NOT NULL DEFAULT '',
     content TEXT NOT NULL,
     tier_records JSON NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -42,7 +42,33 @@ CREATE TABLE IF NOT EXISTS review_replies (
     INDEX idx_review_replies_lineup_id (lineup_id)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-ALTER TABLE review_replies ADD COLUMN IF NOT EXISTS knight_name VARCHAR(60) NOT NULL DEFAULT '';
+ALTER TABLE review_replies ADD COLUMN IF NOT EXISTS booster_name VARCHAR(60) NOT NULL DEFAULT '';
+UPDATE review_replies rr
+LEFT JOIN lineups l ON l.id = rr.lineup_id
+SET rr.booster_name = COALESCE(l.name, '')
+WHERE rr.booster_name = '';
+SET @legacy_reply_name_column = (
+    SELECT COLUMN_NAME
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'review_replies'
+      AND COLUMN_NAME <> 'booster_name'
+      AND COLUMN_NAME REGEXP '_name$'
+    ORDER BY ORDINAL_POSITION
+    LIMIT 1
+);
+SET @drop_legacy_reply_name_sql = IF(
+    @legacy_reply_name_column IS NULL,
+    'SELECT 1',
+    CONCAT(
+        'ALTER TABLE review_replies DROP COLUMN `',
+        REPLACE(@legacy_reply_name_column, '`', '``'),
+        '`'
+    )
+);
+PREPARE drop_legacy_reply_name_statement FROM @drop_legacy_reply_name_sql;
+EXECUTE drop_legacy_reply_name_statement;
+DEALLOCATE PREPARE drop_legacy_reply_name_statement;
 ALTER TABLE review_replies ADD COLUMN IF NOT EXISTS tier_records JSON NULL;
 
 CREATE TABLE IF NOT EXISTS review_rate_limits (

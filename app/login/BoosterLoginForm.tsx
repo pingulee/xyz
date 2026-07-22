@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function KnightLoginForm() {
+export default function BoosterLoginForm() {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -27,7 +27,7 @@ export default function KnightLoginForm() {
     setMessage("");
 
     try {
-      const response = await fetch("/api/knight/login", {
+      const response = await fetch("/api/booster/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: n, password: pw }),

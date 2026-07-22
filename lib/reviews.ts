@@ -19,7 +19,7 @@ export type TierRecord = {
 export type ReviewReply = {
   id: string;
   lineupId: string;
-  knightName: string;
+  boosterName: string;
   content: string;
   tierRecords: TierRecord[];
   createdAt: string;
@@ -57,10 +57,14 @@ type ReviewRow = RowDataPacket & {
   created_at: Date;
   reply_id: number | null;
   reply_lineup_id: number | null;
-  reply_knight_name: string | null;
+  reply_booster_name: string | null;
   reply_content: string | null;
   reply_tier_records: string | null;
   reply_created_at: Date | null;
+};
+
+type SchemaColumnRow = RowDataPacket & {
+  COLUMN_NAME: string;
 };
 
 export const ensureReviewsSchema = oncePerProcess(async () => {
@@ -78,7 +82,7 @@ export const ensureReviewsSchema = oncePerProcess(async () => {
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       review_id BIGINT UNSIGNED NOT NULL,
       lineup_id BIGINT UNSIGNED NOT NULL,
-      knight_name VARCHAR(60) NOT NULL DEFAULT '',
+      booster_name VARCHAR(60) NOT NULL DEFAULT '',
       content TEXT NOT NULL,
       tier_records JSON NULL,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -88,8 +92,31 @@ export const ensureReviewsSchema = oncePerProcess(async () => {
     ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
   await getPool().execute(
-    `ALTER TABLE review_replies ADD COLUMN IF NOT EXISTS knight_name VARCHAR(60) NOT NULL DEFAULT ''`,
+    `ALTER TABLE review_replies ADD COLUMN IF NOT EXISTS booster_name VARCHAR(60) NOT NULL DEFAULT ''`,
   );
+  await getPool().execute(`
+    UPDATE review_replies rr
+    LEFT JOIN lineups l ON l.id = rr.lineup_id
+    SET rr.booster_name = COALESCE(l.name, '')
+    WHERE rr.booster_name = ''
+  `);
+  const [legacyNameColumns] = await getPool().execute<SchemaColumnRow[]>(
+    `SELECT COLUMN_NAME
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'review_replies'
+       AND COLUMN_NAME <> 'booster_name'
+       AND COLUMN_NAME REGEXP '_name$'
+     ORDER BY ORDINAL_POSITION
+     LIMIT 1`,
+  );
+  const legacyNameColumn = legacyNameColumns[0]?.COLUMN_NAME;
+  if (legacyNameColumn && /^[a-z][a-z0-9_]*$/i.test(legacyNameColumn)) {
+    const escapedColumn = legacyNameColumn.replaceAll("`", "``");
+    await getPool().execute(
+      `ALTER TABLE review_replies DROP COLUMN \`${escapedColumn}\``,
+    );
+  }
   await getPool().execute(
     `ALTER TABLE review_replies ADD COLUMN IF NOT EXISTS tier_records JSON NULL`,
   );
@@ -138,7 +165,7 @@ export function toReview(row: ReviewRow): Review {
       ? {
           id: String(row.reply_id),
           lineupId: String(row.reply_lineup_id),
-          knightName: row.reply_knight_name ?? "",
+          boosterName: row.reply_booster_name ?? "",
           content: row.reply_content ?? "",
           tierRecords: parseTierRecords(row.reply_tier_records),
           createdAt: row.reply_created_at!.toISOString(),
@@ -151,7 +178,7 @@ const REVIEW_SELECT = `
   SELECT r.id, r.name, r.service, r.lineup_id, l.name AS lineup_name,
          r.rating, r.content, r.view_count, r.created_at,
          rr.id AS reply_id, rr.lineup_id AS reply_lineup_id,
-         rr.knight_name AS reply_knight_name,
+         rr.booster_name AS reply_booster_name,
          rr.content AS reply_content, rr.tier_records AS reply_tier_records,
          rr.created_at AS reply_created_at
   FROM reviews r

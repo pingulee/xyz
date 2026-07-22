@@ -1,7 +1,7 @@
 "use client";
 
 import { Copy, Loader2, Pencil, Trash2 } from "lucide-react";
-import { type KnightAvailability } from "@/components/lineup/KnightAvatar";
+import { type BoosterAvailability } from "@/components/lineup/BoosterAvatar";
 import type { TierRecord } from "@/lib/reviews";
 import { REVIEW_CONTENT_MAX_LENGTH } from "@/components/review/constants";
 import { formatDate } from "@/components/review/helpers";
@@ -21,10 +21,10 @@ export default function ReviewDetail({
   editing,
   error,
   isAdmin,
-  knightLineupId,
-  knightName,
-  knightImage,
-  knightAvailability,
+  boosterLineupId,
+  boosterName,
+  boosterImage,
+  boosterAvailability,
   replying,
   deletingReply,
   onSubmitReply,
@@ -52,10 +52,10 @@ export default function ReviewDetail({
   editing: boolean;
   error?: string;
   isAdmin: boolean;
-  knightLineupId: number | null;
-  knightName: string;
-  knightImage: string;
-  knightAvailability?: KnightAvailability | null;
+  boosterLineupId: number | null;
+  boosterName: string;
+  boosterImage: string;
+  boosterAvailability?: BoosterAvailability | null;
   replying: boolean;
   deletingReply: boolean;
   onSubmitReply: (content: string, tierRecords: TierRecord[]) => void;
@@ -240,10 +240,10 @@ export default function ReviewDetail({
         {!editOpen && (
           <ReplySection
             review={review}
-            knightLineupId={knightLineupId}
-            knightName={knightName}
-            knightImage={knightImage}
-            knightAvailability={knightAvailability}
+            boosterLineupId={boosterLineupId}
+            boosterName={boosterName}
+            boosterImage={boosterImage}
+            boosterAvailability={boosterAvailability}
             replying={replying}
             deletingReply={deletingReply}
             onSubmitReply={onSubmitReply}

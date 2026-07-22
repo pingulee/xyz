@@ -33,7 +33,7 @@ export default function ReviewBoard({
   serverPage = 1,
   isAdmin = false,
   lineups = [],
-  knightLineupId = null,
+  boosterLineupId = null,
 }: {
   initialReviews?: Review[];
   total?: number;
@@ -48,10 +48,10 @@ export default function ReviewBoard({
     weekdayHours: string;
     weekendHours: string;
   }>;
-  knightLineupId?: number | null;
+  boosterLineupId?: number | null;
 }) {
-  const knightName = knightLineupId
-    ? (lineups.find((l) => l.id === String(knightLineupId))?.name ?? "")
+  const boosterName = boosterLineupId
+    ? (lineups.find((l) => l.id === String(boosterLineupId))?.name ?? "")
     : "";
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
   const [form, setForm] = useState(blankForm);
@@ -824,16 +824,16 @@ export default function ReviewBoard({
             editVerified={editVerifiedIds.has(selectedReview.id)}
             editing={editingId === selectedReview.id}
             isAdmin={isAdmin}
-            knightLineupId={knightLineupId}
-            knightName={knightName}
+            boosterLineupId={boosterLineupId}
+            boosterName={boosterName}
             replying={replyingId === selectedReview.id}
             deletingReply={deletingReplyId === selectedReview.id}
-            knightAvailability={
+            boosterAvailability={
               lineupById[
                 selectedReview.reply?.lineupId ?? selectedReview.lineupId ?? ""
               ] ?? null
             }
-            knightImage={
+            boosterImage={
               lineupById[
                 selectedReview.reply?.lineupId ?? selectedReview.lineupId ?? ""
               ]?.image ?? ""
@@ -895,7 +895,7 @@ export default function ReviewBoard({
               </div>
               {paginatedReviews.map((review, i) => {
                 const lineupName =
-                  review.lineupName ?? review.reply?.knightName ?? "";
+                  review.lineupName ?? review.reply?.boosterName ?? "";
                 // 전체 후기 수 기준 전역 번호: 최신 글 = 최대 번호, 가장 오래된 글 = 1
                 const displayNumber =
                   Math.max(total, visibleReviews.length) -

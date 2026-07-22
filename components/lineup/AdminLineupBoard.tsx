@@ -3,7 +3,7 @@
 import { Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import KnightCard from "@/components/lineup/KnightCard";
+import BoosterCard from "@/components/lineup/BoosterCard";
 import {
   blankForm,
   NATIONALITIES,
@@ -19,7 +19,7 @@ import type { Lineup } from "@/lib/lineup-model";
 const MAX_IMAGE_SIZE = 1024 * 1024 * 5;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const DEFAULT_PROFILE_IMAGE = "/images/profile.webp";
-const KNIGHT_PASSWORD_MIN_LENGTH = 4;
+const BOOSTER_PASSWORD_MIN_LENGTH = 4;
 const LINEUP_DESCRIPTION_MIN_LENGTH = 10;
 
 const TIER_OPTIONS = [
@@ -173,7 +173,7 @@ export default function AdminLineupBoard({
       serviceDuo: lineup.services.includes("듀오"),
       imageUrl: lineup.image,
       active: lineup.active,
-      knightPassword: "",
+      boosterPassword: "",
     });
     resetImageState();
     setImageName(lineup.image ? "현재 이미지" : "");
@@ -203,7 +203,7 @@ export default function AdminLineupBoard({
     nationality: Number(form.nationality),
     image: imageUrl || DEFAULT_PROFILE_IMAGE,
     active: form.active,
-    knightPassword: form.knightPassword || undefined,
+    boosterPassword: form.boosterPassword || undefined,
   });
 
   const saveLineup = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -218,10 +218,10 @@ export default function AdminLineupBoard({
       form.positionSet.size === 0 ||
       form.description.trim().length < LINEUP_DESCRIPTION_MIN_LENGTH ||
       (!form.serviceBoost && !form.serviceDuo) ||
-      (!editingId && form.knightPassword.trim().length < KNIGHT_PASSWORD_MIN_LENGTH) ||
+      (!editingId && form.boosterPassword.trim().length < BOOSTER_PASSWORD_MIN_LENGTH) ||
       (Boolean(editingId) &&
-        form.knightPassword.trim().length > 0 &&
-        form.knightPassword.trim().length < KNIGHT_PASSWORD_MIN_LENGTH);
+        form.boosterPassword.trim().length > 0 &&
+        form.boosterPassword.trim().length < BOOSTER_PASSWORD_MIN_LENGTH);
 
     if (missingRequired) {
       setMessage("필수 항목을 모두 입력해주세요.");
@@ -316,10 +316,10 @@ export default function AdminLineupBoard({
     submitAttempted &&
     form.description.trim().length > 0 &&
     form.description.trim().length < LINEUP_DESCRIPTION_MIN_LENGTH;
-  const invalidKnightPassword =
+  const invalidBoosterPassword =
     submitAttempted &&
-    form.knightPassword.trim().length > 0 &&
-    form.knightPassword.trim().length < KNIGHT_PASSWORD_MIN_LENGTH;
+    form.boosterPassword.trim().length > 0 &&
+    form.boosterPassword.trim().length < BOOSTER_PASSWORD_MIN_LENGTH;
 
   return (
     <>
@@ -595,17 +595,17 @@ export default function AdminLineupBoard({
                   기사 로그인 비밀번호
                   <input
                     type="password"
-                    value={form.knightPassword}
-                    onChange={set("knightPassword")}
+                    value={form.boosterPassword}
+                    onChange={set("boosterPassword")}
                     maxLength={60}
                     className={`${inputCls} ${
-                      invalidKnightPassword ? invalidCls : ""
+                      invalidBoosterPassword ? invalidCls : ""
                     }`}
                     placeholder="변경 시에만 입력 (비워두면 유지)"
                     autoComplete="new-password"
                   />
                   {requiredMessage(
-                    invalidKnightPassword,
+                    invalidBoosterPassword,
                     "기사 비밀번호는 4자 이상 입력해주세요.",
                   )}
                 </label>
@@ -661,13 +661,13 @@ export default function AdminLineupBoard({
           {lineups.length === 0 && (
             <p className="col-span-full text-sm text-zinc-500">등록된 기사가 없습니다.</p>
           )}
-          {lineups.map((knight) => (
-            <div key={knight.id} className="relative">
-              <KnightCard knight={knight} />
+          {lineups.map((booster) => (
+            <div key={booster.id} className="relative">
+              <BoosterCard booster={booster} />
               <div className="absolute bottom-3 right-3 flex gap-1.5">
                 <button
                   type="button"
-                  onClick={() => openEdit(knight)}
+                  onClick={() => openEdit(booster)}
                   className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-gold/40 hover:text-white"
                   aria-label="수정"
                 >
@@ -675,12 +675,12 @@ export default function AdminLineupBoard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => void deleteLineup(knight)}
-                  disabled={deletingId === knight.id}
+                  onClick={() => void deleteLineup(booster)}
+                  disabled={deletingId === booster.id}
                   className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-red-400/40 hover:text-red-200 disabled:opacity-60"
                   aria-label="삭제"
                 >
-                  {deletingId === knight.id ? (
+                  {deletingId === booster.id ? (
                     <Loader2 size={13} className="animate-spin" />
                   ) : (
                     <Trash2 size={13} />

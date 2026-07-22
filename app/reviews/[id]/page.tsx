@@ -7,7 +7,10 @@ import Reveal from "@/components/ui/Reveal";
 import ReviewDetailView from "@/components/review/ReviewDetailView";
 import { getLineups } from "@/lib/lineups";
 import { getReviewById, getReviewNavigation } from "@/lib/reviews";
-import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSession";
+import {
+  BOOSTER_SESSION_COOKIE,
+  validateBoosterSession,
+} from "@/lib/boosterSession";
 import { SESSION_COOKIE, validateSession } from "@/lib/adminSession";
 import { site } from "@/lib/site";
 
@@ -31,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const service = review.service || "롤 서비스";
-  const lineupName = review.lineupName ?? review.reply?.knightName ?? "검증 기사";
+  const lineupName = review.lineupName ?? review.reply?.boosterName ?? "검증 기사";
   const description = `${review.content.replace(/\s+/g, " ").slice(0, 110)}${review.content.length > 110 ? "..." : ""}`;
   const title = `${review.name}님의 ${service} 후기 | XYZ`;
   const url = `/reviews/${id}`;
@@ -87,14 +90,14 @@ export default async function ReviewDetailPage({ params }: Props) {
   const cookieStore = await cookies();
   const adminToken = cookieStore.get(SESSION_COOKIE)?.value ?? "";
   const isAdmin = validateSession(adminToken);
-  const knightToken = cookieStore.get(KNIGHT_SESSION_COOKIE)?.value ?? "";
-  const knightLineupId = validateKnightSession(knightToken);
+  const boosterToken = cookieStore.get(BOOSTER_SESSION_COOKIE)?.value ?? "";
+  const boosterLineupId = validateBoosterSession(boosterToken);
   const replyLineupId = review.reply?.lineupId ?? review.lineupId ?? "";
   const lineup = lineups.find((item) => item.id === replyLineupId);
-  const knightName =
+  const boosterName =
     lineup?.name ??
-    (knightLineupId
-      ? lineups.find((item) => item.id === String(knightLineupId))?.name
+    (boosterLineupId
+      ? lineups.find((item) => item.id === String(boosterLineupId))?.name
       : "") ??
     "";
   const reviewJsonLd = {
@@ -165,10 +168,10 @@ export default async function ReviewDetailPage({ params }: Props) {
         <Reveal>
           <ReviewDetailView
             initialReview={review}
-            knightLineupId={knightLineupId}
-            knightName={knightName}
-            knightImage={lineup?.image ?? ""}
-            knightAvailability={lineup ?? null}
+            boosterLineupId={boosterLineupId}
+            boosterName={boosterName}
+            boosterImage={lineup?.image ?? ""}
+            boosterAvailability={lineup ?? null}
             previousReview={navigation.previous}
             nextReview={navigation.next}
             isAdmin={isAdmin}

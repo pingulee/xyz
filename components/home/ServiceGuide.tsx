@@ -55,10 +55,10 @@ export default function ServiceGuide() {
                 id="service-guide-title"
                 className="mt-6 text-4xl font-black leading-[1.08] tracking-[-0.055em] text-white sm:text-5xl lg:text-6xl"
               >
-                처음이라면,
+                롤 대리와 듀오,
                 <br />
-                <span className="gold-text">이것부터</span>
-                <br className="hidden lg:block" /> 확인하세요.
+                <span className="gold-text">어떤 방식이</span>
+                <br className="hidden lg:block" /> 맞을까요?
               </h2>
             </div>
 
@@ -95,7 +95,7 @@ export default function ServiceGuide() {
 
         <div className="mt-14 grid gap-4 lg:grid-cols-12">
           <Reveal className="h-full lg:col-span-7">
-            <article className="relative h-full overflow-hidden rounded-[32px] border border-gold/15 bg-[linear-gradient(145deg,rgba(222,176,67,0.10),rgba(255,255,255,0.025)_48%,rgba(255,255,255,0.015))] p-6 sm:p-8 lg:p-10">
+            <article className="relative h-full overflow-hidden rounded-4xl border border-gold/15 bg-[linear-gradient(145deg,rgba(222,176,67,0.10),rgba(255,255,255,0.025)_48%,rgba(255,255,255,0.015))] p-6 sm:p-8 lg:p-10">
               <div
                 aria-hidden="true"
                 className="absolute -right-16 -top-16 h-52 w-52 rounded-full bg-gold/8 blur-3xl"
@@ -119,7 +119,7 @@ export default function ServiceGuide() {
                 </p>
 
                 <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                  <section className="flex flex-col rounded-[24px] border border-white/8 bg-black/24 p-5 sm:p-6">
+                  <section className="flex flex-col rounded-3xl border border-white/8 bg-black/24 p-5 sm:p-6">
                     <div className="flex flex-wrap items-center gap-2">
                       <h4 className="text-xl font-black text-white">롤 대리</h4>
                       <span className="rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-black text-gold">
@@ -128,8 +128,8 @@ export default function ServiceGuide() {
                     </div>
                     <p className="mt-4 flex-1 text-sm leading-7 text-zinc-400">
                       검증된 기사가 고객님의 계정으로 랭크를 진행합니다. 현재
-                      티어와 MMR을 먼저 확인한 뒤 시간제·승리 보장제·점수
-                      보장제 중 목적에 맞는 방식으로 목표 티어까지 관리합니다.
+                      티어와 MMR을 먼저 확인한 뒤 시간제·승리 보장제·점수 보장제
+                      중 목적에 맞는 방식으로 목표 티어까지 관리합니다.
                     </p>
                     <Link
                       href="/boosting"
@@ -143,7 +143,7 @@ export default function ServiceGuide() {
                     </Link>
                   </section>
 
-                  <section className="flex flex-col rounded-[24px] border border-white/8 bg-black/24 p-5 sm:p-6">
+                  <section className="flex flex-col rounded-3xl border border-white/8 bg-black/24 p-5 sm:p-6">
                     <div className="flex flex-wrap items-center gap-2">
                       <h4 className="text-xl font-black text-white">롤 듀오</h4>
                       <span className="rounded-full bg-white/6 px-2.5 py-1 text-[10px] font-black text-zinc-300">
@@ -172,7 +172,7 @@ export default function ServiceGuide() {
           </Reveal>
 
           <Reveal className="h-full lg:col-span-5" delay={0.08}>
-            <article className="flex h-full flex-col rounded-[32px] border border-white/8 bg-white/3 p-6 sm:p-8 lg:p-10">
+            <article className="flex h-full flex-col rounded-4xl border border-white/8 bg-white/3 p-6 sm:p-8 lg:p-10">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-gold-soft">
                   <ShieldCheck size={21} aria-hidden="true" />
@@ -184,7 +184,8 @@ export default function ServiceGuide() {
 
               <h3 className="mt-8 text-2xl font-black tracking-[-0.035em] text-white sm:text-3xl">
                 안전한 업체는
-                <br />감이 아니라 근거로 고릅니다
+                <br />
+                감이 아니라 근거로 고릅니다
               </h3>
               <p className="mt-3 leading-7 text-zinc-400">
                 저렴한 가격만 보기보다 아래 정보가 실제로 공개되어 있는지 먼저
@@ -226,14 +227,15 @@ export default function ServiceGuide() {
           </Reveal>
 
           <Reveal className="lg:col-span-12" delay={0.12}>
-            <article className="grid gap-8 rounded-[32px] border border-gold/12 bg-[#15120d] p-6 sm:p-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:gap-12 lg:p-10">
+            <article className="grid gap-8 rounded-4xl border border-gold/12 bg-[#15120d] p-6 sm:p-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:gap-12 lg:p-10">
               <div>
                 <span className="text-[11px] font-black uppercase tracking-[0.22em] text-gold">
                   03 · How it works
                 </span>
                 <h3 className="mt-4 text-2xl font-black tracking-[-0.035em] text-white sm:text-3xl">
                   배정부터 완료까지,
-                  <br />진행 기록을 남깁니다
+                  <br />
+                  진행 기록을 남깁니다
                 </h3>
                 <p className="mt-4 max-w-xl text-sm leading-7 text-zinc-400 sm:text-base">
                   상담에서 현재 티어와 목표, 선호 라인, 희망 시간대를 확인한 뒤

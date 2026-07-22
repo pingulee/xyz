@@ -5,13 +5,16 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { Clock, MessageCircle, Star, Swords } from "lucide-react";
 import Container from "@/components/layout/Container";
-import KnightAvatar from "@/components/lineup/KnightAvatar";
+import BoosterAvatar from "@/components/lineup/BoosterAvatar";
 import Reveal from "@/components/ui/Reveal";
 import LineupReviews from "@/components/review/LineupReviews";
 import WinStatsCard from "@/components/lineup/WinStatsCard";
 import { getLineupBySlug, getLineupReviewStats, getLineupWinStats } from "@/lib/lineups";
 import { getReviewsByLineupIdPage } from "@/lib/reviews";
-import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSession";
+import {
+  BOOSTER_SESSION_COOKIE,
+  validateBoosterSession,
+} from "@/lib/boosterSession";
 import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -75,8 +78,8 @@ export default async function LineupDetailPage({ params, searchParams }: Props) 
   }
 
   const cookieStore = await cookies();
-  const knightToken = cookieStore.get(KNIGHT_SESSION_COOKIE)?.value ?? "";
-  const knightLineupId = validateKnightSession(knightToken);
+  const boosterToken = cookieStore.get(BOOSTER_SESSION_COOKIE)?.value ?? "";
+  const boosterLineupId = validateBoosterSession(boosterToken);
 
   const [stats, reviewsPage, winStats] = await Promise.all([
     getLineupReviewStats(Number(lineup.id)),
@@ -135,7 +138,7 @@ export default async function LineupDetailPage({ params, searchParams }: Props) 
             <div className="relative px-6 pb-6 md:px-8 md:pb-8">
               <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                 <div className="-mt-14 flex flex-col items-center gap-4 md:-mt-16 md:flex-row md:items-end">
-                  <KnightAvatar
+                  <BoosterAvatar
                     availability={lineup}
                     image={lineup.image}
                     name={lineup.name}
@@ -327,10 +330,10 @@ export default async function LineupDetailPage({ params, searchParams }: Props) 
                   total={reviewTotal}
                   serverPage={currentReviewPage}
                   basePath={`/lineup/${encodeURIComponent(slug)}`}
-                  knightLineupId={knightLineupId}
-                  knightName={lineup.name}
-                  knightImage={lineup.image ?? ""}
-                  knightAvailability={lineup}
+                  boosterLineupId={boosterLineupId}
+                  boosterName={lineup.name}
+                  boosterImage={lineup.image ?? ""}
+                  boosterAvailability={lineup}
                 />
               </div>
             </div>

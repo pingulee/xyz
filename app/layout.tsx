@@ -10,45 +10,34 @@ import "./globals.css";
 // JS로 stylesheet를 append하면 첫 페인트를 막지 않음. font-display:swap이 FOUT 처리.
 const FONT_LOADER = `(function(){var l=document.createElement('link');l.rel='stylesheet';l.href='/fonts/pretendard/pretendardvariable-dynamic-subset.css';document.head.appendChild(l);})();`;
 
+const BRAND_NAME = "XYZ";
+const HOME_TITLE = "롤 대리 전문 XYZ | 가격·검증 기사·실제 후기";
+const HOME_DESCRIPTION =
+  "롤 대리 전문 XYZ. 구간별 가격과 승률 보장 기준, 상위 티어 검증 기사의 승률·전적, 실제 작업 후기를 공개합니다. 100% 수동 진행과 24시간 카카오톡 상담을 제공하며 롤 듀오·롤 계정도 안내합니다.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
+  applicationName: BRAND_NAME,
   title: {
-    default: "롤 대리 · 롤 듀오 · 롤 계정 전문 | XYZ",
+    default: HOME_TITLE,
     template: "%s | XYZ",
   },
-  description: site.description,
-  keywords: [
-    "롤 대리",
-    "롤대리",
-    "롤 듀오",
-    "롤듀오",
-    "롤 계정",
-    "롤 대리 가격",
-    "롤 듀오 가격",
-    "롤계정",
-    "롤 작업 후기",
-    "롤대리 후기",
-    "기사 모집",
-    "롤 업디",
-    "XYZ",
-  ],
+  description: HOME_DESCRIPTION,
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "롤 대리 · 롤 듀오 · 롤 계정 전문 | XYZ",
-    description: site.description,
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
     url: site.url,
-    siteName: site.name,
+    siteName: BRAND_NAME,
     locale: "ko_KR",
     type: "website",
-    images: [{ url: "/images/profile.webp" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "롤 대리 · 롤 듀오 · 롤 계정 전문 | XYZ",
-    description: site.description,
-    images: ["/images/profile.webp"],
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
   },
   verification: {
     google: "bd8AUpF-AipHBtAmr4brhshsGfRijvw5TmLDUlMS2rA",

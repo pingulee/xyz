@@ -28,6 +28,7 @@ type LineupRow = RowDataPacket & {
 };
 
 type ColumnRow = RowDataPacket & {
+  COLUMN_NAME?: string;
   DATA_TYPE: string;
 };
 
@@ -50,6 +51,38 @@ function nationalityCode(value: number | string | null | undefined): number {
 }
 
 export const ensureLineupsSchema = oncePerProcess(async () => {
+  await getPool().execute(
+    `ALTER TABLE lineups ADD COLUMN IF NOT EXISTS booster_password_hash VARCHAR(200) NULL`,
+  );
+
+  // 배포 전에 저장된 기사 로그인 비밀번호를 새 컬럼으로 안전하게 승계한다.
+  const [legacyPasswordColumns] = await getPool().execute<ColumnRow[]>(
+    `SELECT COLUMN_NAME, DATA_TYPE
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'lineups'
+       AND COLUMN_NAME <> 'booster_password_hash'
+       AND COLUMN_NAME REGEXP '_password_hash$'
+     ORDER BY ORDINAL_POSITION
+     LIMIT 1`,
+  );
+  const legacyPasswordColumn = legacyPasswordColumns[0]?.COLUMN_NAME;
+  if (
+    legacyPasswordColumn &&
+    /^[a-z][a-z0-9_]*$/i.test(legacyPasswordColumn)
+  ) {
+    const escapedColumn = legacyPasswordColumn.replaceAll("`", "``");
+    await getPool().execute(
+      `UPDATE lineups
+       SET booster_password_hash = \`${escapedColumn}\`
+       WHERE booster_password_hash IS NULL
+         AND \`${escapedColumn}\` IS NOT NULL`,
+    );
+    await getPool().execute(
+      `ALTER TABLE lineups DROP COLUMN \`${escapedColumn}\``,
+    );
+  }
+
   await getPool().execute(
     `ALTER TABLE lineups ADD COLUMN IF NOT EXISTS nationality TINYINT UNSIGNED NOT NULL DEFAULT 1`,
   );

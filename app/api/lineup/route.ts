@@ -8,7 +8,7 @@ import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession"
 export const runtime = "nodejs";
 
 const DEFAULT_PROFILE_IMAGE = "/images/profile.webp";
-const KNIGHT_PASSWORD_MIN_LENGTH = 4;
+const BOOSTER_PASSWORD_MIN_LENGTH = 4;
 const LINEUP_DESCRIPTION_MIN_LENGTH = 10;
 
 type LineupPayload = {
@@ -25,7 +25,7 @@ type LineupPayload = {
   image?: string | null;
   sortOrder?: number;
   active?: boolean;
-  knightPassword?: string;
+  boosterPassword?: string;
 };
 
 function hashPassword(password: string): string {
@@ -109,18 +109,18 @@ export async function POST(request: Request) {
   if ("message" in v) return NextResponse.json({ message: v.message }, { status: 400 });
   const { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image } = v;
 
-  const rawKnightPassword = payload.knightPassword?.trim() ?? "";
-  if (rawKnightPassword.length < KNIGHT_PASSWORD_MIN_LENGTH) {
+  const rawBoosterPassword = payload.boosterPassword?.trim() ?? "";
+  if (rawBoosterPassword.length < BOOSTER_PASSWORD_MIN_LENGTH) {
     return NextResponse.json({ message: "기사 비밀번호는 4자 이상 입력해주세요." }, { status: 400 });
   }
-  const knightPasswordHash = hashPassword(rawKnightPassword);
+  const boosterPasswordHash = hashPassword(rawBoosterPassword);
 
   try {
     await ensureLineupsSchema();
     const [result] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO lineups (name, positions, rank, tier, description, weekday_hours, weekend_hours, champions, services, nationality, image_url, sort_order, active, knight_password_hash)
-       VALUES (:name, :positions, :rank, :tier, :description, :weekdayHours, :weekendHours, '', :services, :nationality, :image, :sortOrder, :active, :knightPasswordHash)`,
-      { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, knightPasswordHash },
+      `INSERT INTO lineups (name, positions, rank, tier, description, weekday_hours, weekend_hours, champions, services, nationality, image_url, sort_order, active, booster_password_hash)
+       VALUES (:name, :positions, :rank, :tier, :description, :weekdayHours, :weekendHours, '', :services, :nationality, :image, :sortOrder, :active, :boosterPasswordHash)`,
+      { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, boosterPasswordHash },
     );
     const lineup = await getLineupById(result.insertId);
     return NextResponse.json({ lineup }, { status: 201 });
@@ -151,16 +151,16 @@ export async function PUT(request: Request) {
   if ("message" in v) return NextResponse.json({ message: v.message }, { status: 400 });
   const { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image } = v;
 
-  const rawKnightPassword = payload.knightPassword?.trim() ?? "";
-  if (rawKnightPassword && rawKnightPassword.length < KNIGHT_PASSWORD_MIN_LENGTH) {
+  const rawBoosterPassword = payload.boosterPassword?.trim() ?? "";
+  if (rawBoosterPassword && rawBoosterPassword.length < BOOSTER_PASSWORD_MIN_LENGTH) {
     return NextResponse.json({ message: "기사 비밀번호는 4자 이상 입력해주세요." }, { status: 400 });
   }
-  const newPasswordHash = rawKnightPassword
-    ? hashPassword(rawKnightPassword)
+  const newPasswordHash = rawBoosterPassword
+    ? hashPassword(rawBoosterPassword)
     : undefined;
 
   const passwordClause = newPasswordHash !== undefined
-    ? ", knight_password_hash=:knightPasswordHash"
+    ? ", booster_password_hash=:boosterPasswordHash"
     : "";
 
   try {
@@ -171,7 +171,7 @@ export async function PUT(request: Request) {
            weekday_hours=:weekdayHours, weekend_hours=:weekendHours,
            services=:services, nationality=:nationality, image_url=:image, sort_order=:sortOrder, active=:active${passwordClause}
        WHERE id=:id`,
-      { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image, id, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, ...(newPasswordHash !== undefined ? { knightPasswordHash: newPasswordHash } : {}) },
+      { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image, id, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, ...(newPasswordHash !== undefined ? { boosterPasswordHash: newPasswordHash } : {}) },
     );
     const lineup = await getLineupById(id);
     if (!lineup) return NextResponse.json({ message: "기사를 찾을 수 없습니다." }, { status: 404 });

@@ -9,7 +9,7 @@ import {
   Loader2,
   Star,
 } from "lucide-react";
-import KnightAvatar, { type KnightAvailability } from "@/components/lineup/KnightAvatar";
+import BoosterAvatar, { type BoosterAvailability } from "@/components/lineup/BoosterAvatar";
 import {
   TierRecordBadges,
   TierRecordEditor,
@@ -97,14 +97,14 @@ function ReplyDisplay({
 }
 
 function ReplyForm({
-  knightName,
+  boosterName,
   initial,
   saving,
   onSubmit,
   onCancel,
   service,
 }: {
-  knightName: string;
+  boosterName: string;
   initial?: ReviewReply;
   saving: boolean;
   onSubmit: (content: string, tierRecords: TierRecord[]) => void;
@@ -126,7 +126,7 @@ function ReplyForm({
   return (
     <div className="grid gap-3">
       <div className="flex items-center gap-2">
-        <span className="text-xs font-black text-gold">{knightName}</span>
+        <span className="text-xs font-black text-gold">{boosterName}</span>
       </div>
       <TierRecordEditor records={tierRecords} onChange={setTierRecords} service={service} />
       {!recordsComplete && (
@@ -183,23 +183,23 @@ function ReplyForm({
 
 function ReplyBlock({
   review,
-  knightLineupId,
-  knightName,
-  knightImage,
-  knightAvailability,
+  boosterLineupId,
+  boosterName,
+  boosterImage,
+  boosterAvailability,
 }: {
   review: Review;
-  knightLineupId: number | null;
-  knightName: string;
-  knightImage: string;
-  knightAvailability?: KnightAvailability | null;
+  boosterLineupId: number | null;
+  boosterName: string;
+  boosterImage: string;
+  boosterAvailability?: BoosterAvailability | null;
 }) {
   const [replyData, setReplyData] = useState(review.reply);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const canReply =
-    knightLineupId !== null && review.lineupId === String(knightLineupId);
+    boosterLineupId !== null && review.lineupId === String(boosterLineupId);
 
   const replyFormVisible = canReply && (formOpen || editing || !replyData);
 
@@ -241,9 +241,9 @@ function ReplyBlock({
 
   return (
     <div className="relative mt-4 overflow-hidden rounded-3xl border border-gold/20 bg-zinc-950 p-4 sm:p-5">
-      {knightImage && (
+      {boosterImage && (
         <Image
-          src={knightImage}
+          src={boosterImage}
           alt=""
           fill
           className="pointer-events-none object-cover opacity-20"
@@ -254,15 +254,15 @@ function ReplyBlock({
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.88),rgba(0,0,0,0.62)_52%,rgba(0,0,0,0.30))]" />
       <div className="relative mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <KnightAvatar
-            availability={knightAvailability}
-            image={knightImage}
-            name={replyData?.knightName ?? knightName}
+          <BoosterAvatar
+            availability={boosterAvailability}
+            image={boosterImage}
+            name={replyData?.boosterName ?? boosterName}
             size={44}
           />
           <div>
             <p className="text-base font-black text-white">
-              {replyData?.knightName ?? knightName}
+              {replyData?.boosterName ?? boosterName}
             </p>
           </div>
         </div>
@@ -288,7 +288,7 @@ function ReplyBlock({
       {replyFormVisible && (
         <div className="relative">
           <ReplyForm
-            knightName={knightName}
+            boosterName={boosterName}
             initial={editing ? replyData : undefined}
             saving={saving}
             service={review.service}
@@ -318,19 +318,19 @@ export default function LineupReviews({
   total = 0,
   serverPage = 1,
   basePath = "",
-  knightLineupId = null,
-  knightName = "",
-  knightImage = "",
-  knightAvailability = null,
+  boosterLineupId = null,
+  boosterName = "",
+  boosterImage = "",
+  boosterAvailability = null,
 }: {
   reviews: Review[];
   total?: number;
   serverPage?: number;
   basePath?: string;
-  knightLineupId?: number | null;
-  knightName?: string;
-  knightImage?: string;
-  knightAvailability?: KnightAvailability | null;
+  boosterLineupId?: number | null;
+  boosterName?: string;
+  boosterImage?: string;
+  boosterAvailability?: BoosterAvailability | null;
 }) {
   const router = useRouter();
 
@@ -386,10 +386,10 @@ export default function LineupReviews({
           </p>
           <ReplyBlock
             review={review}
-            knightLineupId={knightLineupId}
-            knightName={knightName}
-            knightImage={knightImage}
-            knightAvailability={knightAvailability}
+            boosterLineupId={boosterLineupId}
+            boosterName={boosterName}
+            boosterImage={boosterImage}
+            boosterAvailability={boosterAvailability}
           />
         </div>
       ))}

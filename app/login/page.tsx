@@ -4,10 +4,10 @@ import { redirect } from "next/navigation";
 import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
 import {
-  KNIGHT_SESSION_COOKIE,
-  validateKnightSession,
-} from "@/lib/knightSession";
-import KnightLoginForm from "./KnightLoginForm";
+  BOOSTER_SESSION_COOKIE,
+  validateBoosterSession,
+} from "@/lib/boosterSession";
+import BoosterLoginForm from "./BoosterLoginForm";
 
 export const dynamic = "force-dynamic";
 
@@ -16,11 +16,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function KnightLoginPage() {
+export default async function BoosterLoginPage() {
   const cookieStore = await cookies();
-  const token = cookieStore.get(KNIGHT_SESSION_COOKIE)?.value ?? "";
+  const token = cookieStore.get(BOOSTER_SESSION_COOKIE)?.value ?? "";
 
-  if (validateKnightSession(token)) {
+  if (validateBoosterSession(token)) {
     redirect("/reviews");
   }
 
@@ -28,7 +28,7 @@ export default async function KnightLoginPage() {
     <section className="py-20">
       <Container>
         <Reveal>
-          <KnightLoginForm />
+          <BoosterLoginForm />
         </Reveal>
       </Container>
     </section>

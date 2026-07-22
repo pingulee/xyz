@@ -3,13 +3,13 @@ import { getLineupAvailability } from "@/lib/lineup-availability";
 
 const DEFAULT_PROFILE_IMAGE = "/images/profile.webp";
 
-export type KnightAvailability = {
+export type BoosterAvailability = {
   active: boolean;
   weekdayHours: string;
   weekendHours: string;
 };
 
-export default function KnightAvatar({
+export default function BoosterAvatar({
   availability,
   className = "",
   image,
@@ -17,7 +17,7 @@ export default function KnightAvatar({
   priority = false,
   size = 80,
 }: {
-  availability?: KnightAvailability | null;
+  availability?: BoosterAvailability | null;
   className?: string;
   image?: string | null;
   name: string;

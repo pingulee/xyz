@@ -24,7 +24,7 @@ type ReviewRow = RowDataPacket & {
   created_at: Date;
   reply_id: number | null;
   reply_lineup_id: number | null;
-  reply_knight_name: string | null;
+  reply_booster_name: string | null;
   reply_content: string | null;
   reply_tier_records: string | null;
   reply_created_at: Date | null;
@@ -45,7 +45,7 @@ const REVIEW_SELECT = `
   SELECT r.id, r.name, r.service, r.lineup_id, l.name AS lineup_name,
          r.rating, r.content, r.view_count, r.password_hash, r.created_at,
          rr.id AS reply_id, rr.lineup_id AS reply_lineup_id,
-         rr.knight_name AS reply_knight_name,
+         rr.booster_name AS reply_booster_name,
          rr.content AS reply_content, rr.tier_records AS reply_tier_records,
          rr.created_at AS reply_created_at
   FROM reviews r
@@ -200,6 +200,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    await ensureReviewsSchema();
     const adminWrite = isAdminRequest(request);
     if (!adminWrite) {
       const cooldown = await getReviewCooldown(request);
@@ -292,6 +293,7 @@ export async function PUT(request: Request) {
   }
 
   try {
+    await ensureReviewsSchema();
     const [existingRows] = await getPool().execute<ReviewRow[]>(
       `${REVIEW_SELECT} WHERE r.id = :id LIMIT 1`,
       { id },
@@ -432,6 +434,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
+    await ensureReviewsSchema();
     const [rows] = await getPool().execute<ReviewRow[]>(
       `${REVIEW_SELECT} WHERE r.id = :id LIMIT 1`,
       { id },

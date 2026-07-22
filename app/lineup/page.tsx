@@ -74,9 +74,9 @@ export default async function LineupPage() {
         </Reveal>
 
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {lineups.map((knight, i) => (
-            <Reveal key={knight.name} delay={i * 0.04}>
-              <LineupCard knight={knight} placement={i + 1} />
+          {lineups.map((booster, i) => (
+            <Reveal key={booster.name} delay={i * 0.04}>
+              <LineupCard booster={booster} placement={i + 1} />
             </Reveal>
           ))}
         </div>

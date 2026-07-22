@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
-import { getKnightLineupId } from "@/lib/knightSession";
+import { getBoosterLineupId } from "@/lib/boosterSession";
 import {
   getSessionTokenFromRequest,
   validateSession,
 } from "@/lib/adminSession";
-import type { TierRecord } from "@/lib/reviews";
+import { ensureReviewsSchema, type TierRecord } from "@/lib/reviews";
 import { clearStatsCache } from "@/lib/stats-cache";
 
 export const runtime = "nodejs";
@@ -52,8 +52,8 @@ function toCountStat(value: number | undefined | null): number {
 }
 
 export async function POST(request: Request) {
-  const knightLineupId = getKnightLineupId(request);
-  if (!knightLineupId) {
+  const boosterLineupId = getBoosterLineupId(request);
+  if (!boosterLineupId) {
     return NextResponse.json(
       { message: "로그인이 필요합니다." },
       { status: 401 },
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
       { status: 404 },
     );
   }
-  if (review.lineup_id !== knightLineupId) {
+  if (review.lineup_id !== boosterLineupId) {
     return NextResponse.json(
       { message: "해당 후기에 답변 권한이 없습니다." },
       { status: 403 },
@@ -122,24 +122,25 @@ export async function POST(request: Request) {
 
   const [lineupRows] = await getPool().execute<LineupRow[]>(
     `SELECT name FROM lineups WHERE id = :id LIMIT 1`,
-    { id: knightLineupId },
+    { id: boosterLineupId },
   );
-  const knightName = lineupRows[0]?.name ?? "";
+  const boosterName = lineupRows[0]?.name ?? "";
 
   const tierJson = tierRecords.length > 0 ? JSON.stringify(tierRecords) : null;
 
+  await ensureReviewsSchema();
   await getPool().execute(
     `DELETE FROM review_replies WHERE review_id = :reviewId`,
     { reviewId },
   );
   const [result] = await getPool().execute<ResultSetHeader>(
-    `INSERT INTO review_replies (review_id, lineup_id, knight_name, content, tier_records)
-     VALUES (:reviewId, :lineupId, :knightName, :content, :tierJson)`,
-    { reviewId, lineupId: knightLineupId, knightName, content, tierJson },
+    `INSERT INTO review_replies (review_id, lineup_id, booster_name, content, tier_records)
+     VALUES (:reviewId, :lineupId, :boosterName, :content, :tierJson)`,
+    { reviewId, lineupId: boosterLineupId, boosterName, content, tierJson },
   );
 
   const [replyRows] = await getPool().execute<RowDataPacket[]>(
-    `SELECT id, lineup_id, knight_name, content, tier_records, created_at FROM review_replies WHERE id = :id`,
+    `SELECT id, lineup_id, booster_name, content, tier_records, created_at FROM review_replies WHERE id = :id`,
     { id: result.insertId },
   );
   clearStatsCache();
@@ -155,7 +156,7 @@ export async function POST(request: Request) {
       reply: {
         id: String(r.id),
         lineupId: String(r.lineup_id),
-        knightName: r.knight_name,
+        boosterName: r.booster_name,
         content: r.content,
         tierRecords: parsedTier,
         createdAt: (r.created_at as Date).toISOString(),
@@ -166,9 +167,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const knightLineupId = getKnightLineupId(request);
+  const boosterLineupId = getBoosterLineupId(request);
   const admin = isAdminRequest(request);
-  if (!knightLineupId && !admin) {
+  if (!boosterLineupId && !admin) {
     return NextResponse.json({ message: "권한이 없습니다." }, { status: 401 });
   }
 
@@ -195,7 +196,7 @@ export async function DELETE(request: Request) {
       `SELECT lineup_id FROM review_replies WHERE review_id = :reviewId LIMIT 1`,
       { reviewId },
     );
-    if (rows[0]?.lineup_id !== knightLineupId) {
+    if (rows[0]?.lineup_id !== boosterLineupId) {
       return NextResponse.json(
         { message: "삭제 권한이 없습니다." },
         { status: 403 },

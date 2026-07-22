@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Clock, Crown, Star } from "lucide-react";
-import KnightAvatar from "@/components/lineup/KnightAvatar";
+import BoosterAvatar from "@/components/lineup/BoosterAvatar";
 import type { Lineup } from "@/lib/lineup-model";
 import { getLineupPath } from "@/lib/lineups";
 
@@ -14,14 +14,14 @@ function nationalityLabel(code: number) {
 }
 
 export default function LineupCard({
-  knight,
+  booster,
   placement,
 }: {
-  knight: Lineup;
+  booster: Lineup;
   placement?: number;
 }) {
-  const wins = knight.wins ?? 0;
-  const losses = knight.losses ?? 0;
+  const wins = booster.wins ?? 0;
+  const losses = booster.losses ?? 0;
   const games = wins + losses;
   const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
 
@@ -47,7 +47,7 @@ export default function LineupCard({
       : null;
 
   return (
-    <Link href={getLineupPath(knight)} prefetch={false} className="block">
+    <Link href={getLineupPath(booster)} prefetch={false} className="block">
       <article className="card-premium relative overflow-hidden rounded-[28px] transition duration-200">
         {crown && (
           <div
@@ -59,33 +59,33 @@ export default function LineupCard({
           </div>
         )}
         <div className="flex gap-4 p-5">
-          <KnightAvatar
-            availability={knight}
-            image={knight.image}
-            name={knight.name}
+          <BoosterAvatar
+            availability={booster}
+            image={booster.image}
+            name={booster.name}
             size={80}
           />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1">
                 <Image
-                  src={knight.tier}
-                  alt={knight.rank}
+                  src={booster.tier}
+                  alt={booster.rank}
                   width={18}
                   height={18}
                   className="rounded-full bg-zinc-800"
                 />
                 <span className="text-xs font-black text-gold">
-                  {knight.rank}
+                  {booster.rank}
                 </span>
               </div>
             </div>
             <p className="mt-1.5 flex items-center gap-2 font-black text-white">
-              <span className="truncate">{knight.name}</span>
+              <span className="truncate">{booster.name}</span>
               <Image
-                src={nationalityFlag(knight.nationality)}
-                alt={nationalityLabel(knight.nationality)}
-                title={nationalityLabel(knight.nationality)}
+                src={nationalityFlag(booster.nationality)}
+                alt={nationalityLabel(booster.nationality)}
+                title={nationalityLabel(booster.nationality)}
                 width={24}
                 height={16}
                 className="shrink-0 rounded-[3px] border border-white/10 object-cover"
@@ -94,20 +94,20 @@ export default function LineupCard({
             <div className="mt-1 flex items-center gap-1.5 text-sm text-zinc-400">
               <Star size={14} className="fill-gold text-gold" />
               <span>
-                {knight.averageRating ? knight.averageRating.toFixed(1) : "0.0"}
+                {booster.averageRating ? booster.averageRating.toFixed(1) : "0.0"}
               </span>
               <span className="text-zinc-500">
-                ({knight.reviewCount ?? 0}개 리뷰)
+                ({booster.reviewCount ?? 0}개 리뷰)
               </span>
             </div>
             <div className="mt-1 grid gap-0.5 text-xs text-zinc-500">
               <div className="flex items-center gap-1.5">
                 <Clock size={10} />
-                <span>평일 {knight.weekdayHours}</span>
+                <span>평일 {booster.weekdayHours}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock size={10} />
-                <span>주말 {knight.weekendHours}</span>
+                <span>주말 {booster.weekendHours}</span>
               </div>
             </div>
           </div>
@@ -115,7 +115,7 @@ export default function LineupCard({
 
         <div className="border-t border-white/6 px-5 pb-5 pt-4">
           <p className="text-sm leading-6 text-zinc-400">
-            {knight.description}
+            {booster.description}
           </p>
 
           <div className="mt-4 grid gap-2.5">
@@ -124,7 +124,7 @@ export default function LineupCard({
                 라인
               </span>
               <div className="flex min-h-6 flex-wrap items-center gap-1.5">
-                {knight.positions.map((position) => (
+                {booster.positions.map((position) => (
                   <span
                     key={position}
                     className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300"
@@ -135,13 +135,13 @@ export default function LineupCard({
               </div>
             </div>
 
-            {knight.champions.length > 0 && (
+            {booster.champions.length > 0 && (
               <div className="flex items-center gap-2">
                 <span className="w-17 shrink-0 text-xs font-black text-zinc-500">
                   챔피언
                 </span>
                 <div className="flex min-h-6 flex-wrap items-center gap-1.5">
-                  {knight.champions.map((champion) => (
+                  {booster.champions.map((champion) => (
                     <span
                       key={champion}
                       className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300"
@@ -158,7 +158,7 @@ export default function LineupCard({
                 진행 서비스
               </span>
               <div className="flex min-h-6 flex-wrap items-center gap-1.5">
-                {knight.services.map((service) => (
+                {booster.services.map((service) => (
                   <span
                     key={service}
                     className="rounded-full border border-white/8 bg-white/4 px-2.5 py-0.5 text-xs font-bold text-zinc-300"

@@ -3,7 +3,7 @@ import type { TierRecord } from "@/lib/reviews";
 export type ReviewReply = {
   id: string;
   lineupId: string;
-  knightName: string;
+  boosterName: string;
   content: string;
   tierRecords: TierRecord[];
   createdAt: string;

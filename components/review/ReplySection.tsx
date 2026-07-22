@@ -3,9 +3,9 @@
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
-import KnightAvatar, {
-  type KnightAvailability,
-} from "@/components/lineup/KnightAvatar";
+import BoosterAvatar, {
+  type BoosterAvailability,
+} from "@/components/lineup/BoosterAvatar";
 import {
   TierRecordBadges,
   TierRecordEditor,
@@ -19,20 +19,20 @@ import type { Review } from "@/components/review/types";
 
 export default function ReplySection({
   review,
-  knightLineupId,
-  knightName,
-  knightImage,
-  knightAvailability,
+  boosterLineupId,
+  boosterName,
+  boosterImage,
+  boosterAvailability,
   replying,
   deletingReply,
   onSubmitReply,
   onDeleteReply,
 }: {
   review: Review;
-  knightLineupId: number | null;
-  knightName: string;
-  knightImage: string;
-  knightAvailability?: KnightAvailability | null;
+  boosterLineupId: number | null;
+  boosterName: string;
+  boosterImage: string;
+  boosterAvailability?: BoosterAvailability | null;
   replying: boolean;
   deletingReply: boolean;
   onSubmitReply: (content: string, tierRecords: TierRecord[]) => void;
@@ -49,7 +49,7 @@ export default function ReplySection({
     draftLength > 0 && draftLength < REPLY_CONTENT_MIN_LENGTH;
   const recordsComplete = isTierRecordsComplete(tierRecords);
   const canReply =
-    knightLineupId !== null && review.lineupId === String(knightLineupId);
+    boosterLineupId !== null && review.lineupId === String(boosterLineupId);
 
   const replyFormVisible = canReply && (formOpen || editing || !review.reply);
 
@@ -61,9 +61,9 @@ export default function ReplySection({
 
   return (
     <div className="relative mt-6 overflow-hidden rounded-3xl border border-gold/20 bg-zinc-950 p-5">
-      {knightImage && (
+      {boosterImage && (
         <Image
-          src={knightImage}
+          src={boosterImage}
           alt=""
           fill
           className="pointer-events-none object-cover opacity-20"
@@ -74,15 +74,15 @@ export default function ReplySection({
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.88),rgba(0,0,0,0.62)_52%,rgba(0,0,0,0.30))]" />
       <div className="relative mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <KnightAvatar
-            availability={knightAvailability}
-            image={knightImage}
-            name={review.reply?.knightName ?? knightName}
+          <BoosterAvatar
+            availability={boosterAvailability}
+            image={boosterImage}
+            name={review.reply?.boosterName ?? boosterName}
             size={44}
           />
           <div>
             <p className="text-base font-black text-white">
-              {review.reply?.knightName ?? knightName}
+              {review.reply?.boosterName ?? boosterName}
             </p>
           </div>
         </div>
@@ -137,7 +137,7 @@ export default function ReplySection({
       {replyFormVisible && (
         <div className="relative grid gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-black text-gold">{knightName}</span>
+            <span className="text-xs font-black text-gold">{boosterName}</span>
           </div>
           <TierRecordEditor records={tierRecords} onChange={setTierRecords} service={review.service} />
           {!recordsComplete && (

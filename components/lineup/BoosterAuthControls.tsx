@@ -7,7 +7,7 @@ import { LogIn, LogOut } from "lucide-react";
 
 type AuthStatus = { loggedIn: boolean };
 
-export default function KnightAuthControls({
+export default function BoosterAuthControls({
   className = "",
 }: {
   className?: string;
@@ -19,7 +19,7 @@ export default function KnightAuthControls({
   useEffect(() => {
     let mounted = true;
 
-    fetch("/api/knight/status", { cache: "no-store" })
+    fetch("/api/booster/status", { cache: "no-store" })
       .then(async (response) => {
         const data = (await response.json()) as AuthStatus;
         if (mounted) {
@@ -40,7 +40,7 @@ export default function KnightAuthControls({
   const handleLogout = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/knight/logout", {
+      const response = await fetch("/api/booster/logout", {
         method: "POST",
       });
 

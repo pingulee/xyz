@@ -31,7 +31,7 @@ export const blankForm = {
   serviceDuo: false,
   imageUrl: null as string | null,
   active: true,
-  knightPassword: "",
+  boosterPassword: "",
 };
 
 export type FormState = typeof blankForm;
