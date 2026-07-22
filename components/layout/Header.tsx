@@ -69,7 +69,7 @@ export default function Header() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="relative h-12 w-40 sm:w-44"
+          className="relative block h-12 aspect-20/9"
           onClick={(event) => {
             setOpen(false);
             setMobileOpenItem("");
@@ -84,8 +84,8 @@ export default function Header() {
             alt="XYZ 롤 대리, 롤 듀오, 롤 계정"
             fill
             priority
-            sizes="112px"
-            className="object-contain object-left"
+            sizes="107px"
+            className="object-contain"
           />
         </Link>
 
