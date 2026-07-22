@@ -67,15 +67,15 @@ type SchemaColumnRow = RowDataPacket & {
   COLUMN_NAME: string;
 };
 
-export const ensureReviewsSchema = oncePerProcess(async () => {
+export const ensureReviewSchema = oncePerProcess(async () => {
   await getPool().execute(
-    `ALTER TABLE reviews ADD COLUMN IF NOT EXISTS lineup_id BIGINT UNSIGNED NULL`,
+    `ALTER TABLE \`review\` ADD COLUMN IF NOT EXISTS lineup_id BIGINT UNSIGNED NULL`,
   );
   await getPool().execute(
-    `ALTER TABLE reviews ADD COLUMN IF NOT EXISTS lineup_name VARCHAR(60) NULL`,
+    `ALTER TABLE \`review\` ADD COLUMN IF NOT EXISTS lineup_name VARCHAR(60) NULL`,
   );
   await getPool().execute(
-    `ALTER TABLE reviews ADD COLUMN IF NOT EXISTS view_count INT UNSIGNED NOT NULL DEFAULT 0`,
+    `ALTER TABLE \`review\` ADD COLUMN IF NOT EXISTS view_count INT UNSIGNED NOT NULL DEFAULT 0`,
   );
   await getPool().execute(`
     CREATE TABLE IF NOT EXISTS review_replies (
@@ -181,30 +181,21 @@ const REVIEW_SELECT = `
          rr.booster_name AS reply_booster_name,
          rr.content AS reply_content, rr.tier_records AS reply_tier_records,
          rr.created_at AS reply_created_at
-  FROM reviews r
+  FROM \`review\` r
   LEFT JOIN lineups l ON l.id = r.lineup_id
   LEFT JOIN review_replies rr ON rr.review_id = r.id
 `;
 
-export async function getReviewsByLineupId(lineupId: number): Promise<Review[]> {
-  await ensureReviewsSchema();
-  const [rows] = await getPool().execute<ReviewRow[]>(
-    `${REVIEW_SELECT} WHERE r.lineup_id = :lineupId ORDER BY r.created_at DESC`,
-    { lineupId },
-  );
-  return rows.map(toReview);
-}
-
 /** 기사 상세용 서버 사이드 페이지네이션: 해당 페이지 분량 + 전체 개수 */
-export async function getReviewsByLineupIdPage(
+export async function getLineupReviewPage(
   lineupId: number,
   page = 1,
   perPage = 3,
-): Promise<{ reviews: Review[]; total: number; page: number; perPage: number }> {
-  await ensureReviewsSchema();
+): Promise<{ reviewList: Review[]; total: number; page: number; perPage: number }> {
+  await ensureReviewSchema();
   const safePer = Math.max(1, Math.min(50, Math.floor(perPage)));
   const [countRows] = await getPool().execute<RowDataPacket[]>(
-    `SELECT COUNT(*) AS total FROM reviews WHERE lineup_id = :lineupId`,
+    `SELECT COUNT(*) AS total FROM \`review\` WHERE lineup_id = :lineupId`,
     { lineupId },
   );
   const total = Number(countRows[0]?.total ?? 0);
@@ -216,11 +207,11 @@ export async function getReviewsByLineupIdPage(
     `${REVIEW_SELECT} WHERE r.lineup_id = ${safeLineupId}
      ORDER BY r.created_at DESC, r.id DESC LIMIT ${safePer} OFFSET ${offset}`,
   );
-  return { reviews: rows.map(toReview), total, page: safePage, perPage: safePer };
+  return { reviewList: rows.map(toReview), total, page: safePage, perPage: safePer };
 }
 
-export async function getReviews(limit = 5000) {
-  await ensureReviewsSchema();
+export async function getReviewList(limit = 5000) {
+  await ensureReviewSchema();
   const safeLimit = Math.max(1, Math.min(100000, Math.floor(limit)));
   const [rows] = await getPool().query<ReviewRow[]>(
     `${REVIEW_SELECT} ORDER BY r.created_at DESC, r.id DESC LIMIT ${safeLimit}`,
@@ -229,13 +220,13 @@ export async function getReviews(limit = 5000) {
 }
 
 /** sitemap용 경량 조회: id/created_at만 (조인·JSON 파싱 없음) */
-export async function getReviewSitemapEntries(
+export async function getSitemapReviewEntries(
   limit = 5000,
 ): Promise<Array<{ id: string; createdAt: string }>> {
-  await ensureReviewsSchema();
+  await ensureReviewSchema();
   const safeLimit = Math.max(1, Math.min(100000, Math.floor(limit)));
   const [rows] = await getPool().query<RowDataPacket[]>(
-    `SELECT id, created_at FROM reviews ORDER BY created_at DESC, id DESC LIMIT ${safeLimit}`,
+    `SELECT id, created_at FROM \`review\` ORDER BY created_at DESC, id DESC LIMIT ${safeLimit}`,
   );
   return rows.map((r) => ({
     id: String(r.id),
@@ -244,14 +235,14 @@ export async function getReviewSitemapEntries(
 }
 
 /** 서버 사이드 페이지네이션: 현재 페이지 분량만 조회 + 전체 개수 */
-export async function getReviewsPage(
+export async function getReviewPage(
   page = 1,
   perPage = 20,
-): Promise<{ reviews: Review[]; total: number; page: number; perPage: number }> {
-  await ensureReviewsSchema();
+): Promise<{ reviewList: Review[]; total: number; page: number; perPage: number }> {
+  await ensureReviewSchema();
   const safePer = Math.max(1, Math.min(100, Math.floor(perPage)));
   const [countRows] = await getPool().query<RowDataPacket[]>(
-    `SELECT COUNT(*) AS total FROM reviews`,
+    `SELECT COUNT(*) AS total FROM \`review\``,
   );
   const total = Number(countRows[0]?.total ?? 0);
   const totalPages = Math.max(1, Math.ceil(total / safePer));
@@ -260,11 +251,11 @@ export async function getReviewsPage(
   const [rows] = await getPool().query<ReviewRow[]>(
     `${REVIEW_SELECT} ORDER BY r.created_at DESC, r.id DESC LIMIT ${safePer} OFFSET ${offset}`,
   );
-  return { reviews: rows.map(toReview), total, page: safePage, perPage: safePer };
+  return { reviewList: rows.map(toReview), total, page: safePage, perPage: safePer };
 }
 
 export async function getReviewById(id: number): Promise<Review | null> {
-  await ensureReviewsSchema();
+  await ensureReviewSchema();
   const [rows] = await getPool().execute<ReviewRow[]>(
     `${REVIEW_SELECT} WHERE r.id = :id LIMIT 1`,
     { id },
@@ -276,16 +267,16 @@ export async function getReviewNavigation(id: number): Promise<{
   previous?: ReviewNavItem;
   next?: ReviewNavItem;
 }> {
-  await ensureReviewsSchema();
+  await ensureReviewSchema();
   const pool = getPool();
   const [curRows] = await pool.execute<RowDataPacket[]>(
-    `SELECT created_at FROM reviews WHERE id = :id LIMIT 1`,
+    `SELECT created_at FROM \`review\` WHERE id = :id LIMIT 1`,
     { id },
   );
   if (!curRows[0]) return {};
   const createdAt = curRows[0].created_at as Date;
 
-  const NAV_SELECT = `SELECT id, name, content, created_at FROM reviews`;
+  const NAV_SELECT = `SELECT id, name, content, created_at FROM \`review\``;
   // 목록 정렬: created_at DESC, id DESC → 이전=더 최신, 다음=더 과거
   const [prevRows] = await pool.execute<RowDataPacket[]>(
     `${NAV_SELECT} WHERE (created_at > :createdAt) OR (created_at = :createdAt AND id > :id)

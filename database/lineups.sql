@@ -20,7 +20,6 @@ CREATE TABLE IF NOT EXISTS lineups (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 ALTER TABLE lineups ADD COLUMN IF NOT EXISTS image_url VARCHAR(255) NULL;
-ALTER TABLE lineups DROP COLUMN IF EXISTS image_data;
 ALTER TABLE lineups ADD COLUMN IF NOT EXISTS booster_password_hash VARCHAR(200) NULL;
 
 -- 기존 이름의 로그인 해시 컬럼이 있으면 새 컬럼으로 복사한 뒤 제거한다.

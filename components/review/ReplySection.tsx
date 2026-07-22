@@ -12,7 +12,7 @@ import {
   isTierRecordsComplete,
   normalizeTierRecords,
 } from "@/components/lineup/TierRecords";
-import type { TierRecord } from "@/lib/reviews";
+import type { TierRecord } from "@/lib/review";
 import { REPLY_CONTENT_MIN_LENGTH } from "@/components/review/constants";
 import { formatDate } from "@/components/review/helpers";
 import type { Review } from "@/components/review/types";

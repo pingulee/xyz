@@ -4,7 +4,7 @@ import { join, resolve, basename } from "path";
 
 export const runtime = "nodejs";
 
-const ALLOWED_FOLDERS = new Set(["reviews", "lineups"]);
+const ALLOWED_FOLDERS = new Set(["lineups"]);
 
 const MIME_MAP: Record<string, string> = {
   jpg: "image/jpeg",
@@ -15,7 +15,6 @@ const MIME_MAP: Record<string, string> = {
 
 function getUploadBase(): string {
   return process.env.UPLOAD_BASE_DIR
-    ?? process.env.UPLOAD_DIR?.replace(/\/reviews$/, "")
     ?? join(process.cwd(), "uploads");
 }
 

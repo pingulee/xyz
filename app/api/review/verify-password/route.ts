@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   }
 
   const [rows] = await getPool().execute<ReviewRow[]>(
-    `SELECT password_hash FROM reviews WHERE id = :id LIMIT 1`,
+    `SELECT password_hash FROM \`review\` WHERE id = :id LIMIT 1`,
     { id },
   );
 

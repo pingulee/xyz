@@ -10,7 +10,7 @@ import {
   isTierRecordsComplete,
   normalizeTierRecords,
 } from "@/components/lineup/TierRecords";
-import type { Review, ReviewReply, TierRecord } from "@/lib/reviews";
+import type { Review, ReviewReply, TierRecord } from "@/lib/review";
 
 const RECENT_LIMIT = 3; // 기사 상세: 최근 후기 3개만 표시(페이지네이션 없음)
 const REPLY_CONTENT_MIN_LENGTH = 10;
@@ -198,7 +198,7 @@ function ReplyBlock({
   const submitReply = async (content: string, tierRecords: TierRecord[]) => {
     setSaving(true);
     try {
-      const res = await fetch("/api/reviews/reply", {
+      const res = await fetch("/api/review/reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reviewId: review.id, content, tierRecords }),
@@ -218,7 +218,7 @@ function ReplyBlock({
   const deleteReply = async () => {
     setSaving(true);
     try {
-      const res = await fetch("/api/reviews/reply", {
+      const res = await fetch("/api/review/reply", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reviewId: review.id }),
@@ -305,20 +305,20 @@ function ReplyBlock({
   );
 }
 
-export default function LineupReviews({
-  reviews,
+export default function LineupReview({
+  reviewList,
   boosterLineupId = null,
   boosterName = "",
   boosterImage = "",
   boosterAvailability = null,
 }: {
-  reviews: Review[];
+  reviewList: Review[];
   boosterLineupId?: number | null;
   boosterName?: string;
   boosterImage?: string;
   boosterAvailability?: BoosterAvailability | null;
 }) {
-  if (reviews.length === 0) {
+  if (reviewList.length === 0) {
     return (
       <div className="rounded-3xl border border-white/8 bg-white/3 px-6 py-10 text-center text-sm text-zinc-500">
         아직 이 기사의 후기가 없습니다.
@@ -326,11 +326,11 @@ export default function LineupReviews({
     );
   }
 
-  const slice = reviews.slice(0, RECENT_LIMIT);
+  const recentReviewList = reviewList.slice(0, RECENT_LIMIT);
 
   return (
     <div className="grid gap-4">
-      {slice.map((review) => (
+      {recentReviewList.map((review) => (
         <div
           key={review.id}
           className="rounded-3xl border border-white/8 bg-white/3.5 p-5"

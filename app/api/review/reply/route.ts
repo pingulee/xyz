@@ -6,7 +6,7 @@ import {
   getSessionTokenFromRequest,
   validateSession,
 } from "@/lib/adminSession";
-import { ensureReviewsSchema, type TierRecord } from "@/lib/reviews";
+import { ensureReviewSchema, type TierRecord } from "@/lib/review";
 import { clearStatsCache } from "@/lib/stats-cache";
 
 export const runtime = "nodejs";
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
   }
 
   const [reviewRows] = await getPool().execute<ReviewRow[]>(
-    `SELECT lineup_id FROM reviews WHERE id = :reviewId LIMIT 1`,
+    `SELECT lineup_id FROM \`review\` WHERE id = :reviewId LIMIT 1`,
     { reviewId },
   );
   const review = reviewRows[0];
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
 
   const tierJson = tierRecords.length > 0 ? JSON.stringify(tierRecords) : null;
 
-  await ensureReviewsSchema();
+  await ensureReviewSchema();
   await getPool().execute(
     `DELETE FROM review_replies WHERE review_id = :reviewId`,
     { reviewId },

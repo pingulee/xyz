@@ -19,7 +19,7 @@ import type {
   ReviewNavItem,
   ReviewReply,
   TierRecord,
-} from "@/lib/reviews";
+} from "@/lib/review";
 
 const REVIEW_CONTENT_MAX_LENGTH = 100;
 const REPLY_CONTENT_MIN_LENGTH = 10;
@@ -94,7 +94,7 @@ function PostNav({
     <div className="grid grid-cols-3 gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-3">
       <NavLink label="이전글" review={previousReview} align="left" />
       <Link
-        href="/reviews"
+        href="/review"
         className="grid min-h-11 place-items-center rounded-full border border-white/10 px-3 py-2 text-center text-sm font-black text-zinc-300 transition hover:border-gold/40 hover:text-white sm:px-6 sm:py-3"
       >
         목록
@@ -128,7 +128,7 @@ function NavLink({
 
   return (
     <Link
-      href={`/reviews/${review.id}`}
+      href={`/review/${review.id}`}
       className={`grid min-h-11 place-items-center rounded-full border border-white/8 bg-white/3.5 px-3 py-2 transition hover:border-gold/30 hover:bg-white/5.5 sm:block sm:min-h-0 sm:rounded-3xl sm:p-4 ${align === "right" ? "sm:text-right" : ""}`}
     >
       <p className="text-xs font-black text-gold">{label}</p>
@@ -166,7 +166,7 @@ export default function ReviewDetailView({
   const [reviewEditOpen, setReviewEditOpen] = useState(false);
   const [reviewDeleteOpen, setReviewDeleteOpen] = useState(false);
   const [reviewPassword, setReviewPassword] = useState("");
-  const [reviewSaving, setReviewSaving] = useState(false);
+  const [savingReview, setSavingReview] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const [editService, setEditService] = useState(review.service);
   const [editRating, setEditRating] = useState(review.rating);
@@ -198,7 +198,7 @@ export default function ReviewDetailView({
 
     const trackView = async () => {
       try {
-        const response = await fetch("/api/reviews", {
+        const response = await fetch("/api/review", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: initialReview.id }),
@@ -234,10 +234,10 @@ export default function ReviewDetailView({
       setReviewError("수정하려면 비밀번호와 후기 내용을 입력해주세요.");
       return;
     }
-    setReviewSaving(true);
+    setSavingReview(true);
     setReviewError("");
     try {
-      const response = await fetch("/api/reviews", {
+      const response = await fetch("/api/review", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -265,7 +265,7 @@ export default function ReviewDetailView({
           : "후기를 수정하지 못했습니다.",
       );
     } finally {
-      setReviewSaving(false);
+      setSavingReview(false);
     }
   };
 
@@ -275,10 +275,10 @@ export default function ReviewDetailView({
       setReviewError("삭제하려면 비밀번호를 입력해주세요.");
       return;
     }
-    setReviewSaving(true);
+    setSavingReview(true);
     setReviewError("");
     try {
-      const response = await fetch("/api/reviews", {
+      const response = await fetch("/api/review", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: review.id, password }),
@@ -287,7 +287,7 @@ export default function ReviewDetailView({
       if (!response.ok) {
         throw new Error(data.message ?? "후기를 삭제하지 못했습니다.");
       }
-      router.push("/reviews");
+      router.push("/review");
     } catch (caught) {
       setReviewError(
         caught instanceof Error
@@ -295,7 +295,7 @@ export default function ReviewDetailView({
           : "후기를 삭제하지 못했습니다.",
       );
     } finally {
-      setReviewSaving(false);
+      setSavingReview(false);
     }
   };
 
@@ -314,7 +314,7 @@ export default function ReviewDetailView({
     if (draftLength < REPLY_CONTENT_MIN_LENGTH) return;
     setSaving(true);
     try {
-      const response = await fetch("/api/reviews/reply", {
+      const response = await fetch("/api/review/reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -339,7 +339,7 @@ export default function ReviewDetailView({
   const deleteReply = async () => {
     setSaving(true);
     try {
-      const response = await fetch("/api/reviews/reply", {
+      const response = await fetch("/api/review/reply", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reviewId: review.id }),
@@ -480,10 +480,10 @@ export default function ReviewDetailView({
                 <button
                   type="button"
                   onClick={updateReview}
-                  disabled={reviewSaving}
+                  disabled={savingReview}
                   className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-2.5 text-sm font-black text-black disabled:opacity-60"
                 >
-                  {reviewSaving && (
+                  {savingReview && (
                     <Loader2 size={14} className="animate-spin" />
                   )}
                   수정 저장
@@ -516,10 +516,10 @@ export default function ReviewDetailView({
                 <button
                   type="button"
                   onClick={deleteReview}
-                  disabled={reviewSaving}
+                  disabled={savingReview}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-400 px-5 py-3 font-black text-black transition hover:bg-red-300 disabled:opacity-60"
                 >
-                  {reviewSaving && (
+                  {savingReview && (
                     <Loader2 size={14} className="animate-spin" />
                   )}
                   삭제

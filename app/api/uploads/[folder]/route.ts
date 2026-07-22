@@ -24,7 +24,6 @@ const EXT_MAP: Record<string, string> = {
 
 async function getUploadDir(folder: string): Promise<string> {
   const base = process.env.UPLOAD_BASE_DIR
-    ?? process.env.UPLOAD_DIR?.replace(/\/reviews$/, "")
     ?? join(process.cwd(), "uploads");
   const dir = resolve(join(base, folder));
   await mkdir(dir, { recursive: true });

@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { navItems, services, site } from "@/lib/site";
 import { getLineups } from "@/lib/lineups";
 import { getLineupSlug } from "@/lib/lineup-model";
-import { getReviewSitemapEntries } from "@/lib/reviews";
+import { getSitemapReviewEntries } from "@/lib/review";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 const staticLastModified: Record<string, string> = {
   "": "2026-07-22",
   "/lineup": "2026-07-21",
-  "/reviews": "2026-07-22",
+  "/review": "2026-07-22",
   "/recruit": "2026-07-21",
   "/boosting": "2026-07-21",
   "/duo": "2026-07-21",
@@ -38,9 +38,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let dynamicEntries: MetadataRoute.Sitemap = [];
   try {
-    const [lineups, reviews] = await Promise.all([
+    const [lineups, reviewList] = await Promise.all([
       getLineups(true),
-      getReviewSitemapEntries(),
+      getSitemapReviewEntries(),
     ]);
 
     const lineupEntries: MetadataRoute.Sitemap = lineups.map((lineup) => ({
@@ -49,8 +49,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-    const reviewEntries: MetadataRoute.Sitemap = reviews.map((review) => ({
-      url: `${site.url}/reviews/${review.id}`,
+    const reviewEntries: MetadataRoute.Sitemap = reviewList.map((review) => ({
+      url: `${site.url}/review/${review.id}`,
       lastModified: new Date(review.createdAt),
       changeFrequency: "monthly",
       priority: 0.5,

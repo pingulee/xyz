@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Copy, Plus, Trash2 } from "lucide-react";
 import { useChampionOptions } from "@/hooks/useChampionOptions";
-import type { TierRecord } from "@/lib/reviews";
+import type { TierRecord } from "@/lib/review";
 
 export const TIER_OPTIONS = [
   "언랭크",
@@ -20,8 +20,8 @@ export const TIER_OPTIONS = [
 ];
 
 // 듀오는 마스터/그랜드마스터/챌린저 불가 → 서비스별 선택 가능 티어
-export const DUO_EXCLUDED_TIERS = ["마스터", "그랜드마스터", "챌린저"];
-export function tierOptionsForService(service?: string) {
+const DUO_EXCLUDED_TIERS = ["마스터", "그랜드마스터", "챌린저"];
+function tierOptionsForService(service?: string) {
   return service && service.includes("듀오")
     ? TIER_OPTIONS.filter((t) => !DUO_EXCLUDED_TIERS.includes(t))
     : TIER_OPTIONS;

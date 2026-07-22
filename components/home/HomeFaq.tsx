@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowUpRight, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
-export type HomeFaqItem = {
+type HomeFaqItem = {
   question: string;
   answer: string;
 };

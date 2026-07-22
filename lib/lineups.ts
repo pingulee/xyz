@@ -1,7 +1,7 @@
 import { RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
-import { ensureReviewsSchema } from "@/lib/reviews";
-import type { TierRecord } from "@/lib/reviews";
+import { ensureReviewSchema } from "@/lib/review";
+import type { TierRecord } from "@/lib/review";
 import { getChampionImageMap } from "@/lib/champions";
 import { oncePerProcess } from "@/lib/schema-once";
 import { getLineupSlug } from "@/lib/lineup-model";
@@ -200,22 +200,22 @@ async function getRecordSummariesByLineup(): Promise<
 
 export async function getLineups(
   activeOnly = true,
-  sortByReviews = false,
+  sortByReview = false,
 ): Promise<Lineup[]> {
-  await ensureReviewsSchema();
+  await ensureReviewSchema();
   await ensureLineupsSchema();
   const [rows] = await getPool().execute<LineupRow[]>(
     `SELECT l.*, COALESCE(stats.average_rating, 0) AS average_rating, COALESCE(stats.review_count, 0) AS review_count
      FROM lineups l
      LEFT JOIN (
        SELECT lineup_id, AVG(rating) AS average_rating, COUNT(*) AS review_count
-       FROM reviews
+       FROM \`review\`
        WHERE lineup_id IS NOT NULL
        GROUP BY lineup_id
      ) stats ON stats.lineup_id = l.id
      ${activeOnly ? "WHERE l.active = 1" : ""}
      ORDER BY ${
-       sortByReviews
+       sortByReview
          ? "review_count DESC, average_rating DESC, l.sort_order ASC, l.id ASC"
          : "l.sort_order ASC, l.id ASC"
      }`,
@@ -233,14 +233,14 @@ export async function getLineups(
 }
 
 export async function getLineupById(id: number): Promise<Lineup | null> {
-  await ensureReviewsSchema();
+  await ensureReviewSchema();
   await ensureLineupsSchema();
   const [rows] = await getPool().execute<LineupRow[]>(
     `SELECT l.*, COALESCE(stats.average_rating, 0) AS average_rating, COALESCE(stats.review_count, 0) AS review_count
      FROM lineups l
      LEFT JOIN (
        SELECT lineup_id, AVG(rating) AS average_rating, COUNT(*) AS review_count
-       FROM reviews
+       FROM \`review\`
        WHERE lineup_id IS NOT NULL
        GROUP BY lineup_id
      ) stats ON stats.lineup_id = l.id
@@ -376,7 +376,7 @@ export async function getLineupWinStats(lineupId: number): Promise<{
     `SELECT rr.tier_records AS tier_records, r.service AS service,
             r.created_at AS created_at
        FROM review_replies rr
-       JOIN reviews r ON r.id = rr.review_id
+       JOIN \`review\` r ON r.id = rr.review_id
        WHERE rr.lineup_id = :lineupId AND rr.tier_records IS NOT NULL
        ORDER BY r.created_at DESC, rr.created_at DESC`,
     { lineupId },
@@ -485,10 +485,10 @@ export async function getLineupWinStats(lineupId: number): Promise<{
 }
 
 export async function getLineupReviewStats(id: number) {
-  await ensureReviewsSchema();
+  await ensureReviewSchema();
   const [rows] = await getPool().execute<RowDataPacket[]>(
     `SELECT rating, COUNT(*) AS count
-     FROM reviews
+     FROM \`review\`
      WHERE lineup_id = :id
      GROUP BY rating
      ORDER BY rating DESC`,
@@ -496,7 +496,7 @@ export async function getLineupReviewStats(id: number) {
   );
   const [summaryRows] = await getPool().execute<RowDataPacket[]>(
     `SELECT COUNT(*) AS review_count, AVG(rating) AS average_rating
-     FROM reviews
+     FROM \`review\`
      WHERE lineup_id = :id`,
     { id },
   );

@@ -217,7 +217,7 @@ export default function ServiceGuide() {
                   기사 라인업 확인
                 </Link>
                 <Link
-                  href="/reviews"
+                  href="/review"
                   className="text-gold transition hover:text-gold-soft"
                 >
                   실제 작업 후기

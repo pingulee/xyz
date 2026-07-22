@@ -2,7 +2,7 @@
 
 import { Copy, Loader2, Pencil, Trash2 } from "lucide-react";
 import { type BoosterAvailability } from "@/components/lineup/BoosterAvatar";
-import type { TierRecord } from "@/lib/reviews";
+import type { TierRecord } from "@/lib/review";
 import { REVIEW_CONTENT_MAX_LENGTH } from "@/components/review/constants";
 import { formatDate } from "@/components/review/helpers";
 import type { DeleteForm, EditForm, Review } from "@/components/review/types";

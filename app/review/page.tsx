@@ -4,8 +4,8 @@ import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
 import ReviewBoard from "@/components/review/ReviewBoard";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { getReviewsPage } from "@/lib/reviews";
-import { REVIEWS_PER_PAGE } from "@/components/review/constants";
+import { getReviewPage } from "@/lib/review";
+import { REVIEW_PAGE_SIZE } from "@/components/review/constants";
 import { getLineups } from "@/lib/lineups";
 import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
 import {
@@ -20,12 +20,12 @@ export const metadata: Metadata = {
   title: "작업 후기",
   description:
     "XYZ 실제 후기를 확인하고 직접 남겨보세요.",
-  alternates: { canonical: "/reviews" },
+  alternates: { canonical: "/review" },
   openGraph: {
     title: "작업 후기 | XYZ",
     description:
       "XYZ 실제 후기를 확인하고 직접 남겨보세요.",
-    url: "/reviews",
+    url: "/review",
     type: "website",
     siteName: site.name,
     images: [{ url: site.ogImage }],
@@ -38,16 +38,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ReviewsPage({
+export default async function ReviewPage({
   searchParams,
 }: {
   searchParams: Promise<{ page?: string }>;
 }) {
   const { page: pageParam } = await searchParams;
   const requestedPage = Math.max(1, Number(pageParam) || 1);
-  const { reviews, total, page } = await getReviewsPage(
+  const { reviewList, total, page } = await getReviewPage(
     requestedPage,
-    REVIEWS_PER_PAGE,
+    REVIEW_PAGE_SIZE,
   );
   const lineups = await getLineups(true);
 
@@ -57,10 +57,10 @@ export default async function ReviewsPage({
   const boosterToken = cookieStore.get(BOOSTER_SESSION_COOKIE)?.value ?? "";
   const boosterLineupId = validateBoosterSession(boosterToken);
 
-  const reviewSchema = {
+  const structuredReviewData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    itemListElement: reviews.slice(0, 20).map((review, index) => ({
+    itemListElement: reviewList.slice(0, 20).map((review, index) => ({
       "@type": "ListItem",
       position: index + 1,
       item: {
@@ -80,12 +80,12 @@ export default async function ReviewsPage({
     <section className="py-20">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredReviewData) }}
       />
       <Container>
         <Reveal>
           <SectionTitle
-            eyebrow="reviews"
+            eyebrow="review"
             title="작업 후기"
             desc="조작 없는 100% 리얼 후기를 확인하고 직접 남겨보세요."
             as="h1"
@@ -94,7 +94,7 @@ export default async function ReviewsPage({
         <Reveal>
           <ReviewBoard
             key={page}
-            initialReviews={reviews}
+            initialReviewList={reviewList}
             total={total}
             serverPage={page}
             isAdmin={isAdmin}

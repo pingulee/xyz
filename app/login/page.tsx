@@ -21,7 +21,7 @@ export default async function BoosterLoginPage() {
   const token = cookieStore.get(BOOSTER_SESSION_COOKIE)?.value ?? "";
 
   if (validateBoosterSession(token)) {
-    redirect("/reviews");
+    redirect("/review");
   }
 
   return (

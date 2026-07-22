@@ -3,9 +3,9 @@
 import { ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { TierRecord } from "@/lib/reviews";
+import type { TierRecord } from "@/lib/review";
 import {
-  REVIEWS_PER_PAGE,
+  REVIEW_PAGE_SIZE,
   REVIEW_NAME_MAX_LENGTH,
   REVIEW_PASSWORD_MIN_LENGTH,
   REVIEW_CONTENT_MIN_LENGTH,
@@ -28,14 +28,14 @@ import StarRating from "@/components/review/StarRating";
 import ReviewDetail from "@/components/review/ReviewDetail";
 
 export default function ReviewBoard({
-  initialReviews = [],
+  initialReviewList = [],
   total = 0,
   serverPage = 1,
   isAdmin = false,
   lineups = [],
   boosterLineupId = null,
 }: {
-  initialReviews?: Review[];
+  initialReviewList?: Review[];
   total?: number;
   serverPage?: number;
   isAdmin?: boolean;
@@ -53,7 +53,7 @@ export default function ReviewBoard({
   const boosterName = boosterLineupId
     ? (lineups.find((l) => l.id === String(boosterLineupId))?.name ?? "")
     : "";
-  const [reviews, setReviews] = useState<Review[]>(initialReviews);
+  const [reviewList, setReviewList] = useState<Review[]>(initialReviewList);
   const [form, setForm] = useState(blankForm);
   const [deleteForms, setDeleteForms] = useState<Record<string, DeleteForm>>(
     {},
@@ -66,7 +66,7 @@ export default function ReviewBoard({
   );
   const [selectedReviewId, setSelectedReviewId] = useState("");
   const [writeOpen, setWriteOpen] = useState(false);
-  const [reviewSubmitAttempted, setReviewSubmitAttempted] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [error, setError] = useState("");
   const loading = false;
   const [submitting, setSubmitting] = useState(false);
@@ -84,28 +84,28 @@ export default function ReviewBoard({
     [lineups],
   );
 
-  const visibleReviews = reviews;
+  const visibleReviewList = reviewList;
   const totalPages = Math.max(
     1,
-    Math.ceil(Math.max(total, visibleReviews.length) / REVIEWS_PER_PAGE),
+    Math.ceil(Math.max(total, visibleReviewList.length) / REVIEW_PAGE_SIZE),
   );
   const currentPage = Math.min(serverPage, totalPages);
-  const selectedReview = reviews.find(
+  const selectedReview = reviewList.find(
     (review) => review.id === selectedReviewId,
   );
-  const selectedReviewIndex = visibleReviews.findIndex(
+  const selectedReviewIndex = visibleReviewList.findIndex(
     (review) => review.id === selectedReviewId,
   );
   const previousReview =
     selectedReviewIndex > 0
-      ? visibleReviews[selectedReviewIndex - 1]
+      ? visibleReviewList[selectedReviewIndex - 1]
       : undefined;
   const nextReview =
-    selectedReviewIndex >= 0 && selectedReviewIndex < visibleReviews.length - 1
-      ? visibleReviews[selectedReviewIndex + 1]
+    selectedReviewIndex >= 0 && selectedReviewIndex < visibleReviewList.length - 1
+      ? visibleReviewList[selectedReviewIndex + 1]
       : undefined;
   // 서버에서 현재 페이지 분량만 내려옴
-  const paginatedReviews = visibleReviews;
+  const paginatedReviewList = visibleReviewList;
   const pageItems = useMemo(
     () => getPageItems(currentPage, totalPages),
     [currentPage, totalPages],
@@ -117,20 +117,20 @@ export default function ReviewBoard({
       form.service &&
       form.content.trim().length >= REVIEW_CONTENT_MIN_LENGTH,
   );
-  const missingReviewName = reviewSubmitAttempted && !form.name.trim();
-  const missingReviewPassword = reviewSubmitAttempted && !form.password.trim();
+  const missingReviewName = submitAttempted && !form.name.trim();
+  const missingReviewPassword = submitAttempted && !form.password.trim();
   const invalidReviewPassword =
     form.password.trim().length > 0 &&
     form.password.trim().length < REVIEW_PASSWORD_MIN_LENGTH;
-  const missingReviewLineup = reviewSubmitAttempted && !form.lineupId;
-  const missingReviewService = reviewSubmitAttempted && !form.service;
-  const missingReviewContent = reviewSubmitAttempted && !form.content.trim();
+  const missingReviewLineup = submitAttempted && !form.lineupId;
+  const missingService = submitAttempted && !form.service;
+  const missingReviewContent = submitAttempted && !form.content.trim();
   const invalidReviewContent =
     form.content.trim().length > 0 &&
     form.content.trim().length < REVIEW_CONTENT_MIN_LENGTH;
 
   const openReview = (reviewId: string) => {
-    router.push(`/reviews/${reviewId}`);
+    router.push(`/review/${reviewId}`);
   };
 
   useEffect(() => {
@@ -149,7 +149,7 @@ export default function ReviewBoard({
     setSelectedReviewId("");
     setDeleteOpenId("");
     setEditOpenId("");
-    router.push(target === 1 ? "/reviews" : `/reviews?page=${target}`);
+    router.push(target === 1 ? "/review" : `/review?page=${target}`);
   };
 
   const updateDeleteForm = (reviewId: string, updates: Partial<DeleteForm>) => {
@@ -212,7 +212,7 @@ export default function ReviewBoard({
 
     setEditingId(review.id);
     try {
-      const response = await fetch("/api/reviews/verify-password", {
+      const response = await fetch("/api/review/verify-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: review.id, password }),
@@ -236,7 +236,7 @@ export default function ReviewBoard({
   const submitReview = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
-    setReviewSubmitAttempted(true);
+    setSubmitAttempted(true);
 
     const name = form.name.trim();
     const password = form.password.trim();
@@ -280,7 +280,7 @@ export default function ReviewBoard({
     setSubmitting(true);
 
     try {
-      const response = await fetch("/api/reviews", {
+      const response = await fetch("/api/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -301,11 +301,11 @@ export default function ReviewBoard({
         throw new Error(data.message ?? "후기를 저장하지 못했습니다.");
       }
 
-      setReviews((current) => [data.review, ...current]);
+      setReviewList((current) => [data.review, ...current]);
       setForm(blankForm);
-      setReviewSubmitAttempted(false);
+      setSubmitAttempted(false);
       setWriteOpen(false);
-      router.push(`/reviews/${data.review.id}`);
+      router.push(`/review/${data.review.id}`);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -331,7 +331,7 @@ export default function ReviewBoard({
         return;
       }
 
-      const response = await fetch("/api/reviews", {
+      const response = await fetch("/api/review", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -345,7 +345,7 @@ export default function ReviewBoard({
         throw new Error(data.message ?? "후기를 삭제하지 못했습니다.");
       }
 
-      setReviews((current) =>
+      setReviewList((current) =>
         current.filter((review) => review.id !== reviewId),
       );
       setSelectedReviewId("");
@@ -392,7 +392,7 @@ export default function ReviewBoard({
     setEditingId(review.id);
 
     try {
-      const response = await fetch("/api/reviews", {
+      const response = await fetch("/api/review", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -412,7 +412,7 @@ export default function ReviewBoard({
         throw new Error(data.message ?? "후기를 수정하지 못했습니다.");
       }
 
-      setReviews((current) =>
+      setReviewList((current) =>
         current.map((item) => (item.id === review.id ? data.review : item)),
       );
       setEditOpenId("");
@@ -440,7 +440,7 @@ export default function ReviewBoard({
     setError("");
     setReplyingId(reviewId);
     try {
-      const response = await fetch("/api/reviews/reply", {
+      const response = await fetch("/api/review/reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reviewId, content, tierRecords }),
@@ -451,7 +451,7 @@ export default function ReviewBoard({
       };
       if (!response.ok)
         throw new Error(data.message ?? "답변을 저장하지 못했습니다.");
-      setReviews((cur) =>
+      setReviewList((cur) =>
         cur.map((r) => (r.id === reviewId ? { ...r, reply: data.reply } : r)),
       );
     } catch (caught) {
@@ -469,7 +469,7 @@ export default function ReviewBoard({
     setError("");
     setDeletingReplyId(reviewId);
     try {
-      const response = await fetch("/api/reviews/reply", {
+      const response = await fetch("/api/review/reply", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reviewId }),
@@ -477,7 +477,7 @@ export default function ReviewBoard({
       const data = (await response.json()) as { message?: string };
       if (!response.ok)
         throw new Error(data.message ?? "답변을 삭제하지 못했습니다.");
-      setReviews((cur) =>
+      setReviewList((cur) =>
         cur.map((r) => (r.id === reviewId ? { ...r, reply: undefined } : r)),
       );
     } catch (caught) {
@@ -494,7 +494,7 @@ export default function ReviewBoard({
   const duplicateReview = async (review: Review) => {
     setError("");
     try {
-      const response = await fetch("/api/reviews", {
+      const response = await fetch("/api/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -507,8 +507,8 @@ export default function ReviewBoard({
       });
       const data = (await response.json()) as CreateReviewResponse;
       if (!response.ok) throw new Error(data.message ?? "복제하지 못했습니다.");
-      setReviews((current) => [data.review, ...current]);
-      router.push(`/reviews/${data.review.id}`);
+      setReviewList((current) => [data.review, ...current]);
+      router.push(`/review/${data.review.id}`);
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "복제하지 못했습니다.",
@@ -526,7 +526,7 @@ export default function ReviewBoard({
           }}
           onClick={(e) => {
             if (e.target === e.currentTarget && mousedownOnOverlay.current) {
-              setReviewSubmitAttempted(false);
+              setSubmitAttempted(false);
               setWriteOpen(false);
             }
           }}
@@ -545,7 +545,7 @@ export default function ReviewBoard({
               <button
                 type="button"
                 onClick={() => {
-                  setReviewSubmitAttempted(false);
+                  setSubmitAttempted(false);
                   setWriteOpen(false);
                 }}
                 className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white"
@@ -691,7 +691,7 @@ export default function ReviewBoard({
                             }))
                           }
                           className={`rounded-2xl border bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50 ${
-                            missingReviewService
+                            missingService
                               ? "border-red-400/50"
                               : "border-white/10"
                           }`}
@@ -707,7 +707,7 @@ export default function ReviewBoard({
                         </select>
                       );
                     })()}
-                    {missingReviewService && (
+                    {missingService && (
                       <p className="text-xs font-bold text-red-300">
                         서비스를 선택해주세요.
                       </p>
@@ -790,10 +790,10 @@ export default function ReviewBoard({
       <div className="mx-auto max-w-6xl space-y-5">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
-            reviews
+            review
           </p>
           <h2 className="mt-2 text-2xl font-black text-white">
-            전체 후기 {visibleReviews.length}개
+            전체 후기 {visibleReviewList.length}개
           </h2>
         </div>
 
@@ -802,7 +802,7 @@ export default function ReviewBoard({
             <Loader2 size={22} className="mr-2 animate-spin text-gold" />
             후기를 불러오는 중
           </div>
-        ) : reviews.length === 0 ? (
+        ) : reviewList.length === 0 ? (
           <div className="rounded-[30px] border border-gold/15 bg-white/3.5 p-8 text-center text-zinc-400">
             아직 등록된 후기가 없습니다.
           </div>
@@ -893,13 +893,13 @@ export default function ReviewBoard({
                 <span>답변 상태</span>
                 <span>조회수</span>
               </div>
-              {paginatedReviews.map((review, i) => {
+              {paginatedReviewList.map((review, i) => {
                 const lineupName =
                   review.lineupName ?? review.reply?.boosterName ?? "";
                 // 전체 후기 수 기준 전역 번호: 최신 글 = 최대 번호, 가장 오래된 글 = 1
                 const displayNumber =
-                  Math.max(total, visibleReviews.length) -
-                  ((currentPage - 1) * REVIEWS_PER_PAGE + i);
+                  Math.max(total, visibleReviewList.length) -
+                  ((currentPage - 1) * REVIEW_PAGE_SIZE + i);
 
                 return (
                   <button
@@ -1035,7 +1035,7 @@ export default function ReviewBoard({
             <button
               type="button"
               onClick={() => {
-                setReviewSubmitAttempted(false);
+                setSubmitAttempted(false);
                 setWriteOpen(true);
               }}
               className="cursor-pointer rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black transition hover:brightness-110"

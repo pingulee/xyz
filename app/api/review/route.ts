@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
-import { ensureReviewsSchema, getReviews, toReview } from "@/lib/reviews";
+import { ensureReviewSchema, getReviewList, toReview } from "@/lib/review";
 import {
   getSessionTokenFromRequest,
   validateSession,
@@ -48,7 +48,7 @@ const REVIEW_SELECT = `
          rr.booster_name AS reply_booster_name,
          rr.content AS reply_content, rr.tier_records AS reply_tier_records,
          rr.created_at AS reply_created_at
-  FROM reviews r
+  FROM \`review\` r
   LEFT JOIN lineups l ON l.id = r.lineup_id
   LEFT JOIN review_replies rr ON rr.review_id = r.id
 `;
@@ -128,9 +128,9 @@ async function markReviewCreated(request: Request) {
 
 export async function GET() {
   try {
-    return NextResponse.json({ reviews: await getReviews(100) });
+    return NextResponse.json({ reviewList: await getReviewList(100) });
   } catch (error) {
-    console.error("Failed to load reviews", error);
+    console.error("Failed to load review", error);
     return NextResponse.json(
       { message: "후기를 불러오지 못했습니다." },
       { status: 500 },
@@ -200,7 +200,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await ensureReviewsSchema();
+    await ensureReviewSchema();
     const adminWrite = isAdminRequest(request);
     if (!adminWrite) {
       const cooldown = await getReviewCooldown(request);
@@ -215,7 +215,7 @@ export async function POST(request: Request) {
 
     const passwordHash = hashPassword(password);
     const [result] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO reviews (name, service, lineup_id, lineup_name, rating, content, password_hash)
+      `INSERT INTO \`review\` (name, service, lineup_id, lineup_name, rating, content, password_hash)
        VALUES (:name, :service, :lineupId, :lineupName, :rating, :content, :passwordHash)`,
       { name, service, lineupId, lineupName, rating, content, passwordHash },
     );
@@ -293,7 +293,7 @@ export async function PUT(request: Request) {
   }
 
   try {
-    await ensureReviewsSchema();
+    await ensureReviewSchema();
     const [existingRows] = await getPool().execute<ReviewRow[]>(
       `${REVIEW_SELECT} WHERE r.id = :id LIMIT 1`,
       { id },
@@ -332,12 +332,12 @@ export async function PUT(request: Request) {
 
     if (createdAt) {
       await getPool().execute(
-        `UPDATE reviews SET service = :service, rating = :rating, content = :content, created_at = :createdAt WHERE id = :id`,
+        `UPDATE \`review\` SET service = :service, rating = :rating, content = :content, created_at = :createdAt WHERE id = :id`,
         { id, service, rating, content, createdAt },
       );
     } else {
       await getPool().execute(
-        `UPDATE reviews SET service = :service, rating = :rating, content = :content WHERE id = :id`,
+        `UPDATE \`review\` SET service = :service, rating = :rating, content = :content WHERE id = :id`,
         { id, service, rating, content },
       );
     }
@@ -378,9 +378,9 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    await ensureReviewsSchema();
+    await ensureReviewSchema();
     await getPool().execute(
-      `UPDATE reviews SET view_count = view_count + 1 WHERE id = :id`,
+      `UPDATE \`review\` SET view_count = view_count + 1 WHERE id = :id`,
       { id },
     );
     const [rows] = await getPool().execute<ReviewRow[]>(
@@ -434,7 +434,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    await ensureReviewsSchema();
+    await ensureReviewSchema();
     const [rows] = await getPool().execute<ReviewRow[]>(
       `${REVIEW_SELECT} WHERE r.id = :id LIMIT 1`,
       { id },
@@ -462,7 +462,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    await getPool().execute(`DELETE FROM reviews WHERE id = :id`, { id });
+    await getPool().execute(`DELETE FROM \`review\` WHERE id = :id`, { id });
     clearStatsCache();
     return NextResponse.json({ ok: true });
   } catch (error) {

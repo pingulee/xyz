@@ -1,4 +1,4 @@
-export const REVIEWS_PER_PAGE = 10;
+export const REVIEW_PAGE_SIZE = 10;
 export const REVIEW_NAME_MAX_LENGTH = 7;
 export const REVIEW_PASSWORD_MIN_LENGTH = 4;
 export const REVIEW_CONTENT_MIN_LENGTH = 10;

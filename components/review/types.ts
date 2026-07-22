@@ -1,4 +1,4 @@
-import type { TierRecord } from "@/lib/reviews";
+import type { TierRecord } from "@/lib/review";
 
 export type ReviewReply = {
   id: string;
@@ -20,11 +20,6 @@ export type Review = {
   createdAt: string;
   viewCount: number;
   reply?: ReviewReply;
-};
-
-export type ReviewsResponse = {
-  reviews: Review[];
-  message?: string;
 };
 
 export type CreateReviewResponse = {

@@ -42,7 +42,7 @@ const process = [
   { title: "작업 완료", image: "/images/process/05.webp" },
 ];
 
-const reviews = [
+const reviewList = [
   [
     "마빵 구간 다른 곳은 드럽게 비싸던데 이렇게 저렴해도 되나 싶다..",
     "롤 대리",
@@ -479,14 +479,14 @@ export default async function Home() {
         <Container>
           <Reveal>
             <SectionTitle
-              eyebrow="reviews"
+              eyebrow="review"
               title="진행 후기"
               desc="롤 대리·롤 듀오·롤 계정 이용 후기를 살펴보세요. 후기 게시판에서는 작성일, 이용 서비스와 연결된 작업 기사 정보를 함께 확인할 수 있습니다."
             />
           </Reveal>
           <Reveal>
             <div className="review-marquee-mask mt-10 space-y-5">
-              {[reviews.slice(0, 5), reviews.slice(5, 10)].map(
+              {[reviewList.slice(0, 5), reviewList.slice(5, 10)].map(
                 (row, rowIndex) => (
                   <div
                     key={rowIndex === 0 ? "top" : "bottom"}
@@ -532,7 +532,7 @@ export default async function Home() {
           <Reveal>
             <div className="mt-9 text-center">
               <Link
-                href="/reviews"
+                href="/review"
                 prefetch={false}
                 className="inline-flex items-center gap-2 rounded-full border border-gold/20 px-6 py-3 font-bold text-white transition hover:border-gold/60"
               >

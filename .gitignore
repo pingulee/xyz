@@ -42,4 +42,4 @@ next-env.d.ts
 
 .vscode
 .claude/settings.local.json
-database/reviews-backup.json
+database/review-backup.json

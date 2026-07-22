@@ -17,7 +17,7 @@
 
 ## 디렉토리 구조
 - **컴포넌트는 기능별 폴더**(평면 아님): `components/{layout,ui,home,service,quote,review,lineup}` + `hooks/`. import는 항상 `@/` alias 절대경로(상대경로 `./` 안 씀). 새 컴포넌트는 해당 기능 폴더에.
-  - `layout`(Header/Footer/FloatingContact/Container), `ui`(SectionTitle/Reveal/JsonLd/FaqItem), `home`(HeroSlider/ServiceCard/HomeFaq), `service`(ServiceDetail/PriceTable), `quote`(QuoteCalculator+RankPicker/constants/types/utils), `review`(ReviewBoard+ReviewDetail/ReplySection/Stars/StarRating/ReviewNavButton/helpers/types/constants, ReviewDetailView, LineupReviews), `lineup`(AdminLineupBoard+BoosterCard/adminLineupConstants, LineupCard/BoosterAvatar/BoosterAuthControls/WinStatsCard/TierRecords)
+  - `layout`(Header/Footer/FloatingContact/Container), `ui`(SectionTitle/Reveal/JsonLd/FaqItem), `home`(HeroSlider/ServiceCard/HomeFaq), `service`(ServiceDetail/PriceTable), `quote`(QuoteCalculator+RankPicker/constants/types/utils), `review`(ReviewBoard+ReviewDetail/ReplySection/Stars/StarRating/ReviewNavButton/helpers/types/constants, ReviewDetailView, LineupReview), `lineup`(AdminLineupBoard+BoosterCard/adminLineupConstants, LineupCard/BoosterAvatar/BoosterAuthControls/WinStatsCard/TierRecords)
   - `hooks/useChampionOptions.ts` = quote·lineup 공용 챔피언 데이터 훅.
 - 큰 컴포넌트는 하위 컴포넌트/상수/타입/헬퍼를 같은 폴더 내 파일로 분리(예: review/, quote/). `lineup/`은 여러 컴포넌트 공유 폴더라 상수 파일명에 접두사(`adminLineupConstants.ts`).
 
@@ -25,7 +25,7 @@
 - **`lib/site.ts` = 사이트 단일 진실 소스**: `site`(name/url/description/kakaoUrl/ogImage/logo), `navItems`, `services`, 가격표(`boostingPrices`/`duoPrices`). 도메인/이미지/네비 변경은 여기서.
 - **도메인은 IDN**: `https://롤대리.xyz` → punycode `xn--vk1b65hf2a.xyz`. `metadataBase`가 자동 인코딩.
 - **서비스 카드 이미지**: `/images/slider/01~03.webp` 재사용 (01=대리, 02=듀오, 03=계정). `boosting/duo/account.png`는 **존재하지 않음** — 새 경로 추가 시 실제 파일 먼저 배치할 것 (없으면 next/image가 400).
-- **DB 접근 페이지는 `export const dynamic = "force-dynamic"`** (lineup, reviews, 상세, admin, login). `sitemap.ts`도 force-dynamic + try/catch.
+- **DB 접근 페이지는 `export const dynamic = "force-dynamic"`** (lineup, review, 상세, admin, login). `sitemap.ts`도 force-dynamic + try/catch.
 - **인증**: `lib/adminSession.ts`(관리자), `lib/boosterSession.ts`(기사) — 쿠키 기반. `SESSION_COOKIE`, `BOOSTER_SESSION_COOKIE`.
 - 라인업 slug는 저장 안 함 — `getLineupSlug(name)`으로 파생 (`lib/lineup-model.ts`).
 

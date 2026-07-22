@@ -6,7 +6,7 @@ import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
 import ReviewDetailView from "@/components/review/ReviewDetailView";
 import { getLineups } from "@/lib/lineups";
-import { getReviewById, getReviewNavigation } from "@/lib/reviews";
+import { getReviewById, getReviewNavigation } from "@/lib/review";
 import {
   BOOSTER_SESSION_COOKIE,
   validateBoosterSession,
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lineupName = review.lineupName ?? review.reply?.boosterName ?? "검증 기사";
   const description = `${review.content.replace(/\s+/g, " ").slice(0, 110)}${review.content.length > 110 ? "..." : ""}`;
   const title = `${review.name}님의 ${service} 후기 | XYZ`;
-  const url = `/reviews/${id}`;
+  const url = `/review/${id}`;
 
   return {
     title,
@@ -134,13 +134,13 @@ export default async function ReviewDetailPage({ params }: Props) {
         "@type": "ListItem",
         position: 1,
         name: "작업 후기",
-        item: `${site.url}/reviews`,
+        item: `${site.url}/review`,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: `#${review.id}`,
-        item: `${site.url}/reviews/${review.id}`,
+        item: `${site.url}/review/${review.id}`,
       },
     ],
   };
@@ -158,7 +158,7 @@ export default async function ReviewDetailPage({ params }: Props) {
       <Container>
         <Reveal>
           <div className="mb-8 flex items-center gap-3 text-sm text-zinc-500">
-            <Link href="/reviews" className="transition hover:text-gold">
+            <Link href="/review" className="transition hover:text-gold">
               후기 게시판
             </Link>
             <span>/</span>

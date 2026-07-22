@@ -7,10 +7,10 @@ import { Clock, MessageCircle, Star, Swords } from "lucide-react";
 import Container from "@/components/layout/Container";
 import BoosterAvatar from "@/components/lineup/BoosterAvatar";
 import Reveal from "@/components/ui/Reveal";
-import LineupReviews from "@/components/review/LineupReviews";
+import LineupReview from "@/components/review/LineupReview";
 import WinStatsCard from "@/components/lineup/WinStatsCard";
 import { getLineupBySlug, getLineupReviewStats, getLineupWinStats } from "@/lib/lineups";
-import { getReviewsByLineupIdPage } from "@/lib/reviews";
+import { getLineupReviewPage } from "@/lib/review";
 import {
   BOOSTER_SESSION_COOKIE,
   validateBoosterSession,
@@ -78,12 +78,12 @@ export default async function LineupDetailPage({ params }: Props) {
   const boosterToken = cookieStore.get(BOOSTER_SESSION_COOKIE)?.value ?? "";
   const boosterLineupId = validateBoosterSession(boosterToken);
 
-  const [stats, reviewsPage, winStats] = await Promise.all([
+  const [stats, reviewPage, winStats] = await Promise.all([
     getLineupReviewStats(Number(lineup.id)),
-    getReviewsByLineupIdPage(Number(lineup.id), 1, 3),
+    getLineupReviewPage(Number(lineup.id), 1, 3),
     getLineupWinStats(Number(lineup.id)),
   ]);
-  const { reviews } = reviewsPage;
+  const { reviewList } = reviewPage;
 
   const hasWinRecords = winStats.total.wins + winStats.total.losses > 0;
 
@@ -319,8 +319,8 @@ export default async function LineupDetailPage({ params }: Props) {
 
               <div className="mt-6">
                 <h2 className="mb-4 text-lg font-black text-white">최근 후기</h2>
-                <LineupReviews
-                  reviews={reviews}
+                <LineupReview
+                  reviewList={reviewList}
                   boosterLineupId={boosterLineupId}
                   boosterName={lineup.name}
                   boosterImage={lineup.image ?? ""}
