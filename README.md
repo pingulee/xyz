@@ -23,7 +23,7 @@ MYSQL_PORT=3306
 MYSQL_USER=your_db_user
 MYSQL_PASSWORD=your_db_password
 MYSQL_DATABASE=your_db_name
-UPLOAD_BASE_DIR=/home/username/public_html/uploads
+UPLOAD_BASE_DIR=/home/username/public_html/upload
 ```
 
 초기 DB 구성은 `database/review.sql`, `database/lineups.sql`,
@@ -33,14 +33,14 @@ UPLOAD_BASE_DIR=/home/username/public_html/uploads
 
 라인업 이미지는 Hostinger 서버 로컬 디스크에 저장됩니다.
 
-- `UPLOAD_BASE_DIR` 미설정 시 기본 경로: `{프로젝트 루트}/uploads`
+- `UPLOAD_BASE_DIR` 미설정 시 기본 경로: `{프로젝트 루트}/upload`
 - 디렉터리는 앱 시작 시 자동 생성됩니다.
 - Hostinger에서는 웹 루트 외부 경로를 권장합니다.
 
 **Hostinger 설정 예시:**
 
 ```
-UPLOAD_BASE_DIR=/home/u123456789/uploads
+UPLOAD_BASE_DIR=/home/u123456789/upload
 ```
 
-업로드된 이미지는 `/uploads/lineups/{filename}` 경로로 서빙됩니다.
+업로드된 이미지는 `/upload/lineups/{filename}` 경로로 서빙됩니다.

@@ -237,7 +237,7 @@ export default function AdminLineupBoard({
         setUploading(true);
         const fd = new FormData();
         fd.append("image", imageFile);
-        const uploadRes = await fetch("/api/uploads/lineups", {
+        const uploadRes = await fetch("/api/upload/lineups", {
           method: "POST",
           body: fd,
         });

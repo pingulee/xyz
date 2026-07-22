@@ -24,7 +24,7 @@ const EXT_MAP: Record<string, string> = {
 
 async function getUploadDir(folder: string): Promise<string> {
   const base = process.env.UPLOAD_BASE_DIR
-    ?? join(process.cwd(), "uploads");
+    ?? join(process.cwd(), "upload");
   const dir = resolve(join(base, folder));
   await mkdir(dir, { recursive: true });
   await access(dir, constants.W_OK);
@@ -95,7 +95,7 @@ export async function POST(
   }
 
   return NextResponse.json(
-    { imageUrl: `/uploads/${folder}/${safeName}` },
+    { imageUrl: `/upload/${folder}/${safeName}` },
     { status: 201 },
   );
 }

@@ -42,7 +42,7 @@ function isAdminRequest(request: Request): boolean {
 function isValidImageUrl(image: string | null | undefined): boolean {
   if (!image) return true;
   return (
-    (image === DEFAULT_PROFILE_IMAGE || image.startsWith("/uploads/lineups/")) &&
+    (image === DEFAULT_PROFILE_IMAGE || image.startsWith("/upload/lineups/")) &&
     image.length <= 255
   );
 }

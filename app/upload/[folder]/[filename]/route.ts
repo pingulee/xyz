@@ -15,7 +15,7 @@ const MIME_MAP: Record<string, string> = {
 
 function getUploadBase(): string {
   return process.env.UPLOAD_BASE_DIR
-    ?? join(process.cwd(), "uploads");
+    ?? join(process.cwd(), "upload");
 }
 
 export async function GET(

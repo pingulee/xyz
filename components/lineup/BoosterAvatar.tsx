@@ -47,7 +47,7 @@ export default function BoosterAvatar({
           priority={priority}
           className="h-full w-full object-cover rounded-full"
           // 업로드 아바타는 Node 라우트 경유 + 서버 리사이즈(sharp) 비용이 커서 원본 그대로 서빙
-          unoptimized={imageSrc.startsWith("/uploads/")}
+          unoptimized={imageSrc.startsWith("/upload/")}
         />
       </span>
       <span
