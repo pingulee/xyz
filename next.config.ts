@@ -6,6 +6,20 @@ const nextConfig: NextConfig = {
   experimental: {
     inlineCss: true,
   },
+  // 폰트 서브셋(불변 파일명)은 장기 캐시 → 재방문 시 재다운로드 방지
+  async headers() {
+    return [
+      {
+        source: "/fonts/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

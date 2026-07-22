@@ -119,6 +119,7 @@ export default function HeroSlider() {
           priority
           fetchPriority="high"
           sizes="100vw"
+          quality={50}
           className="object-cover opacity-50"
         />
         <div className="absolute inset-0 bg-linear-to-t from-black via-black/55 to-black/30" />
