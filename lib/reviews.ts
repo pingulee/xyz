@@ -168,13 +168,72 @@ export async function getReviewsByLineupId(lineupId: number): Promise<Review[]> 
   return rows.map(toReview);
 }
 
+/** 기사 상세용 서버 사이드 페이지네이션: 해당 페이지 분량 + 전체 개수 */
+export async function getReviewsByLineupIdPage(
+  lineupId: number,
+  page = 1,
+  perPage = 3,
+): Promise<{ reviews: Review[]; total: number; page: number; perPage: number }> {
+  await ensureReviewsSchema();
+  const safePer = Math.max(1, Math.min(50, Math.floor(perPage)));
+  const [countRows] = await getPool().execute<RowDataPacket[]>(
+    `SELECT COUNT(*) AS total FROM reviews WHERE lineup_id = :lineupId`,
+    { lineupId },
+  );
+  const total = Number(countRows[0]?.total ?? 0);
+  const totalPages = Math.max(1, Math.ceil(total / safePer));
+  const safePage = Math.max(1, Math.min(totalPages, Math.floor(page) || 1));
+  const offset = (safePage - 1) * safePer;
+  const safeLineupId = Math.floor(lineupId);
+  const [rows] = await getPool().query<ReviewRow[]>(
+    `${REVIEW_SELECT} WHERE r.lineup_id = ${safeLineupId}
+     ORDER BY r.created_at DESC, r.id DESC LIMIT ${safePer} OFFSET ${offset}`,
+  );
+  return { reviews: rows.map(toReview), total, page: safePage, perPage: safePer };
+}
+
 export async function getReviews(limit = 5000) {
   await ensureReviewsSchema();
   const safeLimit = Math.max(1, Math.min(100000, Math.floor(limit)));
   const [rows] = await getPool().query<ReviewRow[]>(
-    `${REVIEW_SELECT} ORDER BY r.created_at DESC LIMIT ${safeLimit}`,
+    `${REVIEW_SELECT} ORDER BY r.created_at DESC, r.id DESC LIMIT ${safeLimit}`,
   );
   return rows.map(toReview);
+}
+
+/** sitemap용 경량 조회: id/created_at만 (조인·JSON 파싱 없음) */
+export async function getReviewSitemapEntries(
+  limit = 5000,
+): Promise<Array<{ id: string; createdAt: string }>> {
+  await ensureReviewsSchema();
+  const safeLimit = Math.max(1, Math.min(100000, Math.floor(limit)));
+  const [rows] = await getPool().query<RowDataPacket[]>(
+    `SELECT id, created_at FROM reviews ORDER BY created_at DESC, id DESC LIMIT ${safeLimit}`,
+  );
+  return rows.map((r) => ({
+    id: String(r.id),
+    createdAt: (r.created_at as Date).toISOString(),
+  }));
+}
+
+/** 서버 사이드 페이지네이션: 현재 페이지 분량만 조회 + 전체 개수 */
+export async function getReviewsPage(
+  page = 1,
+  perPage = 20,
+): Promise<{ reviews: Review[]; total: number; page: number; perPage: number }> {
+  await ensureReviewsSchema();
+  const safePer = Math.max(1, Math.min(100, Math.floor(perPage)));
+  const [countRows] = await getPool().query<RowDataPacket[]>(
+    `SELECT COUNT(*) AS total FROM reviews`,
+  );
+  const total = Number(countRows[0]?.total ?? 0);
+  const totalPages = Math.max(1, Math.ceil(total / safePer));
+  const safePage = Math.max(1, Math.min(totalPages, Math.floor(page) || 1));
+  const offset = (safePage - 1) * safePer;
+  const [rows] = await getPool().query<ReviewRow[]>(
+    `${REVIEW_SELECT} ORDER BY r.created_at DESC, r.id DESC LIMIT ${safePer} OFFSET ${offset}`,
+  );
+  return { reviews: rows.map(toReview), total, page: safePage, perPage: safePer };
 }
 
 export async function getReviewById(id: number): Promise<Review | null> {
@@ -191,19 +250,36 @@ export async function getReviewNavigation(id: number): Promise<{
   next?: ReviewNavItem;
 }> {
   await ensureReviewsSchema();
-  const reviews = await getReviews(500);
-  const index = reviews.findIndex((review) => review.id === String(id));
-  if (index < 0) return {};
+  const pool = getPool();
+  const [curRows] = await pool.execute<RowDataPacket[]>(
+    `SELECT created_at FROM reviews WHERE id = :id LIMIT 1`,
+    { id },
+  );
+  if (!curRows[0]) return {};
+  const createdAt = curRows[0].created_at as Date;
 
-  const toNavItem = (review: Review): ReviewNavItem => ({
-    id: review.id,
-    name: review.name,
-    content: review.content,
-    createdAt: review.createdAt,
+  const NAV_SELECT = `SELECT id, name, content, created_at FROM reviews`;
+  // 목록 정렬: created_at DESC, id DESC → 이전=더 최신, 다음=더 과거
+  const [prevRows] = await pool.execute<RowDataPacket[]>(
+    `${NAV_SELECT} WHERE (created_at > :createdAt) OR (created_at = :createdAt AND id > :id)
+     ORDER BY created_at ASC, id ASC LIMIT 1`,
+    { createdAt, id },
+  );
+  const [nextRows] = await pool.execute<RowDataPacket[]>(
+    `${NAV_SELECT} WHERE (created_at < :createdAt) OR (created_at = :createdAt AND id < :id)
+     ORDER BY created_at DESC, id DESC LIMIT 1`,
+    { createdAt, id },
+  );
+
+  const toNavItem = (row: RowDataPacket): ReviewNavItem => ({
+    id: String(row.id),
+    name: row.name,
+    content: row.content,
+    createdAt: (row.created_at as Date).toISOString(),
   });
 
   return {
-    previous: index > 0 ? toNavItem(reviews[index - 1]) : undefined,
-    next: index < reviews.length - 1 ? toNavItem(reviews[index + 1]) : undefined,
+    previous: prevRows[0] ? toNavItem(prevRows[0]) : undefined,
+    next: nextRows[0] ? toNavItem(nextRows[0]) : undefined,
   };
 }

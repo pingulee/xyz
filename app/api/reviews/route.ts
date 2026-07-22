@@ -7,6 +7,7 @@ import {
   getSessionTokenFromRequest,
   validateSession,
 } from "@/lib/adminSession";
+import { clearStatsCache } from "@/lib/stats-cache";
 
 export const runtime = "nodejs";
 
@@ -127,7 +128,7 @@ async function markReviewCreated(request: Request) {
 
 export async function GET() {
   try {
-    return NextResponse.json({ reviews: await getReviews() });
+    return NextResponse.json({ reviews: await getReviews(100) });
   } catch (error) {
     console.error("Failed to load reviews", error);
     return NextResponse.json(
@@ -225,6 +226,7 @@ export async function POST(request: Request) {
 
     if (!adminWrite) await markReviewCreated(request);
 
+    clearStatsCache();
     return NextResponse.json({ review: toReview(rows[0]) }, { status: 201 });
   } catch (error) {
     console.error("Failed to create review", error);
@@ -343,6 +345,7 @@ export async function PUT(request: Request) {
       { id },
     );
 
+    clearStatsCache();
     return NextResponse.json({ review: toReview(rows[0]) });
   } catch (error) {
     console.error("Failed to update review", error);
@@ -457,6 +460,7 @@ export async function DELETE(request: Request) {
     }
 
     await getPool().execute(`DELETE FROM reviews WHERE id = :id`, { id });
+    clearStatsCache();
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Failed to delete review", error);

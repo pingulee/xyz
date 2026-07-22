@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { navItems, services, site } from "@/lib/site";
 import { getLineups } from "@/lib/lineups";
 import { getLineupSlug } from "@/lib/lineup-model";
-import { getReviews } from "@/lib/reviews";
+import { getReviewSitemapEntries } from "@/lib/reviews";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const [lineups, reviews] = await Promise.all([
       getLineups(true),
-      getReviews(),
+      getReviewSitemapEntries(),
     ]);
 
     const lineupEntries: MetadataRoute.Sitemap = lineups.map((lineup) => ({

@@ -10,7 +10,7 @@ import Reveal from "@/components/ui/Reveal";
 import LineupReviews from "@/components/review/LineupReviews";
 import WinStatsCard from "@/components/lineup/WinStatsCard";
 import { getLineupBySlug, getLineupReviewStats, getLineupWinStats } from "@/lib/lineups";
-import { getReviewsByLineupId } from "@/lib/reviews";
+import { getReviewsByLineupIdPage } from "@/lib/reviews";
 import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSession";
 import { site } from "@/lib/site";
 
@@ -26,6 +26,7 @@ function nationalityLabel(code: number) {
 
 type Props = {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ rp?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -63,8 +64,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function LineupDetailPage({ params }: Props) {
+export default async function LineupDetailPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { rp } = (await searchParams) ?? {};
+  const reviewPage = Math.max(1, Number(rp) || 1);
   const lineup = await getLineupBySlug(slug);
 
   if (!lineup) {
@@ -75,11 +78,12 @@ export default async function LineupDetailPage({ params }: Props) {
   const knightToken = cookieStore.get(KNIGHT_SESSION_COOKIE)?.value ?? "";
   const knightLineupId = validateKnightSession(knightToken);
 
-  const [stats, reviews, winStats] = await Promise.all([
+  const [stats, reviewsPage, winStats] = await Promise.all([
     getLineupReviewStats(Number(lineup.id)),
-    getReviewsByLineupId(Number(lineup.id)),
+    getReviewsByLineupIdPage(Number(lineup.id), reviewPage),
     getLineupWinStats(Number(lineup.id)),
   ]);
+  const { reviews, total: reviewTotal, page: currentReviewPage } = reviewsPage;
 
   const hasWinRecords = winStats.total.wins + winStats.total.losses > 0;
 
@@ -315,10 +319,14 @@ export default async function LineupDetailPage({ params }: Props) {
 
               <div className="mt-6">
                 <h2 className="mb-4 text-lg font-black text-white">
-                  후기 <span className="text-gold">{reviews.length}</span>개
+                  후기 <span className="text-gold">{reviewTotal}</span>개
                 </h2>
                 <LineupReviews
+                  key={currentReviewPage}
                   reviews={reviews}
+                  total={reviewTotal}
+                  serverPage={currentReviewPage}
+                  basePath={`/lineup/${encodeURIComponent(slug)}`}
                   knightLineupId={knightLineupId}
                   knightName={lineup.name}
                   knightImage={lineup.image ?? ""}

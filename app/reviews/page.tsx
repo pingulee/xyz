@@ -4,7 +4,8 @@ import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
 import ReviewBoard from "@/components/review/ReviewBoard";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { getReviews } from "@/lib/reviews";
+import { getReviewsPage } from "@/lib/reviews";
+import { REVIEWS_PER_PAGE } from "@/components/review/constants";
 import { getLineups } from "@/lib/lineups";
 import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
 import { KNIGHT_SESSION_COOKIE, validateKnightSession } from "@/lib/knightSession";
@@ -34,8 +35,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ReviewsPage() {
-  const reviews = await getReviews(5000);
+export default async function ReviewsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const requestedPage = Math.max(1, Number(pageParam) || 1);
+  const { reviews, total, page } = await getReviewsPage(
+    requestedPage,
+    REVIEWS_PER_PAGE,
+  );
   const lineups = await getLineups(true);
 
   const cookieStore = await cookies();
@@ -80,7 +90,10 @@ export default async function ReviewsPage() {
         </Reveal>
         <Reveal>
           <ReviewBoard
+            key={page}
             initialReviews={reviews}
+            total={total}
+            serverPage={page}
             isAdmin={isAdmin}
             lineups={lineups}
             knightLineupId={knightLineupId}

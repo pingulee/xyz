@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   ChevronLeft,
@@ -314,18 +315,24 @@ function ReplyBlock({
 
 export default function LineupReviews({
   reviews,
+  total = 0,
+  serverPage = 1,
+  basePath = "",
   knightLineupId = null,
   knightName = "",
   knightImage = "",
   knightAvailability = null,
 }: {
   reviews: Review[];
+  total?: number;
+  serverPage?: number;
+  basePath?: string;
   knightLineupId?: number | null;
   knightName?: string;
   knightImage?: string;
   knightAvailability?: KnightAvailability | null;
 }) {
-  const [page, setPage] = useState(1);
+  const router = useRouter();
 
   if (reviews.length === 0) {
     return (
@@ -335,12 +342,19 @@ export default function LineupReviews({
     );
   }
 
-  const totalPages = Math.ceil(reviews.length / PER_PAGE);
-  const currentPage = Math.min(page, totalPages);
-  const slice = reviews.slice(
-    (currentPage - 1) * PER_PAGE,
-    currentPage * PER_PAGE,
+  // 서버에서 현재 페이지 분량만 내려옴
+  const totalPages = Math.max(
+    1,
+    Math.ceil(Math.max(total, reviews.length) / PER_PAGE),
   );
+  const currentPage = Math.min(serverPage, totalPages);
+  const slice = reviews;
+  const setPage = (nextPage: number) => {
+    const target = Math.min(Math.max(nextPage, 1), totalPages);
+    router.push(target === 1 ? basePath : `${basePath}?rp=${target}`, {
+      scroll: false,
+    });
+  };
 
   const pages = getPageItems(currentPage, totalPages, PAGE_BLOCK).filter(
     (p): p is number => typeof p === "number",

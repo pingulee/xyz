@@ -19,7 +19,6 @@ import { getPageItems, formatDate, PAGE_BLOCK } from "@/components/review/helper
 import type {
   Review,
   ReviewReply,
-  ReviewsResponse,
   CreateReviewResponse,
   DeleteForm,
   EditForm,
@@ -30,11 +29,15 @@ import ReviewDetail from "@/components/review/ReviewDetail";
 
 export default function ReviewBoard({
   initialReviews = [],
+  total = 0,
+  serverPage = 1,
   isAdmin = false,
   lineups = [],
   knightLineupId = null,
 }: {
   initialReviews?: Review[];
+  total?: number;
+  serverPage?: number;
   isAdmin?: boolean;
   lineups?: Array<{
     id: string;
@@ -64,9 +67,8 @@ export default function ReviewBoard({
   const [selectedReviewId, setSelectedReviewId] = useState("");
   const [writeOpen, setWriteOpen] = useState(false);
   const [reviewSubmitAttempted, setReviewSubmitAttempted] = useState(false);
-  const [page, setPage] = useState(1);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(initialReviews.length === 0);
+  const loading = false;
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState("");
   const [editingId, setEditingId] = useState("");
@@ -85,9 +87,9 @@ export default function ReviewBoard({
   const visibleReviews = reviews;
   const totalPages = Math.max(
     1,
-    Math.ceil(visibleReviews.length / REVIEWS_PER_PAGE),
+    Math.ceil(Math.max(total, visibleReviews.length) / REVIEWS_PER_PAGE),
   );
-  const currentPage = Math.min(page, totalPages);
+  const currentPage = Math.min(serverPage, totalPages);
   const selectedReview = reviews.find(
     (review) => review.id === selectedReviewId,
   );
@@ -102,10 +104,8 @@ export default function ReviewBoard({
     selectedReviewIndex >= 0 && selectedReviewIndex < visibleReviews.length - 1
       ? visibleReviews[selectedReviewIndex + 1]
       : undefined;
-  const paginatedReviews = useMemo(() => {
-    const start = (currentPage - 1) * REVIEWS_PER_PAGE;
-    return visibleReviews.slice(start, start + REVIEWS_PER_PAGE);
-  }, [currentPage, visibleReviews]);
+  // 서버에서 현재 페이지 분량만 내려옴
+  const paginatedReviews = visibleReviews;
   const pageItems = useMemo(
     () => getPageItems(currentPage, totalPages),
     [currentPage, totalPages],
@@ -144,36 +144,12 @@ export default function ReviewBoard({
     };
   }, [writeOpen]);
 
-  useEffect(() => {
-    const loadReviews = async () => {
-      try {
-        const response = await fetch("/api/reviews", { cache: "no-store" });
-        const data = (await response.json()) as ReviewsResponse;
-
-        if (!response.ok) {
-          throw new Error(data.message ?? "후기를 불러오지 못했습니다.");
-        }
-
-        setReviews(data.reviews);
-      } catch (caught) {
-        setError(
-          caught instanceof Error
-            ? caught.message
-            : "후기를 불러오지 못했습니다.",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void loadReviews();
-  }, []);
-
   const goToPage = (nextPage: number) => {
-    setPage(Math.min(Math.max(nextPage, 1), totalPages));
+    const target = Math.min(Math.max(nextPage, 1), totalPages);
     setSelectedReviewId("");
     setDeleteOpenId("");
     setEditOpenId("");
+    router.push(target === 1 ? "/reviews" : `/reviews?page=${target}`);
   };
 
   const updateDeleteForm = (reviewId: string, updates: Partial<DeleteForm>) => {
@@ -328,7 +304,6 @@ export default function ReviewBoard({
       setReviews((current) => [data.review, ...current]);
       setForm(blankForm);
       setReviewSubmitAttempted(false);
-      setPage(1);
       setWriteOpen(false);
       router.push(`/reviews/${data.review.id}`);
     } catch (caught) {
@@ -380,6 +355,7 @@ export default function ReviewBoard({
         delete next[reviewId];
         return next;
       });
+      router.refresh();
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -532,7 +508,6 @@ export default function ReviewBoard({
       const data = (await response.json()) as CreateReviewResponse;
       if (!response.ok) throw new Error(data.message ?? "복제하지 못했습니다.");
       setReviews((current) => [data.review, ...current]);
-      setPage(1);
       router.push(`/reviews/${data.review.id}`);
     } catch (caught) {
       setError(

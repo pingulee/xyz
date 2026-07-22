@@ -6,6 +6,7 @@ import { getChampionImageMap } from "@/lib/champions";
 import { oncePerProcess } from "@/lib/schema-once";
 import { getLineupSlug } from "@/lib/lineup-model";
 import type { Lineup } from "@/lib/lineup-model";
+import { getCachedStat, setCachedStat } from "@/lib/stats-cache";
 
 type LineupRow = RowDataPacket & {
   id: number;
@@ -105,6 +106,11 @@ type LineupRecordSummary = { champions: string[]; wins: number; losses: number }
 async function getRecordSummariesByLineup(): Promise<
   Map<number, LineupRecordSummary>
 > {
+  const CACHE_KEY = "recordSummariesByLineup";
+  const cachedSummary =
+    getCachedStat<Map<number, LineupRecordSummary>>(CACHE_KEY);
+  if (cachedSummary) return cachedSummary;
+
   const [rows] = await getPool().execute<RowDataPacket[]>(
     `SELECT lineup_id, tier_records
        FROM review_replies
@@ -155,6 +161,7 @@ async function getRecordSummariesByLineup(): Promise<
         .map(([champion]) => champion),
     });
   }
+  setCachedStat(CACHE_KEY, result);
   return result;
 }
 
@@ -324,6 +331,14 @@ export async function getLineupWinStats(lineupId: number): Promise<{
   boost: WinStatsGroup;
   duo: WinStatsGroup;
 }> {
+  const CACHE_KEY = `winStats:${lineupId}`;
+  const cached = getCachedStat<{
+    total: WinStatsGroup;
+    boost: WinStatsGroup;
+    duo: WinStatsGroup;
+  }>(CACHE_KEY);
+  if (cached) return cached;
+
   const [rows] = await getPool().execute<RowDataPacket[]>(
     `SELECT rr.tier_records AS tier_records, r.service AS service,
             r.created_at AS created_at
@@ -427,11 +442,13 @@ export async function getLineupWinStats(lineupId: number): Promise<{
 
   const championImages = await getChampionImageMap();
 
-  return {
+  const result = {
     total: toWinStatsGroup(total, championImages),
     boost: toWinStatsGroup(boost, championImages),
     duo: toWinStatsGroup(duo, championImages),
   };
+  setCachedStat(CACHE_KEY, result);
+  return result;
 }
 
 export async function getLineupReviewStats(id: number) {

@@ -7,6 +7,7 @@ import {
   validateSession,
 } from "@/lib/adminSession";
 import type { TierRecord } from "@/lib/reviews";
+import { clearStatsCache } from "@/lib/stats-cache";
 
 export const runtime = "nodejs";
 
@@ -141,6 +142,7 @@ export async function POST(request: Request) {
     `SELECT id, lineup_id, knight_name, content, tier_records, created_at FROM review_replies WHERE id = :id`,
     { id: result.insertId },
   );
+  clearStatsCache();
   const r = replyRows[0];
   const parsedTier = r.tier_records
     ? ((typeof r.tier_records === "string"
@@ -205,5 +207,6 @@ export async function DELETE(request: Request) {
     `DELETE FROM review_replies WHERE review_id = :reviewId`,
     { reviewId },
   );
+  clearStatsCache();
   return NextResponse.json({ ok: true });
 }
