@@ -1,15 +1,19 @@
-export function getPageItems(currentPage: number, totalPages: number) {
+export const PAGE_BLOCK = 10;
+
+export function getPageItems(
+  currentPage: number,
+  totalPages: number,
+  block: number = PAGE_BLOCK,
+) {
+  // 네이버 카페식: block개 단위 블록으로 번호 노출(생략 없음). 블록 정렬.
   const items: Array<number | "..."> = [];
+  if (totalPages <= 0) return items;
 
-  for (let page = 1; page <= totalPages; page += 1) {
-    const visible =
-      page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1;
+  const blockStart = Math.floor((currentPage - 1) / block) * block + 1;
+  const blockEnd = Math.min(totalPages, blockStart + block - 1);
 
-    if (visible) {
-      items.push(page);
-    } else if (items[items.length - 1] !== "...") {
-      items.push("...");
-    }
+  for (let page = blockStart; page <= blockEnd; page += 1) {
+    items.push(page);
   }
 
   return items;

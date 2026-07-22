@@ -16,8 +16,10 @@ import {
   normalizeTierRecords,
 } from "@/components/lineup/TierRecords";
 import type { Review, ReviewReply, TierRecord } from "@/lib/reviews";
+import { getPageItems } from "@/components/review/helpers";
 
 const PER_PAGE = 3;
+const PAGE_BLOCK = 5; // 기사 세부페이지 후기: < 1~5 > 블록
 const REPLY_CONTENT_MIN_LENGTH = 10;
 
 function Stars({ rating }: { rating: number }) {
@@ -337,8 +339,9 @@ export default function LineupReviews({
     currentPage * PER_PAGE,
   );
 
-  const pages: number[] = [];
-  for (let i = 1; i <= totalPages; i++) pages.push(i);
+  const pages = getPageItems(currentPage, totalPages, PAGE_BLOCK).filter(
+    (p): p is number => typeof p === "number",
+  );
 
   return (
     <div className="grid gap-4">
@@ -378,8 +381,9 @@ export default function LineupReviews({
         <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
           <button
             type="button"
-            onClick={() => setPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
+            onClick={() => setPage(Math.max(currentPage - PAGE_BLOCK, 1))}
+            disabled={Math.ceil(currentPage / PAGE_BLOCK) <= 1}
+            aria-label="이전 10페이지"
             className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronLeft size={16} />
@@ -402,8 +406,12 @@ export default function LineupReviews({
 
           <button
             type="button"
-            onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
+            onClick={() => setPage(Math.min(currentPage + PAGE_BLOCK, totalPages))}
+            disabled={
+              Math.ceil(currentPage / PAGE_BLOCK) >=
+              Math.ceil(totalPages / PAGE_BLOCK)
+            }
+            aria-label="다음 10페이지"
             className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronRight size={16} />

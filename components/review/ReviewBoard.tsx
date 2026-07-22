@@ -15,7 +15,7 @@ import {
   blankEditForm,
   SERVICE_LABEL,
 } from "@/components/review/constants";
-import { getPageItems, formatDate } from "@/components/review/helpers";
+import { getPageItems, formatDate, PAGE_BLOCK } from "@/components/review/helpers";
 import type {
   Review,
   ReviewReply,
@@ -1005,8 +1005,9 @@ export default function ReviewBoard({
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <button
                   type="button"
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage === 1}
+                  onClick={() => goToPage(currentPage - PAGE_BLOCK)}
+                  disabled={Math.ceil(currentPage / PAGE_BLOCK) <= 1}
+                  aria-label="이전 10페이지"
                   className="inline-flex items-center gap-1 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <ChevronLeft size={16} />
@@ -1039,8 +1040,12 @@ export default function ReviewBoard({
 
                 <button
                   type="button"
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
+                  onClick={() => goToPage(currentPage + PAGE_BLOCK)}
+                  disabled={
+                    Math.ceil(currentPage / PAGE_BLOCK) >=
+                    Math.ceil(totalPages / PAGE_BLOCK)
+                  }
+                  aria-label="다음 10페이지"
                   className="inline-flex items-center gap-1 rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   다음

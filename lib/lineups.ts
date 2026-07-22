@@ -266,7 +266,7 @@ export type WinStatsGroup = {
   recent: RecentGame[];
 };
 
-const RECENT_GAMES_LIMIT = 10;
+const RECENT_GAMES_LIMIT = 15;
 
 type ChampionAcc = {
   wins: number;
