@@ -14,6 +14,7 @@ import {
 import Container from "@/components/layout/Container";
 import FaqItem from "@/components/ui/FaqItem";
 import HeroSlider from "@/components/home/HeroSlider";
+import ServiceGuide from "@/components/home/ServiceGuide";
 import LineupCard from "@/components/lineup/LineupCard";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
@@ -170,6 +171,52 @@ export default async function Home() {
         <Container>
           <Reveal>
             <SectionTitle
+              eyebrow="why xyz"
+              title="XYZ를 이용해야 하는 이유"
+              desc="롤 대리·롤 듀오는 결국 계정을 믿고 맡기는 일입니다. XYZ는 안전, 검증, 투명함 세 가지 원칙으로 운영합니다."
+            />
+          </Reveal>
+          <div className="grid gap-5 lg:grid-cols-3">
+            {[
+              [
+                ShieldCheck,
+                "안전 중심",
+                "무리한 속도보다 계정 상태와 일정에 맞춘 안정적인 진행을 우선합니다.",
+              ],
+              [
+                Trophy,
+                "검증 기사",
+                "상위 티어 기사 라인업을 기준으로 서비스별 적합한 기사를 배정합니다.",
+              ],
+              [
+                BadgeCheck,
+                "투명한 상담",
+                "목표와 조건을 확인한 뒤 진행 가능 여부와 견적을 명확하게 안내합니다.",
+              ],
+            ].map(([Icon, title, desc]) => {
+              const I = Icon as typeof ShieldCheck;
+              return (
+                <Reveal key={String(title)}>
+                  <div className="card-premium rounded-4xl p-8">
+                    <I className="text-gold" size={36} />
+                    <h3 className="mt-6 text-2xl font-black text-white">
+                      {String(title)}
+                    </h3>
+                    <p className="mt-3 leading-7 text-zinc-400">
+                      {String(desc)}
+                    </p>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
+        </Container>
+      </section>
+
+      <section className="py-20">
+        <Container>
+          <Reveal>
+            <SectionTitle
               eyebrow="services"
               title="서비스 안내"
               desc="대리, 듀오, 계정 까지 목적에 맞는 서비스를 빠르게 선택할 수 있습니다."
@@ -285,52 +332,6 @@ export default async function Home() {
         <Container>
           <Reveal>
             <SectionTitle
-              eyebrow="why xyz"
-              title="XYZ가 신뢰를 만드는 방식"
-              desc="롤 대리·롤 듀오는 결국 계정을 믿고 맡기는 일입니다. XYZ는 안전, 검증, 투명함 세 가지 원칙으로 운영합니다."
-            />
-          </Reveal>
-          <div className="grid gap-5 lg:grid-cols-3">
-            {[
-              [
-                ShieldCheck,
-                "안전 중심",
-                "무리한 속도보다 계정 상태와 일정에 맞춘 안정적인 진행을 우선합니다.",
-              ],
-              [
-                Trophy,
-                "검증 기사",
-                "상위 티어 기사 라인업을 기준으로 서비스별 적합한 기사를 배정합니다.",
-              ],
-              [
-                BadgeCheck,
-                "투명한 상담",
-                "목표와 조건을 확인한 뒤 진행 가능 여부와 견적을 명확하게 안내합니다.",
-              ],
-            ].map(([Icon, title, desc]) => {
-              const I = Icon as typeof ShieldCheck;
-              return (
-                <Reveal key={String(title)}>
-                  <div className="card-premium rounded-4xl p-8">
-                    <I className="text-gold" size={36} />
-                    <h3 className="mt-6 text-2xl font-black text-white">
-                      {String(title)}
-                    </h3>
-                    <p className="mt-3 leading-7 text-zinc-400">
-                      {String(desc)}
-                    </p>
-                  </div>
-                </Reveal>
-              );
-            })}
-          </div>
-        </Container>
-      </section>
-
-      <section className="py-20">
-        <Container>
-          <Reveal>
-            <SectionTitle
               eyebrow="reviews"
               title="진행 후기"
               desc="롤 대리·롤 듀오·롤 계정을 이용한 고객님들의 생생한 후기입니다. 전체 작업 후기는 후기 게시판에서 확인하세요."
@@ -379,135 +380,7 @@ export default async function Home() {
         </Container>
       </section>
 
-      {/* SEO 콘텐츠: 롤 대리/듀오 가이드 (검색 의도 커버 + 내부 링크) */}
-      <section className="py-20">
-        <Container>
-          <Reveal>
-            <SectionTitle
-              eyebrow="guide"
-              title="롤 대리 · 롤 듀오 이용 가이드"
-              desc="처음 이용하시는 분들을 위해 롤 대리와 롤 듀오의 차이, 안전한 업체를 고르는 기준, XYZ의 진행 방식을 정리했습니다."
-            />
-          </Reveal>
-          <div className="mx-auto grid max-w-4xl gap-10">
-            <Reveal>
-              <article>
-                <h3 className="text-xl font-black text-white">
-                  롤 대리란 무엇인가요?
-                </h3>
-                <p className="mt-3 leading-8 text-zinc-400">
-                  롤 대리는 상위 티어의 검증된 기사가 고객님의 리그 오브 레전드
-                  계정으로 대신 랭크 게임을 진행해 목표 티어까지 안전하게
-                  올려드리는 서비스입니다. 아이언·브론즈·실버 같은 저티어
-                  구간부터 다이아몬드, 마스터, 그랜드마스터 이상 고티어 구간까지
-                  전 구간 진행이 가능하며, 시간제·승리 보장제·점수 보장제 등
-                  목적에 맞는 방식을 선택할 수 있습니다. XYZ의 롤대리는 전원
-                  수동 진행이 원칙이며, 계정 상태와 MMR을 먼저 분석한 뒤 무리한
-                  연속 플레이 대신 안정적인 일정으로 승급을 진행합니다. 구간별
-                  가격과 승률 보장 기준은{" "}
-                  <Link
-                    href="/boosting"
-                    className="font-bold text-gold underline-offset-4 hover:underline"
-                  >
-                    롤 대리 가격표
-                  </Link>
-                  에서 바로 확인할 수 있습니다.
-                </p>
-              </article>
-            </Reveal>
-            <Reveal>
-              <article>
-                <h3 className="text-xl font-black text-white">
-                  롤 듀오는 어떻게 다른가요?
-                </h3>
-                <p className="mt-3 leading-8 text-zinc-400">
-                  롤 듀오는 고객님이 본인 계정으로 직접 플레이하면서 상위 티어
-                  기사와 파티를 맺고 함께 랭크를 올리는 방식입니다. 계정을
-                  맡기지 않기 때문에 가장 안전한 티어 상승 방법이고, 게임을
-                  함께하며 라인전 운영·시야 장악·한타 판단 같은 실전 피드백을
-                  바로 받을 수 있어 실력 향상까지 동시에 챙길 수 있습니다.
-                  승급전이 불안한 구간, 연패로 무너진 MMR 복구, 시즌 마감 전
-                  막판 스퍼트에 특히 효과적입니다. 자세한 진행 방식과 구간별
-                  요금은{" "}
-                  <Link
-                    href="/duo"
-                    className="font-bold text-gold underline-offset-4 hover:underline"
-                  >
-                    롤 듀오 가격표
-                  </Link>
-                  에서 확인해보세요. 원하는 티어·챔피언 조건의 계정이 필요하다면{" "}
-                  <Link
-                    href="/account"
-                    className="font-bold text-gold underline-offset-4 hover:underline"
-                  >
-                    롤 계정 서비스
-                  </Link>
-                  도 함께 운영 중입니다.
-                </p>
-              </article>
-            </Reveal>
-            <Reveal>
-              <article>
-                <h3 className="text-xl font-black text-white">
-                  안전한 롤 대리 업체, 이렇게 확인하세요
-                </h3>
-                <p className="mt-3 leading-8 text-zinc-400">
-                  가격이 저렴하다는 이유만으로 업체를 고르면 계정 정지, 잠수,
-                  환불 분쟁 같은 문제를 겪기 쉽습니다. 믿을 수 있는 롤대리
-                  업체인지 판단할 때는 최소한 네 가지를 확인하세요. 첫째, 구간별
-                  가격과 승률 보장 기준을 숨김없이 공개하는지. 둘째, 실제 작업을
-                  진행하는 기사의 티어와 전적이 공개되어 있는지. 셋째, 조작이
-                  아닌 실제 진행 기록이 남는 후기가 쌓여 있는지. 넷째, 진행 중
-                  상담 채널로 실시간 소통이 가능한지입니다. XYZ는{" "}
-                  <Link
-                    href="/lineup"
-                    className="font-bold text-gold underline-offset-4 hover:underline"
-                  >
-                    기사 라인업
-                  </Link>
-                  에서 기사별 티어·모스트 챔피언·티어별 승률·최근 전적을 모두
-                  공개하고,{" "}
-                  <Link
-                    href="/reviews"
-                    className="font-bold text-gold underline-offset-4 hover:underline"
-                  >
-                    작업 후기
-                  </Link>
-                  에는 담당 기사의 실제 게임 기록(티어·챔피언·KDA)이 답변으로
-                  함께 남아 누구나 검증할 수 있습니다.
-                </p>
-              </article>
-            </Reveal>
-            <Reveal>
-              <article>
-                <h3 className="text-xl font-black text-white">
-                  XYZ가 티어를 올리는 방식
-                </h3>
-                <p className="mt-3 leading-8 text-zinc-400">
-                  상담에서 현재 티어, 목표 티어, 선호 라인과 챔피언, 희망
-                  시간대를 확인한 뒤 조건에 가장 잘 맞는 기사를 1:1로
-                  배정합니다. 진행 중에는 카카오톡으로 실시간 진행 상황을
-                  공유하고, 작업이 끝나면 티어별 승률과 게임별 KDA가 담긴 작업
-                  기록을 남깁니다. 구간별 승률 보장(저티어 최대 90%)이 기준에
-                  미달하면 상담 후 추가 진행으로 보완해드리며, 결제 전 예상
-                  금액은 메인의 견적 계산기로 미리 확인할 수 있습니다. 대리든
-                  듀오든 목표는 하나입니다 — 고객님의 계정을 안전하게, 목표
-                  티어까지. 지금 바로{" "}
-                  <a
-                    href={site.kakaoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-bold text-gold underline-offset-4 hover:underline"
-                  >
-                    카카오톡 상담
-                  </a>
-                  으로 현재 티어와 목표를 알려주세요.
-                </p>
-              </article>
-            </Reveal>
-          </div>
-        </Container>
-      </section>
+      <ServiceGuide />
 
       <section className="py-20">
         <Container>
