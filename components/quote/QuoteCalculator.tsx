@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
 import {
-  ArrowRight,
   BadgeCheck,
   Check,
   ChevronDown,
@@ -47,6 +46,7 @@ export default function QuoteCalculator() {
   const [selectedLanes, setSelectedLanes] = useState<string[]>([]);
   const [selectedChampions, setSelectedChampions] = useState<string[]>([]);
   const [championSearch, setChampionSearch] = useState("");
+  const [stepIndex, setStepIndex] = useState(0);
   const { champions, loading: championsLoading } = useChampionOptions();
 
   const currentScore = rankScore(currentTier, currentDivision);
@@ -357,6 +357,27 @@ export default function QuoteCalculator() {
     guaranteeRate === null ? "별도 상담" : `${guaranteeRate}% 보장`;
   const priceConsultRequired = serviceKey === "hourly" && currentTier >= 8;
 
+  const wizardSteps = [
+    { key: "service", label: "서비스" },
+    { key: "current", label: currentRankTitle },
+    ...(needsTargetRank ? [{ key: "target", label: "목표 랭크" }] : []),
+    { key: "options", label: "추가 옵션" },
+    { key: "result", label: "견적 결과" },
+  ];
+  const safeIndex = Math.min(stepIndex, wizardSteps.length - 1);
+  const stepKey = wizardSteps[safeIndex].key;
+  const stepValid =
+    stepKey === "current"
+      ? serviceRankValid
+      : stepKey === "target"
+        ? validTarget
+        : stepKey === "options"
+          ? championSelectionValid
+          : true;
+  const goNext = () =>
+    setStepIndex((i) => Math.min(i + 1, wizardSteps.length - 1));
+  const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0));
+
   return (
     <div className="card-premium overflow-hidden rounded-4xl">
       <div className="border-b border-white/8 bg-black/25 px-5 py-5 sm:px-7">
@@ -372,22 +393,44 @@ export default function QuoteCalculator() {
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-zinc-500">
-            {["현재 랭크", "목표 랭크", "견적 확인"].map((item, index) => (
-              <span key={item} className="flex items-center gap-2">
-                <i className="grid h-5 w-5 place-items-center rounded-full bg-gold/12 not-italic text-gold">
-                  {index + 1}
-                </i>
-                {item}
-                {index < 2 && <ArrowRight size={12} />}
-              </span>
-            ))}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {wizardSteps.map((step, index) => {
+                const active = index === safeIndex;
+                return (
+                  <button
+                    key={step.key}
+                    type="button"
+                    onClick={() => setStepIndex(index)}
+                    className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${active ? "border-gold/50 bg-gold/12 text-gold" : "border-white/8 bg-black/20 text-zinc-500 hover:text-zinc-300"}`}
+                  >
+                    <i
+                      className={`grid h-4 w-4 place-items-center rounded-full text-[10px] not-italic ${active ? "bg-gold text-black" : "bg-white/8 text-zinc-500"}`}
+                    >
+                      {index + 1}
+                    </i>
+                    {step.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="ml-auto text-right">
+              <p className="text-[10px] font-bold text-zinc-500">예상</p>
+              <p className="text-sm font-black text-gold">
+                {priceConsultRequired
+                  ? "별도 상담"
+                  : validTarget
+                    ? won(quote.total)
+                    : "-"}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-6 p-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_350px] lg:p-7">
-        <div className="space-y-4">
+      <div className="p-4 sm:p-6 lg:p-7">
+        <div className="min-h-105 space-y-4">
+          {stepKey === "service" && (
           <div className="rounded-3xl border border-gold/20 bg-gold/3.5 p-5 sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -473,7 +516,10 @@ export default function QuoteCalculator() {
               ))}
             </div>
           </div>
+          )}
 
+          {stepKey === "current" && (
+            <>
           {needsCurrentRank && (
             <RankPicker
               title={currentRankTitle}
@@ -586,7 +632,11 @@ export default function QuoteCalculator() {
               </div>
             </div>
           )}
+            </>
+          )}
 
+          {stepKey === "target" && (
+            <>
           {needsTargetRank && (
             <RankPicker
               title="목표 랭크"
@@ -624,206 +674,10 @@ export default function QuoteCalculator() {
               목표 랭크는 현재 랭크보다 높게 선택해주세요.
             </p>
           )}
+            </>
+          )}
 
-          <div className="hidden">
-            <h3 className="font-black text-white">
-              추가 옵션{" "}
-              <span className="ml-1 text-xs font-medium text-zinc-600">
-                선택 사항
-              </span>
-            </h3>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-              {visibleAddons.map((item) => {
-                const active = addons.includes(item.key);
-                const locked =
-                  item.key === "champion" && !addons.includes("lane");
-                return (
-                  <button
-                    key={item.key}
-                    type="button"
-                    disabled={locked}
-                    onClick={() => toggleAddon(item.key)}
-                    className={`rounded-2xl border p-4 text-left transition ${locked ? "cursor-not-allowed border-white/5 bg-white/1 opacity-35" : active ? "border-gold/60 bg-gold/10" : "border-white/8 bg-white/2 hover:border-gold/25"}`}
-                  >
-                    <span className="flex items-center justify-between">
-                      <b className="text-sm text-white">{item.label}</b>
-                      <i
-                        className={`grid h-5 w-5 place-items-center rounded-full border not-italic ${active ? "border-gold bg-gold text-black" : "border-white/15"}`}
-                      >
-                        {active && <Check size={12} strokeWidth={4} />}
-                      </i>
-                    </span>
-                    <span className="mt-1 block text-[11px] text-zinc-500">
-                      {locked ? "라인 지정 선택 후 이용" : item.desc}
-                    </span>
-                    <span className="mt-3 block text-xs font-black text-gold">
-                      {item.key === "champion"
-                        ? "최대 3개"
-                        : item.perGame
-                          ? `+${won(item.perGame)} / 판`
-                          : item.rate
-                            ? `+${item.rate * 100}%`
-                            : "무료"}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            {addons.includes("lane") && (
-              <div className="mt-4 rounded-2xl border border-gold/15 bg-gold/4 p-4">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm font-black text-white">
-                      희망 라인 선택
-                    </p>
-                    <p className="mt-1 text-[11px] text-zinc-500">
-                      여러 라인을 중복으로 선택할 수 있습니다.
-                    </p>
-                  </div>
-                  {selectedLanes.length > 0 && (
-                    <span className="mt-2 text-xs font-bold text-gold sm:mt-0">
-                      {selectedLanes.join(" · ")}
-                    </span>
-                  )}
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
-                  {LANES.map((lane) => {
-                    const active = selectedLanes.includes(lane);
-                    return (
-                      <button
-                        key={lane}
-                        type="button"
-                        onClick={() => toggleLane(lane)}
-                        className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-bold transition ${active ? "border-gold bg-gold text-black" : "border-white/10 bg-black/20 text-zinc-400 hover:border-gold/35"}`}
-                      >
-                        <span
-                          className={`grid h-4 w-4 place-items-center rounded border ${active ? "border-black/30 bg-black/10" : "border-white/20"}`}
-                        >
-                          {active && <Check size={10} strokeWidth={4} />}
-                        </span>
-                        {lane}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            {addons.includes("champion") && (
-              <div className="mt-4 rounded-2xl border border-gold/15 bg-gold/4 p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="text-sm font-black text-white">
-                      희망 챔피언 선택{" "}
-                      <span
-                        className={`ml-1 text-xs ${championSelectionValid ? "text-gold" : "text-red-300"}`}
-                      >
-                        {selectedChampions.length}개 선택
-                      </span>
-                    </p>
-                    <p className="mt-1 text-[11px] text-zinc-500">
-                      무료 지정을 위해 최소 3개 이상 선택해주세요.
-                    </p>
-                  </div>
-                  <input
-                    type="search"
-                    value={championSearch}
-                    onChange={(event) => setChampionSearch(event.target.value)}
-                    placeholder="챔피언 검색"
-                    className="rounded-xl border border-white/10 bg-black/25 px-4 py-2.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gold/50 sm:w-56"
-                  />
-                </div>
-                {!championSelectionValid && (
-                  <p className="mt-3 rounded-xl border border-red-400/15 bg-red-400/6 px-3 py-2 text-[11px] font-bold text-red-300">
-                    챔피언을 {3 - selectedChampions.length}개 더 선택해주세요.
-                  </p>
-                )}
-                {selectedChampions.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {selectedChampions.map((id) => {
-                      const champion = champions.find((item) => item.id === id);
-                      if (!champion) return null;
-                      return (
-                        <button
-                          key={id}
-                          type="button"
-                          onClick={() => toggleChampion(id)}
-                          className="flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 py-1 pl-1 pr-3 text-xs font-bold text-gold-soft"
-                        >
-                          <Image
-                            src={`/images/champion/${champion.id}.png`}
-                            alt=""
-                            width={24}
-                            height={24}
-                            className="h-6 w-6 rounded-full object-cover"
-                          />
-                          {champion.name}
-                          <span className="text-zinc-500">×</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-                <div className="mt-4 grid max-h-56 grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-6">
-                  {championsLoading ? (
-                    <p className="col-span-full py-6 text-center text-xs text-zinc-500">
-                      챔피언을 불러오는 중입니다.
-                    </p>
-                  ) : (
-                    filteredChampions.map((champion) => {
-                      const active = selectedChampions.includes(champion.id);
-                      return (
-                        <button
-                          key={champion.id}
-                          type="button"
-                          onClick={() => toggleChampion(champion.id)}
-                          className={`rounded-xl border p-2 text-center transition ${active ? "border-gold bg-gold/12" : "border-white/8 bg-black/20 hover:border-gold/30"}`}
-                        >
-                          <Image
-                            src={`/images/champion/${champion.id}.png`}
-                            alt=""
-                            width={38}
-                            height={38}
-                            className="mx-auto h-9 w-9 rounded-full object-cover"
-                          />
-                          <span
-                            className={`mt-1 block truncate text-[10px] font-bold ${active ? "text-gold" : "text-zinc-500"}`}
-                          >
-                            {champion.name}
-                          </span>
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <aside className="rounded-3xl border border-gold/25 bg-[radial-gradient(circle_at_top_right,rgba(222,176,67,.15),transparent_45%),rgba(0,0,0,.32)] p-6 lg:sticky lg:top-24">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-black text-gold">예상 견적</p>
-            <span className="flex items-center gap-1 text-[10px] font-bold text-zinc-500">
-              <BadgeCheck size={13} /> 실시간 계산
-            </span>
-          </div>
-          <div className="mt-4 rounded-2xl border border-gold/15 bg-gold/6 px-4 py-3">
-            <p className="text-[10px] font-bold text-zinc-500">선택 서비스</p>
-            <p className="mt-1 flex items-center gap-2 text-sm font-black text-gold-soft">
-              {service.label}
-              {service.category && (
-                <span className="rounded-full border border-gold/25 px-2 py-0.5 text-[9px]">
-                  {service.category}
-                </span>
-              )}
-            </p>
-            <p className="mt-1 text-xs text-zinc-400">
-              {serviceKey === "low-win"
-                ? `${validTarget ? quote.steps : 0}구간 신청`
-                : `${quantity.toLocaleString("ko-KR")}${service.unit} 신청`}
-            </p>
-          </div>
-
+          {stepKey === "options" && (
           <div className="mt-4 border-t border-white/8 pt-4">
             <p className="text-xs font-black text-white">
               추가 옵션{" "}
@@ -966,6 +820,32 @@ export default function QuoteCalculator() {
               </div>
             )}
           </div>
+          )}
+
+          {stepKey === "result" && (
+          <div className="rounded-3xl border border-gold/25 bg-[radial-gradient(circle_at_top_right,rgba(222,176,67,.15),transparent_45%),rgba(0,0,0,.32)] p-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-black text-gold">예상 견적</p>
+            <span className="flex items-center gap-1 text-[10px] font-bold text-zinc-500">
+              <BadgeCheck size={13} /> 실시간 계산
+            </span>
+          </div>
+          <div className="mt-4 rounded-2xl border border-gold/15 bg-gold/6 px-4 py-3">
+            <p className="text-[10px] font-bold text-zinc-500">선택 서비스</p>
+            <p className="mt-1 flex items-center gap-2 text-sm font-black text-gold-soft">
+              {service.label}
+              {service.category && (
+                <span className="rounded-full border border-gold/25 px-2 py-0.5 text-[9px]">
+                  {service.category}
+                </span>
+              )}
+            </p>
+            <p className="mt-1 text-xs text-zinc-400">
+              {serviceKey === "low-win"
+                ? `${validTarget ? quote.steps : 0}구간 신청`
+                : `${quantity.toLocaleString("ko-KR")}${service.unit} 신청`}
+            </p>
+          </div>
           <div className="mt-6 space-y-3 border-y border-white/8 py-5 text-sm">
             <div className="flex justify-between">
               <span className="text-zinc-500">기본 금액</span>
@@ -1041,7 +921,33 @@ export default function QuoteCalculator() {
             <ShieldCheck size={13} className="text-gold" /> 상담 전 별도 결제가
             발생하지 않습니다.
           </div>
-        </aside>
+          </div>
+          )}
+        </div>
+
+        <div className="mt-5 flex items-center justify-between gap-3">
+          {safeIndex > 0 ? (
+            <button
+              type="button"
+              onClick={goPrev}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-gold"
+            >
+              <ChevronLeft size={16} /> 이전
+            </button>
+          ) : (
+            <span />
+          )}
+          {stepKey !== "result" && (
+            <button
+              type="button"
+              onClick={goNext}
+              disabled={!stepValid}
+              className={`inline-flex items-center gap-1.5 rounded-full px-6 py-3 text-sm font-black transition ${stepValid ? "bg-gold-gradient text-black hover:brightness-110" : "pointer-events-none bg-white/5 text-zinc-600"}`}
+            >
+              다음 <ChevronRight size={16} />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
