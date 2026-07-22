@@ -1,13 +1,13 @@
 import Image from "next/image";
 import { Clock, EyeOff } from "lucide-react";
-import BoosterAvatar from "@/components/lineup/BoosterAvatar";
-import type { Lineup } from "@/lib/lineup-model";
+import BoosterAvatar from "@/components/booster/BoosterAvatar";
+import type { Booster } from "@/lib/booster-model";
 import {
   nationalityFlag,
   nationalityLabel,
-} from "@/components/lineup/adminLineupConstants";
+} from "@/components/booster/adminBoosterConstants";
 
-export default function BoosterCard({ booster }: { booster: Lineup }) {
+export default function AdminBoosterCard({ booster }: { booster: Booster }) {
   const wins = booster.wins ?? 0;
   const losses = booster.losses ?? 0;
   const games = wins + losses;

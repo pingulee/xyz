@@ -2,44 +2,44 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Clock, Medal, Shield } from "lucide-react";
 import Container from "@/components/layout/Container";
-import AdminLineupBoard from "@/components/lineup/AdminLineupBoard";
-import LineupCard from "@/components/lineup/LineupCard";
+import AdminBoosterBoard from "@/components/booster/AdminBoosterBoard";
+import BoosterCard from "@/components/booster/BoosterCard";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { getLineups } from "@/lib/lineups";
+import { getBoosterList } from "@/lib/booster";
 import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
 import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-const description = "xyz의 검증된 상위 티어 롤 기사 라인업 안내 페이지입니다.";
+const description = "xyz의 검증된 상위 티어 롤 부스터 안내 페이지입니다.";
 
 export const metadata: Metadata = {
-  title: "기사 라인업",
+  title: "기사 부스터",
   description,
-  alternates: { canonical: "/lineup" },
+  alternates: { canonical: "/booster" },
   openGraph: {
-    title: "기사 라인업 | XYZ",
+    title: "기사 부스터 | XYZ",
     description,
-    url: "/lineup",
+    url: "/booster",
     type: "website",
     siteName: site.name,
     images: [{ url: site.ogImage }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "기사 라인업 | XYZ",
+    title: "기사 부스터 | XYZ",
     description,
     images: [site.ogImage],
   },
 };
 
-export default async function LineupPage() {
+export default async function BoosterPage() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value ?? "";
   const isAdmin = validateSession(token);
 
-  const lineups = await getLineups(isAdmin ? false : true, !isAdmin);
+  const boosterList = await getBoosterList(isAdmin ? false : true, !isAdmin);
 
   if (isAdmin) {
     return (
@@ -47,14 +47,14 @@ export default async function LineupPage() {
         <Container>
           <Reveal>
             <SectionTitle
-              eyebrow="lineup"
-              title="기사 라인업"
+              eyebrow="booster"
+              title="기사 부스터"
               desc="검증된 상위 티어 기사진이 직접 진행합니다."
               as="h1"
             />
           </Reveal>
           <Reveal>
-            <AdminLineupBoard initialLineups={lineups} />
+            <AdminBoosterBoard initialBoosterList={boosterList} />
           </Reveal>
         </Container>
       </section>
@@ -66,17 +66,17 @@ export default async function LineupPage() {
       <Container>
         <Reveal>
           <SectionTitle
-            eyebrow="lineup"
-            title="기사 라인업"
+            eyebrow="booster"
+            title="기사 부스터"
             desc="검증된 상위 티어 기사진이 직접 진행합니다."
             as="h1"
           />
         </Reveal>
 
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {lineups.map((booster, i) => (
+          {boosterList.map((booster, i) => (
             <Reveal key={booster.name} delay={i * 0.04}>
-              <LineupCard booster={booster} placement={i + 1} />
+              <BoosterCard booster={booster} placement={i + 1} />
             </Reveal>
           ))}
         </div>

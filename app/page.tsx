@@ -17,15 +17,15 @@ import HomeFaq, {
   type HomeFaqCategory,
 } from "@/components/home/HomeFaq";
 import ServiceGuide from "@/components/home/ServiceGuide";
-import LineupCard from "@/components/lineup/LineupCard";
+import BoosterCard from "@/components/booster/BoosterCard";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 import ServiceCard from "@/components/home/ServiceCard";
 import QuoteCalculator from "@/components/quote/QuoteCalculator";
 import JsonLd from "@/components/ui/JsonLd";
 import { services, site } from "@/lib/site";
-import { getLineups } from "@/lib/lineups";
-import type { Lineup } from "@/lib/lineup-model";
+import { getBoosterList } from "@/lib/booster";
+import type { Booster } from "@/lib/booster-model";
 
 const stats = [
   { value: "상위 티어", label: "검증 기사", icon: ShieldCheck },
@@ -288,11 +288,11 @@ const faqJsonLd = {
 };
 
 export default async function Home() {
-  let lineups: Lineup[] = [];
+  let boosterList: Booster[] = [];
   try {
-    lineups = (await getLineups(true, true)).slice(0, 3);
+    boosterList = (await getBoosterList(true, true)).slice(0, 3);
   } catch (error) {
-    console.error("Failed to load home lineups", error);
+    console.error("Failed to load home booster", error);
   }
 
   return (
@@ -348,7 +348,7 @@ export default async function Home() {
               [
                 Trophy,
                 "검증 기사",
-                "상위 티어 기사 라인업을 기준으로 서비스별 적합한 기사를 배정합니다.",
+                "상위 티어 기사 부스터를 기준으로 서비스별 적합한 기사를 배정합니다.",
               ],
               [
                 BadgeCheck,
@@ -449,26 +449,26 @@ export default async function Home() {
         <Container>
           <Reveal>
             <SectionTitle
-              eyebrow="lineup"
+              eyebrow="booster"
               title="BEST 기사"
               desc="XYZ에서 가장 인기있는 기사 3명을 소개합니다."
             />
           </Reveal>
           <div className="grid gap-6 lg:grid-cols-3">
-            {lineups.map((lineup, i) => (
-              <Reveal key={lineup.name} delay={i * 0.08}>
-                <LineupCard booster={lineup} placement={i + 1} />
+            {boosterList.map((booster, i) => (
+              <Reveal key={booster.name} delay={i * 0.08}>
+                <BoosterCard booster={booster} placement={i + 1} />
               </Reveal>
             ))}
           </div>
           <Reveal>
             <div className="mt-9 text-center">
               <Link
-                href="/lineup"
+                href="/booster"
                 prefetch={false}
                 className="inline-flex items-center gap-2 rounded-full border border-gold/20 px-6 py-3 font-bold text-white transition hover:border-gold/60"
               >
-                기사 라인업 더보기 <ArrowRight size={18} />
+                기사 부스터 더보기 <ArrowRight size={18} />
               </Link>
             </div>
           </Reveal>

@@ -6,6 +6,25 @@ const nextConfig: NextConfig = {
   experimental: {
     inlineCss: true,
   },
+  async redirects() {
+    return [
+      {
+        source: "/lineup",
+        destination: "/booster",
+        permanent: true,
+      },
+      {
+        source: "/lineup/:slug",
+        destination: "/booster/:slug",
+        permanent: true,
+      },
+      {
+        source: "/upload/lineups/:filename",
+        destination: "/upload/booster/:filename",
+        permanent: true,
+      },
+    ];
+  },
   // 폰트 서브셋(불변 파일명)은 장기 캐시 → 재방문 시 재다운로드 방지
   async headers() {
     return [

@@ -1,4 +1,4 @@
-type LineupAvailabilityInput = {
+type BoosterAvailabilityInput = {
   active: boolean;
   weekdayHours: string;
   weekendHours: string;
@@ -63,17 +63,17 @@ function isAvailableInRange(hours: string, currentMinutes: number) {
   return currentMinutes >= start || currentMinutes < end;
 }
 
-export function getLineupAvailability(
-  lineup: LineupAvailabilityInput,
+export function getBoosterAvailability(
+  booster: BoosterAvailabilityInput,
   now = new Date(),
 ) {
-  if (!lineup.active) {
+  if (!booster.active) {
     return { available: false, label: "비활동" };
   }
 
   const seoulTime = getSeoulTime(now);
   const isWeekend = seoulTime.day === "Sat" || seoulTime.day === "Sun";
-  const hours = isWeekend ? lineup.weekendHours : lineup.weekdayHours;
+  const hours = isWeekend ? booster.weekendHours : booster.weekdayHours;
   const available = isAvailableInRange(hours, seoulTime.minutes);
 
   return {

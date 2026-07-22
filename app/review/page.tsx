@@ -6,7 +6,7 @@ import ReviewBoard from "@/components/review/ReviewBoard";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { getReviewPage } from "@/lib/review";
 import { REVIEW_PAGE_SIZE } from "@/components/review/constants";
-import { getLineups } from "@/lib/lineups";
+import { getBoosterList } from "@/lib/booster";
 import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
 import {
   BOOSTER_SESSION_COOKIE,
@@ -49,13 +49,13 @@ export default async function ReviewPage({
     requestedPage,
     REVIEW_PAGE_SIZE,
   );
-  const lineups = await getLineups(true);
+  const boosterList = await getBoosterList(true);
 
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value ?? "";
   const isAdmin = validateSession(token);
   const boosterToken = cookieStore.get(BOOSTER_SESSION_COOKIE)?.value ?? "";
-  const boosterLineupId = validateBoosterSession(boosterToken);
+  const boosterId = validateBoosterSession(boosterToken);
 
   const structuredReviewData = {
     "@context": "https://schema.org",
@@ -98,8 +98,8 @@ export default async function ReviewPage({
             total={total}
             serverPage={page}
             isAdmin={isAdmin}
-            lineups={lineups}
-            boosterLineupId={boosterLineupId}
+            boosterList={boosterList}
+            boosterId={boosterId}
           />
         </Reveal>
       </Container>

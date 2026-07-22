@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { getLineupAvailability } from "@/lib/lineup-availability";
+import { getBoosterAvailability } from "@/lib/booster-availability";
 
 const DEFAULT_PROFILE_IMAGE = "/images/profile.webp";
 
@@ -25,7 +25,7 @@ export default function BoosterAvatar({
   size?: number;
 }) {
   const status = availability
-    ? getLineupAvailability(availability)
+    ? getBoosterAvailability(availability)
     : { available: false, label: "비활동" };
   // 아바타 크기에 비례해 상태 원 크기 결정 (작은 아바타는 최소 크기 보장)
   const dotSize = Math.max(17, Math.round(size * 0.275));

@@ -2,16 +2,16 @@ import { NextResponse } from "next/server";
 import { ResultSetHeader } from "mysql2";
 import { scryptSync, randomBytes } from "crypto";
 import { getPool } from "@/lib/db";
-import { ensureLineupsSchema, getLineups, getLineupById } from "@/lib/lineups";
+import { ensureBoosterSchema, getBoosterList, getBoosterById } from "@/lib/booster";
 import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession";
 
 export const runtime = "nodejs";
 
 const DEFAULT_PROFILE_IMAGE = "/images/profile.webp";
 const BOOSTER_PASSWORD_MIN_LENGTH = 4;
-const LINEUP_DESCRIPTION_MIN_LENGTH = 10;
+const BOOSTER_DESCRIPTION_MIN_LENGTH = 10;
 
-type LineupPayload = {
+type BoosterPayload = {
   id?: string;
   name?: string;
   positions?: string;
@@ -42,12 +42,12 @@ function isAdminRequest(request: Request): boolean {
 function isValidImageUrl(image: string | null | undefined): boolean {
   if (!image) return true;
   return (
-    (image === DEFAULT_PROFILE_IMAGE || image.startsWith("/upload/lineups/")) &&
+    (image === DEFAULT_PROFILE_IMAGE || image.startsWith("/upload/booster/")) &&
     image.length <= 255
   );
 }
 
-function validateLineup(payload: LineupPayload) {
+function validateBooster(payload: BoosterPayload) {
   const name = payload.name?.trim() ?? "";
   const positions = payload.positions?.trim() ?? "";
   const rank = payload.rank?.trim() ?? "";
@@ -69,7 +69,7 @@ function validateLineup(payload: LineupPayload) {
   if (!positions) return { message: "포지션을 입력해주세요." };
   if (!rank || rank.length > 30) return { message: "랭크를 입력해주세요." };
   if (!tier) return { message: "티어 이미지를 선택해주세요." };
-  if (description.length < LINEUP_DESCRIPTION_MIN_LENGTH) {
+  if (description.length < BOOSTER_DESCRIPTION_MIN_LENGTH) {
     return { message: "소개는 10자 이상 입력해주세요." };
   }
   if (description.length > 300) return { message: "소개는 300자 이내로 입력해주세요." };
@@ -86,9 +86,9 @@ function validateLineup(payload: LineupPayload) {
 
 export async function GET() {
   try {
-    return NextResponse.json({ lineups: await getLineups(false) });
+    return NextResponse.json({ boosterList: await getBoosterList(false) });
   } catch (error) {
-    console.error("Failed to load lineups", error);
+    console.error("Failed to load booster", error);
     return NextResponse.json({ message: "기사 목록을 불러오지 못했습니다." }, { status: 500 });
   }
 }
@@ -98,14 +98,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
   }
 
-  let payload: LineupPayload;
+  let payload: BoosterPayload;
   try {
     payload = await request.json();
   } catch {
     return NextResponse.json({ message: "요청 형식이 올바르지 않습니다." }, { status: 400 });
   }
 
-  const v = validateLineup(payload);
+  const v = validateBooster(payload);
   if ("message" in v) return NextResponse.json({ message: v.message }, { status: 400 });
   const { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image } = v;
 
@@ -116,16 +116,16 @@ export async function POST(request: Request) {
   const boosterPasswordHash = hashPassword(rawBoosterPassword);
 
   try {
-    await ensureLineupsSchema();
+    await ensureBoosterSchema();
     const [result] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO lineups (name, positions, rank, tier, description, weekday_hours, weekend_hours, champions, services, nationality, image_url, sort_order, active, booster_password_hash)
+      `INSERT INTO booster (name, positions, rank, tier, description, weekday_hours, weekend_hours, champions, services, nationality, image_url, sort_order, active, booster_password_hash)
        VALUES (:name, :positions, :rank, :tier, :description, :weekdayHours, :weekendHours, '', :services, :nationality, :image, :sortOrder, :active, :boosterPasswordHash)`,
       { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, boosterPasswordHash },
     );
-    const lineup = await getLineupById(result.insertId);
-    return NextResponse.json({ lineup }, { status: 201 });
+    const booster = await getBoosterById(result.insertId);
+    return NextResponse.json({ booster }, { status: 201 });
   } catch (error) {
-    console.error("Failed to create lineup", error);
+    console.error("Failed to create booster", error);
     return NextResponse.json({ message: "기사를 저장하지 못했습니다." }, { status: 500 });
   }
 }
@@ -135,7 +135,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
   }
 
-  let payload: LineupPayload;
+  let payload: BoosterPayload;
   try {
     payload = await request.json();
   } catch {
@@ -147,7 +147,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ message: "수정할 기사를 찾을 수 없습니다." }, { status: 400 });
   }
 
-  const v = validateLineup(payload);
+  const v = validateBooster(payload);
   if ("message" in v) return NextResponse.json({ message: v.message }, { status: 400 });
   const { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image } = v;
 
@@ -164,20 +164,20 @@ export async function PUT(request: Request) {
     : "";
 
   try {
-    await ensureLineupsSchema();
+    await ensureBoosterSchema();
     await getPool().execute(
-      `UPDATE lineups
+      `UPDATE booster
        SET name=:name, positions=:positions, rank=:rank, tier=:tier, description=:description,
            weekday_hours=:weekdayHours, weekend_hours=:weekendHours,
            services=:services, nationality=:nationality, image_url=:image, sort_order=:sortOrder, active=:active${passwordClause}
        WHERE id=:id`,
       { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image, id, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, ...(newPasswordHash !== undefined ? { boosterPasswordHash: newPasswordHash } : {}) },
     );
-    const lineup = await getLineupById(id);
-    if (!lineup) return NextResponse.json({ message: "기사를 찾을 수 없습니다." }, { status: 404 });
-    return NextResponse.json({ lineup });
+    const booster = await getBoosterById(id);
+    if (!booster) return NextResponse.json({ message: "기사를 찾을 수 없습니다." }, { status: 404 });
+    return NextResponse.json({ booster });
   } catch (error) {
-    console.error("Failed to update lineup", error);
+    console.error("Failed to update booster", error);
     return NextResponse.json({ message: "기사를 수정하지 못했습니다." }, { status: 500 });
   }
 }
@@ -200,10 +200,10 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    await getPool().execute(`DELETE FROM lineups WHERE id = :id`, { id });
+    await getPool().execute(`DELETE FROM booster WHERE id = :id`, { id });
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Failed to delete lineup", error);
+    console.error("Failed to delete booster", error);
     return NextResponse.json({ message: "기사를 삭제하지 못했습니다." }, { status: 500 });
   }
 }

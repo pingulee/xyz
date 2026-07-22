@@ -18,7 +18,7 @@ export type TierRecord = {
 
 export type ReviewReply = {
   id: string;
-  lineupId: string;
+  boosterId: string;
   boosterName: string;
   content: string;
   tierRecords: TierRecord[];
@@ -29,8 +29,8 @@ export type Review = {
   id: string;
   name: string;
   service: string;
-  lineupId?: string;
-  lineupName?: string;
+  boosterId?: string;
+  boosterName?: string;
   rating: number;
   content: string;
   createdAt: string;
@@ -49,14 +49,14 @@ type ReviewRow = RowDataPacket & {
   id: number;
   name: string;
   service: string;
-  lineup_id: number | null;
-  lineup_name: string | null;
+  booster_id: number | null;
+  booster_name: string | null;
   rating: number;
   content: string;
   view_count: number | null;
   created_at: Date;
   reply_id: number | null;
-  reply_lineup_id: number | null;
+  reply_booster_id: number | null;
   reply_booster_name: string | null;
   reply_content: string | null;
   reply_tier_records: string | null;
@@ -69,10 +69,10 @@ type SchemaColumnRow = RowDataPacket & {
 
 export const ensureReviewSchema = oncePerProcess(async () => {
   await getPool().execute(
-    `ALTER TABLE \`review\` ADD COLUMN IF NOT EXISTS lineup_id BIGINT UNSIGNED NULL`,
+    `ALTER TABLE \`review\` ADD COLUMN IF NOT EXISTS booster_id BIGINT UNSIGNED NULL`,
   );
   await getPool().execute(
-    `ALTER TABLE \`review\` ADD COLUMN IF NOT EXISTS lineup_name VARCHAR(60) NULL`,
+    `ALTER TABLE \`review\` ADD COLUMN IF NOT EXISTS booster_name VARCHAR(60) NULL`,
   );
   await getPool().execute(
     `ALTER TABLE \`review\` ADD COLUMN IF NOT EXISTS view_count INT UNSIGNED NOT NULL DEFAULT 0`,
@@ -81,14 +81,14 @@ export const ensureReviewSchema = oncePerProcess(async () => {
     CREATE TABLE IF NOT EXISTS review_replies (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       review_id BIGINT UNSIGNED NOT NULL,
-      lineup_id BIGINT UNSIGNED NOT NULL,
+      booster_id BIGINT UNSIGNED NOT NULL,
       booster_name VARCHAR(60) NOT NULL DEFAULT '',
       content TEXT NOT NULL,
       tier_records JSON NULL,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       INDEX idx_review_replies_review_id (review_id),
-      INDEX idx_review_replies_lineup_id (lineup_id)
+      INDEX idx_review_replies_booster_id (booster_id)
     ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
   await getPool().execute(
@@ -96,8 +96,8 @@ export const ensureReviewSchema = oncePerProcess(async () => {
   );
   await getPool().execute(`
     UPDATE review_replies rr
-    LEFT JOIN lineups l ON l.id = rr.lineup_id
-    SET rr.booster_name = COALESCE(l.name, '')
+    LEFT JOIN booster b ON b.id = rr.booster_id
+    SET rr.booster_name = COALESCE(b.name, '')
     WHERE rr.booster_name = ''
   `);
   const [legacyNameColumns] = await getPool().execute<SchemaColumnRow[]>(
@@ -155,8 +155,8 @@ export function toReview(row: ReviewRow): Review {
     id: String(row.id),
     name: row.name,
     service: row.service,
-    lineupId: row.lineup_id ? String(row.lineup_id) : undefined,
-    lineupName: row.lineup_name ?? undefined,
+    boosterId: row.booster_id ? String(row.booster_id) : undefined,
+    boosterName: row.booster_name ?? undefined,
     rating: row.rating,
     content: row.content,
     createdAt: row.created_at.toISOString(),
@@ -164,7 +164,7 @@ export function toReview(row: ReviewRow): Review {
     reply: row.reply_id
       ? {
           id: String(row.reply_id),
-          lineupId: String(row.reply_lineup_id),
+          boosterId: String(row.reply_booster_id),
           boosterName: row.reply_booster_name ?? "",
           content: row.reply_content ?? "",
           tierRecords: parseTierRecords(row.reply_tier_records),
@@ -175,36 +175,37 @@ export function toReview(row: ReviewRow): Review {
 }
 
 const REVIEW_SELECT = `
-  SELECT r.id, r.name, r.service, r.lineup_id, l.name AS lineup_name,
+  SELECT r.id, r.name, r.service, r.booster_id,
+         COALESCE(b.name, r.booster_name) AS booster_name,
          r.rating, r.content, r.view_count, r.created_at,
-         rr.id AS reply_id, rr.lineup_id AS reply_lineup_id,
+         rr.id AS reply_id, rr.booster_id AS reply_booster_id,
          rr.booster_name AS reply_booster_name,
          rr.content AS reply_content, rr.tier_records AS reply_tier_records,
          rr.created_at AS reply_created_at
   FROM \`review\` r
-  LEFT JOIN lineups l ON l.id = r.lineup_id
+  LEFT JOIN booster b ON b.id = r.booster_id
   LEFT JOIN review_replies rr ON rr.review_id = r.id
 `;
 
 /** 기사 상세용 서버 사이드 페이지네이션: 해당 페이지 분량 + 전체 개수 */
-export async function getLineupReviewPage(
-  lineupId: number,
+export async function getBoosterReviewPage(
+  boosterId: number,
   page = 1,
   perPage = 3,
 ): Promise<{ reviewList: Review[]; total: number; page: number; perPage: number }> {
   await ensureReviewSchema();
   const safePer = Math.max(1, Math.min(50, Math.floor(perPage)));
   const [countRows] = await getPool().execute<RowDataPacket[]>(
-    `SELECT COUNT(*) AS total FROM \`review\` WHERE lineup_id = :lineupId`,
-    { lineupId },
+    `SELECT COUNT(*) AS total FROM \`review\` WHERE booster_id = :boosterId`,
+    { boosterId },
   );
   const total = Number(countRows[0]?.total ?? 0);
   const totalPages = Math.max(1, Math.ceil(total / safePer));
   const safePage = Math.max(1, Math.min(totalPages, Math.floor(page) || 1));
   const offset = (safePage - 1) * safePer;
-  const safeLineupId = Math.floor(lineupId);
+  const safeBoosterId = Math.floor(boosterId);
   const [rows] = await getPool().query<ReviewRow[]>(
-    `${REVIEW_SELECT} WHERE r.lineup_id = ${safeLineupId}
+    `${REVIEW_SELECT} WHERE r.booster_id = ${safeBoosterId}
      ORDER BY r.created_at DESC, r.id DESC LIMIT ${safePer} OFFSET ${offset}`,
   );
   return { reviewList: rows.map(toReview), total, page: safePage, perPage: safePer };

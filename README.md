@@ -26,12 +26,12 @@ MYSQL_DATABASE=your_db_name
 UPLOAD_BASE_DIR=/home/username/public_html/upload
 ```
 
-초기 DB 구성은 `database/review.sql`, `database/lineups.sql`,
+초기 DB 구성은 `database/booster.sql`, `database/review.sql`,
 `database/champions.sql`을 순서대로 실행합니다.
 
-### 라인업 이미지 업로드 설정
+### 부스터 이미지 업로드 설정
 
-라인업 이미지는 Hostinger 서버 로컬 디스크에 저장됩니다.
+부스터 이미지는 Hostinger 서버 로컬 디스크에 저장됩니다.
 
 - `UPLOAD_BASE_DIR` 미설정 시 기본 경로: `{프로젝트 루트}/upload`
 - 디렉터리는 앱 시작 시 자동 생성됩니다.
@@ -43,4 +43,4 @@ UPLOAD_BASE_DIR=/home/username/public_html/upload
 UPLOAD_BASE_DIR=/home/u123456789/upload
 ```
 
-업로드된 이미지는 `/upload/lineups/{filename}` 경로로 서빙됩니다.
+업로드된 이미지는 `/upload/booster/{filename}` 경로로 서빙됩니다.

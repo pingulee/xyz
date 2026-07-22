@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getBoosterLineupId } from "@/lib/boosterSession";
+import { getBoosterId } from "@/lib/boosterSession";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  return NextResponse.json({ loggedIn: Boolean(getBoosterLineupId(request)) });
+  return NextResponse.json({ loggedIn: Boolean(getBoosterId(request)) });
 }

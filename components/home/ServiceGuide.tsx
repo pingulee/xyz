@@ -210,11 +210,11 @@ export default function ServiceGuide() {
 
               <div className="mt-auto flex flex-wrap gap-x-5 gap-y-2 pt-7 text-sm font-black">
                 <Link
-                  href="/lineup"
+                  href="/booster"
                   prefetch={false}
                   className="text-gold transition hover:text-gold-soft"
                 >
-                  기사 라인업 확인
+                  기사 부스터 확인
                 </Link>
                 <Link
                   href="/review"

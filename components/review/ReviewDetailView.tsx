@@ -7,13 +7,13 @@ import { Loader2, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import BoosterAvatar, {
   type BoosterAvailability,
-} from "@/components/lineup/BoosterAvatar";
+} from "@/components/booster/BoosterAvatar";
 import {
   TierRecordBadges,
   TierRecordEditor,
   isTierRecordsComplete,
   normalizeTierRecords,
-} from "@/components/lineup/TierRecords";
+} from "@/components/booster/TierRecords";
 import type {
   Review,
   ReviewNavItem,
@@ -144,7 +144,7 @@ function NavLink({
 
 export default function ReviewDetailView({
   initialReview,
-  boosterLineupId,
+  boosterId,
   boosterName,
   boosterImage,
   boosterAvailability,
@@ -153,7 +153,7 @@ export default function ReviewDetailView({
   isAdmin = false,
 }: {
   initialReview: Review;
-  boosterLineupId: number | null;
+  boosterId: number | null;
   boosterName: string;
   boosterImage: string;
   boosterAvailability?: BoosterAvailability | null;
@@ -185,8 +185,8 @@ export default function ReviewDetailView({
   const viewTrackedRef = useRef(false);
 
   const canReply =
-    boosterLineupId !== null && review.lineupId === String(boosterLineupId);
-  const isLoggedIn = boosterLineupId !== null;
+    boosterId !== null && review.boosterId === String(boosterId);
+  const isLoggedIn = boosterId !== null;
   const displayBoosterName =
     review.reply?.boosterName || boosterName || "기사 답변";
   const canModifyReview = isAdmin || !review.reply;
@@ -363,7 +363,7 @@ export default function ReviewDetailView({
                 <span>{review.service}</span>
                 <span>/</span>
                 <span>
-                  {review.lineupName ??
+                  {review.boosterName ??
                     review.reply?.boosterName ??
                     "선택 안함"}
                 </span>

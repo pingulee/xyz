@@ -3,24 +3,24 @@
 import { Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import BoosterCard from "@/components/lineup/BoosterCard";
+import AdminBoosterCard from "@/components/booster/AdminBoosterCard";
 import {
   blankForm,
   NATIONALITIES,
   POSITIONS,
-} from "@/components/lineup/adminLineupConstants";
+} from "@/components/booster/adminBoosterConstants";
 import type {
   FormState,
-  LineupResponse,
-} from "@/components/lineup/adminLineupConstants";
-import { getLineupPath } from "@/lib/lineup-model";
-import type { Lineup } from "@/lib/lineup-model";
+  BoosterResponse,
+} from "@/components/booster/adminBoosterConstants";
+import { getBoosterPath } from "@/lib/booster-model";
+import type { Booster } from "@/lib/booster-model";
 
 const MAX_IMAGE_SIZE = 1024 * 1024 * 5;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const DEFAULT_PROFILE_IMAGE = "/images/profile.webp";
 const BOOSTER_PASSWORD_MIN_LENGTH = 4;
-const LINEUP_DESCRIPTION_MIN_LENGTH = 10;
+const BOOSTER_DESCRIPTION_MIN_LENGTH = 10;
 
 const TIER_OPTIONS = [
   { label: "챌린저", rank: "Challenger", tier: "/images/tier/10-challenger.png" },
@@ -36,12 +36,12 @@ const TIME_SLOTS = [
   "12","13","14","15","16","17","18","19","20","21","22","23",
 ];
 
-export default function AdminLineupBoard({
-  initialLineups = [],
+export default function AdminBoosterBoard({
+  initialBoosterList = [],
 }: {
-  initialLineups?: Lineup[];
+  initialBoosterList?: Booster[];
 }) {
-  const [lineups, setLineups] = useState(initialLineups);
+  const [boosterList, setBoosterList] = useState(initialBoosterList);
   const [form, setForm] = useState(blankForm);
   const [editingId, setEditingId] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -152,31 +152,31 @@ export default function AdminLineupBoard({
     return { start: "00", end: "23", all: false };
   };
 
-  const openEdit = (lineup: Lineup) => {
-    setEditingId(lineup.id);
-    const wd = parseHours(lineup.weekdayHours);
-    const we = parseHours(lineup.weekendHours);
+  const openEdit = (booster: Booster) => {
+    setEditingId(booster.id);
+    const wd = parseHours(booster.weekdayHours);
+    const we = parseHours(booster.weekendHours);
     setForm({
-      name: lineup.name,
-      positionSet: new Set(lineup.positions),
-      rank: lineup.rank,
-      tier: lineup.tier,
-      nationality: String(lineup.nationality),
-      description: lineup.description,
+      name: booster.name,
+      positionSet: new Set(booster.positions),
+      rank: booster.rank,
+      tier: booster.tier,
+      nationality: String(booster.nationality),
+      description: booster.description,
       weekdayStart: wd.start,
       weekdayEnd: wd.end,
       weekdayAll: wd.all,
       weekendStart: we.start,
       weekendEnd: we.end,
       weekendAll: we.all,
-      serviceBoost: lineup.services.includes("대리"),
-      serviceDuo: lineup.services.includes("듀오"),
-      imageUrl: lineup.image,
-      active: lineup.active,
+      serviceBoost: booster.services.includes("대리"),
+      serviceDuo: booster.services.includes("듀오"),
+      imageUrl: booster.image,
+      active: booster.active,
       boosterPassword: "",
     });
     resetImageState();
-    setImageName(lineup.image ? "현재 이미지" : "");
+    setImageName(booster.image ? "현재 이미지" : "");
     setMessage("");
     setModalOpen(true);
   };
@@ -206,7 +206,7 @@ export default function AdminLineupBoard({
     boosterPassword: form.boosterPassword || undefined,
   });
 
-  const saveLineup = async (e: React.FormEvent<HTMLFormElement>) => {
+  const saveBooster = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setMessage("");
     setSubmitAttempted(true);
@@ -216,7 +216,7 @@ export default function AdminLineupBoard({
       !form.tier ||
       !form.nationality ||
       form.positionSet.size === 0 ||
-      form.description.trim().length < LINEUP_DESCRIPTION_MIN_LENGTH ||
+      form.description.trim().length < BOOSTER_DESCRIPTION_MIN_LENGTH ||
       (!form.serviceBoost && !form.serviceDuo) ||
       (!editingId && form.boosterPassword.trim().length < BOOSTER_PASSWORD_MIN_LENGTH) ||
       (Boolean(editingId) &&
@@ -237,7 +237,7 @@ export default function AdminLineupBoard({
         setUploading(true);
         const fd = new FormData();
         fd.append("image", imageFile);
-        const uploadRes = await fetch("/api/upload/lineups", {
+        const uploadRes = await fetch("/api/upload/booster", {
           method: "POST",
           body: fd,
         });
@@ -251,25 +251,25 @@ export default function AdminLineupBoard({
         imageUrl = uploadData.imageUrl ?? null;
       }
 
-      const response = await fetch("/api/lineup", {
+      const response = await fetch("/api/booster", {
         method: editingId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: editingId || undefined,
           ...buildPayload(imageUrl),
           sortOrder: editingId
-            ? (lineups.find((l) => l.id === editingId)?.sortOrder ?? 0)
-            : lineups.length,
+            ? (boosterList.find((l) => l.id === editingId)?.sortOrder ?? 0)
+            : boosterList.length,
         }),
       });
-      const data = (await response.json()) as LineupResponse;
+      const data = (await response.json()) as BoosterResponse;
       if (!response.ok) throw new Error(data.message ?? "저장하지 못했습니다.");
 
       if (editingId) {
-        setLineups((cur) => cur.map((l) => (l.id === editingId ? data.lineup : l)));
+        setBoosterList((cur) => cur.map((l) => (l.id === editingId ? data.booster : l)));
       } else {
-        setLineups((cur) => [...cur, data.lineup]);
-        router.push(getLineupPath(data.lineup));
+        setBoosterList((cur) => [...cur, data.booster]);
+        router.push(getBoosterPath(data.booster));
       }
       closeModal();
     } catch (err) {
@@ -280,18 +280,18 @@ export default function AdminLineupBoard({
     }
   };
 
-  const deleteLineup = async (lineup: Lineup) => {
-    if (!confirm(`"${lineup.name}" 기사를 삭제하시겠습니까?`)) return;
-    setDeletingId(lineup.id);
+  const deleteBooster = async (booster: Booster) => {
+    if (!confirm(`"${booster.name}" 기사를 삭제하시겠습니까?`)) return;
+    setDeletingId(booster.id);
     try {
-      const response = await fetch("/api/lineup", {
+      const response = await fetch("/api/booster", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: lineup.id }),
+        body: JSON.stringify({ id: booster.id }),
       });
       const data = (await response.json()) as { message?: string };
       if (!response.ok) throw new Error(data.message ?? "삭제하지 못했습니다.");
-      setLineups((cur) => cur.filter((l) => l.id !== lineup.id));
+      setBoosterList((cur) => cur.filter((l) => l.id !== booster.id));
     } catch {
       // silently fail
     } finally {
@@ -315,7 +315,7 @@ export default function AdminLineupBoard({
   const invalidDescription =
     submitAttempted &&
     form.description.trim().length > 0 &&
-    form.description.trim().length < LINEUP_DESCRIPTION_MIN_LENGTH;
+    form.description.trim().length < BOOSTER_DESCRIPTION_MIN_LENGTH;
   const invalidBoosterPassword =
     submitAttempted &&
     form.boosterPassword.trim().length > 0 &&
@@ -355,7 +355,7 @@ export default function AdminLineupBoard({
             </div>
 
             <form
-              onSubmit={saveLineup}
+              onSubmit={saveBooster}
               className="md:grid md:grid-cols-[240px_1fr] md:divide-x md:divide-white/8"
             >
               <div className="grid gap-3 p-5 md:px-8 md:pb-8 md:pt-0 md:content-start">
@@ -644,7 +644,7 @@ export default function AdminLineupBoard({
 
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-xl font-black text-white">기사 {lineups.length}명</h2>
+          <h2 className="text-xl font-black text-white">기사 {boosterList.length}명</h2>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -658,12 +658,12 @@ export default function AdminLineupBoard({
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {lineups.length === 0 && (
+          {boosterList.length === 0 && (
             <p className="col-span-full text-sm text-zinc-500">등록된 기사가 없습니다.</p>
           )}
-          {lineups.map((booster) => (
+          {boosterList.map((booster) => (
             <div key={booster.id} className="relative">
-              <BoosterCard booster={booster} />
+              <AdminBoosterCard booster={booster} />
               <div className="absolute bottom-3 right-3 flex gap-1.5">
                 <button
                   type="button"
@@ -675,7 +675,7 @@ export default function AdminLineupBoard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => void deleteLineup(booster)}
+                  onClick={() => void deleteBooster(booster)}
                   disabled={deletingId === booster.id}
                   className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/60 text-zinc-400 backdrop-blur-sm transition hover:border-red-400/40 hover:text-red-200 disabled:opacity-60"
                   aria-label="삭제"

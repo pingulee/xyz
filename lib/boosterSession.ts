@@ -7,30 +7,30 @@ function getSecret(): string {
   return process.env.ADMIN_PASSWORD ?? "";
 }
 
-export function createBoosterSession(lineupId: number): string {
+export function createBoosterSession(boosterId: number): string {
   const expiry = Date.now() + SESSION_TTL;
-  const payload = `booster:${lineupId}:${expiry}`;
+  const payload = `booster:${boosterId}:${expiry}`;
   const sig = createHmac("sha256", getSecret()).update(payload).digest("hex");
-  return `${lineupId}:${expiry}:${sig}`;
+  return `${boosterId}:${expiry}:${sig}`;
 }
 
 export function validateBoosterSession(token: string): number | null {
   if (!token) return null;
   const parts = token.split(":");
   if (parts.length !== 3) return null;
-  const [lineupIdStr, expiryStr, sig] = parts;
-  const lineupId = Number(lineupIdStr);
+  const [boosterIdStr, expiryStr, sig] = parts;
+  const boosterId = Number(boosterIdStr);
   const expiry = Number(expiryStr);
-  if (!lineupId || !expiry || Date.now() > expiry) return null;
+  if (!boosterId || !expiry || Date.now() > expiry) return null;
 
-  const payload = `booster:${lineupId}:${expiry}`;
+  const payload = `booster:${boosterId}:${expiry}`;
   const expectedSig = createHmac("sha256", getSecret()).update(payload).digest("hex");
 
   const sigBuf = Buffer.from(sig.padEnd(128, "0"), "hex");
   const expectedBuf = Buffer.from(expectedSig.padEnd(128, "0"), "hex");
 
   if (!timingSafeEqual(sigBuf, expectedBuf) || sig !== expectedSig) return null;
-  return lineupId;
+  return boosterId;
 }
 
 export function getBoosterSessionCookieHeader(token: string): string {
@@ -48,7 +48,7 @@ function getBoosterTokenFromRequest(request: Request): string | null {
   return match?.[1] ?? null;
 }
 
-export function getBoosterLineupId(request: Request): number | null {
+export function getBoosterId(request: Request): number | null {
   const token = getBoosterTokenFromRequest(request);
   if (!token) return null;
   return validateBoosterSession(token);

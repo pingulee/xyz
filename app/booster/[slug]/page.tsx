@@ -5,12 +5,12 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { Clock, MessageCircle, Star, Swords } from "lucide-react";
 import Container from "@/components/layout/Container";
-import BoosterAvatar from "@/components/lineup/BoosterAvatar";
+import BoosterAvatar from "@/components/booster/BoosterAvatar";
 import Reveal from "@/components/ui/Reveal";
-import LineupReview from "@/components/review/LineupReview";
-import WinStatsCard from "@/components/lineup/WinStatsCard";
-import { getLineupBySlug, getLineupReviewStats, getLineupWinStats } from "@/lib/lineups";
-import { getLineupReviewPage } from "@/lib/review";
+import BoosterReview from "@/components/review/BoosterReview";
+import WinStatsCard from "@/components/booster/WinStatsCard";
+import { getBoosterBySlug, getBoosterReviewStats, getBoosterWinStats } from "@/lib/booster";
+import { getBoosterReviewPage } from "@/lib/review";
 import {
   BOOSTER_SESSION_COOKIE,
   validateBoosterSession,
@@ -22,7 +22,6 @@ export const dynamic = "force-dynamic";
 function nationalityFlag(code: number) {
   return code === 2 ? "/images/flags/cn.svg" : "/images/flags/kr.svg";
 }
-
 function nationalityLabel(code: number) {
   return code === 2 ? "중국" : "대한민국";
 }
@@ -33,24 +32,24 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const lineup = await getLineupBySlug(slug);
+  const booster = await getBoosterBySlug(slug);
 
-  if (!lineup) {
+  if (!booster) {
     return { title: "기사 정보를 찾을 수 없습니다" };
   }
 
   const description =
-    lineup.description ||
-    `${lineup.name} 기사 프로필 — ${lineup.rank} 티어, 진행 서비스와 후기를 확인하세요.`;
-  const url = `/lineup/${slug}`;
-  const image = lineup.image || site.ogImage;
+    booster.description ||
+    `${booster.name} 기사 프로필 — ${booster.rank} 티어, 진행 서비스와 후기를 확인하세요.`;
+  const url = `/booster/${slug}`;
+  const image = booster.image || site.ogImage;
 
   return {
-    title: `${lineup.name} | 기사 라인업`,
+    title: `${booster.name} | 기사 부스터`,
     description,
     alternates: { canonical: url },
     openGraph: {
-      title: `${lineup.name} | 기사 라인업`,
+      title: `${booster.name} | 기사 부스터`,
       description,
       url,
       type: "profile",
@@ -59,29 +58,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: "summary",
-      title: `${lineup.name} | 기사 라인업`,
+      title: `${booster.name} | 기사 부스터`,
       description,
       images: [image],
     },
   };
 }
 
-export default async function LineupDetailPage({ params }: Props) {
+export default async function BoosterDetailPage({ params }: Props) {
   const { slug } = await params;
-  const lineup = await getLineupBySlug(slug);
+  const booster = await getBoosterBySlug(slug);
 
-  if (!lineup) {
+  if (!booster) {
     notFound();
   }
 
   const cookieStore = await cookies();
   const boosterToken = cookieStore.get(BOOSTER_SESSION_COOKIE)?.value ?? "";
-  const boosterLineupId = validateBoosterSession(boosterToken);
+  const boosterId = validateBoosterSession(boosterToken);
 
   const [stats, reviewPage, winStats] = await Promise.all([
-    getLineupReviewStats(Number(lineup.id)),
-    getLineupReviewPage(Number(lineup.id), 1, 3),
-    getLineupWinStats(Number(lineup.id)),
+    getBoosterReviewStats(Number(booster.id)),
+    getBoosterReviewPage(Number(booster.id), 1, 3),
+    getBoosterWinStats(Number(booster.id)),
   ]);
   const { reviewList } = reviewPage;
 
@@ -94,14 +93,14 @@ export default async function LineupDetailPage({ params }: Props) {
       {
         "@type": "ListItem",
         position: 1,
-        name: "기사 라인업",
-        item: `${site.url}/lineup`,
+        name: "기사 부스터",
+        item: `${site.url}/booster`,
       },
       {
         "@type": "ListItem",
         position: 2,
-        name: lineup.name,
-        item: `${site.url}/lineup/${encodeURIComponent(slug)}`,
+        name: booster.name,
+        item: `${site.url}/booster/${encodeURIComponent(slug)}`,
       },
     ],
   };
@@ -115,11 +114,11 @@ export default async function LineupDetailPage({ params }: Props) {
       <Container>
         <Reveal>
           <div className="mb-6 flex items-center gap-3 text-sm text-zinc-500">
-            <Link href="/lineup" className="transition hover:text-gold">
-              기사 라인업
+            <Link href="/booster" className="transition hover:text-gold">
+              기사 부스터
             </Link>
             <span>/</span>
-            <span className="text-zinc-300">{lineup.name}</span>
+            <span className="text-zinc-300">{booster.name}</span>
           </div>
         </Reveal>
 
@@ -136,39 +135,39 @@ export default async function LineupDetailPage({ params }: Props) {
               <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                 <div className="-mt-14 flex flex-col items-center gap-4 md:-mt-16 md:flex-row md:items-end">
                   <BoosterAvatar
-                    availability={lineup}
-                    image={lineup.image}
-                    name={lineup.name}
+                    availability={booster}
+                    image={booster.image}
+                    name={booster.name}
                     priority
                     size={148}
                   />
                   <div className="text-center md:pb-1 md:text-left">
                     <div className="inline-flex items-center gap-1.5 rounded-full border border-gold/25 bg-gold/8 px-3 py-1">
                       <Image
-                        src={lineup.tier}
+                        src={booster.tier}
                         alt=""
                         width={16}
                         height={16}
                         className="rounded-full bg-zinc-800"
                       />
                       <span className="text-xs font-black text-gold">
-                        {lineup.rank}
+                        {booster.rank}
                       </span>
                     </div>
                     <h1 className="mt-2 flex items-center justify-center gap-2.5 text-3xl font-black text-white md:justify-start">
-                      {lineup.name}
+                      {booster.name}
                       <Image
-                        src={nationalityFlag(lineup.nationality)}
-                        alt={nationalityLabel(lineup.nationality)}
-                        title={nationalityLabel(lineup.nationality)}
+                        src={nationalityFlag(booster.nationality)}
+                        alt={nationalityLabel(booster.nationality)}
+                        title={nationalityLabel(booster.nationality)}
                         width={28}
                         height={19}
                         className="rounded-[3px] border border-white/10 object-cover"
                       />
                     </h1>
-                    {lineup.description && (
+                    {booster.description && (
                       <p className="mt-1.5 text-sm leading-6 text-zinc-400">
-                        {lineup.description}
+                        {booster.description}
                       </p>
                     )}
                   </div>
@@ -192,7 +191,7 @@ export default async function LineupDetailPage({ params }: Props) {
                     평일 작업 가능 시간
                   </div>
                   <p className="mt-1.5 text-sm font-semibold text-zinc-300">
-                    {lineup.weekdayHours}
+                    {booster.weekdayHours}
                   </p>
                 </div>
                 <div>
@@ -201,13 +200,13 @@ export default async function LineupDetailPage({ params }: Props) {
                     주말 작업 가능 시간
                   </div>
                   <p className="mt-1.5 text-sm font-semibold text-zinc-300">
-                    {lineup.weekendHours}
+                    {booster.weekendHours}
                   </p>
                 </div>
                 <div>
                   <div className="text-xs font-black text-zinc-500">라인</div>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    {lineup.positions.map((position) => (
+                    {booster.positions.map((position) => (
                       <span
                         key={position}
                         className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-bold text-zinc-300"
@@ -220,7 +219,7 @@ export default async function LineupDetailPage({ params }: Props) {
                 <div>
                   <div className="text-xs font-black text-zinc-500">진행 서비스</div>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    {lineup.services.map((service) => (
+                    {booster.services.map((service) => (
                       <span
                         key={service}
                         className="rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs font-bold text-zinc-300"
@@ -319,12 +318,12 @@ export default async function LineupDetailPage({ params }: Props) {
 
               <div className="mt-6">
                 <h2 className="mb-4 text-lg font-black text-white">최근 후기</h2>
-                <LineupReview
+                <BoosterReview
                   reviewList={reviewList}
-                  boosterLineupId={boosterLineupId}
-                  boosterName={lineup.name}
-                  boosterImage={lineup.image ?? ""}
-                  boosterAvailability={lineup}
+                  boosterId={boosterId}
+                  boosterName={booster.name}
+                  boosterImage={booster.image ?? ""}
+                  boosterAvailability={booster}
                 />
               </div>
             </div>

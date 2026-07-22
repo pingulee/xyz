@@ -4,11 +4,11 @@ import { ensureReviewSchema } from "@/lib/review";
 import type { TierRecord } from "@/lib/review";
 import { getChampionImageMap } from "@/lib/champions";
 import { oncePerProcess } from "@/lib/schema-once";
-import { getLineupSlug } from "@/lib/lineup-model";
-import type { Lineup } from "@/lib/lineup-model";
+import { getBoosterSlug } from "@/lib/booster-model";
+import type { Booster } from "@/lib/booster-model";
 import { getCachedStat, setCachedStat } from "@/lib/stats-cache";
 
-type LineupRow = RowDataPacket & {
+type BoosterRow = RowDataPacket & {
   id: number;
   name: string;
   positions: string;
@@ -50,9 +50,9 @@ function nationalityCode(value: number | string | null | undefined): number {
   return 1;
 }
 
-export const ensureLineupsSchema = oncePerProcess(async () => {
+export const ensureBoosterSchema = oncePerProcess(async () => {
   await getPool().execute(
-    `ALTER TABLE lineups ADD COLUMN IF NOT EXISTS booster_password_hash VARCHAR(200) NULL`,
+    `ALTER TABLE booster ADD COLUMN IF NOT EXISTS booster_password_hash VARCHAR(200) NULL`,
   );
 
   // 배포 전에 저장된 기사 로그인 비밀번호를 새 컬럼으로 안전하게 승계한다.
@@ -60,7 +60,7 @@ export const ensureLineupsSchema = oncePerProcess(async () => {
     `SELECT COLUMN_NAME, DATA_TYPE
      FROM INFORMATION_SCHEMA.COLUMNS
      WHERE TABLE_SCHEMA = DATABASE()
-       AND TABLE_NAME = 'lineups'
+       AND TABLE_NAME = 'booster'
        AND COLUMN_NAME <> 'booster_password_hash'
        AND COLUMN_NAME REGEXP '_password_hash$'
      ORDER BY ORDINAL_POSITION
@@ -73,25 +73,25 @@ export const ensureLineupsSchema = oncePerProcess(async () => {
   ) {
     const escapedColumn = legacyPasswordColumn.replaceAll("`", "``");
     await getPool().execute(
-      `UPDATE lineups
+      `UPDATE booster
        SET booster_password_hash = \`${escapedColumn}\`
        WHERE booster_password_hash IS NULL
          AND \`${escapedColumn}\` IS NOT NULL`,
     );
     await getPool().execute(
-      `ALTER TABLE lineups DROP COLUMN \`${escapedColumn}\``,
+      `ALTER TABLE booster DROP COLUMN \`${escapedColumn}\``,
     );
   }
 
   await getPool().execute(
-    `ALTER TABLE lineups ADD COLUMN IF NOT EXISTS nationality TINYINT UNSIGNED NOT NULL DEFAULT 1`,
+    `ALTER TABLE booster ADD COLUMN IF NOT EXISTS nationality TINYINT UNSIGNED NOT NULL DEFAULT 1`,
   );
 
   const [columns] = await getPool().execute<ColumnRow[]>(
     `SELECT DATA_TYPE
      FROM INFORMATION_SCHEMA.COLUMNS
      WHERE TABLE_SCHEMA = DATABASE()
-       AND TABLE_NAME = 'lineups'
+       AND TABLE_NAME = 'booster'
        AND COLUMN_NAME = 'nationality'
      LIMIT 1`,
   );
@@ -99,19 +99,19 @@ export const ensureLineupsSchema = oncePerProcess(async () => {
   const dataType = columns[0]?.DATA_TYPE;
   if (dataType && dataType !== "tinyint") {
     await getPool().execute(
-      `UPDATE lineups
+      `UPDATE booster
        SET nationality = CASE
          WHEN CAST(nationality AS CHAR) IN ('중국', '2') THEN '2'
          ELSE '1'
        END`,
     );
     await getPool().execute(
-      `ALTER TABLE lineups MODIFY COLUMN nationality TINYINT UNSIGNED NOT NULL DEFAULT 1`,
+      `ALTER TABLE booster MODIFY COLUMN nationality TINYINT UNSIGNED NOT NULL DEFAULT 1`,
     );
   }
 });
 
-function toLineup(row: LineupRow): Lineup {
+function toBooster(row: BoosterRow): Booster {
   return {
     id: String(row.id),
     name: row.name,
@@ -133,19 +133,19 @@ function toLineup(row: LineupRow): Lineup {
   };
 }
 
-type LineupRecordSummary = { champions: string[]; wins: number; losses: number };
+type BoosterRecordSummary = { champions: string[]; wins: number; losses: number };
 
 /** 기사별 작업 기록에서 승/패 합계와 판수 기준 모스트 챔피언 TOP3를 집계 */
-async function getRecordSummariesByLineup(): Promise<
-  Map<number, LineupRecordSummary>
+async function getRecordSummariesByBooster(): Promise<
+  Map<number, BoosterRecordSummary>
 > {
-  const CACHE_KEY = "recordSummariesByLineup";
+  const CACHE_KEY = "recordSummariesByBooster";
   const cachedSummary =
-    getCachedStat<Map<number, LineupRecordSummary>>(CACHE_KEY);
+    getCachedStat<Map<number, BoosterRecordSummary>>(CACHE_KEY);
   if (cachedSummary) return cachedSummary;
 
   const [rows] = await getPool().execute<RowDataPacket[]>(
-    `SELECT lineup_id, tier_records
+    `SELECT booster_id, tier_records
        FROM review_replies
        WHERE tier_records IS NOT NULL`,
   );
@@ -160,12 +160,12 @@ async function getRecordSummariesByLineup(): Promise<
       const raw = row.tier_records;
       records = (typeof raw === "string" ? JSON.parse(raw) : raw) as TierRecord[];
     } catch { continue; }
-    const lineupId = Number(row.lineup_id);
-    if (!Number.isInteger(lineupId)) continue;
-    let acc = counts.get(lineupId);
+    const boosterId = Number(row.booster_id);
+    if (!Number.isInteger(boosterId)) continue;
+    let acc = counts.get(boosterId);
     if (!acc) {
       acc = { wins: 0, losses: 0, champions: new Map() };
-      counts.set(lineupId, acc);
+      counts.set(boosterId, acc);
     }
     for (const r of records) {
       if (!r.tier) continue;
@@ -183,9 +183,9 @@ async function getRecordSummariesByLineup(): Promise<
     }
   }
 
-  const result = new Map<number, LineupRecordSummary>();
-  for (const [lineupId, acc] of counts) {
-    result.set(lineupId, {
+  const result = new Map<number, BoosterRecordSummary>();
+  for (const [boosterId, acc] of counts) {
+    result.set(boosterId, {
       wins: acc.wins,
       losses: acc.losses,
       champions: [...acc.champions.entries()]
@@ -198,21 +198,21 @@ async function getRecordSummariesByLineup(): Promise<
   return result;
 }
 
-export async function getLineups(
+export async function getBoosterList(
   activeOnly = true,
   sortByReview = false,
-): Promise<Lineup[]> {
+): Promise<Booster[]> {
   await ensureReviewSchema();
-  await ensureLineupsSchema();
-  const [rows] = await getPool().execute<LineupRow[]>(
+  await ensureBoosterSchema();
+  const [rows] = await getPool().execute<BoosterRow[]>(
     `SELECT l.*, COALESCE(stats.average_rating, 0) AS average_rating, COALESCE(stats.review_count, 0) AS review_count
-     FROM lineups l
+     FROM booster l
      LEFT JOIN (
-       SELECT lineup_id, AVG(rating) AS average_rating, COUNT(*) AS review_count
+       SELECT booster_id, AVG(rating) AS average_rating, COUNT(*) AS review_count
        FROM \`review\`
-       WHERE lineup_id IS NOT NULL
-       GROUP BY lineup_id
-     ) stats ON stats.lineup_id = l.id
+       WHERE booster_id IS NOT NULL
+       GROUP BY booster_id
+     ) stats ON stats.booster_id = l.id
      ${activeOnly ? "WHERE l.active = 1" : ""}
      ORDER BY ${
        sortByReview
@@ -220,11 +220,11 @@ export async function getLineups(
          : "l.sort_order ASC, l.id ASC"
      }`,
   );
-  const summaries = await getRecordSummariesByLineup();
+  const summaries = await getRecordSummariesByBooster();
   return rows.map((row) => {
     const summary = summaries.get(row.id);
     return {
-      ...toLineup(row),
+      ...toBooster(row),
       champions: summary?.champions ?? [],
       wins: summary?.wins ?? 0,
       losses: summary?.losses ?? 0,
@@ -232,40 +232,40 @@ export async function getLineups(
   });
 }
 
-export async function getLineupById(id: number): Promise<Lineup | null> {
+export async function getBoosterById(id: number): Promise<Booster | null> {
   await ensureReviewSchema();
-  await ensureLineupsSchema();
-  const [rows] = await getPool().execute<LineupRow[]>(
+  await ensureBoosterSchema();
+  const [rows] = await getPool().execute<BoosterRow[]>(
     `SELECT l.*, COALESCE(stats.average_rating, 0) AS average_rating, COALESCE(stats.review_count, 0) AS review_count
-     FROM lineups l
+     FROM booster l
      LEFT JOIN (
-       SELECT lineup_id, AVG(rating) AS average_rating, COUNT(*) AS review_count
+       SELECT booster_id, AVG(rating) AS average_rating, COUNT(*) AS review_count
        FROM \`review\`
-       WHERE lineup_id IS NOT NULL
-       GROUP BY lineup_id
-     ) stats ON stats.lineup_id = l.id
+       WHERE booster_id IS NOT NULL
+       GROUP BY booster_id
+     ) stats ON stats.booster_id = l.id
      WHERE l.id = :id`,
     { id },
   );
   if (!rows[0]) return null;
-  const summaries = await getRecordSummariesByLineup();
+  const summaries = await getRecordSummariesByBooster();
   const summary = summaries.get(rows[0].id);
   return {
-    ...toLineup(rows[0]),
+    ...toBooster(rows[0]),
     champions: summary?.champions ?? [],
     wins: summary?.wins ?? 0,
     losses: summary?.losses ?? 0,
   };
 }
 
-export { getLineupPath } from "@/lib/lineup-model";
+export { getBoosterPath } from "@/lib/booster-model";
 
-export async function getLineupBySlug(slug: string): Promise<Lineup | null> {
+export async function getBoosterBySlug(slug: string): Promise<Booster | null> {
   const decoded = decodeURIComponent(slug);
-  const lineups = await getLineups(false);
+  const boosterList = await getBoosterList(false);
   return (
-    lineups.find(
-      (lineup) => getLineupSlug(lineup.name) === decoded,
+    boosterList.find(
+      (booster) => getBoosterSlug(booster.name) === decoded,
     ) ?? null
   );
 }
@@ -359,12 +359,12 @@ function toWinStatsGroup(
   };
 }
 
-export async function getLineupWinStats(lineupId: number): Promise<{
+export async function getBoosterWinStats(boosterId: number): Promise<{
   total: WinStatsGroup;
   boost: WinStatsGroup;
   duo: WinStatsGroup;
 }> {
-  const CACHE_KEY = `winStats:${lineupId}`;
+  const CACHE_KEY = `winStats:${boosterId}`;
   const cached = getCachedStat<{
     total: WinStatsGroup;
     boost: WinStatsGroup;
@@ -377,9 +377,9 @@ export async function getLineupWinStats(lineupId: number): Promise<{
             r.created_at AS created_at
        FROM review_replies rr
        JOIN \`review\` r ON r.id = rr.review_id
-       WHERE rr.lineup_id = :lineupId AND rr.tier_records IS NOT NULL
+       WHERE rr.booster_id = :boosterId AND rr.tier_records IS NOT NULL
        ORDER BY r.created_at DESC, rr.created_at DESC`,
-    { lineupId },
+    { boosterId },
   );
 
   const total = createWinStatsAccumulator();
@@ -484,12 +484,12 @@ export async function getLineupWinStats(lineupId: number): Promise<{
   return result;
 }
 
-export async function getLineupReviewStats(id: number) {
+export async function getBoosterReviewStats(id: number) {
   await ensureReviewSchema();
   const [rows] = await getPool().execute<RowDataPacket[]>(
     `SELECT rating, COUNT(*) AS count
      FROM \`review\`
-     WHERE lineup_id = :id
+     WHERE booster_id = :id
      GROUP BY rating
      ORDER BY rating DESC`,
     { id },
@@ -497,7 +497,7 @@ export async function getLineupReviewStats(id: number) {
   const [summaryRows] = await getPool().execute<RowDataPacket[]>(
     `SELECT COUNT(*) AS review_count, AVG(rating) AS average_rating
      FROM \`review\`
-     WHERE lineup_id = :id`,
+     WHERE booster_id = :id`,
     { id },
   );
 

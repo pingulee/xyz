@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Clock, Crown, Star } from "lucide-react";
-import BoosterAvatar from "@/components/lineup/BoosterAvatar";
-import type { Lineup } from "@/lib/lineup-model";
-import { getLineupPath } from "@/lib/lineups";
+import BoosterAvatar from "@/components/booster/BoosterAvatar";
+import type { Booster } from "@/lib/booster-model";
+import { getBoosterPath } from "@/lib/booster";
 
 function nationalityFlag(code: number) {
   return code === 2 ? "/images/flags/cn.svg" : "/images/flags/kr.svg";
@@ -13,11 +13,11 @@ function nationalityLabel(code: number) {
   return code === 2 ? "중국" : "대한민국";
 }
 
-export default function LineupCard({
+export default function BoosterCard({
   booster,
   placement,
 }: {
-  booster: Lineup;
+  booster: Booster;
   placement?: number;
 }) {
   const wins = booster.wins ?? 0;
@@ -47,7 +47,7 @@ export default function LineupCard({
       : null;
 
   return (
-    <Link href={getLineupPath(booster)} prefetch={false} className="block">
+    <Link href={getBoosterPath(booster)} prefetch={false} className="block">
       <article className="card-premium relative overflow-hidden rounded-[28px] transition duration-200">
         {crown && (
           <div

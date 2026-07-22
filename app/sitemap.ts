@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { navItems, services, site } from "@/lib/site";
-import { getLineups } from "@/lib/lineups";
-import { getLineupSlug } from "@/lib/lineup-model";
+import { getBoosterList } from "@/lib/booster";
+import { getBoosterSlug } from "@/lib/booster-model";
 import { getSitemapReviewEntries } from "@/lib/review";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 // 검색엔진에 매번 잘못된 갱신 신호를 보내므로 콘텐츠 수정 시에만 갱신한다.
 const staticLastModified: Record<string, string> = {
   "": "2026-07-22",
-  "/lineup": "2026-07-21",
+  "/booster": "2026-07-22",
   "/review": "2026-07-22",
   "/recruit": "2026-07-21",
   "/boosting": "2026-07-21",
@@ -38,13 +38,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let dynamicEntries: MetadataRoute.Sitemap = [];
   try {
-    const [lineups, reviewList] = await Promise.all([
-      getLineups(true),
+    const [boosterList, reviewList] = await Promise.all([
+      getBoosterList(true),
       getSitemapReviewEntries(),
     ]);
 
-    const lineupEntries: MetadataRoute.Sitemap = lineups.map((lineup) => ({
-      url: `${site.url}/lineup/${encodeURIComponent(getLineupSlug(lineup.name))}`,
+    const boosterEntries: MetadataRoute.Sitemap = boosterList.map((booster) => ({
+      url: `${site.url}/booster/${encodeURIComponent(getBoosterSlug(booster.name))}`,
       changeFrequency: "weekly",
       priority: 0.6,
     }));
@@ -56,7 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     }));
 
-    dynamicEntries = [...lineupEntries, ...reviewEntries];
+    dynamicEntries = [...boosterEntries, ...reviewEntries];
   } catch (error) {
     console.error("sitemap: failed to load dynamic entries", error);
   }

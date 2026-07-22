@@ -3,13 +3,13 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Loader2, Star } from "lucide-react";
-import BoosterAvatar, { type BoosterAvailability } from "@/components/lineup/BoosterAvatar";
+import BoosterAvatar, { type BoosterAvailability } from "@/components/booster/BoosterAvatar";
 import {
   TierRecordBadges,
   TierRecordEditor,
   isTierRecordsComplete,
   normalizeTierRecords,
-} from "@/components/lineup/TierRecords";
+} from "@/components/booster/TierRecords";
 import type { Review, ReviewReply, TierRecord } from "@/lib/review";
 
 const RECENT_LIMIT = 3; // 기사 상세: 최근 후기 3개만 표시(페이지네이션 없음)
@@ -175,13 +175,13 @@ function ReplyForm({
 
 function ReplyBlock({
   review,
-  boosterLineupId,
+  boosterId,
   boosterName,
   boosterImage,
   boosterAvailability,
 }: {
   review: Review;
-  boosterLineupId: number | null;
+  boosterId: number | null;
   boosterName: string;
   boosterImage: string;
   boosterAvailability?: BoosterAvailability | null;
@@ -191,7 +191,7 @@ function ReplyBlock({
   const [saving, setSaving] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const canReply =
-    boosterLineupId !== null && review.lineupId === String(boosterLineupId);
+    boosterId !== null && review.boosterId === String(boosterId);
 
   const replyFormVisible = canReply && (formOpen || editing || !replyData);
 
@@ -305,15 +305,15 @@ function ReplyBlock({
   );
 }
 
-export default function LineupReview({
+export default function BoosterReview({
   reviewList,
-  boosterLineupId = null,
+  boosterId = null,
   boosterName = "",
   boosterImage = "",
   boosterAvailability = null,
 }: {
   reviewList: Review[];
-  boosterLineupId?: number | null;
+  boosterId?: number | null;
   boosterName?: string;
   boosterImage?: string;
   boosterAvailability?: BoosterAvailability | null;
@@ -354,7 +354,7 @@ export default function LineupReview({
           </p>
           <ReplyBlock
             review={review}
-            boosterLineupId={boosterLineupId}
+            boosterId={boosterId}
             boosterName={boosterName}
             boosterImage={boosterImage}
             boosterAvailability={boosterAvailability}

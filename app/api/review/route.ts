@@ -15,26 +15,27 @@ type ReviewRow = RowDataPacket & {
   id: number;
   name: string;
   service: string;
-  lineup_id: number | null;
-  lineup_name: string | null;
+  booster_id: number | null;
+  booster_name: string | null;
   rating: number;
   content: string;
   view_count: number | null;
   password_hash: string | null;
   created_at: Date;
   reply_id: number | null;
-  reply_lineup_id: number | null;
+  reply_booster_id: number | null;
   reply_booster_name: string | null;
   reply_content: string | null;
   reply_tier_records: string | null;
   reply_created_at: Date | null;
 };
 
+type BoosterNameRow = RowDataPacket & { name: string };
+
 type ReviewPayload = {
   name?: string;
   service?: string;
-  lineupId?: string;
-  lineupName?: string;
+  boosterId?: string;
   rating?: number;
   content?: string;
   password?: string;
@@ -42,14 +43,15 @@ type ReviewPayload = {
 };
 
 const REVIEW_SELECT = `
-  SELECT r.id, r.name, r.service, r.lineup_id, l.name AS lineup_name,
+  SELECT r.id, r.name, r.service, r.booster_id,
+         COALESCE(b.name, r.booster_name) AS booster_name,
          r.rating, r.content, r.view_count, r.password_hash, r.created_at,
-         rr.id AS reply_id, rr.lineup_id AS reply_lineup_id,
+         rr.id AS reply_id, rr.booster_id AS reply_booster_id,
          rr.booster_name AS reply_booster_name,
          rr.content AS reply_content, rr.tier_records AS reply_tier_records,
          rr.created_at AS reply_created_at
   FROM \`review\` r
-  LEFT JOIN lineups l ON l.id = r.lineup_id
+  LEFT JOIN booster b ON b.id = r.booster_id
   LEFT JOIN review_replies rr ON rr.review_id = r.id
 `;
 
@@ -151,8 +153,7 @@ export async function POST(request: Request) {
 
   const name = payload.name?.trim() ?? "";
   const service = payload.service?.trim() ?? "";
-  const lineupId = payload.lineupId ? Number(payload.lineupId) : null;
-  const lineupName = payload.lineupName?.trim() || null;
+  const boosterId = payload.boosterId ? Number(payload.boosterId) : null;
   const content = payload.content?.trim() ?? "";
   const rating = Number(payload.rating);
   const password = payload.password?.trim() ?? "";
@@ -171,7 +172,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (lineupId === null || !Number.isInteger(lineupId) || lineupId < 1 || !lineupName) {
+  if (boosterId === null || !Number.isInteger(boosterId) || boosterId < 1) {
     return NextResponse.json(
       { message: "작업 기사를 선택해주세요." },
       { status: 400 },
@@ -201,6 +202,18 @@ export async function POST(request: Request) {
 
   try {
     await ensureReviewSchema();
+    const [boosterRows] = await getPool().execute<BoosterNameRow[]>(
+      `SELECT name FROM booster WHERE id = :boosterId AND active = 1 LIMIT 1`,
+      { boosterId },
+    );
+    const boosterName = boosterRows[0]?.name;
+    if (!boosterName) {
+      return NextResponse.json(
+        { message: "작업 기사를 다시 선택해주세요." },
+        { status: 400 },
+      );
+    }
+
     const adminWrite = isAdminRequest(request);
     if (!adminWrite) {
       const cooldown = await getReviewCooldown(request);
@@ -215,9 +228,9 @@ export async function POST(request: Request) {
 
     const passwordHash = hashPassword(password);
     const [result] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO \`review\` (name, service, lineup_id, lineup_name, rating, content, password_hash)
-       VALUES (:name, :service, :lineupId, :lineupName, :rating, :content, :passwordHash)`,
-      { name, service, lineupId, lineupName, rating, content, passwordHash },
+      `INSERT INTO \`review\` (name, service, booster_id, booster_name, rating, content, password_hash)
+       VALUES (:name, :service, :boosterId, :boosterName, :rating, :content, :passwordHash)`,
+      { name, service, boosterId, boosterName, rating, content, passwordHash },
     );
 
     const [rows] = await getPool().execute<ReviewRow[]>(

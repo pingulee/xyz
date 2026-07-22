@@ -9,8 +9,8 @@ export const blankForm = {
   name: "",
   password: "",
   service: "",
-  lineupId: "",
-  lineupName: "",
+  boosterId: "",
+  boosterName: "",
   rating: 5,
   content: "",
 };

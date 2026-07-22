@@ -1,4 +1,4 @@
-export type Lineup = {
+export type Booster = {
   id: string;
   name: string;
   positions: string[];
@@ -19,7 +19,7 @@ export type Lineup = {
   losses?: number;
 };
 
-export function getLineupSlug(name: string): string {
+export function getBoosterSlug(name: string): string {
   return name
     .trim()
     .toLowerCase()
@@ -28,6 +28,6 @@ export function getLineupSlug(name: string): string {
     .replace(/^-|-$/g, "");
 }
 
-export function getLineupPath(lineup: Pick<Lineup, "name">): string {
-  return `/lineup/${getLineupSlug(lineup.name)}`;
+export function getBoosterPath(booster: Pick<Booster, "name">): string {
+  return `/booster/${getBoosterSlug(booster.name)}`;
 }

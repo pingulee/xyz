@@ -5,13 +5,13 @@ import { useState } from "react";
 import Image from "next/image";
 import BoosterAvatar, {
   type BoosterAvailability,
-} from "@/components/lineup/BoosterAvatar";
+} from "@/components/booster/BoosterAvatar";
 import {
   TierRecordBadges,
   TierRecordEditor,
   isTierRecordsComplete,
   normalizeTierRecords,
-} from "@/components/lineup/TierRecords";
+} from "@/components/booster/TierRecords";
 import type { TierRecord } from "@/lib/review";
 import { REPLY_CONTENT_MIN_LENGTH } from "@/components/review/constants";
 import { formatDate } from "@/components/review/helpers";
@@ -19,7 +19,7 @@ import type { Review } from "@/components/review/types";
 
 export default function ReplySection({
   review,
-  boosterLineupId,
+  boosterId,
   boosterName,
   boosterImage,
   boosterAvailability,
@@ -29,7 +29,7 @@ export default function ReplySection({
   onDeleteReply,
 }: {
   review: Review;
-  boosterLineupId: number | null;
+  boosterId: number | null;
   boosterName: string;
   boosterImage: string;
   boosterAvailability?: BoosterAvailability | null;
@@ -49,7 +49,7 @@ export default function ReplySection({
     draftLength > 0 && draftLength < REPLY_CONTENT_MIN_LENGTH;
   const recordsComplete = isTierRecordsComplete(tierRecords);
   const canReply =
-    boosterLineupId !== null && review.lineupId === String(boosterLineupId);
+    boosterId !== null && review.boosterId === String(boosterId);
 
   const replyFormVisible = canReply && (formOpen || editing || !review.reply);
 

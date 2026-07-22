@@ -8,7 +8,7 @@ import { useState } from "react";
 import type { MouseEvent } from "react";
 import clsx from "clsx";
 import { navItems, services, site } from "@/lib/site";
-import BoosterAuthControls from "@/components/lineup/BoosterAuthControls";
+import BoosterAuthControls from "@/components/booster/BoosterAuthControls";
 
 type MenuItem = {
   label: string;

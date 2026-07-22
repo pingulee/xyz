@@ -1,4 +1,4 @@
-import type { Lineup } from "@/lib/lineup-model";
+import type { Booster } from "@/lib/booster-model";
 
 export function nationalityFlag(code: number) {
   return code === 2 ? "/images/flags/cn.svg" : "/images/flags/kr.svg";
@@ -35,4 +35,4 @@ export const blankForm = {
 };
 
 export type FormState = typeof blankForm;
-export type LineupResponse = { lineup: Lineup; message?: string };
+export type BoosterResponse = { booster: Booster; message?: string };

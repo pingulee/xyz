@@ -1,7 +1,7 @@
 "use client";
 
 import { Copy, Loader2, Pencil, Trash2 } from "lucide-react";
-import { type BoosterAvailability } from "@/components/lineup/BoosterAvatar";
+import { type BoosterAvailability } from "@/components/booster/BoosterAvatar";
 import type { TierRecord } from "@/lib/review";
 import { REVIEW_CONTENT_MAX_LENGTH } from "@/components/review/constants";
 import { formatDate } from "@/components/review/helpers";
@@ -21,7 +21,7 @@ export default function ReviewDetail({
   editing,
   error,
   isAdmin,
-  boosterLineupId,
+  boosterId,
   boosterName,
   boosterImage,
   boosterAvailability,
@@ -52,7 +52,7 @@ export default function ReviewDetail({
   editing: boolean;
   error?: string;
   isAdmin: boolean;
-  boosterLineupId: number | null;
+  boosterId: number | null;
   boosterName: string;
   boosterImage: string;
   boosterAvailability?: BoosterAvailability | null;
@@ -240,7 +240,7 @@ export default function ReviewDetail({
         {!editOpen && (
           <ReplySection
             review={review}
-            boosterLineupId={boosterLineupId}
+            boosterId={boosterId}
             boosterName={boosterName}
             boosterImage={boosterImage}
             boosterAvailability={boosterAvailability}

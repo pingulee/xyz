@@ -32,14 +32,14 @@ export default function ReviewBoard({
   total = 0,
   serverPage = 1,
   isAdmin = false,
-  lineups = [],
-  boosterLineupId = null,
+  boosterList = [],
+  boosterId = null,
 }: {
   initialReviewList?: Review[];
   total?: number;
   serverPage?: number;
   isAdmin?: boolean;
-  lineups?: Array<{
+  boosterList?: Array<{
     id: string;
     name: string;
     services: string[];
@@ -48,10 +48,10 @@ export default function ReviewBoard({
     weekdayHours: string;
     weekendHours: string;
   }>;
-  boosterLineupId?: number | null;
+  boosterId?: number | null;
 }) {
-  const boosterName = boosterLineupId
-    ? (lineups.find((l) => l.id === String(boosterLineupId))?.name ?? "")
+  const boosterName = boosterId
+    ? (boosterList.find((l) => l.id === String(boosterId))?.name ?? "")
     : "";
   const [reviewList, setReviewList] = useState<Review[]>(initialReviewList);
   const [form, setForm] = useState(blankForm);
@@ -76,12 +76,12 @@ export default function ReviewBoard({
   const [deletingReplyId, setDeletingReplyId] = useState("");
   const mousedownOnOverlay = useRef(false);
   const router = useRouter();
-  const lineupById = useMemo(
+  const boosterById = useMemo(
     () =>
       Object.fromEntries(
-        lineups.map((lineup) => [lineup.id, lineup]),
-      ) as Record<string, (typeof lineups)[number]>,
-    [lineups],
+        boosterList.map((booster) => [booster.id, booster]),
+      ) as Record<string, (typeof boosterList)[number]>,
+    [boosterList],
   );
 
   const visibleReviewList = reviewList;
@@ -113,7 +113,7 @@ export default function ReviewBoard({
   const canSubmitReview = Boolean(
     form.name.trim() &&
       form.password.trim().length >= REVIEW_PASSWORD_MIN_LENGTH &&
-      form.lineupId &&
+      form.boosterId &&
       form.service &&
       form.content.trim().length >= REVIEW_CONTENT_MIN_LENGTH,
   );
@@ -122,7 +122,7 @@ export default function ReviewBoard({
   const invalidReviewPassword =
     form.password.trim().length > 0 &&
     form.password.trim().length < REVIEW_PASSWORD_MIN_LENGTH;
-  const missingReviewLineup = submitAttempted && !form.lineupId;
+  const missingReviewBooster = submitAttempted && !form.boosterId;
   const missingService = submitAttempted && !form.service;
   const missingReviewContent = submitAttempted && !form.content.trim();
   const invalidReviewContent =
@@ -247,7 +247,7 @@ export default function ReviewBoard({
       return;
     }
 
-    if (!form.lineupId) {
+    if (!form.boosterId) {
       setError("작업 기사를 선택해주세요.");
       return;
     }
@@ -287,10 +287,7 @@ export default function ReviewBoard({
           name,
           password,
           service: form.service,
-          lineupId: form.lineupId || undefined,
-          lineupName: form.lineupId
-            ? lineups.find((lineup) => lineup.id === form.lineupId)?.name
-            : undefined,
+          boosterId: form.boosterId || undefined,
           rating: form.rating,
           content,
         }),
@@ -494,6 +491,9 @@ export default function ReviewBoard({
   const duplicateReview = async (review: Review) => {
     setError("");
     try {
+      if (!review.boosterId) {
+        throw new Error("작업 기사 정보가 없어 복제할 수 없습니다.");
+      }
       const response = await fetch("/api/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -501,6 +501,7 @@ export default function ReviewBoard({
           name: review.name,
           password: "admin_duplicate",
           service: review.service,
+          boosterId: review.boosterId,
           rating: review.rating,
           content: review.content,
         }),
@@ -628,10 +629,10 @@ export default function ReviewBoard({
                       작업 기사
                     </span>
                     <select
-                      value={form.lineupId}
+                      value={form.boosterId}
                       onChange={(event) => {
                         const id = event.target.value;
-                        const selected = lineups.find((l) => l.id === id);
+                        const selected = boosterList.find((l) => l.id === id);
                         const availableServices = selected
                           ? selected.services
                               .map((s) => SERVICE_LABEL[s])
@@ -639,14 +640,14 @@ export default function ReviewBoard({
                           : ["롤 대리", "롤 듀오"];
                         setForm((current) => ({
                           ...current,
-                          lineupId: id,
+                          boosterId: id,
                           service: availableServices.includes(current.service)
                             ? current.service
                             : "",
                         }));
                       }}
                       className={`rounded-2xl border bg-black/30 px-4 py-3 text-white outline-none transition focus:border-gold/50 ${
-                        missingReviewLineup
+                        missingReviewBooster
                           ? "border-red-400/50"
                           : "border-white/10"
                       }`}
@@ -655,13 +656,13 @@ export default function ReviewBoard({
                       <option value="" disabled>
                         선택해주세요
                       </option>
-                      {lineups.map((lineup) => (
-                        <option key={lineup.id} value={lineup.id}>
-                          {lineup.name}
+                      {boosterList.map((booster) => (
+                        <option key={booster.id} value={booster.id}>
+                          {booster.name}
                         </option>
                       ))}
                     </select>
-                    {missingReviewLineup && (
+                    {missingReviewBooster && (
                       <p className="text-xs font-bold text-red-300">
                         작업 기사를 선택해주세요.
                       </p>
@@ -673,8 +674,8 @@ export default function ReviewBoard({
                       서비스
                     </span>
                     {(() => {
-                      const selected = lineups.find(
-                        (l) => l.id === form.lineupId,
+                      const selected = boosterList.find(
+                        (l) => l.id === form.boosterId,
                       );
                       const opts = selected
                         ? selected.services
@@ -824,18 +825,18 @@ export default function ReviewBoard({
             editVerified={editVerifiedIds.has(selectedReview.id)}
             editing={editingId === selectedReview.id}
             isAdmin={isAdmin}
-            boosterLineupId={boosterLineupId}
+            boosterId={boosterId}
             boosterName={boosterName}
             replying={replyingId === selectedReview.id}
             deletingReply={deletingReplyId === selectedReview.id}
             boosterAvailability={
-              lineupById[
-                selectedReview.reply?.lineupId ?? selectedReview.lineupId ?? ""
+              boosterById[
+                selectedReview.reply?.boosterId ?? selectedReview.boosterId ?? ""
               ] ?? null
             }
             boosterImage={
-              lineupById[
-                selectedReview.reply?.lineupId ?? selectedReview.lineupId ?? ""
+              boosterById[
+                selectedReview.reply?.boosterId ?? selectedReview.boosterId ?? ""
               ]?.image ?? ""
             }
             onSubmitReply={(content, tierRecords) =>
@@ -894,8 +895,8 @@ export default function ReviewBoard({
                 <span>조회수</span>
               </div>
               {paginatedReviewList.map((review, i) => {
-                const lineupName =
-                  review.lineupName ?? review.reply?.boosterName ?? "";
+                const reviewBoosterName =
+                  review.boosterName ?? review.reply?.boosterName ?? "";
                 // 전체 후기 수 기준 전역 번호: 최신 글 = 최대 번호, 가장 오래된 글 = 1
                 const displayNumber =
                   Math.max(total, visibleReviewList.length) -
@@ -927,7 +928,7 @@ export default function ReviewBoard({
                       </span>
                       <span className="truncate text-xs font-bold text-zinc-500 lg:hidden">
                         작성자 {review.name} · 작업 기사{" "}
-                        {lineupName || "선택 안 함"}
+                        {reviewBoosterName || "선택 안 함"}
                       </span>
                     </span>
 
@@ -936,7 +937,7 @@ export default function ReviewBoard({
                     </span>
 
                     <span className="hidden truncate text-sm font-bold text-zinc-400 lg:block">
-                      {lineupName || "선택 안 함"}
+                      {reviewBoosterName || "선택 안 함"}
                     </span>
 
                     <span className="hidden lg:block">

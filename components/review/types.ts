@@ -2,7 +2,7 @@ import type { TierRecord } from "@/lib/review";
 
 export type ReviewReply = {
   id: string;
-  lineupId: string;
+  boosterId: string;
   boosterName: string;
   content: string;
   tierRecords: TierRecord[];
@@ -13,8 +13,8 @@ export type Review = {
   id: string;
   name: string;
   service: string;
-  lineupId?: string;
-  lineupName?: string;
+  boosterId?: string;
+  boosterName?: string;
   rating: number;
   content: string;
   createdAt: string;

@@ -1,6 +1,6 @@
 // 무거운 집계(리뷰 답글 tier_records JSON 파싱)를 짧은 TTL로 메모이즈.
 // force-dynamic 페이지가 매 요청마다 전체 테이블을 파싱하던 부하를 흡수한다.
-// 데이터 변경(리뷰/답글/라인업 쓰기) 시 clearStatsCache()로 무효화.
+// 데이터 변경(리뷰/답글/부스터 쓰기) 시 clearStatsCache()로 무효화.
 
 type Entry = { at: number; value: unknown };
 

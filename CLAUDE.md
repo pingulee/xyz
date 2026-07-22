@@ -5,7 +5,7 @@
 ## 스택
 - **Next.js 16.2.9** (App Router, **Turbopack**, **React Compiler** `reactCompiler: true`)
 - React 19.2 / TypeScript 5 / Tailwind CSS v4 (`@tailwindcss/postcss`)
-- **MySQL** (`mysql2`) — 라인업/후기 데이터
+- **MySQL** (`mysql2`) — 부스터/후기 데이터
 - framer-motion(애니메이션), lucide-react(아이콘)
 - 경로 alias `@/*` → 프로젝트 루트
 
@@ -16,25 +16,25 @@
 - `npm run lint` — eslint
 
 ## 디렉토리 구조
-- **컴포넌트는 기능별 폴더**(평면 아님): `components/{layout,ui,home,service,quote,review,lineup}` + `hooks/`. import는 항상 `@/` alias 절대경로(상대경로 `./` 안 씀). 새 컴포넌트는 해당 기능 폴더에.
-  - `layout`(Header/Footer/FloatingContact/Container), `ui`(SectionTitle/Reveal/JsonLd/FaqItem), `home`(HeroSlider/ServiceCard/HomeFaq), `service`(ServiceDetail/PriceTable), `quote`(QuoteCalculator+RankPicker/constants/types/utils), `review`(ReviewBoard+ReviewDetail/ReplySection/Stars/StarRating/ReviewNavButton/helpers/types/constants, ReviewDetailView, LineupReview), `lineup`(AdminLineupBoard+BoosterCard/adminLineupConstants, LineupCard/BoosterAvatar/BoosterAuthControls/WinStatsCard/TierRecords)
-  - `hooks/useChampionOptions.ts` = quote·lineup 공용 챔피언 데이터 훅.
-- 큰 컴포넌트는 하위 컴포넌트/상수/타입/헬퍼를 같은 폴더 내 파일로 분리(예: review/, quote/). `lineup/`은 여러 컴포넌트 공유 폴더라 상수 파일명에 접두사(`adminLineupConstants.ts`).
+- **컴포넌트는 기능별 폴더**(평면 아님): `components/{layout,ui,home,service,quote,review,booster}` + `hooks/`. import는 항상 `@/` alias 절대경로(상대경로 `./` 안 씀). 새 컴포넌트는 해당 기능 폴더에.
+  - `layout`(Header/Footer/FloatingContact/Container), `ui`(SectionTitle/Reveal/JsonLd/FaqItem), `home`(HeroSlider/ServiceCard/HomeFaq), `service`(ServiceDetail/PriceTable), `quote`(QuoteCalculator+RankPicker/constants/types/utils), `review`(ReviewBoard+ReviewDetail/ReplySection/Stars/StarRating/ReviewNavButton/helpers/types/constants, ReviewDetailView, BoosterReview), `booster`(AdminBoosterBoard+AdminBoosterCard/adminBoosterConstants, BoosterCard/BoosterAvatar/BoosterAuthControls/WinStatsCard/TierRecords)
+  - `hooks/useChampionOptions.ts` = quote·booster 공용 챔피언 데이터 훅.
+- 큰 컴포넌트는 하위 컴포넌트/상수/타입/헬퍼를 같은 폴더 내 파일로 분리(예: review/, quote/). `booster/`는 여러 컴포넌트 공유 폴더라 상수 파일명에 접두사(`adminBoosterConstants.ts`).
 
 ## 핵심 규칙 / 컨벤션
 - **`lib/site.ts` = 사이트 단일 진실 소스**: `site`(name/url/description/kakaoUrl/ogImage/logo), `navItems`, `services`, 가격표(`boostingPrices`/`duoPrices`). 도메인/이미지/네비 변경은 여기서.
 - **도메인은 IDN**: `https://롤대리.xyz` → punycode `xn--vk1b65hf2a.xyz`. `metadataBase`가 자동 인코딩.
 - **서비스 카드 이미지**: `/images/slider/01~03.webp` 재사용 (01=대리, 02=듀오, 03=계정). `boosting/duo/account.png`는 **존재하지 않음** — 새 경로 추가 시 실제 파일 먼저 배치할 것 (없으면 next/image가 400).
-- **DB 접근 페이지는 `export const dynamic = "force-dynamic"`** (lineup, review, 상세, admin, login). `sitemap.ts`도 force-dynamic + try/catch.
+- **DB 접근 페이지는 `export const dynamic = "force-dynamic"`** (booster, review, 상세, admin, login). `sitemap.ts`도 force-dynamic + try/catch.
 - **인증**: `lib/adminSession.ts`(관리자), `lib/boosterSession.ts`(기사) — 쿠키 기반. `SESSION_COOKIE`, `BOOSTER_SESSION_COOKIE`.
-- 라인업 slug는 저장 안 함 — `getLineupSlug(name)`으로 파생 (`lib/lineup-model.ts`).
+- 부스터 slug는 저장 안 함 — `getBoosterSlug(name)`으로 파생 (`lib/booster-model.ts`).
 
 ## SEO 컨벤션 (준수 필수)
 - **페이지당 `<h1>` 정확히 1개.** `SectionTitle`은 기본 `h2`, 주 제목엔 `as="h1"` 전달. `ServiceDetail`은 내부에서 이미 `as="h1"`.
 - 모든 공개 페이지: per-page `metadata` + `alternates.canonical` + `openGraph`(siteName/images) + twitter. 이미지 기본값 `site.ogImage`.
 - 동적 라우트는 `generateMetadata`.
 - 구조화 데이터: `components/ui/JsonLd.tsx`(홈, `@graph`: Organization+WebSite+Service), 서비스 페이지 Service/FAQPage, 후기 Review, 상세 페이지 BreadcrumbList.
-- `app/robots.ts` — `/admin`, `/login`, `/api/` disallow. `app/sitemap.ts` — 정적 + 동적(라인업 slug, 후기 id).
+- `app/robots.ts` — `/admin`, `/login`, `/api/` disallow. `app/sitemap.ts` — 정적 + 동적(부스터 slug, 후기 id).
 - 비공개 페이지(admin/login) `robots: { index: false }`.
 
 ## 접근성 (Lighthouse 통과 유지)

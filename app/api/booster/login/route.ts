@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { scryptSync, timingSafeEqual } from "crypto";
 import { RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
-import { ensureLineupsSchema } from "@/lib/lineups";
+import { ensureBoosterSchema } from "@/lib/booster";
 import {
   createBoosterSession,
   getBoosterSessionCookieHeader,
@@ -10,7 +10,7 @@ import {
 
 export const runtime = "nodejs";
 
-type LineupRow = RowDataPacket & {
+type BoosterRow = RowDataPacket & {
   id: number;
   name: string;
   booster_password_hash: string | null;
@@ -39,23 +39,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "닉네임과 비밀번호를 입력해주세요." }, { status: 400 });
   }
 
-  await ensureLineupsSchema();
-  const [rows] = await getPool().execute<LineupRow[]>(
-    `SELECT id, name, booster_password_hash FROM lineups WHERE name = :name AND active = 1 LIMIT 1`,
+  await ensureBoosterSchema();
+  const [rows] = await getPool().execute<BoosterRow[]>(
+    `SELECT id, name, booster_password_hash FROM booster WHERE name = :name AND active = 1 LIMIT 1`,
     { name },
   );
 
-  const lineup = rows[0];
-  if (!lineup || !lineup.booster_password_hash) {
+  const booster = rows[0];
+  if (!booster || !booster.booster_password_hash) {
     return NextResponse.json({ message: "닉네임 또는 비밀번호가 일치하지 않습니다." }, { status: 403 });
   }
 
-  if (!verifyPassword(password, lineup.booster_password_hash)) {
+  if (!verifyPassword(password, booster.booster_password_hash)) {
     return NextResponse.json({ message: "닉네임 또는 비밀번호가 일치하지 않습니다." }, { status: 403 });
   }
 
-  const token = createBoosterSession(lineup.id);
-  return NextResponse.json({ ok: true, lineupId: lineup.id, name: lineup.name }, {
+  const token = createBoosterSession(booster.id);
+  return NextResponse.json({ ok: true, boosterId: booster.id, name: booster.name }, {
     headers: { "Set-Cookie": getBoosterSessionCookieHeader(token) },
   });
 }

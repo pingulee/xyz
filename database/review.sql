@@ -2,8 +2,8 @@ CREATE TABLE IF NOT EXISTS `review` (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     name VARCHAR(20) NOT NULL,
     service VARCHAR(30) NOT NULL,
-    lineup_id BIGINT UNSIGNED NULL,
-    lineup_name VARCHAR(60) NULL,
+    booster_id BIGINT UNSIGNED NULL,
+    booster_name VARCHAR(60) NULL,
     rating TINYINT UNSIGNED NOT NULL,
     content TEXT NOT NULL,
     view_count INT UNSIGNED NOT NULL DEFAULT 0,
@@ -11,17 +11,17 @@ CREATE TABLE IF NOT EXISTS `review` (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     INDEX idx_review_created_at (created_at),
-    INDEX idx_review_lineup_id (lineup_id)
+    INDEX idx_review_booster_id (booster_id)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 ALTER TABLE `review`
 ADD COLUMN IF NOT EXISTS password_hash VARCHAR(200) NULL;
 
 ALTER TABLE `review`
-ADD COLUMN IF NOT EXISTS lineup_id BIGINT UNSIGNED NULL;
+ADD COLUMN IF NOT EXISTS booster_id BIGINT UNSIGNED NULL;
 
 ALTER TABLE `review`
-ADD COLUMN IF NOT EXISTS lineup_name VARCHAR(60) NULL;
+ADD COLUMN IF NOT EXISTS booster_name VARCHAR(60) NULL;
 
 ALTER TABLE `review`
 ADD COLUMN IF NOT EXISTS view_count INT UNSIGNED NOT NULL DEFAULT 0;
@@ -29,20 +29,20 @@ ADD COLUMN IF NOT EXISTS view_count INT UNSIGNED NOT NULL DEFAULT 0;
 CREATE TABLE IF NOT EXISTS review_replies (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     review_id BIGINT UNSIGNED NOT NULL,
-    lineup_id BIGINT UNSIGNED NOT NULL,
+    booster_id BIGINT UNSIGNED NOT NULL,
     booster_name VARCHAR(60) NOT NULL DEFAULT '',
     content TEXT NOT NULL,
     tier_records JSON NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     INDEX idx_review_replies_review_id (review_id),
-    INDEX idx_review_replies_lineup_id (lineup_id)
+    INDEX idx_review_replies_booster_id (booster_id)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 ALTER TABLE review_replies ADD COLUMN IF NOT EXISTS booster_name VARCHAR(60) NOT NULL DEFAULT '';
 UPDATE review_replies rr
-LEFT JOIN lineups l ON l.id = rr.lineup_id
-SET rr.booster_name = COALESCE(l.name, '')
+LEFT JOIN booster b ON b.id = rr.booster_id
+SET rr.booster_name = COALESCE(b.name, '')
 WHERE rr.booster_name = '';
 SET @legacy_reply_name_column = (
     SELECT COLUMN_NAME

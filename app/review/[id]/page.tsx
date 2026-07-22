@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
 import ReviewDetailView from "@/components/review/ReviewDetailView";
-import { getLineups } from "@/lib/lineups";
+import { getBoosterList } from "@/lib/booster";
 import { getReviewById, getReviewNavigation } from "@/lib/review";
 import {
   BOOSTER_SESSION_COOKIE,
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const service = review.service || "롤 서비스";
-  const lineupName = review.lineupName ?? review.reply?.boosterName ?? "검증 기사";
+  const boosterName = review.boosterName ?? review.reply?.boosterName ?? "검증 기사";
   const description = `${review.content.replace(/\s+/g, " ").slice(0, 110)}${review.content.length > 110 ? "..." : ""}`;
   const title = `${review.name}님의 ${service} 후기 | XYZ`;
   const url = `/review/${id}`;
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       "롤 듀오 후기",
       "롤 작업 후기",
       service,
-      lineupName,
+      boosterName,
       "XYZ 후기",
     ],
     alternates: { canonical: url },
@@ -77,9 +77,9 @@ export default async function ReviewDetailPage({ params }: Props) {
     notFound();
   }
 
-  const [review, lineups, navigation] = await Promise.all([
+  const [review, boosterList, navigation] = await Promise.all([
     getReviewById(reviewId),
-    getLineups(true),
+    getBoosterList(true),
     getReviewNavigation(reviewId),
   ]);
 
@@ -91,13 +91,13 @@ export default async function ReviewDetailPage({ params }: Props) {
   const adminToken = cookieStore.get(SESSION_COOKIE)?.value ?? "";
   const isAdmin = validateSession(adminToken);
   const boosterToken = cookieStore.get(BOOSTER_SESSION_COOKIE)?.value ?? "";
-  const boosterLineupId = validateBoosterSession(boosterToken);
-  const replyLineupId = review.reply?.lineupId ?? review.lineupId ?? "";
-  const lineup = lineups.find((item) => item.id === replyLineupId);
+  const boosterId = validateBoosterSession(boosterToken);
+  const replyBoosterId = review.reply?.boosterId ?? review.boosterId ?? "";
+  const booster = boosterList.find((item) => item.id === replyBoosterId);
   const boosterName =
-    lineup?.name ??
-    (boosterLineupId
-      ? lineups.find((item) => item.id === String(boosterLineupId))?.name
+    booster?.name ??
+    (boosterId
+      ? boosterList.find((item) => item.id === String(boosterId))?.name
       : "") ??
     "";
   const reviewJsonLd = {
@@ -168,10 +168,10 @@ export default async function ReviewDetailPage({ params }: Props) {
         <Reveal>
           <ReviewDetailView
             initialReview={review}
-            boosterLineupId={boosterLineupId}
+            boosterId={boosterId}
             boosterName={boosterName}
-            boosterImage={lineup?.image ?? ""}
-            boosterAvailability={lineup ?? null}
+            boosterImage={booster?.image ?? ""}
+            boosterAvailability={booster ?? null}
             previousReview={navigation.previous}
             nextReview={navigation.next}
             isAdmin={isAdmin}

@@ -4,7 +4,7 @@ import { join, resolve, basename } from "path";
 
 export const runtime = "nodejs";
 
-const ALLOWED_FOLDERS = new Set(["lineups"]);
+const ALLOWED_FOLDERS = new Set(["booster"]);
 
 const MIME_MAP: Record<string, string> = {
   jpg: "image/jpeg",
