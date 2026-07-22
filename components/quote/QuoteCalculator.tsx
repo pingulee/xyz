@@ -358,7 +358,7 @@ export default function QuoteCalculator() {
   const priceConsultRequired = serviceKey === "hourly" && currentTier >= 8;
 
   return (
-    <div className="card-premium overflow-hidden rounded-[32px]">
+    <div className="card-premium overflow-hidden rounded-4xl">
       <div className="border-b border-white/8 bg-black/25 px-5 py-5 sm:px-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
@@ -372,7 +372,7 @@ export default function QuoteCalculator() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-[11px] font-bold text-zinc-500">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-zinc-500">
             {["현재 랭크", "목표 랭크", "견적 확인"].map((item, index) => (
               <span key={item} className="flex items-center gap-2">
                 <i className="grid h-5 w-5 place-items-center rounded-full bg-gold/12 not-italic text-gold">
@@ -386,7 +386,7 @@ export default function QuoteCalculator() {
         </div>
       </div>
 
-      <div className="grid items-start gap-6 p-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_350px] lg:p-7">
+      <div className="grid grid-cols-1 items-start gap-6 p-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_350px] lg:p-7">
         <div className="space-y-4">
           <div className="rounded-3xl border border-gold/20 bg-gold/3.5 p-5 sm:p-6">
             <div className="flex items-start justify-between gap-4">
