@@ -139,6 +139,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={false}
                 onClick={(event) => handleNavClick(item.href, event)}
                 className={clsx(
                   "relative text-sm font-bold transition",
@@ -213,6 +214,7 @@ export default function Header() {
               ) : (
                 <Link
                   href={item.href}
+                  prefetch={false}
                   onClick={(event) => handleNavClick(item.href, event)}
                   className={clsx(
                     "block rounded-2xl px-4 py-4 text-base font-bold",

@@ -47,7 +47,7 @@ export default function LineupCard({
       : null;
 
   return (
-    <Link href={getLineupPath(knight)} className="block">
+    <Link href={getLineupPath(knight)} prefetch={false} className="block">
       <article className="card-premium relative overflow-hidden rounded-[28px] transition duration-200">
         {crown && (
           <div

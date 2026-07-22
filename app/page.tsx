@@ -241,6 +241,7 @@ export default async function Home() {
             <div className="mt-9 text-center">
               <Link
                 href="/lineup"
+                prefetch={false}
                 className="inline-flex items-center gap-2 rounded-full border border-gold/20 px-6 py-3 font-bold text-white transition hover:border-gold/60"
               >
                 기사 라인업 더보기 <ArrowRight size={18} />

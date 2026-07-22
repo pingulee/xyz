@@ -56,7 +56,7 @@ export default function Footer() {
           <ul className="mt-5 space-y-3 text-sm text-zinc-400">
             {navItems.map((item) => (
               <li key={item.href}>
-                <Link className="hover:text-gold" href={item.href}>
+                <Link className="hover:text-gold" href={item.href} prefetch={false}>
                   {item.label}
                 </Link>
               </li>
