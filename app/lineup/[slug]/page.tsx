@@ -29,7 +29,6 @@ function nationalityLabel(code: number) {
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams?: Promise<{ rp?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -67,10 +66,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function LineupDetailPage({ params, searchParams }: Props) {
+export default async function LineupDetailPage({ params }: Props) {
   const { slug } = await params;
-  const { rp } = (await searchParams) ?? {};
-  const reviewPage = Math.max(1, Number(rp) || 1);
   const lineup = await getLineupBySlug(slug);
 
   if (!lineup) {
@@ -83,10 +80,10 @@ export default async function LineupDetailPage({ params, searchParams }: Props) 
 
   const [stats, reviewsPage, winStats] = await Promise.all([
     getLineupReviewStats(Number(lineup.id)),
-    getReviewsByLineupIdPage(Number(lineup.id), reviewPage),
+    getReviewsByLineupIdPage(Number(lineup.id), 1, 3),
     getLineupWinStats(Number(lineup.id)),
   ]);
-  const { reviews, total: reviewTotal, page: currentReviewPage } = reviewsPage;
+  const { reviews } = reviewsPage;
 
   const hasWinRecords = winStats.total.wins + winStats.total.losses > 0;
 
@@ -321,15 +318,9 @@ export default async function LineupDetailPage({ params, searchParams }: Props) 
               </div>
 
               <div className="mt-6">
-                <h2 className="mb-4 text-lg font-black text-white">
-                  후기 <span className="text-gold">{reviewTotal}</span>개
-                </h2>
+                <h2 className="mb-4 text-lg font-black text-white">최근 후기</h2>
                 <LineupReviews
-                  key={currentReviewPage}
                   reviews={reviews}
-                  total={reviewTotal}
-                  serverPage={currentReviewPage}
-                  basePath={`/lineup/${encodeURIComponent(slug)}`}
                   boosterLineupId={boosterLineupId}
                   boosterName={lineup.name}
                   boosterImage={lineup.image ?? ""}

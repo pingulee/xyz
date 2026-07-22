@@ -1,14 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  Star,
-} from "lucide-react";
+import { Loader2, Star } from "lucide-react";
 import BoosterAvatar, { type BoosterAvailability } from "@/components/lineup/BoosterAvatar";
 import {
   TierRecordBadges,
@@ -17,10 +11,8 @@ import {
   normalizeTierRecords,
 } from "@/components/lineup/TierRecords";
 import type { Review, ReviewReply, TierRecord } from "@/lib/reviews";
-import { getPageItems } from "@/components/review/helpers";
 
-const PER_PAGE = 3;
-const PAGE_BLOCK = 5; // 기사 세부페이지 후기: < 1~5 > 블록
+const RECENT_LIMIT = 3; // 기사 상세: 최근 후기 3개만 표시(페이지네이션 없음)
 const REPLY_CONTENT_MIN_LENGTH = 10;
 
 function Stars({ rating }: { rating: number }) {
@@ -315,25 +307,17 @@ function ReplyBlock({
 
 export default function LineupReviews({
   reviews,
-  total = 0,
-  serverPage = 1,
-  basePath = "",
   boosterLineupId = null,
   boosterName = "",
   boosterImage = "",
   boosterAvailability = null,
 }: {
   reviews: Review[];
-  total?: number;
-  serverPage?: number;
-  basePath?: string;
   boosterLineupId?: number | null;
   boosterName?: string;
   boosterImage?: string;
   boosterAvailability?: BoosterAvailability | null;
 }) {
-  const router = useRouter();
-
   if (reviews.length === 0) {
     return (
       <div className="rounded-3xl border border-white/8 bg-white/3 px-6 py-10 text-center text-sm text-zinc-500">
@@ -342,23 +326,7 @@ export default function LineupReviews({
     );
   }
 
-  // 서버에서 현재 페이지 분량만 내려옴
-  const totalPages = Math.max(
-    1,
-    Math.ceil(Math.max(total, reviews.length) / PER_PAGE),
-  );
-  const currentPage = Math.min(serverPage, totalPages);
-  const slice = reviews;
-  const setPage = (nextPage: number) => {
-    const target = Math.min(Math.max(nextPage, 1), totalPages);
-    router.push(target === 1 ? basePath : `${basePath}?rp=${target}`, {
-      scroll: false,
-    });
-  };
-
-  const pages = getPageItems(currentPage, totalPages, PAGE_BLOCK).filter(
-    (p): p is number => typeof p === "number",
-  );
+  const slice = reviews.slice(0, RECENT_LIMIT);
 
   return (
     <div className="grid gap-4">
@@ -393,48 +361,6 @@ export default function LineupReviews({
           />
         </div>
       ))}
-
-      {totalPages > 1 && (
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-          <button
-            type="button"
-            onClick={() => setPage(Math.max(currentPage - PAGE_BLOCK, 1))}
-            disabled={Math.ceil(currentPage / PAGE_BLOCK) <= 1}
-            aria-label="이전 5페이지"
-            className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <ChevronLeft size={16} />
-          </button>
-
-          {pages.map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setPage(p)}
-              className={`grid h-9 w-9 place-items-center rounded-full text-sm font-black transition ${
-                p === currentPage
-                  ? "bg-gold text-black"
-                  : "border border-white/10 text-zinc-300 hover:border-gold/40 hover:text-white"
-              }`}
-            >
-              {p}
-            </button>
-          ))}
-
-          <button
-            type="button"
-            onClick={() => setPage(Math.min(currentPage + PAGE_BLOCK, totalPages))}
-            disabled={
-              Math.ceil(currentPage / PAGE_BLOCK) >=
-              Math.ceil(totalPages / PAGE_BLOCK)
-            }
-            aria-label="다음 5페이지"
-            className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-zinc-400 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      )}
     </div>
   );
 }
