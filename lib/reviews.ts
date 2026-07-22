@@ -168,11 +168,11 @@ export async function getReviewsByLineupId(lineupId: number): Promise<Review[]> 
   return rows.map(toReview);
 }
 
-export async function getReviews(limit = 100) {
+export async function getReviews(limit = 5000) {
   await ensureReviewsSchema();
-  const [rows] = await getPool().execute<ReviewRow[]>(
-    `${REVIEW_SELECT} ORDER BY r.created_at DESC LIMIT :limit`,
-    { limit },
+  const safeLimit = Math.max(1, Math.min(100000, Math.floor(limit)));
+  const [rows] = await getPool().query<ReviewRow[]>(
+    `${REVIEW_SELECT} ORDER BY r.created_at DESC LIMIT ${safeLimit}`,
   );
   return rows.map(toReview);
 }
