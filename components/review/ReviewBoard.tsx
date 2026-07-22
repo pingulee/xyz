@@ -896,8 +896,9 @@ export default function ReviewBoard({
               {paginatedReviews.map((review, i) => {
                 const lineupName =
                   review.lineupName ?? review.reply?.knightName ?? "";
+                // 전체 후기 수 기준 전역 번호: 최신 글 = 최대 번호, 가장 오래된 글 = 1
                 const displayNumber =
-                  visibleReviews.length -
+                  Math.max(total, visibleReviews.length) -
                   ((currentPage - 1) * REVIEWS_PER_PAGE + i);
 
                 return (

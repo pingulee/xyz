@@ -13,7 +13,7 @@ const FONT_LOADER = `(function(){var l=document.createElement('link');l.rel='sty
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "XYZ | 롤 대리 롤 듀오 롤 계정",
+    default: "롤 대리 · 롤 듀오 · 롤 계정 전문 | XYZ",
     template: "%s | XYZ",
   },
   description: site.description,
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "XYZ | 롤 대리 롤 듀오 롤 계정",
+    title: "롤 대리 · 롤 듀오 · 롤 계정 전문 | XYZ",
     description: site.description,
     url: site.url,
     siteName: site.name,
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "XYZ | 롤 대리 롤 듀오 롤 계정",
+    title: "롤 대리 · 롤 듀오 · 롤 계정 전문 | XYZ",
     description: site.description,
     images: ["/images/profile.webp"],
   },
