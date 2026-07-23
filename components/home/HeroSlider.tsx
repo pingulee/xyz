@@ -9,8 +9,8 @@ const slides = [
   {
     eyebrow: "PREMIUM BOOSTING",
     title: "프리미엄 롤 대리",
-    titlePrefix: "목표 티어까지 ",
-    titleHighlight: "전담 관리",
+    titlePrefix: "프리미엄 ",
+    titleHighlight: "롤 대리",
     desc: "현재 시즌 기준 챌린저 티어 기사가 목표 티어까지 직접 달성해드립니다. 일부 업체처럼 무작위로 저티어 기사를 배정하는 방식이 아닌, 전담 1:1 기사 배정 시스템을 운영하여 더욱 안전하고 빠른 롤 대리 서비스를 제공합니다.",
     image: "/images/slider/01.webp",
     alt: "롤 대리 서비스를 상징하는 프리미엄 게임 이미지",
