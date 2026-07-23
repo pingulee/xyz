@@ -32,7 +32,7 @@ export default async function ChampionMarquee() {
   const shown = files.filter((_, i) => i % step === 0).slice(0, LIMIT);
 
   return (
-    <ul className="grid grid-cols-8 gap-2 mask-[linear-gradient(to_bottom,transparent,#000_12%,#000_88%,transparent)] pointer-events-none select-none sm:grid-cols-10 sm:gap-2.5 lg:grid-cols-16">
+    <ul className="grid grid-cols-8 gap-2 mask-[radial-gradient(ellipse_at_center,#000_28%,transparent_82%)] pointer-events-none select-none sm:grid-cols-10 sm:gap-2.5 lg:grid-cols-16">
       {shown.map((file, i) => {
         const ko = nameById.get(file) ?? file;
         // 40개까지 전 화면, 40~49는 sm+, 50~79는 lg에서만 표시
