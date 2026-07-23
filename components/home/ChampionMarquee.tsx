@@ -25,13 +25,13 @@ export default async function ChampionMarquee() {
 
   if (files.length === 0) return null;
 
-  // 열 개수(모바일 8·sm 12)의 공배수만큼만 표시 → 마지막 줄까지 항상 꽉 찬 직사각형
-  const LIMIT = 48;
+  // 열 개수(모바일 8·sm 10·lg 16)의 공배수만큼만 표시 → 마지막 줄까지 항상 꽉 참(lg 5줄)
+  const LIMIT = 80;
   const step = Math.max(1, Math.floor(files.length / LIMIT));
   const shown = files.filter((_, i) => i % step === 0).slice(0, LIMIT);
 
   return (
-    <ul className="grid grid-cols-8 gap-2 mask-[linear-gradient(to_bottom,transparent,#000_12%,#000_88%,transparent)] sm:grid-cols-12 sm:gap-2.5 lg:grid-cols-16">
+    <ul className="grid grid-cols-8 gap-2 mask-[linear-gradient(to_bottom,transparent,#000_12%,#000_88%,transparent)] sm:grid-cols-10 sm:gap-2.5 lg:grid-cols-16">
       {shown.map((file) => {
         const ko = nameById.get(file) ?? file;
         return (
