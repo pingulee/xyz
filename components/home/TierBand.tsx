@@ -45,10 +45,10 @@ export default function TierBand() {
   return (
     <div>
       <div className="relative mx-auto flex max-w-3xl items-center justify-center">
-        {/* 뒤: 언랭 중앙 → 챌린저 중앙 진행 레일 (inset = 노드 반폭) */}
+        {/* 뒤: 언랭 모서리 → 챌린저 모서리 진행 레일 (inset = 노드 전폭, chevron이 박스 모서리) */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-8 top-1/2 z-0 -translate-y-1/2 sm:inset-x-10"
+          className="pointer-events-none absolute inset-x-16 top-1/2 z-0 -translate-y-1/2 sm:inset-x-20"
         >
           <span className="block h-1 w-full rounded-full bg-linear-to-r from-white/15 via-gold/40 to-gold" />
           <ChevronRight
