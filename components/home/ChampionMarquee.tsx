@@ -35,8 +35,8 @@ export default async function ChampionMarquee() {
       {shown.map((file) => {
         const ko = nameById.get(file) ?? file;
         return (
-          <li key={file} className="group" title={ko}>
-            <span className="block overflow-hidden rounded-md border border-white/8 bg-white/3.5 transition group-hover:border-gold/50">
+          <li key={file} title={ko}>
+            <span className="block overflow-hidden rounded-md border border-white/8 bg-white/3.5">
               <Image
                 src={`/images/champion/${file}.png`}
                 alt={`${ko} 롤 대리·듀오 가능 챔피언`}
@@ -44,7 +44,7 @@ export default async function ChampionMarquee() {
                 height={56}
                 loading="lazy"
                 sizes="48px"
-                className="aspect-square w-full object-cover opacity-55 grayscale-[0.35] transition duration-300 group-hover:scale-110 group-hover:opacity-100 group-hover:grayscale-0"
+                className="aspect-square w-full object-cover opacity-55 grayscale-[0.35]"
               />
             </span>
           </li>
