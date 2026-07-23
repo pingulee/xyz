@@ -469,7 +469,7 @@ export default async function Home() {
           <Reveal>
             <SectionTitle
               eyebrow="review"
-              title="롤 대리 · 듀오 진행 후기"
+              title="작업 후기"
               desc="롤 대리·롤 듀오·롤 계정 이용 후기를 살펴보세요. 후기 게시판에서는 작성일, 이용 서비스와 연결된 작업 기사 정보를 함께 확인할 수 있습니다."
             />
           </Reveal>
