@@ -1,30 +1,33 @@
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, Check, Minus } from "lucide-react";
 import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
 
-const options = [
-  {
-    icon: ShieldCheck,
-    name: "롤 대리",
-    tag: "목표 티어 중심",
-    tagClass: "bg-gold/10 text-gold",
-    desc: "검증된 기사가 고객님의 계정으로 랭크를 진행합니다. 현재 티어와 MMR을 확인한 뒤 목적에 맞는 방식으로 목표 티어까지 관리합니다.",
-    points: ["시간제 · 승리 보장제 · 점수 보장제", "구간별 승률 보장", "100% 수동 진행"],
-    href: "/boosting",
-    linkLabel: "롤 대리 가격 보기",
-  },
-  {
-    icon: Users,
-    name: "롤 듀오",
-    tag: "직접 플레이 + 피드백",
-    tagClass: "bg-white/8 text-zinc-200",
-    desc: "고객님이 직접 플레이하며 상위 티어 기사와 함께 랭크를 올립니다. 계정을 맡기지 않고 실전 피드백까지 받을 수 있습니다.",
-    points: ["계정 공유 없이 안전", "라인전 · 오브젝트 실시간 코칭", "승급전 · 연패 구간에 강함"],
-    href: "/duo",
-    linkLabel: "롤 듀오 가격 보기",
-  },
+// 대리 vs 듀오 비교 (서비스 소개 섹션과 겹치지 않도록 "결정용 비교표" 포맷)
+type Cell = string | boolean;
+const rows: { label: string; boost: Cell; duo: Cell }[] = [
+  { label: "진행 방식", boost: "기사가 계정으로 대신 진행", duo: "함께 파티로 직접 플레이" },
+  { label: "계정 공유", boost: "필요", duo: false },
+  { label: "실시간 피드백", boost: false, duo: true },
+  { label: "추천 대상", boost: "빠른 티어 상승", duo: "실력·티어 동시" },
+  { label: "가격 시작", boost: "시간제 12,000원~", duo: "시간제 14,000원~" },
 ];
+
+function CellView({ value, accent }: { value: Cell; accent?: boolean }) {
+  if (value === true)
+    return (
+      <span className={`inline-flex items-center gap-1.5 font-black ${accent ? "text-gold" : "text-emerald-400"}`}>
+        <Check size={16} aria-hidden="true" /> 가능
+      </span>
+    );
+  if (value === false)
+    return (
+      <span className="inline-flex items-center gap-1.5 font-bold text-zinc-600">
+        <Minus size={16} aria-hidden="true" /> 없음
+      </span>
+    );
+  return <span className={accent ? "font-bold text-white" : "font-semibold text-zinc-300"}>{value}</span>;
+}
 
 export default function ServiceGuide() {
   return (
@@ -49,69 +52,70 @@ export default function ServiceGuide() {
               id="service-guide-title"
               className="mt-5 text-3xl font-black tracking-tighter text-balance text-white sm:text-4xl lg:text-5xl"
             >
-              롤 대리와 롤 듀오,
-              <br className="sm:hidden" /> <span className="gold-text">무엇이 다를까요?</span>
+              롤 대리 vs 롤 듀오,
+              <br className="sm:hidden" /> <span className="gold-text">한눈에 비교</span>
             </h2>
             <p className="mt-4 text-base leading-8 text-pretty text-zinc-300 sm:text-lg">
-              계정을 맡길지, 함께 플레이할지 목표와 참여 방식에 맞춰 선택하세요.
+              계정을 맡길지 함께 플레이할지, 아래 비교로 나에게 맞는 방식을 골라보세요.
             </p>
           </div>
         </Reveal>
 
-        <div className="mx-auto mt-12 grid max-w-4xl items-stretch gap-4 sm:grid-cols-2 sm:gap-5">
-          {options.map((option, i) => {
-            const Icon = option.icon;
-            return (
-              <Reveal key={option.name} delay={i * 0.08} className="h-full">
-                <article className="flex h-full flex-col rounded-4xl border border-gold/12 bg-[linear-gradient(150deg,rgba(222,176,67,0.08),rgba(255,255,255,0.02)_55%)] p-6 transition hover:border-gold/30 sm:p-8">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-gold/20 bg-gold/10 text-gold">
-                      <Icon size={20} aria-hidden="true" />
-                    </span>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-xl font-black text-white">{option.name}</h3>
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-[10px] font-black ${option.tagClass}`}
-                      >
-                        {option.tag}
-                      </span>
-                    </div>
-                  </div>
+        <Reveal delay={0.08}>
+          <div className="mx-auto mt-12 max-w-3xl overflow-hidden rounded-4xl border border-white/8 bg-white/[0.02]">
+            {/* 헤더 행 */}
+            <div className="grid grid-cols-[1fr_1fr_1fr] border-b border-white/8 bg-black/25">
+              <div className="px-4 py-4 text-xs font-black uppercase tracking-[0.16em] text-zinc-500 sm:px-6">
+                항목
+              </div>
+              <div className="border-l border-white/8 bg-gold/8 px-4 py-4 text-center text-sm font-black text-gold sm:px-6 sm:text-base">
+                롤 대리
+              </div>
+              <div className="border-l border-white/8 px-4 py-4 text-center text-sm font-black text-white sm:px-6 sm:text-base">
+                롤 듀오
+              </div>
+            </div>
 
-                  <p className="mt-5 text-sm leading-7 text-pretty text-zinc-400">
-                    {option.desc}
-                  </p>
+            {/* 데이터 행 */}
+            {rows.map((row, i) => (
+              <div
+                key={row.label}
+                className={`grid grid-cols-[1fr_1fr_1fr] ${
+                  i > 0 ? "border-t border-white/6" : ""
+                }`}
+              >
+                <div className="px-4 py-4 text-xs font-black text-zinc-400 sm:px-6 sm:text-sm">
+                  {row.label}
+                </div>
+                <div className="border-l border-white/8 bg-gold/[0.04] px-4 py-4 text-center text-xs sm:px-6 sm:text-sm">
+                  <CellView value={row.boost} accent />
+                </div>
+                <div className="border-l border-white/8 px-4 py-4 text-center text-xs sm:px-6 sm:text-sm">
+                  <CellView value={row.duo} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
 
-                  <ul className="mt-5 space-y-2">
-                    {option.points.map((point) => (
-                      <li
-                        key={point}
-                        className="flex items-start gap-2 text-sm font-semibold leading-6 text-zinc-300"
-                      >
-                        <span
-                          aria-hidden="true"
-                          className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gold"
-                        />
-                        {point}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Link
-                    href={option.href}
-                    className="group mt-auto inline-flex items-center gap-2 pt-7 text-sm font-black text-gold transition hover:text-gold-soft"
-                  >
-                    {option.linkLabel}
-                    <ArrowRight
-                      size={15}
-                      className="transition-transform group-hover:translate-x-1"
-                    />
-                  </Link>
-                </article>
-              </Reveal>
-            );
-          })}
-        </div>
+        <Reveal delay={0.12}>
+          <div className="mx-auto mt-8 flex max-w-3xl flex-wrap justify-center gap-3">
+            <Link
+              href="/boosting"
+              className="group inline-flex items-center gap-2 rounded-full border border-gold/25 bg-gold/8 px-6 py-3 text-sm font-black text-gold transition hover:border-gold/50 hover:bg-gold/12"
+            >
+              롤 대리 가격 보기
+              <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/duo"
+              className="group inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-6 py-3 text-sm font-black text-white transition hover:border-gold/40 hover:text-gold"
+            >
+              롤 듀오 가격 보기
+              <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+        </Reveal>
       </Container>
     </section>
   );
