@@ -1,70 +1,100 @@
 import Image from "next/image";
+import { ChevronRight } from "lucide-react";
 
-// 전 구간 지원 시각화 — 언랭 → 챌린저 상승 진행 레일. 하위는 흐리게, 목표(챌린저)로 갈수록 밝게.
-const tiers: [string, string][] = [
-  ["0-unrank", "언랭"],
-  ["1-iron", "아이언"],
-  ["2-bronze", "브론즈"],
-  ["3-silver", "실버"],
-  ["4-gold", "골드"],
-  ["5-platinum", "플래티넘"],
-  ["6-emerald", "에메랄드"],
-  ["7-diamond", "다이아몬드"],
-  ["8-master", "마스터"],
-  ["9-grandmaster", "그랜드마스터"],
-  ["10-challenger", "챌린저"],
-];
+// 전 구간 지원 시각화 — 챌린저 기사(gotoc) 앞세워 언랭 → 챌린저 화살표 진행.
+function TierNode({
+  file,
+  label,
+  goal,
+}: {
+  file: string;
+  label: string;
+  goal?: boolean;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2.5">
+      <span
+        className={`grid h-20 w-20 place-items-center rounded-2xl border sm:h-24 sm:w-24 ${
+          goal
+            ? "border-gold/60 bg-gold/12 shadow-gold-sm ring-1 ring-gold/30"
+            : "border-white/10 bg-white/3 opacity-75"
+        }`}
+      >
+        <Image
+          src={`/images/tier/${file}.png`}
+          alt={`${label} 구간 롤 대리·듀오`}
+          width={64}
+          height={64}
+          loading="lazy"
+          sizes="64px"
+          className="h-12 w-12 object-contain sm:h-14 sm:w-14"
+        />
+      </span>
+      <span
+        className={`text-xs font-black sm:text-sm ${
+          goal ? "gold-text" : "text-zinc-400"
+        }`}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function ProgressArrow() {
+  return (
+    <div
+      aria-hidden="true"
+      className="mb-6 flex items-center text-gold sm:mb-7"
+    >
+      <span className="h-1 w-10 rounded-full bg-linear-to-r from-white/15 to-gold sm:w-20" />
+      <ChevronRight size={22} className="-ml-1" strokeWidth={3} />
+    </div>
+  );
+}
 
 export default function TierBand() {
-  const last = tiers.length - 1;
-
   return (
-    <div className="relative mx-auto max-w-5xl">
-      {/* 상승 레일 — 아이콘 중심 높이에 흐림→골드 그라데이션 */}
+    <div className="card-premium relative isolate overflow-hidden rounded-4xl p-6 sm:p-10">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-6 top-[2.15rem] h-1 rounded-full bg-linear-to-r from-white/8 via-gold/35 to-gold shadow-gold-sm"
+        className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-gold/15 blur-3xl"
       />
 
-      <ul className="relative flex snap-x gap-3 overflow-x-auto pb-3 scrollbar-none sm:gap-4 lg:justify-between lg:overflow-visible">
-        {tiers.map(([file, label], i) => {
-          const isGoal = i === last;
-          // 하위 티어는 흐리게, 목표로 갈수록 선명 (0.55 → 1)
-          const opacity = 0.55 + (0.45 * i) / last;
-          return (
-            <li
-              key={file}
-              className="flex shrink-0 snap-center flex-col items-center gap-2.5"
-            >
-              <span
-                className={`grid h-18 w-18 place-items-center rounded-2xl border transition ${
-                  isGoal
-                    ? "border-gold/60 bg-gold/12 shadow-gold-sm ring-1 ring-gold/30"
-                    : "border-white/10 bg-white/3 hover:border-gold/30"
-                }`}
-                style={isGoal ? undefined : { opacity }}
-              >
-                <Image
-                  src={`/images/tier/${file}.png`}
-                  alt={`${label} 구간 롤 대리·듀오`}
-                  width={52}
-                  height={52}
-                  loading="lazy"
-                  sizes="52px"
-                  className="h-11 w-11 object-contain"
-                />
-              </span>
-              <span
-                className={`text-[11px] font-black sm:text-xs ${
-                  isGoal ? "gold-text" : "text-zinc-400"
-                }`}
-              >
-                {label}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="relative flex flex-col items-center justify-center gap-8 lg:flex-row lg:gap-12">
+        {/* 챌린저 기사 */}
+        <figure className="relative shrink-0 text-center">
+          <div
+            aria-hidden="true"
+            className="absolute -inset-2 rounded-[30px] bg-gold/20 blur-xl"
+          />
+          <div className="relative h-36 w-36 overflow-hidden rounded-[26px] border border-gold/40 bg-void shadow-gold-sm sm:h-40 sm:w-40">
+            <Image
+              src="/images/gotoc.png"
+              alt="XYZ 챌린저 대리 기사"
+              fill
+              sizes="160px"
+              className="object-cover"
+            />
+          </div>
+          <figcaption className="mt-3 text-[11px] font-black uppercase tracking-[0.2em] text-gold">
+            챌린저 기사
+          </figcaption>
+        </figure>
+
+        {/* 언랭 → 챌린저 */}
+        <div className="flex items-end gap-3 sm:gap-5">
+          <TierNode file="0-unrank" label="언랭" />
+          <ProgressArrow />
+          <TierNode file="10-challenger" label="챌린저" goal />
+        </div>
+      </div>
+
+      <p className="relative mt-8 text-center text-sm leading-7 text-pretty text-zinc-300 sm:text-base">
+        현재 시즌 챌린저 기사가 전담 배정되어{" "}
+        <b className="gold-text font-black">단 3주 만에 언랭 → 그랜드마스터</b>
+        까지 안정적으로 끌어올립니다.
+      </p>
     </div>
   );
 }

@@ -15,7 +15,6 @@ import HeroSlider from "@/components/home/HeroSlider";
 import HomeFaq, { type HomeFaqCategory } from "@/components/home/HomeFaq";
 import ServiceGuide from "@/components/home/ServiceGuide";
 import TierBand from "@/components/home/TierBand";
-import ChallengerHighlight from "@/components/home/ChallengerHighlight";
 import ChampionMarquee from "@/components/home/ChampionMarquee";
 import BoosterCard from "@/components/booster/BoosterCard";
 import Reveal from "@/components/ui/Reveal";
@@ -416,13 +415,8 @@ export default async function Home() {
               desc="언랭 계정부터 챌린저까지 전 구간 작업을 지원합니다. 현재 티어가 어디든 원하는 목표 구간까지 올려드립니다."
             />
           </Reveal>
-          <Reveal delay={0.08}>
+          <Reveal delay={0.1}>
             <div className="mx-auto mt-10 max-w-4xl">
-              <ChallengerHighlight />
-            </div>
-          </Reveal>
-          <Reveal delay={0.14}>
-            <div className="mt-12">
               <TierBand />
             </div>
           </Reveal>
