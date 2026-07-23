@@ -16,15 +16,24 @@ import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
+const reviewDescription =
+  "XYZ 롤 대리·롤 듀오·롤 계정 실제 작업 후기. 담당 기사의 티어·챔피언·KDA 전적이 후기마다 함께 공개되어 직접 검증할 수 있습니다. 이용 후기도 남겨보세요.";
+
 export const metadata: Metadata = {
-  title: "작업 후기",
-  description:
-    "XYZ 실제 후기를 확인하고 직접 남겨보세요.",
+  title: "롤 대리 · 듀오 작업 후기 | 실제 전적 공개",
+  description: reviewDescription,
+  keywords: [
+    "롤 대리 후기",
+    "롤대리 후기",
+    "롤 듀오 후기",
+    "롤 작업 후기",
+    "롤 계정 후기",
+    "XYZ 후기",
+  ],
   alternates: { canonical: "/review" },
   openGraph: {
-    title: "작업 후기 | XYZ",
-    description:
-      "XYZ 실제 후기를 확인하고 직접 남겨보세요.",
+    title: "롤 대리 · 듀오 작업 후기 | XYZ",
+    description: reviewDescription,
     url: "/review",
     type: "website",
     siteName: site.brand,
@@ -32,8 +41,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "작업 후기 | XYZ",
-    description: "XYZ 실제 후기를 확인하고 직접 남겨보세요.",
+    title: "롤 대리 · 듀오 작업 후기 | XYZ",
+    description: reviewDescription,
     images: [site.ogImage],
   },
 };

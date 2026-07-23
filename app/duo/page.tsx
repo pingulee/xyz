@@ -97,7 +97,7 @@ export default function DuoPage() {
     description,
     provider: {
       "@type": "Organization",
-      name: site.name,
+      name: site.brand,
       url: site.url,
     },
     serviceType: "League of Legends duo queue",
@@ -116,7 +116,7 @@ export default function DuoPage() {
       />
       <ServiceDetail
         eyebrow="duo queue"
-        title="듀오 랭크 가격"
+        title="롤 듀오 가격"
         desc="상위 티어 기사와 함께 플레이하며 승률과 피드백을 동시에 챙기는 듀오 랭크 서비스입니다."
         featureTitle="부가 서비스"
         points={[

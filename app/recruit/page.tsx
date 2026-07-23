@@ -5,14 +5,23 @@ import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { site } from "@/lib/site";
 
-const description = "xyz에서 함께할 상위 티어 롤 기사님을 모집합니다.";
+const description =
+  "XYZ에서 함께할 상위 티어 롤 대리·롤 듀오 기사를 모집합니다. 챌린저·그랜드마스터 실력자라면 자유로운 일정으로 활동하고 정산받으세요.";
 
 export const metadata: Metadata = {
-  title: "기사 모집",
+  title: "롤 대리 기사 모집 | XYZ 부스터 채용",
   description,
+  keywords: [
+    "롤 대리 기사 모집",
+    "롤 부스터 모집",
+    "롤 듀오 기사 모집",
+    "챌린저 알바",
+    "롤 대리 알바",
+    "XYZ 기사 모집",
+  ],
   alternates: { canonical: "/recruit" },
   openGraph: {
-    title: "기사 모집 | XYZ",
+    title: "롤 대리 기사 모집 | XYZ",
     description,
     url: "/recruit",
     type: "website",
@@ -21,7 +30,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "기사 모집 | XYZ",
+    title: "롤 대리 기사 모집 | XYZ",
     description,
     images: [site.ogImage],
   },

@@ -12,14 +12,23 @@ import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-const description = "xyz의 검증된 상위 티어 기사 소개 페이지입니다.";
+const description =
+  "XYZ 검증된 상위 티어 롤 대리·롤 듀오 기사진을 소개합니다. 기사별 티어, 모스트 챔피언, 티어별 승률, 최근 전적을 직접 확인하고 원하는 기사를 선택하세요.";
 
 export const metadata: Metadata = {
-  title: "기사 소개",
+  title: "롤 대리 기사 소개 | 티어·승률·전적 공개",
   description,
+  keywords: [
+    "롤 대리 기사",
+    "롤 듀오 기사",
+    "롤 부스터",
+    "챌린저 대리",
+    "상위 티어 기사",
+    "XYZ 기사",
+  ],
   alternates: { canonical: "/booster" },
   openGraph: {
-    title: "기사 소개 | XYZ",
+    title: "롤 대리 기사 소개 | XYZ",
     description,
     url: "/booster",
     type: "website",
@@ -28,7 +37,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "기사 소개 | XYZ",
+    title: "롤 대리 기사 소개 | XYZ",
     description,
     images: [site.ogImage],
   },
@@ -61,8 +70,23 @@ export default async function BoosterPage() {
     );
   }
 
+  const itemListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "XYZ 롤 대리 기사 소개",
+    itemListElement: boosterList.map((booster, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: booster.name,
+    })),
+  };
+
   return (
     <section className="py-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+      />
       <Container>
         <Reveal>
           <SectionTitle

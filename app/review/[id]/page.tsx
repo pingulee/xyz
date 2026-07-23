@@ -114,7 +114,7 @@ export default async function ReviewDetailPage({ params }: Props) {
       name: review.service,
       provider: {
         "@type": "Organization",
-        name: site.name,
+        name: site.brand,
         url: site.url,
       },
     },

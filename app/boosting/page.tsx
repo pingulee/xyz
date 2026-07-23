@@ -100,7 +100,7 @@ export default function BoostingPage() {
     description,
     provider: {
       "@type": "Organization",
-      name: site.name,
+      name: site.brand,
       url: site.url,
     },
     serviceType: "League of Legends boosting",
