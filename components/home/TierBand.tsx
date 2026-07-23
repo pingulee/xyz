@@ -19,7 +19,7 @@ export default function TierBand() {
   return (
     <div className="mx-auto max-w-4xl">
       <ul className="flex flex-wrap items-stretch justify-center gap-2.5 sm:gap-3">
-        {tiers.map(([file, label], i) => (
+        {tiers.map(([file, label]) => (
           <li
             key={file}
             className="flex w-[calc((100%-5rem)/6)] flex-col items-center gap-2 rounded-2xl border border-white/8 bg-white/3.5 px-1.5 py-4 transition hover:border-gold/25 sm:w-20"
@@ -36,12 +36,6 @@ export default function TierBand() {
             <span className="text-[11px] font-black text-zinc-400 sm:text-xs">
               {label}
             </span>
-            {i === 0 && (
-              <span className="text-[9px] font-bold text-gold/70">현재</span>
-            )}
-            {i === tiers.length - 1 && (
-              <span className="text-[9px] font-bold text-gold/70">목표</span>
-            )}
           </li>
         ))}
       </ul>
