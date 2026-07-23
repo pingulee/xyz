@@ -25,17 +25,20 @@ export default async function ChampionMarquee() {
 
   if (files.length === 0) return null;
 
-  // 열 개수(모바일 8·sm 10·lg 16)의 공배수만큼만 표시 → 마지막 줄까지 항상 꽉 참(lg 5줄)
+  // 모든 화면 5줄 고정. 작은 화면은 뒷부분을 CSS로 숨겨 세로 길이 억제.
+  // 모바일 8열×5=40, 태블릿(sm) 10열×5=50, 데스크톱(lg) 16열×5=80 → 각 화면 직사각형 꽉 참.
   const LIMIT = 80;
   const step = Math.max(1, Math.floor(files.length / LIMIT));
   const shown = files.filter((_, i) => i % step === 0).slice(0, LIMIT);
 
   return (
     <ul className="grid grid-cols-8 gap-2 mask-[linear-gradient(to_bottom,transparent,#000_12%,#000_88%,transparent)] sm:grid-cols-10 sm:gap-2.5 lg:grid-cols-16">
-      {shown.map((file) => {
+      {shown.map((file, i) => {
         const ko = nameById.get(file) ?? file;
+        // 40개까지 전 화면, 40~49는 sm+, 50~79는 lg에서만 표시
+        const vis = i < 40 ? "" : i < 50 ? "hidden sm:block" : "hidden lg:block";
         return (
-          <li key={file} title={ko}>
+          <li key={file} title={ko} className={vis}>
             <span className="block overflow-hidden rounded-md border border-white/8 bg-white/3.5">
               <Image
                 src={`/images/champion/${file}.png`}
