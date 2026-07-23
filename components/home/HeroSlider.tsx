@@ -66,6 +66,9 @@ export default function HeroSlider() {
 
   const slide = slides[index];
   const count = slides.length;
+  // 페이지당 h1 1개: 첫 슬라이드(주력 키워드 "롤 대리")만 h1, 나머지는 h2.
+  // SSR 초기 렌더가 항상 index 0이라 크롤러는 h1 "프리미엄 롤 대리"를 본다.
+  const TitleTag = index === 0 ? ("h1" as const) : ("h2" as const);
 
   const goTo = (nextIndex: number) => {
     setAnimate(true);
@@ -114,14 +117,6 @@ export default function HeroSlider() {
       <div className="relative mx-auto grid h-full max-w-7xl items-center gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:gap-10 lg:px-8 lg:py-14">
         <div className="relative z-10 flex h-full max-w-3xl flex-col justify-center">
           <div className="flex h-92 flex-col sm:h-100 lg:h-108">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="inline-flex w-fit rounded-full border border-gold/30 bg-gold/10 px-4 py-2 text-[11px] font-black tracking-[-0.01em] text-gold-soft">
-                프리미엄 롤 대리
-              </h1>
-              <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500">
-                {slide.eyebrow}
-              </span>
-            </div>
             <div
               key={index}
               className={`flex min-h-0 w-full flex-1 flex-col ${
@@ -129,7 +124,12 @@ export default function HeroSlider() {
               }`}
             >
               <div className="flex flex-1 flex-col justify-center py-5">
-                <h2 className="text-3xl font-black leading-[1.16] text-zinc-50 [text-shadow:0_0_28px_rgba(255,255,255,0.16)] sm:text-5xl lg:text-6xl">
+                {/* 영문 eyebrow 키커 (라인 액센트) */}
+                <p className="mb-5 inline-flex w-fit items-center gap-2.5 text-[11px] font-black uppercase tracking-[0.26em] text-gold">
+                  <span className="h-px w-7 bg-gold/60" />
+                  {slide.eyebrow}
+                </p>
+                <TitleTag className="text-4xl font-black leading-[1.14] tracking-[-0.03em] text-zinc-50 [text-shadow:0_0_28px_rgba(255,255,255,0.16)] sm:text-5xl lg:text-6xl">
                   {slide.titlePrefix}
                   <span className="relative inline-block">
                     <span className="absolute -inset-x-1 bottom-1 h-[0.24em] rounded-md bg-gold/35 shadow-gold-sm" />
@@ -137,8 +137,8 @@ export default function HeroSlider() {
                       {slide.titleHighlight}
                     </span>
                   </span>
-                </h2>
-                <p className="mt-6 h-24 max-w-xl text-base font-medium leading-8 text-zinc-100/95 [text-shadow:0_0_18px_rgba(222,176,67,0.14)] sm:h-28 sm:text-lg">
+                </TitleTag>
+                <p className="mt-6 h-24 max-w-xl text-base font-medium leading-8 text-pretty text-zinc-100/95 [text-shadow:0_0_18px_rgba(222,176,67,0.14)] sm:h-28 sm:text-lg">
                   {slide.desc}
                 </p>
               </div>
