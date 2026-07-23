@@ -25,9 +25,14 @@ export default async function ChampionMarquee() {
 
   if (files.length === 0) return null;
 
+  // 전부 표시하지 않고 로스터 전반에서 고르게 추려 한 화면 분량만
+  const LIMIT = 60;
+  const step = Math.max(1, Math.floor(files.length / LIMIT));
+  const shown = files.filter((_, i) => i % step === 0).slice(0, LIMIT);
+
   return (
-    <ul className="mx-auto grid max-w-5xl grid-cols-[repeat(auto-fill,minmax(2.25rem,1fr))] gap-1.5 mask-[linear-gradient(to_bottom,transparent,#000_12%,#000_88%,transparent)] sm:grid-cols-[repeat(auto-fill,minmax(2.75rem,1fr))] sm:gap-2">
-      {files.map((file) => {
+    <ul className="mx-auto grid max-w-5xl grid-cols-[repeat(auto-fill,2.5rem)] justify-center gap-2 mask-[linear-gradient(to_bottom,transparent,#000_12%,#000_88%,transparent)] sm:grid-cols-[repeat(auto-fill,3rem)] sm:gap-2.5">
+      {shown.map((file) => {
         const ko = nameById.get(file) ?? file;
         return (
           <li key={file} className="group" title={ko}>
