@@ -27,7 +27,7 @@ export default function HomeFaq({
   const [activeId, setActiveId] = useState(categories[0]?.id ?? "");
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="w-full">
       {/* 카테고리 탭 */}
       <div
         role="tablist"
@@ -94,8 +94,8 @@ export default function HomeFaq({
                   key={item.question}
                   className="group rounded-2xl border border-white/8 bg-white/3.5 transition-colors open:border-gold/30 open:bg-gold/5"
                 >
-                  <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-4.5 text-left marker:content-none sm:px-6 [&::-webkit-details-marker]:hidden">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gold/12 text-xs font-black text-gold transition-colors group-open:bg-gold group-open:text-black">
+                  <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-4.5 text-left marker:content-none sm:px-6 [&::-webkit-details-marker]:hidden">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-gold/12 text-[10px] font-black text-gold transition-colors group-open:bg-gold group-open:text-black">
                       Q
                     </span>
                     <span className="flex-1 font-black leading-6 text-white">
@@ -108,11 +108,11 @@ export default function HomeFaq({
                   {/* grid-rows 0fr→1fr 트릭: 순수 CSS 높이 애니메이션 */}
                   <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]">
                     <div className="overflow-hidden">
-                      <div className="flex gap-4 px-5 pb-5 sm:px-6">
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/6 text-xs font-black text-zinc-400">
+                      <div className="flex gap-3 px-5 pb-5 sm:px-6">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-white/6 text-[10px] font-black text-zinc-400">
                           A
                         </span>
-                        <p className="flex-1 whitespace-pre-line pt-0.5 text-sm leading-7 text-zinc-300">
+                        <p className="flex-1 whitespace-pre-line text-sm leading-7 text-zinc-300">
                           {item.answer}
                         </p>
                       </div>
