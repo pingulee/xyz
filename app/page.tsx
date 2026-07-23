@@ -394,8 +394,8 @@ export default async function Home() {
           <Reveal>
             <SectionTitle
               eyebrow="tiers"
-              title="아이언부터 챌린저까지"
-              desc="롤 대리·롤 듀오 전 구간을 지원합니다. 현재 티어와 목표 구간을 알려주세요."
+              title="언랭부터 챌린저까지"
+              desc="언랭 계정부터 챌린저까지 전 구간을 지원합니다. 현재 티어가 어디든 원하는 목표 구간까지 롤 대리·롤 듀오로 올려드립니다."
             />
           </Reveal>
           <Reveal delay={0.1}>
