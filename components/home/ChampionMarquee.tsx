@@ -37,6 +37,8 @@ export default async function ChampionMarquee() {
       {rows.map((row, rowIndex) => (
         <div
           key={rowIndex}
+          // 챔피언 수가 많아 트랙이 길다 → 리뷰(60s)보다 느리게 잡아 속도 체감 동일
+          style={{ animationDuration: "150s" }}
           className={`review-marquee-track ${
             rowIndex % 2 === 0
               ? "animate-review-marquee-ltr"
