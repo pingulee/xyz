@@ -393,7 +393,7 @@ export default async function Home() {
             <SectionTitle
               center={true}
               eyebrow="process"
-              title="롤 대리 · 듀오 진행 과정"
+              title="진행 과정"
               desc="롤 대리 및 롤 듀오 서비스 작업 진행 과정입니다. 상담부터 결제, 작업, 완료 확인까지 한눈에 확인 해보세요."
             />
           </Reveal>
@@ -439,7 +439,7 @@ export default async function Home() {
           <Reveal>
             <SectionTitle
               eyebrow="booster"
-              title="BEST 기사"
+              title="기사 소개"
               desc="XYZ에서 가장 인기있는 기사 3명을 소개합니다."
             />
           </Reveal>
