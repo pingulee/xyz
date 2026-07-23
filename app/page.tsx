@@ -373,8 +373,8 @@ export default async function Home() {
           <Reveal>
             <SectionTitle
               eyebrow="services"
-              title="롤 대리 · 듀오 · 계정 서비스"
-              desc="대리, 듀오, 계정까지 목적에 맞는 서비스를 빠르게 선택할 수 있습니다."
+              title="XYZ가 제공하는 서비스"
+              desc="롤 대리, 롤 듀오, 롤 계정까지 목적에 맞는 서비스를 빠르게 선택할 수 있습니다."
             />
           </Reveal>
           <div className="grid items-stretch gap-6 lg:grid-cols-3">
