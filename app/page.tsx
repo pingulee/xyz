@@ -34,11 +34,31 @@ const stats = [
 ];
 
 const process = [
-  { title: "상담 접수", image: "/images/process/01.webp" },
-  { title: "계정 분석", image: "/images/process/02.webp" },
-  { title: "기사 배정", image: "/images/process/03.webp" },
-  { title: "작업 진행", image: "/images/process/04.webp" },
-  { title: "작업 완료", image: "/images/process/05.webp" },
+  {
+    title: "상담 접수",
+    image: "/images/process/01.webp",
+    desc: "카카오톡으로 현재 티어와 목표를 전달합니다.",
+  },
+  {
+    title: "계정 분석",
+    image: "/images/process/02.webp",
+    desc: "현재 티어와 MMR을 확인해 진행 방식을 정합니다.",
+  },
+  {
+    title: "기사 배정",
+    image: "/images/process/03.webp",
+    desc: "조건에 맞는 검증 기사를 1:1로 배정합니다.",
+  },
+  {
+    title: "작업 진행",
+    image: "/images/process/04.webp",
+    desc: "100% 수동 진행, 상황을 실시간 공유합니다.",
+  },
+  {
+    title: "작업 완료",
+    image: "/images/process/05.webp",
+    desc: "목표 달성 후 승률·KDA 기록을 남깁니다.",
+  },
 ];
 
 const reviewList = [
@@ -378,32 +398,33 @@ export default async function Home() {
             />
           </Reveal>
           <Reveal delay={0.12}>
-            <ol className="relative mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
-              {/* 데스크톱 단계 연결선 */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute left-[10%] right-[10%] top-14 hidden h-px bg-linear-to-r from-transparent via-gold/25 to-transparent lg:block"
-              />
-              {process.map(({ title, image }, i) => (
+            {/* 모바일·태블릿: 세로 균일 카드(가로 레이아웃), lg: 5열 카드 — 고아 카드/오버사이즈 없음 */}
+            <ol className="mt-10 grid grid-cols-1 gap-3 lg:grid-cols-5 lg:gap-4">
+              {process.map(({ title, image, desc }, i) => (
                 <li
                   key={title}
-                  className={`relative flex flex-col items-center gap-3 rounded-3xl border border-gold/12 bg-white/3.5 p-5 pt-6 text-center transition hover:border-gold/30 ${
-                    i === process.length - 1 ? "col-span-2 sm:col-span-1" : ""
-                  }`}
+                  className="group flex items-center gap-4 rounded-3xl border border-gold/12 bg-white/3.5 p-4 transition hover:border-gold/30 hover:bg-white/5 lg:flex-col lg:items-center lg:gap-3 lg:p-6 lg:text-center"
                 >
-                  <span className="absolute left-4 top-4 text-[11px] font-black tracking-[0.18em] text-gold/80">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span className="flex h-16 w-16 items-center justify-center sm:h-20 sm:w-20">
+                  <span className="flex h-20 w-20 shrink-0 items-center justify-center lg:h-24 lg:w-24">
                     <Image
                       src={image}
                       alt=""
-                      width={96}
-                      height={96}
+                      width={112}
+                      height={112}
                       className="h-full w-full object-contain"
                     />
                   </span>
-                  <b className="text-base text-white sm:text-lg">{title}</b>
+                  <div className="min-w-0">
+                    <span className="text-[11px] font-black tracking-[0.18em] text-gold/80">
+                      STEP {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <b className="mt-0.5 block text-lg text-white lg:mt-1.5">
+                      {title}
+                    </b>
+                    <p className="mt-0.5 text-sm leading-6 text-zinc-400 lg:mt-2">
+                      {desc}
+                    </p>
+                  </div>
                 </li>
               ))}
             </ol>
