@@ -53,7 +53,7 @@ export default function ServiceGuide() {
               </div>
               <h2
                 id="service-guide-title"
-                className="mt-6 text-4xl font-black leading-[1.08] tracking-[-0.055em] text-white sm:text-5xl lg:text-6xl"
+                className="mt-6 text-3xl font-black leading-[1.08] tracking-tighter text-white sm:text-4xl lg:text-5xl"
               >
                 롤 대리와 듀오,
                 <br />

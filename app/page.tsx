@@ -333,55 +333,9 @@ export default async function Home() {
         <Container>
           <Reveal>
             <SectionTitle
-              eyebrow="why xyz"
-              title="XYZ를 이용해야 하는 이유"
-              desc="롤 대리·롤 듀오는 결국 계정을 믿고 맡기는 일입니다. XYZ는 안전, 검증, 투명함 세 가지 원칙으로 운영합니다."
-            />
-          </Reveal>
-          <div className="grid gap-5 lg:grid-cols-3">
-            {[
-              [
-                ShieldCheck,
-                "안전 중심",
-                "무리한 속도보다 계정 상태와 일정에 맞춘 안정적인 진행을 우선합니다.",
-              ],
-              [
-                Trophy,
-                "검증 기사",
-                "상위 티어 기사 부스터를 기준으로 서비스별 적합한 기사를 배정합니다.",
-              ],
-              [
-                BadgeCheck,
-                "투명한 상담",
-                "목표와 조건을 확인한 뒤 진행 가능 여부와 견적을 명확하게 안내합니다.",
-              ],
-            ].map(([Icon, title, desc]) => {
-              const I = Icon as typeof ShieldCheck;
-              return (
-                <Reveal key={String(title)}>
-                  <div className="card-premium rounded-4xl p-8">
-                    <I className="text-gold" size={36} />
-                    <h3 className="mt-6 text-2xl font-black text-white">
-                      {String(title)}
-                    </h3>
-                    <p className="mt-3 leading-7 text-zinc-400">
-                      {String(desc)}
-                    </p>
-                  </div>
-                </Reveal>
-              );
-            })}
-          </div>
-        </Container>
-      </section>
-
-      <section className="py-20">
-        <Container>
-          <Reveal>
-            <SectionTitle
               eyebrow="services"
-              title="서비스 안내"
-              desc="대리, 듀오, 계정 까지 목적에 맞는 서비스를 빠르게 선택할 수 있습니다."
+              title="롤 대리 · 듀오 · 계정 서비스"
+              desc="대리, 듀오, 계정까지 목적에 맞는 서비스를 빠르게 선택할 수 있습니다."
             />
           </Reveal>
           <div className="grid gap-6 lg:grid-cols-3">
@@ -400,7 +354,7 @@ export default async function Home() {
             <SectionTitle
               center={true}
               eyebrow="process"
-              title="작업 진행 과정"
+              title="롤 대리 · 듀오 진행 과정"
               desc="롤 대리 및 롤 듀오 서비스 작업 진행 과정입니다. 상담부터 결제, 작업, 완료 확인까지 한눈에 확인 해보세요."
             />
           </Reveal>
@@ -470,19 +424,19 @@ export default async function Home() {
                 prefetch={false}
                 className="inline-flex items-center gap-2 rounded-full border border-gold/20 px-6 py-3 font-bold text-white transition hover:border-gold/60"
               >
-                기사 부스터 더보기 <ArrowRight size={18} />
+                기사 전체 보기 <ArrowRight size={18} />
               </Link>
             </div>
           </Reveal>
         </Container>
       </section>
 
-      <section className="py-20">
+      <section className="border-y border-white/6 bg-black/20 py-20">
         <Container>
           <Reveal>
             <SectionTitle
               eyebrow="review"
-              title="진행 후기"
+              title="롤 대리 · 듀오 진행 후기"
               desc="롤 대리·롤 듀오·롤 계정 이용 후기를 살펴보세요. 후기 게시판에서는 작성일, 이용 서비스와 연결된 작업 기사 정보를 함께 확인할 수 있습니다."
             />
           </Reveal>
@@ -545,12 +499,58 @@ export default async function Home() {
         </Container>
       </section>
 
+      <section className="py-20">
+        <Container>
+          <Reveal>
+            <SectionTitle
+              eyebrow="why xyz"
+              title="XYZ를 이용해야 하는 이유"
+              desc="롤 대리·롤 듀오는 결국 계정을 믿고 맡기는 일입니다. XYZ는 안전, 검증, 투명함 세 가지 원칙으로 운영합니다."
+            />
+          </Reveal>
+          <div className="grid gap-5 lg:grid-cols-3">
+            {[
+              [
+                ShieldCheck,
+                "안전 중심",
+                "무리한 속도보다 계정 상태와 일정에 맞춘 안정적인 진행을 우선합니다.",
+              ],
+              [
+                Trophy,
+                "검증 기사",
+                "상위 티어 검증 기사 중에서 서비스별로 가장 적합한 기사를 배정합니다.",
+              ],
+              [
+                BadgeCheck,
+                "투명한 상담",
+                "목표와 조건을 확인한 뒤 진행 가능 여부와 견적을 명확하게 안내합니다.",
+              ],
+            ].map(([Icon, title, desc]) => {
+              const I = Icon as typeof ShieldCheck;
+              return (
+                <Reveal key={String(title)}>
+                  <div className="card-premium rounded-4xl p-8">
+                    <I className="text-gold" size={36} />
+                    <h3 className="mt-6 text-2xl font-black text-white">
+                      {String(title)}
+                    </h3>
+                    <p className="mt-3 leading-7 text-zinc-400">
+                      {String(desc)}
+                    </p>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
+        </Container>
+      </section>
+
       <section id="price" className="scroll-mt-20 py-20">
         <Container>
           <Reveal>
             <SectionTitle
               eyebrow="price"
-              title="견적 계산기"
+              title="롤 대리 · 듀오 견적 계산기"
               desc="서비스, 진행 방식, 구간을 선택하면 예상 금액을 바로 확인할 수 있습니다. 실제 견적은 상담 후 확정됩니다."
             />
           </Reveal>
@@ -581,21 +581,29 @@ export default async function Home() {
                 className="absolute right-8 top-8 opacity-30"
                 size={120}
               />
-              <h2 className="max-w-3xl text-4xl font-black tracking-tighter sm:text-6xl">
+              <h2 className="max-w-3xl text-3xl font-black tracking-tighter sm:text-5xl">
                 목표 티어까지, 지금 XYZ에서 상담받으세요
               </h2>
               <p className="mt-5 max-w-2xl text-lg font-semibold text-black/70">
                 현재 티어와 목표만 알려주면 가장 적합한 방식으로 안내해드립니다.
               </p>
-              <a
-                href={site.kakaoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-black px-7 py-4 font-black text-white"
-              >
-                <MessageCircle size={18} />
-                카카오톡 상담하기
-              </a>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <a
+                  href={site.kakaoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-black px-7 py-4 font-black text-white transition hover:bg-zinc-900"
+                >
+                  <MessageCircle size={18} />
+                  카카오톡 상담하기
+                </a>
+                <a
+                  href="#price"
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-black/25 px-7 py-3.5 font-black text-black transition hover:border-black/60"
+                >
+                  예상 견적 먼저 보기
+                </a>
+              </div>
             </div>
           </Reveal>
         </Container>

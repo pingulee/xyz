@@ -1,4 +1,4 @@
-import { site } from "@/lib/site";
+import { services, site } from "@/lib/site";
 
 const BRAND_NAME = "XYZ";
 
@@ -47,6 +47,14 @@ export default function JsonLd() {
         inLanguage: "ko-KR",
         serviceType: ["롤 대리", "롤 듀오", "롤 계정", "롤 업디"],
         provider: { "@id": `${site.url}/#organization` },
+        // 사이트 가격표에 공개된 실제 범위 (저티어 1승 5,000원 ~ 고티어 점수 보장 180,000원)
+        offers: {
+          "@type": "AggregateOffer",
+          priceCurrency: "KRW",
+          lowPrice: 5000,
+          highPrice: 180000,
+          offerCount: services.length,
+        },
       },
     ],
   };
