@@ -39,7 +39,7 @@ export default async function ChampionMarquee() {
         const vis = i < 40 ? "" : i < 50 ? "hidden sm:block" : "hidden lg:block";
         return (
           <li key={file} title={ko} className={vis}>
-            <span className="block overflow-hidden rounded-md border border-white/8 bg-white/3.5">
+            <span className="block overflow-hidden rounded-md">
               <Image
                 src={`/images/champion/${file}.png`}
                 alt={`${ko} 롤 대리·듀오 가능 챔피언`}
