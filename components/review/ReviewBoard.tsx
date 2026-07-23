@@ -794,7 +794,7 @@ export default function ReviewBoard({
             review
           </p>
           <h2 className="mt-2 text-2xl font-black text-white">
-            전체 후기 {visibleReviewList.length}개
+            전체 후기 {Math.max(total, visibleReviewList.length)}개
           </h2>
         </div>
 
