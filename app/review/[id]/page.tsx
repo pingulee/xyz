@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       url,
       type: "article",
-      siteName: site.name,
+      siteName: site.brand,
       publishedTime: review.createdAt,
       images: [{ url: site.ogImage }],
     },

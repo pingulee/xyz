@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       url,
       type: "profile",
-      siteName: site.name,
+      siteName: site.brand,
       images: [{ url: image }],
     },
     twitter: {

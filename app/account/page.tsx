@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     description,
     url: "/account",
     type: "website",
-    siteName: site.name,
+    siteName: site.brand,
     images: [{ url: site.ogImage }],
   },
   twitter: {

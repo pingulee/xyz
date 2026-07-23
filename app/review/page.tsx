@@ -27,7 +27,7 @@ export const metadata: Metadata = {
       "XYZ 실제 후기를 확인하고 직접 남겨보세요.",
     url: "/review",
     type: "website",
-    siteName: site.name,
+    siteName: site.brand,
     images: [{ url: site.ogImage }],
   },
   twitter: {

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     description,
     url: "/recruit",
     type: "website",
-    siteName: site.name,
+    siteName: site.brand,
     images: [{ url: site.ogImage }],
   },
   twitter: {

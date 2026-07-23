@@ -11,9 +11,9 @@ import "./globals.css";
 const FONT_LOADER = `(function(){var l=document.createElement('link');l.rel='stylesheet';l.href='/fonts/pretendard/pretendardvariable-dynamic-subset.css';document.head.appendChild(l);})();`;
 
 const BRAND_NAME = "XYZ";
-const HOME_TITLE = "롤 대리 전문 XYZ | 가격·검증 기사·실제 후기";
+const HOME_TITLE = "롤 대리 XYZ | 마진 없이 저렴한 가격";
 const HOME_DESCRIPTION =
-  "롤 대리 전문 XYZ. 구간별 가격과 승률 보장 기준, 상위 티어 검증 기사의 승률·전적, 실제 작업 후기를 공개합니다. 100% 수동 진행과 24시간 카카오톡 상담을 제공하며 롤 듀오·롤 계정도 안내합니다.";
+  "롤 대리 전문 업체 XYZ. 중간 마진 없이 개인 기사보다 저렴하게 운영합니다.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
