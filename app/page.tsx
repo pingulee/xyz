@@ -445,6 +445,8 @@ export default async function Home() {
         </Container>
       </section>
 
+      <ServiceGuide />
+
       <section className="py-20">
         <Container>
           <Reveal>
@@ -557,8 +559,6 @@ export default async function Home() {
           </Reveal>
         </Container>
       </section>
-
-      <ServiceGuide />
 
       <section id="faq" className="scroll-mt-20 py-20">
         <Container>
