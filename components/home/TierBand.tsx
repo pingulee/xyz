@@ -40,7 +40,7 @@ function TierNode({
 export default function TierBand() {
   return (
     <div>
-      <div className="relative mx-auto flex max-w-3xl items-center justify-center">
+      <div className="relative mx-auto flex max-w-lg items-center justify-center">
         {/* 뒤: 언랭 모서리 → 그랜드마스터 모서리 진행 화살표 (박스 전폭 inset) */}
         <div
           aria-hidden="true"
