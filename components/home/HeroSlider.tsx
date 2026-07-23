@@ -183,7 +183,7 @@ export default function HeroSlider() {
         </div>
 
         <div
-          className="absolute inset-0 z-0 mx-auto w-full cursor-grab touch-pan-y active:cursor-grabbing lg:relative lg:inset-auto lg:z-auto lg:max-w-150"
+          className="absolute inset-0 z-0 mx-auto w-full touch-pan-y lg:relative lg:inset-auto lg:z-auto lg:max-w-150"
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
         >
