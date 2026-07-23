@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { ChevronRight } from "lucide-react";
 
 // 전 구간 지원 시각화 — 뒤에 언랭 → 챌린저 진행 레일, 앞에 챌린저 기사(투명 PNG) 크게.
 function TierNode({
@@ -42,17 +41,14 @@ export default function TierBand() {
   return (
     <div>
       <div className="relative mx-auto flex max-w-3xl items-center justify-center">
-        {/* 뒤: 언랭 모서리 → 챌린저 모서리 진행 레일 (inset = 노드 전폭, chevron이 박스 모서리) */}
+        {/* 뒤: 언랭 모서리 → 그랜드마스터 모서리 진행 화살표 (박스 전폭 inset) */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-16 top-1/2 z-0 -translate-y-1/2 sm:inset-x-20"
+          className="pointer-events-none absolute inset-x-16 top-1/2 z-0 flex -translate-y-1/2 items-center sm:inset-x-20"
         >
-          <span className="block h-1 w-full rounded-full bg-linear-to-r from-white/15 via-gold/40 to-gold" />
-          <ChevronRight
-            size={22}
-            strokeWidth={3}
-            className="absolute right-0 top-1/2 -translate-y-1/2 text-gold"
-          />
+          <span className="h-1 flex-1 rounded-l-full bg-linear-to-r from-white/15 via-gold/50 to-gold" />
+          {/* 솔리드 삼각형 화살촉 */}
+          <span className="h-0 w-0 border-y-[7px] border-l-[12px] border-y-transparent border-l-gold" />
         </div>
 
         {/* 뒤: 양 끝 티어 노드 (라벨 색 = 아이콘 색) */}
