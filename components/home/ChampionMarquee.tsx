@@ -31,7 +31,7 @@ export default async function ChampionMarquee() {
   const shown = files.filter((_, i) => i % step === 0).slice(0, LIMIT);
 
   return (
-    <ul className="mx-auto grid max-w-3xl grid-cols-8 gap-2 mask-[linear-gradient(to_bottom,transparent,#000_12%,#000_88%,transparent)] sm:grid-cols-12 sm:gap-2.5">
+    <ul className="grid grid-cols-8 gap-2 mask-[linear-gradient(to_bottom,transparent,#000_12%,#000_88%,transparent)] sm:grid-cols-12 sm:gap-2.5 lg:grid-cols-16">
       {shown.map((file) => {
         const ko = nameById.get(file) ?? file;
         return (
