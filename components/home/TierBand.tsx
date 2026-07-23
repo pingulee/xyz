@@ -82,10 +82,9 @@ export default function TierBand() {
         </div>
       </div>
 
-      <p className="mt-6 text-center text-sm leading-7 text-pretty text-zinc-300 sm:text-base">
-        현재 시즌 챌린저 기사가 전담 배정되어{" "}
-        <b className="gold-text font-black">단 3주 만에 언랭 → 그랜드마스터</b>
-        까지 안정적으로 끌어올립니다.
+      <p className="mt-6 text-center text-xl font-black tracking-tight text-balance text-white sm:text-2xl">
+        언랭부터 그랜드마스터까지{" "}
+        <span className="gold-text">단 3주</span> 소요!
       </p>
     </div>
   );
