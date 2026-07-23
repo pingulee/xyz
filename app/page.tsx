@@ -583,7 +583,7 @@ export default async function Home() {
           <Reveal>
             <SectionTitle
               eyebrow="price"
-              title="롤 대리 · 듀오 견적 계산기"
+              title="견적 계산기"
               desc="서비스, 진행 방식, 구간을 선택하면 예상 금액을 바로 확인할 수 있습니다. 실제 견적은 상담 후 확정됩니다."
             />
           </Reveal>
