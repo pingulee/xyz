@@ -85,7 +85,7 @@ export default function TierBand() {
         </div>
       </div>
 
-      <p className="mt-6 text-center text-base font-black tracking-tight text-balance text-white sm:text-lg">
+      <p className="mt-6 text-center text-base font-normal tracking-tight text-balance text-white sm:text-lg">
         언랭부터 그랜드마스터까지{" "}
         <span className="gold-text">단 3주</span> 소요!
       </p>
