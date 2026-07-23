@@ -1,31 +1,37 @@
 import Image from "next/image";
+import fs from "fs";
+import path from "path";
+import { getChampions } from "@/lib/champions";
 
-// 파일명(영문) : 표기(한글) — alt 텍스트에 한글 키워드로 이미지 SEO
-const champions: [string, string][] = [
-  ["Garen", "가렌"], ["Yasuo", "야스오"], ["LeeSin", "리신"], ["Ahri", "아리"],
-  ["Zed", "제드"], ["Jinx", "징크스"], ["Lux", "럭스"], ["Thresh", "쓰레쉬"],
-  ["Ezreal", "이즈리얼"], ["Kaisa", "카이사"], ["Yone", "요네"], ["Sett", "세트"],
-  ["Darius", "다리우스"], ["Katarina", "카타리나"], ["Vayne", "베인"], ["Riven", "리븐"],
-  ["Jhin", "진"], ["Ashe", "애쉬"],
-  ["Malphite", "말파이트"], ["Teemo", "티모"], ["MasterYi", "마스터 이"], ["Akali", "아칼리"],
-  ["Viego", "비에고"], ["Samira", "사미라"], ["Gwen", "그웬"], ["Briar", "브라이어"],
-  ["Hwei", "흐웨이"], ["Aphelios", "아펠리오스"], ["Sylas", "사일러스"], ["Camille", "카밀"],
-  ["Fiora", "피오라"], ["Irelia", "이렐리아"], ["Aatrox", "아트록스"], ["Graves", "그레이브즈"],
-  ["Khazix", "카직스"], ["Evelynn", "이블린"],
-  ["Jayce", "제이스"], ["Caitlyn", "케이틀린"], ["Draven", "드레이븐"], ["Lucian", "루시안"],
-  ["Leona", "레오나"], ["Blitzcrank", "블리츠크랭크"], ["Morgana", "모르가나"], ["Nami", "나미"],
-  ["Senna", "세나"], ["Pyke", "파이크"], ["Shen", "신"], ["Jax", "잭스"],
-  ["Warwick", "워윅"], ["Vi", "바이"], ["JarvanIV", "자르반 4세"], ["Pantheon", "판테온"],
-  ["Diana", "다이애나"], ["Ekko", "에코"],
-];
+// public/images/champion 의 모든 챔피언을 표시. KO 이름은 DB(getChampions, riot_id=파일명)에서 매핑.
+export default async function ChampionMarquee() {
+  let files: string[] = [];
+  try {
+    files = fs
+      .readdirSync(path.join(process.cwd(), "public/images/champion"))
+      .filter((f) => f.toLowerCase().endsWith(".png"))
+      .map((f) => f.replace(/\.png$/i, ""))
+      .sort();
+  } catch {
+    files = [];
+  }
 
-const ROW_COUNT = 3;
-const perRow = Math.ceil(champions.length / ROW_COUNT);
-const rows = Array.from({ length: ROW_COUNT }, (_, r) =>
-  champions.slice(r * perRow, (r + 1) * perRow),
-);
+  const nameById = new Map<string, string>();
+  try {
+    for (const c of await getChampions()) nameById.set(c.id, c.name);
+  } catch {
+    /* DB 실패 시 파일명 사용 */
+  }
 
-export default function ChampionMarquee() {
+  const champions: [string, string][] = files.map((id) => [
+    id,
+    nameById.get(id) ?? id,
+  ]);
+  if (champions.length === 0) return null;
+
+  const mid = Math.ceil(champions.length / 2);
+  const rows = [champions.slice(0, mid), champions.slice(mid)];
+
   return (
     <div className="review-marquee-mask space-y-3 sm:space-y-4">
       {rows.map((row, rowIndex) => (
@@ -56,7 +62,9 @@ export default function ChampionMarquee() {
                     className="h-14 w-14 object-cover sm:h-16 sm:w-16"
                   />
                 </span>
-                <span className="text-xs font-bold text-zinc-500">{ko}</span>
+                <span className="max-w-16 truncate text-xs font-bold text-zinc-500">
+                  {ko}
+                </span>
               </div>
             );
           })}
