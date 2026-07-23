@@ -16,6 +16,8 @@ import HomeFaq, {
   type HomeFaqCategory,
 } from "@/components/home/HomeFaq";
 import ServiceGuide from "@/components/home/ServiceGuide";
+import TierBand from "@/components/home/TierBand";
+import ChampionMarquee from "@/components/home/ChampionMarquee";
 import BoosterCard from "@/components/booster/BoosterCard";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
@@ -391,6 +393,21 @@ export default async function Home() {
         <Container>
           <Reveal>
             <SectionTitle
+              eyebrow="tiers"
+              title="아이언부터 챌린저까지"
+              desc="롤 대리·롤 듀오 전 구간을 지원합니다. 현재 티어와 목표 구간을 알려주세요."
+            />
+          </Reveal>
+          <Reveal delay={0.1}>
+            <TierBand />
+          </Reveal>
+        </Container>
+      </section>
+
+      <section className="py-20">
+        <Container>
+          <Reveal>
+            <SectionTitle
               center={true}
               eyebrow="process"
               title="진행 과정"
@@ -428,6 +445,21 @@ export default async function Home() {
                 </li>
               ))}
             </ol>
+          </Reveal>
+        </Container>
+      </section>
+
+      <section className="py-20">
+        <Container>
+          <Reveal>
+            <SectionTitle
+              eyebrow="champions"
+              title="원하는 챔피언으로 진행"
+              desc="모든 챔피언 대리·듀오가 가능합니다. 선호 챔피언과 라인을 상담에서 알려주세요."
+            />
+          </Reveal>
+          <Reveal delay={0.1}>
+            <ChampionMarquee />
           </Reveal>
         </Container>
       </section>
