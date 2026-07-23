@@ -598,7 +598,7 @@ export default async function Home() {
           <Reveal>
             <SectionTitle
               eyebrow="faq"
-              title="궁금한 서비스부터 확인하세요"
+              title="자주 묻는 질문"
               desc="롤 대리, 롤 듀오, 롤 계정과 결제·진행 질문을 주제별로 모았습니다. 카테고리를 선택해 필요한 답변을 빠르게 찾아보세요."
             />
           </Reveal>
