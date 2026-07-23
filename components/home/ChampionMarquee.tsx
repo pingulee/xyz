@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { getChampions } from "@/lib/champions";
 
-// public/images/champion 의 모든 챔피언을 표시. KO 이름은 DB(getChampions, riot_id=파일명)에서 매핑.
+// public/images/champion 의 모든 챔피언을 정적 그리드로 표시. KO 이름은 DB(riot_id=파일명)에서 매핑.
 export default async function ChampionMarquee() {
   let files: string[] = [];
   try {
@@ -23,55 +23,28 @@ export default async function ChampionMarquee() {
     /* DB 실패 시 파일명 사용 */
   }
 
-  const champions: [string, string][] = files.map((id) => [
-    id,
-    nameById.get(id) ?? id,
-  ]);
-  if (champions.length === 0) return null;
-
-  const mid = Math.ceil(champions.length / 2);
-  const rows = [champions.slice(0, mid), champions.slice(mid)];
+  if (files.length === 0) return null;
 
   return (
-    <div className="review-marquee-mask space-y-3 sm:space-y-4">
-      {rows.map((row, rowIndex) => (
-        <div
-          key={rowIndex}
-          // 챔피언 수가 많아 트랙이 길다 → 리뷰(60s)보다 느리게 잡아 속도 체감 동일
-          style={{ animationDuration: "150s" }}
-          className={`review-marquee-track ${
-            rowIndex % 2 === 0
-              ? "animate-review-marquee-ltr"
-              : "animate-review-marquee-rtl"
-          }`}
-        >
-          {[...row, ...row].map(([file, ko], i) => {
-            const isClone = i >= row.length;
-            return (
-              <div
-                key={`${file}-${isClone ? "c" : "o"}-${i % row.length}`}
-                aria-hidden={isClone || undefined}
-                className="flex shrink-0 flex-col items-center gap-2"
-              >
-                <span className="overflow-hidden rounded-2xl border border-white/8 bg-white/3.5">
-                  <Image
-                    src={`/images/champion/${file}.png`}
-                    alt={isClone ? "" : `${ko} 롤 대리·듀오 가능 챔피언`}
-                    width={64}
-                    height={64}
-                    loading="lazy"
-                    sizes="64px"
-                    className="h-14 w-14 object-cover sm:h-16 sm:w-16"
-                  />
-                </span>
-                <span className="max-w-16 truncate text-xs font-bold text-zinc-500">
-                  {ko}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      ))}
-    </div>
+    <ul className="grid grid-cols-6 gap-2 sm:grid-cols-9 sm:gap-2.5 lg:grid-cols-12">
+      {files.map((file) => {
+        const ko = nameById.get(file) ?? file;
+        return (
+          <li key={file} className="group">
+            <span className="block overflow-hidden rounded-xl border border-white/8 bg-white/3.5 transition group-hover:border-gold/30">
+              <Image
+                src={`/images/champion/${file}.png`}
+                alt={`${ko} 롤 대리·듀오 가능 챔피언`}
+                width={80}
+                height={80}
+                loading="lazy"
+                sizes="(max-width: 640px) 16vw, (max-width: 1024px) 11vw, 80px"
+                className="aspect-square w-full object-cover transition duration-300 group-hover:scale-105"
+              />
+            </span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
