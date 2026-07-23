@@ -5,20 +5,18 @@ import { ChevronRight } from "lucide-react";
 function TierNode({
   file,
   label,
-  goal,
+  boxClass,
+  labelClass,
 }: {
   file: string;
   label: string;
-  goal?: boolean;
+  boxClass: string;
+  labelClass: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="relative h-16 w-16 sm:h-20 sm:w-20">
       <span
-        className={`grid h-16 w-16 place-items-center rounded-2xl border sm:h-20 sm:w-20 ${
-          goal
-            ? "border-gold/60 bg-gold/12 shadow-gold-sm ring-1 ring-gold/30"
-            : "border-white/10 bg-white/3 opacity-80"
-        }`}
+        className={`grid h-full w-full place-items-center rounded-2xl border ${boxClass}`}
       >
         <Image
           src={`/images/tier/${file}.png`}
@@ -30,10 +28,9 @@ function TierNode({
           className="h-10 w-10 object-contain sm:h-12 sm:w-12"
         />
       </span>
+      {/* 라벨은 박스 폭에 영향 없이 중앙 정렬 (긴 라벨 오버플로 허용) */}
       <span
-        className={`text-xs font-black sm:text-sm ${
-          goal ? "gold-text" : "text-zinc-400"
-        }`}
+        className={`absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap text-xs font-black sm:text-sm ${labelClass}`}
       >
         {label}
       </span>
@@ -58,12 +55,22 @@ export default function TierBand() {
           />
         </div>
 
-        {/* 뒤: 양 끝 티어 노드 */}
+        {/* 뒤: 양 끝 티어 노드 (라벨 색 = 아이콘 색) */}
         <div className="absolute left-0 top-1/2 z-0 -translate-y-1/2">
-          <TierNode file="0-unrank" label="언랭" />
+          <TierNode
+            file="0-unrank"
+            label="언랭"
+            boxClass="border-white/10 bg-white/3 opacity-80"
+            labelClass="text-zinc-400"
+          />
         </div>
         <div className="absolute right-0 top-1/2 z-0 -translate-y-1/2">
-          <TierNode file="10-challenger" label="챌린저" goal />
+          <TierNode
+            file="9-grandmaster"
+            label="그랜드마스터"
+            boxClass="border-red-500/50 bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.25)] ring-1 ring-red-500/25"
+            labelClass="text-red-400"
+          />
         </div>
 
         {/* 앞: 챌린저 기사 (투명 배경) */}
