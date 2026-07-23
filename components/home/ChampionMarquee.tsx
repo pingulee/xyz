@@ -26,20 +26,20 @@ export default async function ChampionMarquee() {
   if (files.length === 0) return null;
 
   return (
-    <ul className="grid grid-cols-6 gap-2 sm:grid-cols-9 sm:gap-2.5 lg:grid-cols-12">
+    <ul className="mx-auto grid max-w-5xl grid-cols-[repeat(auto-fill,minmax(2.25rem,1fr))] gap-1.5 sm:grid-cols-[repeat(auto-fill,minmax(2.75rem,1fr))] sm:gap-2">
       {files.map((file) => {
         const ko = nameById.get(file) ?? file;
         return (
-          <li key={file} className="group">
-            <span className="block overflow-hidden rounded-xl border border-white/8 bg-white/3.5 transition group-hover:border-gold/30">
+          <li key={file} className="group" title={ko}>
+            <span className="block overflow-hidden rounded-md border border-white/8 bg-white/3.5 transition group-hover:border-gold/40">
               <Image
                 src={`/images/champion/${file}.png`}
                 alt={`${ko} 롤 대리·듀오 가능 챔피언`}
-                width={80}
-                height={80}
+                width={56}
+                height={56}
                 loading="lazy"
-                sizes="(max-width: 640px) 16vw, (max-width: 1024px) 11vw, 80px"
-                className="aspect-square w-full object-cover transition duration-300 group-hover:scale-105"
+                sizes="48px"
+                className="aspect-square w-full object-cover transition duration-300 group-hover:scale-110"
               />
             </span>
           </li>
