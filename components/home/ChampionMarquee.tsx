@@ -25,13 +25,13 @@ export default async function ChampionMarquee() {
 
   if (files.length === 0) return null;
 
-  // 전부 표시하지 않고 로스터 전반에서 고르게 추려 한 화면 분량만
-  const LIMIT = 60;
+  // 열 개수(모바일 8·sm 12)의 공배수만큼만 표시 → 마지막 줄까지 항상 꽉 찬 직사각형
+  const LIMIT = 48;
   const step = Math.max(1, Math.floor(files.length / LIMIT));
   const shown = files.filter((_, i) => i % step === 0).slice(0, LIMIT);
 
   return (
-    <ul className="mx-auto grid max-w-5xl grid-cols-[repeat(auto-fill,2.5rem)] justify-center gap-2 mask-[linear-gradient(to_bottom,transparent,#000_12%,#000_88%,transparent)] sm:grid-cols-[repeat(auto-fill,3rem)] sm:gap-2.5">
+    <ul className="mx-auto grid max-w-3xl grid-cols-8 gap-2 mask-[linear-gradient(to_bottom,transparent,#000_12%,#000_88%,transparent)] sm:grid-cols-12 sm:gap-2.5">
       {shown.map((file) => {
         const ko = nameById.get(file) ?? file;
         return (
