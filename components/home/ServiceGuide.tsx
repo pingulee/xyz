@@ -214,7 +214,7 @@ export default function ServiceGuide() {
                   prefetch={false}
                   className="text-gold transition hover:text-gold-soft"
                 >
-                  기사 부스터 확인
+                  기사 소개 확인
                 </Link>
                 <Link
                   href="/review"

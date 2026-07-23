@@ -45,11 +45,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const image = booster.image || site.ogImage;
 
   return {
-    title: `${booster.name} | 기사 부스터`,
+    title: `${booster.name} | 기사 소개`,
     description,
     alternates: { canonical: url },
     openGraph: {
-      title: `${booster.name} | 기사 부스터`,
+      title: `${booster.name} | 기사 소개`,
       description,
       url,
       type: "profile",
@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: "summary",
-      title: `${booster.name} | 기사 부스터`,
+      title: `${booster.name} | 기사 소개`,
       description,
       images: [image],
     },
@@ -93,7 +93,7 @@ export default async function BoosterDetailPage({ params }: Props) {
       {
         "@type": "ListItem",
         position: 1,
-        name: "기사 부스터",
+        name: "기사 소개",
         item: `${site.url}/booster`,
       },
       {
@@ -115,7 +115,7 @@ export default async function BoosterDetailPage({ params }: Props) {
         <Reveal>
           <div className="mb-6 flex items-center gap-3 text-sm text-zinc-500">
             <Link href="/booster" className="transition hover:text-gold">
-              기사 부스터
+              기사 소개
             </Link>
             <span>/</span>
             <span className="text-zinc-300">{booster.name}</span>

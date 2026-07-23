@@ -12,14 +12,14 @@ import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-const description = "xyz의 검증된 상위 티어 롤 부스터 안내 페이지입니다.";
+const description = "xyz의 검증된 상위 티어 기사 소개 페이지입니다.";
 
 export const metadata: Metadata = {
-  title: "기사 부스터",
+  title: "기사 소개",
   description,
   alternates: { canonical: "/booster" },
   openGraph: {
-    title: "기사 부스터 | XYZ",
+    title: "기사 소개 | XYZ",
     description,
     url: "/booster",
     type: "website",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "기사 부스터 | XYZ",
+    title: "기사 소개 | XYZ",
     description,
     images: [site.ogImage],
   },
@@ -48,7 +48,7 @@ export default async function BoosterPage() {
           <Reveal>
             <SectionTitle
               eyebrow="booster"
-              title="기사 부스터"
+              title="기사 소개"
               desc="검증된 상위 티어 기사진이 직접 진행합니다."
               as="h1"
             />
@@ -67,7 +67,7 @@ export default async function BoosterPage() {
         <Reveal>
           <SectionTitle
             eyebrow="booster"
-            title="기사 부스터"
+            title="기사 소개"
             desc="검증된 상위 티어 기사진이 직접 진행합니다."
             as="h1"
           />
