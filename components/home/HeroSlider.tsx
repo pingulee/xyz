@@ -2,9 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { site } from "@/lib/site";
 
 const slides = [
   {
@@ -109,11 +108,6 @@ export default function HeroSlider() {
       onMouseLeave={() => setPaused(false)}
     >
       <div className="absolute inset-0 bg-black/30" />
-      {/* 은은한 그리드 패턴 — 배경 깊이감 (CSS only) */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-[linear-gradient(rgba(222,176,67,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(222,176,67,0.04)_1px,transparent_1px)] bg-size-[72px_72px] mask-[radial-gradient(ellipse_at_center,black_35%,transparent_78%)]"
-      />
       <div className="absolute left-[12%] top-20 h-72 w-72 rounded-full bg-gold/18 blur-[110px] animate-background-float" />
       <div className="absolute bottom-8 right-[10%] h-96 w-96 rounded-full bg-gold-soft/12 blur-[130px] animate-background-float-alt" />
 
@@ -126,13 +120,6 @@ export default function HeroSlider() {
               </h1>
               <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500">
                 {slide.eyebrow}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/4 px-3 py-1.5 text-[10px] font-black text-zinc-300">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                </span>
-                24시간 상담 가능
               </span>
             </div>
             <div
@@ -151,26 +138,17 @@ export default function HeroSlider() {
                     </span>
                   </span>
                 </h2>
-                <p className="mt-6 h-24 max-w-xl text-base font-medium leading-8 text-pretty text-zinc-100/95 [text-shadow:0_0_18px_rgba(222,176,67,0.14)] sm:h-28 sm:text-lg">
+                <p className="mt-6 h-24 max-w-xl text-base font-medium leading-8 text-zinc-100/95 [text-shadow:0_0_18px_rgba(222,176,67,0.14)] sm:h-28 sm:text-lg">
                   {slide.desc}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="mt-7 flex flex-wrap items-center gap-3">
-            <a
-              href={site.kakaoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-6 py-3.5 font-black text-black shadow-gold-sm transition hover:brightness-110"
-            >
-              <MessageCircle size={18} />
-              카카오톡 상담
-            </a>
+          <div className="mt-7 flex">
             <Link
               href={slide.secondaryHref}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/12 bg-white/5 px-6 py-3.5 font-bold text-zinc-100 backdrop-blur transition hover:border-gold/45 hover:text-white"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/12 bg-white/5 px-6 py-3.5 font-bold text-zinc-100 transition hover:border-gold/45 hover:text-white"
             >
               {slide.secondary}
               <ArrowRight size={18} />
@@ -191,7 +169,7 @@ export default function HeroSlider() {
                   <span
                     className={`h-2 rounded-full transition-all ${
                       i === index
-                        ? "w-9 bg-gold shadow-gold-sm"
+                        ? "w-9 bg-gold"
                         : "w-2 bg-white/25 group-hover:bg-white/50"
                     }`}
                   />
@@ -224,7 +202,7 @@ export default function HeroSlider() {
                 className="object-cover opacity-50 lg:opacity-95"
               />
               <div className="absolute inset-0 bg-linear-to-t from-black via-black/55 to-black/30 lg:from-black/85 lg:via-black/15 lg:to-transparent" />
-              <div className="absolute bottom-5 left-5 right-5 hidden rounded-[26px] border border-white/12 bg-black/55 p-5 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:block">
+              <div className="absolute bottom-5 left-5 right-5 hidden rounded-[26px] border border-gold/20 bg-black/58 p-5 backdrop-blur-xl lg:block">
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-gold">
                   {slide.cardEyebrow}
                 </p>
@@ -248,11 +226,10 @@ export default function HeroSlider() {
         </div>
       </div>
 
-      {/* 모바일은 스와이프+도트로 조작 — 화살표는 sm 이상에서만 */}
       <button
         type="button"
         onClick={prev}
-        className="absolute left-4 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/12 bg-black/40 text-white backdrop-blur transition hover:border-gold hover:bg-gold hover:text-black cursor-pointer sm:grid sm:left-8 lg:left-10"
+        className="absolute left-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/20 bg-black/35 text-white backdrop-blur transition hover:border-gold hover:text-gold cursor-pointer sm:left-8 lg:left-10"
         aria-label="이전 슬라이드"
       >
         <ChevronLeft />
@@ -260,7 +237,7 @@ export default function HeroSlider() {
       <button
         type="button"
         onClick={next}
-        className="absolute right-4 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/12 bg-black/40 text-white backdrop-blur transition hover:border-gold hover:bg-gold hover:text-black cursor-pointer sm:grid sm:right-8 lg:right-10"
+        className="absolute right-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/20 bg-black/35 text-white backdrop-blur transition hover:border-gold hover:text-gold cursor-pointer sm:right-8 lg:right-10"
         aria-label="다음 슬라이드"
       >
         <ChevronRight />

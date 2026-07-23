@@ -2,13 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
-  BadgeCheck,
   Clock,
   MessageCircle,
   ShieldCheck,
   Sparkles,
   Star,
-  Trophy,
 } from "lucide-react";
 import Container from "@/components/layout/Container";
 import HeroSlider from "@/components/home/HeroSlider";
@@ -378,17 +376,17 @@ export default async function Home() {
             />
           </Reveal>
           <Reveal delay={0.12}>
-            {/* 모바일·태블릿: 가로 스냅 스크롤(카드 5개 전부 동일 크기), 데스크톱: 5열 그리드 */}
-            <ol className="mt-10 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 scrollbar-none lg:grid lg:grid-cols-5 lg:gap-4 lg:overflow-visible lg:pb-0">
+            {/* 모바일: 세로 타임라인(한 화면에 5단계 전부), 데스크톱: 5열 그리드 */}
+            <ol className="mt-10 grid gap-2.5 lg:grid-cols-5 lg:gap-4">
               {process.map(({ title, image }, i) => (
                 <li
                   key={title}
-                  className="relative flex w-[44vw] shrink-0 snap-start flex-col items-center gap-3 rounded-3xl border border-gold/12 bg-white/3.5 p-5 pt-6 text-center transition hover:border-gold/30 sm:w-[30vw] lg:w-auto lg:shrink"
+                  className="relative flex items-center gap-4 rounded-3xl border border-gold/12 bg-white/3.5 p-4 transition hover:border-gold/30 lg:flex-col lg:items-center lg:gap-3 lg:p-5 lg:pt-6 lg:text-center"
                 >
-                  <span className="absolute left-4 top-4 text-[11px] font-black tracking-[0.18em] text-gold/80">
+                  <span className="text-[11px] font-black tracking-[0.18em] text-gold/80 lg:absolute lg:left-4 lg:top-4">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="flex h-16 w-16 items-center justify-center sm:h-20 sm:w-20">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center lg:h-20 lg:w-20">
                     <Image
                       src={image}
                       alt=""
@@ -397,7 +395,7 @@ export default async function Home() {
                       className="h-full w-full object-contain"
                     />
                   </span>
-                  <b className="text-base text-white sm:text-lg">{title}</b>
+                  <b className="text-base text-white lg:text-lg">{title}</b>
                 </li>
               ))}
             </ol>
@@ -502,52 +500,6 @@ export default async function Home() {
               </Link>
             </div>
           </Reveal>
-        </Container>
-      </section>
-
-      <section className="py-20">
-        <Container>
-          <Reveal>
-            <SectionTitle
-              eyebrow="why xyz"
-              title="XYZ를 이용해야 하는 이유"
-              desc="롤 대리·롤 듀오는 결국 계정을 믿고 맡기는 일입니다. XYZ는 안전, 검증, 투명함 세 가지 원칙으로 운영합니다."
-            />
-          </Reveal>
-          <div className="grid gap-5 lg:grid-cols-3">
-            {[
-              [
-                ShieldCheck,
-                "안전 중심",
-                "무리한 속도보다 계정 상태와 일정에 맞춘 안정적인 진행을 우선합니다.",
-              ],
-              [
-                Trophy,
-                "검증 기사",
-                "상위 티어 검증 기사 중에서 서비스별로 가장 적합한 기사를 배정합니다.",
-              ],
-              [
-                BadgeCheck,
-                "투명한 상담",
-                "목표와 조건을 확인한 뒤 진행 가능 여부와 견적을 명확하게 안내합니다.",
-              ],
-            ].map(([Icon, title, desc]) => {
-              const I = Icon as typeof ShieldCheck;
-              return (
-                <Reveal key={String(title)} className="h-full">
-                  <div className="card-premium h-full rounded-4xl p-8">
-                    <I className="text-gold" size={36} />
-                    <h3 className="mt-6 text-2xl font-black text-white">
-                      {String(title)}
-                    </h3>
-                    <p className="mt-3 leading-7 text-zinc-400">
-                      {String(desc)}
-                    </p>
-                  </div>
-                </Reveal>
-              );
-            })}
-          </div>
         </Container>
       </section>
 

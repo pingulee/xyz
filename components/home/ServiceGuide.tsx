@@ -2,26 +2,17 @@ import Link from "next/link";
 import {
   ArrowRight,
   BadgeCheck,
-  MessageCircle,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
-import { site } from "@/lib/site";
 
 const safetyChecks = [
   "구간별 가격과 승률 보장 기준을 공개하는지",
   "실제 기사의 티어와 최근 전적을 확인할 수 있는지",
   "작업 기록이 연결된 후기가 꾸준히 쌓여 있는지",
   "진행 중에도 상담 채널로 소통할 수 있는지",
-];
-
-const progressSteps = [
-  ["01", "계정 분석", "현재 티어와 MMR 확인"],
-  ["02", "전담 배정", "조건에 맞는 기사 1:1 배정"],
-  ["03", "상황 공유", "카카오톡으로 진행 상황 안내"],
-  ["04", "완료 기록", "승률과 게임별 KDA 확인"],
 ];
 
 export default function ServiceGuide() {
@@ -226,55 +217,6 @@ export default function ServiceGuide() {
             </article>
           </Reveal>
 
-          <Reveal className="lg:col-span-12" delay={0.12}>
-            <article className="grid gap-8 rounded-4xl border border-gold/12 bg-[#15120d] p-6 sm:p-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:gap-12 lg:p-10">
-              <div>
-                <span className="text-[11px] font-black uppercase tracking-[0.22em] text-gold">
-                  03 · How it works
-                </span>
-                <h3 className="mt-4 text-2xl font-black tracking-[-0.035em] text-white sm:text-3xl">
-                  배정부터 완료까지,
-                  <br />
-                  진행 기록을 남깁니다
-                </h3>
-                <p className="mt-4 max-w-xl text-sm leading-7 text-zinc-400 sm:text-base">
-                  상담에서 현재 티어와 목표, 선호 라인, 희망 시간대를 확인한 뒤
-                  조건에 맞는 기사를 배정합니다. 진행 중에는 상황을 공유하고,
-                  완료 후에는 승률과 게임별 KDA를 확인할 수 있습니다.
-                </p>
-                <a
-                  href={site.kakaoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group mt-6 inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/8 px-5 py-3 text-sm font-black text-gold transition hover:border-gold/50 hover:bg-gold/12"
-                >
-                  <MessageCircle size={17} aria-hidden="true" />
-                  현재 티어 상담하기
-                  <ArrowRight
-                    size={15}
-                    className="transition-transform group-hover:translate-x-1"
-                  />
-                </a>
-              </div>
-
-              <ol className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                {progressSteps.map(([number, title, desc]) => (
-                  <li
-                    key={number}
-                    className="min-h-36 rounded-[22px] border border-white/7 bg-black/22 p-5"
-                  >
-                    <span className="text-xs font-black tracking-[0.18em] text-gold">
-                      {number}
-                    </span>
-                    <h4 className="mt-6 font-black text-white">{title}</h4>
-                    <p className="mt-2 text-sm leading-6 text-zinc-500">
-                      {desc}
-                    </p>
-                  </li>
-                ))}
-              </ol>
-            </article>
-          </Reveal>
         </div>
       </Container>
     </section>
