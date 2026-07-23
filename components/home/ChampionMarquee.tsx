@@ -48,7 +48,7 @@ export default async function ChampionMarquee() {
                 loading="lazy"
                 sizes="48px"
                 draggable={false}
-                className="aspect-square w-full object-cover opacity-55 grayscale-[0.35]"
+                className="aspect-square w-full object-cover opacity-90"
               />
             </span>
           </li>
