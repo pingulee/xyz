@@ -12,9 +12,7 @@ import {
 } from "lucide-react";
 import Container from "@/components/layout/Container";
 import HeroSlider from "@/components/home/HeroSlider";
-import HomeFaq, {
-  type HomeFaqCategory,
-} from "@/components/home/HomeFaq";
+import HomeFaq, { type HomeFaqCategory } from "@/components/home/HomeFaq";
 import ServiceGuide from "@/components/home/ServiceGuide";
 import TierBand from "@/components/home/TierBand";
 import ChampionMarquee from "@/components/home/ChampionMarquee";
@@ -316,11 +314,26 @@ const howToJsonLd = {
   description:
     "상담 접수부터 작업 완료까지 XYZ의 롤 대리·롤 듀오 서비스 진행 5단계입니다.",
   step: [
-    { name: "상담 접수", text: "카카오톡으로 현재 티어, 목표 티어, 희망 일정을 알려주세요." },
-    { name: "계정 분석", text: "현재 티어와 MMR을 확인해 최적의 진행 방식을 정합니다." },
-    { name: "기사 배정", text: "조건에 맞는 상위 티어 검증 기사를 1:1로 배정합니다." },
-    { name: "작업 진행", text: "100% 수동으로 진행하며 카카오톡으로 실시간 상황을 공유합니다." },
-    { name: "작업 완료", text: "목표 달성 확인 후 승률과 게임별 KDA 기록을 제공합니다." },
+    {
+      name: "상담 접수",
+      text: "카카오톡으로 현재 티어, 목표 티어, 희망 일정을 알려주세요.",
+    },
+    {
+      name: "계정 분석",
+      text: "현재 티어와 MMR을 확인해 최적의 진행 방식을 정합니다.",
+    },
+    {
+      name: "기사 배정",
+      text: "조건에 맞는 상위 티어 검증 기사를 1:1로 배정합니다.",
+    },
+    {
+      name: "작업 진행",
+      text: "100% 수동으로 진행하며 카카오톡으로 실시간 상황을 공유합니다.",
+    },
+    {
+      name: "작업 완료",
+      text: "목표 달성 확인 후 승률과 게임별 KDA 기록을 제공합니다.",
+    },
   ].map((step, i) => ({ "@type": "HowToStep", position: i + 1, ...step })),
 };
 
@@ -359,7 +372,11 @@ export default async function Home() {
                   }`}
                 >
                   <dd className="flex items-center gap-2.5 text-2xl font-black tracking-tight text-gold sm:text-3xl">
-                    <Icon size={22} aria-hidden="true" className="text-gold/70" />
+                    <Icon
+                      size={22}
+                      aria-hidden="true"
+                      className="text-gold/70"
+                    />
                     {value}
                   </dd>
                   <dt className="text-sm font-bold text-zinc-400">{label}</dt>
@@ -455,7 +472,7 @@ export default async function Home() {
             <SectionTitle
               eyebrow="champions"
               title="원하는 챔피언으로 진행"
-              desc="모든 챔피언 대리·듀오가 가능합니다. 선호 챔피언과 라인을 상담에서 알려주세요."
+              desc="모든 챔피언으로 대리·듀오가 가능합니다. 선호 챔피언과 라인을 상담에서 알려주세요."
             />
           </Reveal>
           <Reveal delay={0.1}>
