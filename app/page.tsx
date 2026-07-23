@@ -286,6 +286,22 @@ const faqJsonLd = {
   })),
 };
 
+// AEO: 진행 과정을 답변 엔진이 단계형으로 추출할 수 있게 HowTo로 마크업
+const howToJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "롤 대리 · 롤 듀오 진행 과정",
+  description:
+    "상담 접수부터 작업 완료까지 XYZ의 롤 대리·롤 듀오 서비스 진행 5단계입니다.",
+  step: [
+    { name: "상담 접수", text: "카카오톡으로 현재 티어, 목표 티어, 희망 일정을 알려주세요." },
+    { name: "계정 분석", text: "현재 티어와 MMR을 확인해 최적의 진행 방식을 정합니다." },
+    { name: "기사 배정", text: "조건에 맞는 상위 티어 검증 기사를 1:1로 배정합니다." },
+    { name: "작업 진행", text: "100% 수동으로 진행하며 카카오톡으로 실시간 상황을 공유합니다." },
+    { name: "작업 완료", text: "목표 달성 확인 후 승률과 게임별 KDA 기록을 제공합니다." },
+  ].map((step, i) => ({ "@type": "HowToStep", position: i + 1, ...step })),
+};
+
 export default async function Home() {
   let boosterList: Booster[] = [];
   try {
@@ -300,6 +316,10 @@ export default async function Home() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
       />
       <HeroSlider />
 
