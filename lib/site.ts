@@ -24,7 +24,8 @@ export const services = [
     eyebrow: "boosting",
     description:
       "현재 티어와 목표 티어를 기준으로 검증된 기사가 안정적으로 진행합니다.",
-    image: "/images/slider/01.webp",
+    image: "/images/service/boosting.webp",
+    imageAlt: "롤 대리 기사 배정과 티어 상승 과정을 표현한 서비스 이미지",
   },
   {
     title: "롤 듀오",
@@ -32,14 +33,16 @@ export const services = [
     eyebrow: "duo queue",
     description:
       "상위 티어 기사와 함께 플레이하며 승률과 피드백을 동시에 챙깁니다.",
-    image: "/images/slider/02.webp",
+    image: "/images/service/duo.webp",
+    imageAlt: "두 플레이어가 함께 목표를 향해 진행하는 롤 듀오 서비스 이미지",
   },
   {
     title: "롤 계정",
     href: "/account",
     eyebrow: "account",
     description: "원하는 티어, 챔피언, 일정 조건에 맞춘 계정을 구해드립니다.",
-    image: "/images/slider/03.webp",
+    image: "/images/service/account.webp",
+    imageAlt: "티어와 보유 조건별 롤 계정을 비교하고 검수하는 서비스 이미지",
   },
 ];
 

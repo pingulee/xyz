@@ -6,17 +6,22 @@ import Reveal from "@/components/ui/Reveal";
 // 대리 vs 듀오 비교 (서비스 소개 섹션과 겹치지 않도록 "결정용 비교표" 포맷)
 type Cell = string | boolean;
 const rows: { label: string; boost: Cell; duo: Cell }[] = [
-  { label: "진행 방식", boost: "기사가 계정으로 대신 진행", duo: "함께 파티로 직접 플레이" },
+  {
+    label: "진행 방식",
+    boost: "기사님이 고객님 계정으로 대신 진행",
+    duo: "기사님과 함께 파티로 직접 플레이",
+  },
   { label: "계정 공유", boost: "필요", duo: false },
   { label: "실시간 피드백", boost: false, duo: true },
   { label: "추천 대상", boost: "빠른 티어 상승", duo: "실력·티어 동시" },
-  { label: "가격 시작", boost: "시간제 12,000원~", duo: "시간제 14,000원~" },
 ];
 
 function CellView({ value, accent }: { value: Cell; accent?: boolean }) {
   if (value === true)
     return (
-      <span className={`inline-flex items-center gap-1.5 font-black ${accent ? "text-gold" : "text-emerald-400"}`}>
+      <span
+        className={`inline-flex items-center gap-1.5 font-black ${accent ? "text-gold" : "text-emerald-400"}`}
+      >
         <Check size={16} aria-hidden="true" /> 가능
       </span>
     );
@@ -26,7 +31,15 @@ function CellView({ value, accent }: { value: Cell; accent?: boolean }) {
         <Minus size={16} aria-hidden="true" /> 없음
       </span>
     );
-  return <span className={accent ? "font-bold text-white" : "font-semibold text-zinc-300"}>{value}</span>;
+  return (
+    <span
+      className={
+        accent ? "font-bold text-white" : "font-semibold text-zinc-300"
+      }
+    >
+      {value}
+    </span>
+  );
 }
 
 export default function ServiceGuide() {
@@ -53,10 +66,12 @@ export default function ServiceGuide() {
               className="mt-5 text-3xl font-black tracking-tighter text-balance text-white sm:text-4xl lg:text-5xl"
             >
               롤 대리 vs 롤 듀오,
-              <br className="sm:hidden" /> <span className="gold-text">한눈에 비교</span>
+              <br className="sm:hidden" />{" "}
+              <span className="gold-text">한눈에 비교</span>
             </h2>
             <p className="mt-4 text-base leading-8 text-pretty text-zinc-300 sm:text-lg">
-              계정을 맡길지 함께 플레이할지, 아래 비교로 나에게 맞는 방식을 골라보세요.
+              계정을 맡길지 함께 플레이할지, 아래 비교로 나에게 맞는 방식을
+              골라보세요.
             </p>
           </div>
         </Reveal>
@@ -105,14 +120,20 @@ export default function ServiceGuide() {
               className="group inline-flex items-center gap-2 rounded-full border border-gold/25 bg-gold/8 px-6 py-3 text-sm font-black text-gold transition hover:border-gold/50 hover:bg-gold/12"
             >
               롤 대리 가격 보기
-              <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+              <ArrowRight
+                size={15}
+                className="transition-transform group-hover:translate-x-1"
+              />
             </Link>
             <Link
               href="/duo"
               className="group inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-6 py-3 text-sm font-black text-white transition hover:border-gold/40 hover:text-gold"
             >
               롤 듀오 가격 보기
-              <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+              <ArrowRight
+                size={15}
+                className="transition-transform group-hover:translate-x-1"
+              />
             </Link>
           </div>
         </Reveal>

@@ -8,12 +8,14 @@ export default function ServiceCard({
   description,
   href,
   image,
+  imageAlt,
 }: {
   title: string;
   eyebrow: string;
   description: string;
   href: string;
   image: string;
+  imageAlt?: string;
 }) {
   return (
     <Link
@@ -27,9 +29,9 @@ export default function ServiceCard({
       <div className="relative mb-7 aspect-16/10 overflow-hidden rounded-3xl border border-gold/10 bg-void">
         <Image
           src={image}
-          alt={`${title} 서비스 이미지`}
+          alt={imageAlt ?? `${title} 서비스 이미지`}
           fill
-          sizes="(max-width: 768px) 100vw, 33vw"
+          sizes="(max-width: 639px) calc(100vw - 88px), (max-width: 1023px) calc(100vw - 96px), 380px"
           className="object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100"
         />
         <div className="absolute inset-0 bg-linear-to-t from-black/65 via-transparent to-transparent" />

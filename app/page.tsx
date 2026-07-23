@@ -387,7 +387,7 @@ export default async function Home() {
         </Container>
       </section>
 
-      <section className="py-20">
+      <section id="services" className="scroll-mt-24 py-20">
         <Container>
           <Reveal>
             <SectionTitle
