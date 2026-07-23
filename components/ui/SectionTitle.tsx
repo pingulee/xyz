@@ -19,10 +19,10 @@ export default function SectionTitle({
         {eyebrow}
       </span>
       {/* 히어로 h1(최대 6xl)보다 한 단계 아래로 유지해 타이포 계층 확보 */}
-      <Heading className="text-3xl font-black tracking-tighter text-white sm:text-4xl lg:text-5xl">
+      <Heading className="text-3xl font-black tracking-tighter text-balance text-white sm:text-4xl lg:text-5xl">
         {title}
       </Heading>
-      {desc && <p className="mt-4 text-base leading-8 text-zinc-400 sm:text-lg">{desc}</p>}
+      {desc && <p className="mt-4 text-base leading-8 text-pretty text-zinc-400 sm:text-lg">{desc}</p>}
     </div>
   );
 }

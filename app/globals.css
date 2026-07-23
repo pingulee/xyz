@@ -49,6 +49,9 @@ body {
   font-family: var(--font-pretendard), sans-serif;
   color: var(--foreground);
   background: var(--background);
+  /* 한글 단어 단위 줄바꿈 — 어절 중간에서 끊기는 어색한 개행 방지 */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 a,
 button,

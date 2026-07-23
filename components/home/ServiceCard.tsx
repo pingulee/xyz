@@ -18,7 +18,7 @@ export default function ServiceCard({
   return (
     <Link
       href={href}
-      className="group card-premium relative block overflow-hidden rounded-4xl p-6 transition duration-300 hover:border-gold/45"
+      className="group card-premium relative flex h-full flex-col overflow-hidden rounded-4xl p-6 transition duration-300 hover:border-gold/45"
     >
       <div className="absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100">
         <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-gold/10 blur-3xl" />

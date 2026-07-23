@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowDown,
   ArrowRight,
   BadgeCheck,
   Clock,
@@ -304,27 +303,27 @@ export default async function Home() {
       />
       <HeroSlider />
 
-      <section className="border-y border-gold/10 bg-black/24 py-10">
+      <section className="border-y border-gold/10 bg-black/24 py-9 sm:py-10">
         <Container>
           <Reveal>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {stats.map(({ value, label, icon: Icon }) => (
+            <dl className="grid grid-cols-2 gap-y-8 sm:grid-cols-4">
+              {stats.map(({ value, label, icon: Icon }, i) => (
                 <div
                   key={value}
-                  className="rounded-3xl border border-gold/12 bg-white/3.5 p-5 text-center"
+                  className={`relative flex flex-col items-center gap-1.5 text-center ${
+                    i > 0
+                      ? "sm:before:absolute sm:before:left-0 sm:before:top-1/2 sm:before:h-10 sm:before:w-px sm:before:-translate-y-1/2 sm:before:bg-white/8"
+                      : ""
+                  }`}
                 >
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gold/10 text-gold">
-                    <Icon size={20} />
-                  </div>
-                  <b className="text-2xl font-black text-gold sm:text-3xl">
+                  <dd className="flex items-center gap-2.5 text-2xl font-black tracking-tight text-gold sm:text-3xl">
+                    <Icon size={22} aria-hidden="true" className="text-gold/70" />
                     {value}
-                  </b>
-                  <p className="mt-1 text-sm font-bold text-zinc-400">
-                    {label}
-                  </p>
+                  </dd>
+                  <dt className="text-sm font-bold text-zinc-400">{label}</dt>
                 </div>
               ))}
-            </div>
+            </dl>
           </Reveal>
         </Container>
       </section>
@@ -338,9 +337,9 @@ export default async function Home() {
               desc="대리, 듀오, 계정까지 목적에 맞는 서비스를 빠르게 선택할 수 있습니다."
             />
           </Reveal>
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid items-stretch gap-6 lg:grid-cols-3">
             {services.map((service, i) => (
-              <Reveal key={service.href} delay={i * 0.08}>
+              <Reveal key={service.href} delay={i * 0.08} className="h-full">
                 <ServiceCard {...service} />
               </Reveal>
             ))}
@@ -359,42 +358,35 @@ export default async function Home() {
             />
           </Reveal>
           <Reveal delay={0.12}>
-            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
+            <ol className="relative mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
+              {/* 데스크톱 단계 연결선 */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-[10%] right-[10%] top-14 hidden h-px bg-linear-to-r from-transparent via-gold/25 to-transparent lg:block"
+              />
               {process.map(({ title, image }, i) => (
-                <div
+                <li
                   key={title}
-                  className="flex flex-col items-center gap-3 sm:flex-row"
+                  className={`relative flex flex-col items-center gap-3 rounded-3xl border border-gold/12 bg-white/3.5 p-5 pt-6 text-center transition hover:border-gold/30 ${
+                    i === process.length - 1 ? "col-span-2 sm:col-span-1" : ""
+                  }`}
                 >
-                  <div className="flex min-w-45 flex-col items-center gap-3 rounded-3xl border border-gold/15 bg-white/3.5 p-5 text-center">
-                    <div className="relative">
-                      <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[22px] bg-transparent">
-                        <Image
-                          src={image}
-                          alt={`${title} 아이콘`}
-                          width={96}
-                          height={96}
-                          className="h-20 w-20 object-contain"
-                        />
-                      </div>
-                      <span className="absolute -right-1 -top-1 rounded-full border border-black/10 bg-black px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-gold shadow-lg">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                    </div>
-                    <b className="text-lg text-white">{title}</b>
-                  </div>
-                  {i < process.length - 1 && (
-                    <div className="flex items-center text-gold sm:hidden">
-                      <ArrowDown size={32} strokeWidth={3} />
-                    </div>
-                  )}
-                  {i < process.length - 1 && (
-                    <div className="hidden items-center text-gold sm:flex">
-                      <ArrowRight size={32} strokeWidth={3} />
-                    </div>
-                  )}
-                </div>
+                  <span className="absolute left-4 top-4 text-[11px] font-black tracking-[0.18em] text-gold/80">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="flex h-16 w-16 items-center justify-center sm:h-20 sm:w-20">
+                    <Image
+                      src={image}
+                      alt=""
+                      width={96}
+                      height={96}
+                      className="h-full w-full object-contain"
+                    />
+                  </span>
+                  <b className="text-base text-white sm:text-lg">{title}</b>
+                </li>
               ))}
-            </div>
+            </ol>
           </Reveal>
         </Container>
       </section>
@@ -410,9 +402,9 @@ export default async function Home() {
               desc="XYZ에서 가장 인기있는 기사 3명을 소개합니다."
             />
           </Reveal>
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid items-stretch gap-6 lg:grid-cols-3">
             {boosterList.map((booster, i) => (
-              <Reveal key={booster.name} delay={i * 0.08}>
+              <Reveal key={booster.name} delay={i * 0.08} className="h-full">
                 <BoosterCard booster={booster} placement={i + 1} />
               </Reveal>
             ))}
@@ -528,8 +520,8 @@ export default async function Home() {
             ].map(([Icon, title, desc]) => {
               const I = Icon as typeof ShieldCheck;
               return (
-                <Reveal key={String(title)}>
-                  <div className="card-premium rounded-4xl p-8">
+                <Reveal key={String(title)} className="h-full">
+                  <div className="card-premium h-full rounded-4xl p-8">
                     <I className="text-gold" size={36} />
                     <h3 className="mt-6 text-2xl font-black text-white">
                       {String(title)}
@@ -581,7 +573,7 @@ export default async function Home() {
                 className="absolute right-8 top-8 opacity-30"
                 size={120}
               />
-              <h2 className="max-w-3xl text-3xl font-black tracking-tighter sm:text-5xl">
+              <h2 className="max-w-3xl text-3xl font-black tracking-tighter text-balance sm:text-5xl">
                 목표 티어까지, 지금 XYZ에서 상담받으세요
               </h2>
               <p className="mt-5 max-w-2xl text-lg font-semibold text-black/70">
