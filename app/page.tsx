@@ -378,18 +378,12 @@ export default async function Home() {
             />
           </Reveal>
           <Reveal delay={0.12}>
-            <ol className="relative mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
-              {/* 데스크톱 단계 연결선 */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute left-[10%] right-[10%] top-14 hidden h-px bg-linear-to-r from-transparent via-gold/25 to-transparent lg:block"
-              />
+            {/* 모바일·태블릿: 가로 스냅 스크롤(카드 5개 전부 동일 크기), 데스크톱: 5열 그리드 */}
+            <ol className="mt-10 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 scrollbar-none lg:grid lg:grid-cols-5 lg:gap-4 lg:overflow-visible lg:pb-0">
               {process.map(({ title, image }, i) => (
                 <li
                   key={title}
-                  className={`relative flex flex-col items-center gap-3 rounded-3xl border border-gold/12 bg-white/3.5 p-5 pt-6 text-center transition hover:border-gold/30 ${
-                    i === process.length - 1 ? "col-span-2 sm:col-span-1" : ""
-                  }`}
+                  className="relative flex w-[44vw] shrink-0 snap-start flex-col items-center gap-3 rounded-3xl border border-gold/12 bg-white/3.5 p-5 pt-6 text-center transition hover:border-gold/30 sm:w-[30vw] lg:w-auto lg:shrink"
                 >
                   <span className="absolute left-4 top-4 text-[11px] font-black tracking-[0.18em] text-gold/80">
                     {String(i + 1).padStart(2, "0")}
