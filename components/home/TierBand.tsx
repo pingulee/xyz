@@ -40,7 +40,7 @@ function TierNode({
 export default function TierBand() {
   return (
     <div>
-      <div className="relative mx-auto flex max-w-md items-center justify-center">
+      <div className="relative mx-auto flex max-w-lg items-center justify-center">
         {/* 뒤: 언랭 모서리 → 그랜드마스터 모서리 진행 화살표 (박스 전폭 inset) */}
         <div
           aria-hidden="true"
@@ -64,7 +64,7 @@ export default function TierBand() {
           <TierNode
             file="9-grandmaster"
             label="그랜드마스터"
-            boxClass="border-red-500/50 bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.25)] ring-1 ring-red-500/25"
+            boxClass="border-red-500/50 bg-red-500/10 ring-1 ring-red-500/25"
             labelClass="text-red-500"
           />
         </div>
@@ -73,21 +73,21 @@ export default function TierBand() {
         <div className="relative z-10 h-60 w-60 sm:h-80 sm:w-80">
           <div
             aria-hidden="true"
-            className="absolute inset-6 rounded-full bg-gold/20 blur-3xl"
+            className="absolute inset-20 rounded-full bg-gold/10 blur-2xl"
           />
           <Image
             src="/images/gotoc.png"
             alt="XYZ 챌린저 대리 기사"
             fill
             sizes="(max-width: 639px) 240px, 320px"
-            className="relative object-contain drop-shadow-[0_10px_40px_rgba(222,176,67,0.35)]"
+            className="relative object-contain drop-shadow-[0_10px_40px_rgba(222,176,67,0.35)] transition-transform duration-300 will-change-transform hover:scale-105"
           />
         </div>
       </div>
 
-      <p className="mt-6 text-center text-base font-normal tracking-tight text-balance text-white sm:text-lg">
+      <p className="mt-6 text-center text-sm font-normal tracking-tight text-balance text-white sm:text-base">
         언랭부터 그랜드마스터까지{" "}
-        <span className="gold-text font-bold">단 3주</span> 소요!
+        <span className="gold-text font-bold">단 3주</span> 소요
       </p>
     </div>
   );
