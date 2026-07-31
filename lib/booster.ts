@@ -198,6 +198,22 @@ async function getRecordSummariesByBooster(): Promise<
   return result;
 }
 
+/**
+ * 사이트맵 전용 경량 조회. slug 파생에 이름만 필요하므로 리뷰 집계 JOIN·전적
+ * 요약·스키마 보정 DDL을 모두 건너뛴다. getBoosterList를 쓰면 5초를 넘겨
+ * 검색엔진 페처가 사이트맵을 포기한다(GSC "가져올 수 없음").
+ * name/active/sort_order는 기본 컬럼이라 DDL 없이 안전하고
+ * idx_booster_active_sort 인덱스를 그대로 탄다.
+ */
+export async function getBoosterSitemapEntries(): Promise<
+  Array<{ name: string }>
+> {
+  const [rows] = await getPool().execute<RowDataPacket[]>(
+    `SELECT name FROM booster WHERE active = 1 ORDER BY sort_order ASC, id ASC`,
+  );
+  return rows.map((row) => ({ name: String(row.name) }));
+}
+
 export async function getBoosterList(
   activeOnly = true,
   sortByReview = false,

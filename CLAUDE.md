@@ -26,7 +26,10 @@
 - **도메인은 IDN**: `https://롤대리.xyz` → punycode `xn--vk1b65hf2a.xyz`. **`site.url`은 이미 punycode로 정규화된 값**(`lib/site.ts`의 `SITE_ORIGIN = new URL(...).origin`). 한글 원문 URL을 코드에 다시 하드코딩하지 말 것 — robots.txt/sitemap.xml/JSON-LD는 문자열을 그대로 출력하므로(Next가 인코딩 안 함) 호스트가 canonical과 어긋나 사이트맵 전량 거부됨.
 - **서비스 카드 이미지**: `/images/slider/01~03.webp` 재사용 (01=대리, 02=듀오, 03=계정). `boosting/duo/account.png`는 **존재하지 않음** — 새 경로 추가 시 실제 파일 먼저 배치할 것 (없으면 next/image가 400).
 - **DB 접근 페이지는 `export const dynamic = "force-dynamic"`** (booster, review, 상세, admin, login).
-  - **`sitemap.ts`는 예외 — `export const revalidate = 3600`(ISR).** force-dynamic이면 크롤러 요청마다 `ensureSchema`(DDL) + 리뷰 수천 행 + 부스터 집계 JOIN을 재실행해 응답이 늦어지고 GSC "가져올 수 없음"(페처 타임아웃)이 난다. DB 조회는 `withFallback`(5초 상한, 실패 시 빈 배열)으로 감싸 **DB가 죽어도 정적 URL은 반드시 응답**하게 유지할 것.
+  - **사이트맵은 예외 — 용도별 3분할.** `app/sitemap.ts`(정적 7개, **DB 접근 0** → 빌드 시 프리렌더, 절대 안 죽음), `app/booster/sitemap.ts`, `app/review/sitemap.ts`. 합치면 DB 조회 하나가 늦을 때 정적 URL까지 죽고, GSC가 사이트맵 단위로만 상태를 보고해 원인 특정이 불가능하다. `app/robots.ts`는 `sitemap` 배열로 3줄 노출(복수 `Sitemap:` 지시자는 규격 허용, 인덱스 파일 불필요).
+  - 동적 사이트맵은 `export const revalidate = 3600`(ISR). **리터럴이어야 함** — 상수 import 시 "Invalid segment configuration export"로 빌드 실패.
+  - DB 조회는 `lib/sitemap.ts`의 `withFallback`(5초 상한, 실패 시 빈 배열)으로 감쌀 것. 에러 없이 매달리는 조회는 try/catch로 못 잡는다.
+  - **사이트맵용 쿼리는 전용 경량 함수로.** `getBoosterList`는 DDL 보정 + 리뷰 집계 JOIN + 전적 요약까지 돌아 5초를 넘겼다(실측). slug엔 이름만 필요 → `getBoosterSitemapEntries`. 후기는 `getSitemapReviewEntries`(5000건 상한).
 - **인증**: `lib/adminSession.ts`(관리자), `lib/boosterSession.ts`(기사) — 쿠키 기반. `SESSION_COOKIE`, `BOOSTER_SESSION_COOKIE`.
 - 부스터 slug는 저장 안 함 — `getBoosterSlug(name)`으로 파생 (`lib/booster-model.ts`).
 
