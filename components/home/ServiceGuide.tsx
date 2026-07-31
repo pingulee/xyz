@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Check, Minus } from "lucide-react";
+import { ArrowRight, Check, X } from "lucide-react";
 import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
 
@@ -11,35 +11,33 @@ const rows: { label: string; boost: Cell; duo: Cell }[] = [
     boost: "기사님이 고객님 계정으로 대신 진행",
     duo: "기사님과 함께 파티로 직접 플레이",
   },
-  { label: "계정 공유", boost: "필요", duo: false },
+  { label: "계정 공유", boost: true, duo: false },
   { label: "실시간 피드백", boost: false, duo: true },
   { label: "추천 대상", boost: "빠른 티어 상승", duo: "실력·티어 동시" },
 ];
 
-function CellView({ value, accent }: { value: Cell; accent?: boolean }) {
+function CellView({ value }: { value: Cell }) {
   if (value === true)
     return (
       <span
-        className={`inline-flex items-center gap-1.5 font-black ${accent ? "text-gold" : "text-emerald-400"}`}
+        role="img"
+        aria-label="가능"
+        className="inline-flex justify-center text-emerald-500"
       >
-        <Check size={16} aria-hidden="true" /> 가능
+        <Check size={20} strokeWidth={3} aria-hidden="true" />
       </span>
     );
   if (value === false)
     return (
-      <span className="inline-flex items-center gap-1.5 font-bold text-zinc-600">
-        <Minus size={16} aria-hidden="true" /> 없음
+      <span
+        role="img"
+        aria-label="불가"
+        className="inline-flex justify-center text-red-500"
+      >
+        <X size={20} strokeWidth={3} aria-hidden="true" />
       </span>
     );
-  return (
-    <span
-      className={
-        accent ? "font-bold text-white" : "font-semibold text-zinc-300"
-      }
-    >
-      {value}
-    </span>
-  );
+  return <span className="font-semibold text-zinc-300">{value}</span>;
 }
 
 export default function ServiceGuide() {
@@ -77,13 +75,13 @@ export default function ServiceGuide() {
         </Reveal>
 
         <Reveal delay={0.08}>
-          <div className="mx-auto mt-12 max-w-3xl overflow-hidden rounded-4xl border border-white/8 bg-white/[0.02]">
+          <div className="relative mx-auto mt-12 max-w-3xl overflow-hidden rounded-4xl border border-white/8 bg-white/2">
             {/* 헤더 행 */}
             <div className="grid grid-cols-[1fr_1fr_1fr] border-b border-white/8 bg-black/25">
               <div className="px-4 py-4 text-xs font-black uppercase tracking-[0.16em] text-zinc-500 sm:px-6">
                 항목
               </div>
-              <div className="border-l border-white/8 bg-gold/8 px-4 py-4 text-center text-sm font-black text-gold sm:px-6 sm:text-base">
+              <div className="border-l border-white/8 px-4 py-4 text-center text-sm font-black text-white sm:px-6 sm:text-base">
                 롤 대리
               </div>
               <div className="border-l border-white/8 px-4 py-4 text-center text-sm font-black text-white sm:px-6 sm:text-base">
@@ -102,14 +100,24 @@ export default function ServiceGuide() {
                 <div className="px-4 py-4 text-xs font-black text-zinc-400 sm:px-6 sm:text-sm">
                   {row.label}
                 </div>
-                <div className="border-l border-white/8 bg-gold/[0.04] px-4 py-4 text-center text-xs sm:px-6 sm:text-sm">
-                  <CellView value={row.boost} accent />
+                <div className="border-l border-white/8 px-4 py-4 text-center text-xs sm:px-6 sm:text-sm">
+                  <CellView value={row.boost} />
                 </div>
                 <div className="border-l border-white/8 px-4 py-4 text-center text-xs sm:px-6 sm:text-sm">
                   <CellView value={row.duo} />
                 </div>
               </div>
             ))}
+
+            {/* 열 hover 하이라이트 (대리·듀오 열 위 오버레이) — 마우스 올린 열만 강조 */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-y-0 left-1/3 w-1/3 transition-colors hover:bg-white/4"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-y-0 left-2/3 w-1/3 transition-colors hover:bg-white/4"
+            />
           </div>
         </Reveal>
 
@@ -117,7 +125,7 @@ export default function ServiceGuide() {
           <div className="mx-auto mt-8 flex max-w-3xl flex-wrap justify-center gap-3">
             <Link
               href="/boosting"
-              className="group inline-flex items-center gap-2 rounded-full border border-gold/25 bg-gold/8 px-6 py-3 text-sm font-black text-gold transition hover:border-gold/50 hover:bg-gold/12"
+              className="group inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-6 py-3 text-sm font-black text-white transition hover:border-gold/40 hover:text-gold"
             >
               롤 대리 가격 보기
               <ArrowRight
