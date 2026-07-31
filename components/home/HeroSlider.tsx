@@ -111,8 +111,8 @@ export default function HeroSlider() {
       onMouseLeave={() => setPaused(false)}
     >
       <div className="absolute inset-0 bg-black/30" />
-      <div className="absolute left-[12%] top-20 h-72 w-72 rounded-full bg-gold/18 blur-[110px] animate-background-float" />
-      <div className="absolute bottom-8 right-[10%] h-96 w-96 rounded-full bg-gold-soft/12 blur-[130px] animate-background-float-alt" />
+      <div className="absolute left-[12%] top-20 h-72 w-72 rounded-full bg-gold/18 blur-[110px]" />
+      <div className="absolute bottom-8 right-[10%] h-96 w-96 rounded-full bg-gold-soft/12 blur-[130px]" />
 
       <div className="relative mx-auto grid h-full max-w-7xl items-center gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:gap-10 lg:px-8 lg:py-14">
         <div className="relative z-10 flex h-full max-w-3xl flex-col justify-center">
@@ -132,8 +132,12 @@ export default function HeroSlider() {
                 <TitleTag className="text-4xl font-black leading-[1.14] tracking-[-0.03em] text-zinc-50 [text-shadow:0_0_28px_rgba(255,255,255,0.16)] sm:text-5xl lg:text-6xl">
                   {slide.titlePrefix}
                   <span className="relative inline-block">
-                    <span className="absolute -inset-x-1 bottom-1 h-[0.24em] rounded-md bg-gold/35 shadow-gold-sm" />
-                    <span className="gold-text relative [text-shadow:0_0_30px_rgba(222,176,67,0.38)]">
+                    {/* 단어 뒤 골드 글로우 (밑줄 대신) */}
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 scale-125 rounded-full bg-gold/25 blur-2xl"
+                    />
+                    <span className="gold-text relative [text-shadow:0_0_30px_rgba(222,176,67,0.45)]">
                       {slide.titleHighlight}
                     </span>
                   </span>
