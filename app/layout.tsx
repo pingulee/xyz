@@ -23,9 +23,9 @@ export const metadata: Metadata = {
     template: "%s | XYZ",
   },
   description: HOME_DESCRIPTION,
-  alternates: {
-    canonical: "/",
-  },
+  // alternates(canonical)는 자식 라우트로 상속되므로 루트 레이아웃에 두지 않는다.
+  // 여기에 "/"를 두면 자기 canonical을 지정하지 않은 페이지가 전부 홈을 정본으로
+  // 선언해 색인에서 제외된다. 홈 canonical은 app/page.tsx에 있다.
   openGraph: {
     title: HOME_TITLE,
     description: HOME_DESCRIPTION,

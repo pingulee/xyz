@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -25,6 +26,11 @@ import JsonLd from "@/components/ui/JsonLd";
 import { services, site } from "@/lib/site";
 import { getBoosterList } from "@/lib/booster";
 import type { Booster } from "@/lib/booster-model";
+
+// title·description·openGraph는 루트 레이아웃 기본값을 그대로 상속받는다.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const stats = [
   { value: "상위 티어", label: "검증 기사", icon: ShieldCheck },

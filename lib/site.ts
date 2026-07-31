@@ -1,7 +1,13 @@
+// 도메인은 한글 IDN. robots.txt·sitemap.xml·JSON-LD는 이 문자열을 그대로 출력하고
+// (Next가 인코딩해주지 않음) metadataBase만 자동으로 punycode화하므로, 그대로 두면
+// canonical(xn--vk1b65hf2a.xyz)과 sitemap<loc>(롤대리.xyz)의 호스트가 어긋난다.
+// → 여기서 미리 정규화해 모든 출력 경로의 호스트를 일치시킨다.
+const SITE_ORIGIN = new URL("https://롤대리.xyz").origin; // https://xn--vk1b65hf2a.xyz
+
 export const site = {
   name: "롤대리.xyz",
   brand: "XYZ",
-  url: "https://롤대리.xyz",
+  url: SITE_ORIGIN,
   description:
     "롤 대리, 롤 듀오, 롤 계정 전문 XYZ. 상위 티어 검증 기사가 100% 수동으로 진행하고, 기사별 승률·전적·실제 작업 후기를 모두 공개합니다. 구간별 승률 보장, 24시간 카카오톡 상담.",
   kakaoUrl: "https://open.kakao.com/o/sKuEg9zi",
