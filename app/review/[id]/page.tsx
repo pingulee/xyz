@@ -5,8 +5,13 @@ import { notFound } from "next/navigation";
 import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
 import ReviewDetailView from "@/components/review/ReviewDetailView";
-import { getBoosterList } from "@/lib/booster";
-import { getReviewById, getReviewNavigation } from "@/lib/review";
+import ReviewRelated from "@/components/review/ReviewRelated";
+import { getBoosterById } from "@/lib/booster";
+import {
+  getRelatedReviews,
+  getReviewById,
+  getReviewNavigation,
+} from "@/lib/review";
 import {
   BOOSTER_SESSION_COOKIE,
   validateBoosterSession,
@@ -77,9 +82,8 @@ export default async function ReviewDetailPage({ params }: Props) {
     notFound();
   }
 
-  const [review, boosterList, navigation] = await Promise.all([
+  const [review, navigation] = await Promise.all([
     getReviewById(reviewId),
-    getBoosterList(true),
     getReviewNavigation(reviewId),
   ]);
 
@@ -93,13 +97,18 @@ export default async function ReviewDetailPage({ params }: Props) {
   const boosterToken = cookieStore.get(BOOSTER_SESSION_COOKIE)?.value ?? "";
   const boosterId = validateBoosterSession(boosterToken);
   const replyBoosterId = review.reply?.boosterId ?? review.boosterId ?? "";
-  const booster = boosterList.find((item) => item.id === replyBoosterId);
-  const boosterName =
-    booster?.name ??
-    (boosterId
-      ? boosterList.find((item) => item.id === String(boosterId))?.name
-      : "") ??
-    "";
+
+  // 기사 한 명만 필요한데 getBoosterList는 전체 목록 + 리뷰 집계 JOIN + 전적
+  // 요약까지 돌린다(실측 5초 초과). 후기 상세는 1,600여 개라 크롤 효율에 직결돼
+  // 단건 조회로 바꾼다.
+  const [booster, relatedReviews] = await Promise.all([
+    replyBoosterId ? getBoosterById(Number(replyBoosterId)) : null,
+    getRelatedReviews(reviewId, replyBoosterId, review.service),
+  ]);
+  // 기사가 로그인한 상태라면 답변 폼에 본인 이름을 채워준다.
+  const sessionBooster =
+    !booster && boosterId ? await getBoosterById(Number(boosterId)) : null;
+  const boosterName = booster?.name ?? sessionBooster?.name ?? "";
   const reviewJsonLd = {
     "@context": "https://schema.org",
     "@type": "Review",
@@ -133,12 +142,18 @@ export default async function ReviewDetailPage({ params }: Props) {
       {
         "@type": "ListItem",
         position: 1,
+        name: "홈",
+        item: site.url,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
         name: "작업 후기",
         item: `${site.url}/review`,
       },
       {
         "@type": "ListItem",
-        position: 2,
+        position: 3,
         name: `#${review.id}`,
         item: `${site.url}/review/${review.id}`,
       },
@@ -157,13 +172,20 @@ export default async function ReviewDetailPage({ params }: Props) {
       />
       <Container>
         <Reveal>
-          <div className="mb-8 flex items-center gap-3 text-sm text-zinc-500">
+          <nav
+            aria-label="탐색 경로"
+            className="mb-8 flex items-center gap-3 text-sm text-zinc-500"
+          >
+            <Link href="/" className="transition hover:text-gold">
+              홈
+            </Link>
+            <span>/</span>
             <Link href="/review" className="transition hover:text-gold">
               후기 게시판
             </Link>
             <span>/</span>
             <span className="text-zinc-300">#{review.id}</span>
-          </div>
+          </nav>
         </Reveal>
         <Reveal>
           <ReviewDetailView
@@ -175,6 +197,13 @@ export default async function ReviewDetailPage({ params }: Props) {
             previousReview={navigation.previous}
             nextReview={navigation.next}
             isAdmin={isAdmin}
+          />
+        </Reveal>
+        <Reveal>
+          <ReviewRelated
+            review={review}
+            booster={booster}
+            relatedReviews={relatedReviews}
           />
         </Reveal>
       </Container>

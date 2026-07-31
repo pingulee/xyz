@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Loader2, Star } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Loader2, Star } from "lucide-react";
 import BoosterAvatar, { type BoosterAvailability } from "@/components/booster/BoosterAvatar";
 import {
   TierRecordBadges,
@@ -359,6 +360,16 @@ export default function BoosterReview({
             boosterImage={boosterImage}
             boosterAvailability={boosterAvailability}
           />
+          {/* 기사 상세 → 후기 상세 크롤 경로. 후기 페이지가 목록에서만
+              도달 가능해 색인이 잘 안 되던 것을 보완한다. */}
+          <Link
+            href={`/review/${review.id}`}
+            prefetch={false}
+            className="mt-4 inline-flex items-center gap-1.5 text-xs font-black text-zinc-400 transition hover:text-gold"
+          >
+            후기 상세 보기
+            <ArrowRight size={13} aria-hidden="true" />
+          </Link>
         </div>
       ))}
     </div>

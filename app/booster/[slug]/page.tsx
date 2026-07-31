@@ -93,12 +93,18 @@ export default async function BoosterDetailPage({ params }: Props) {
       {
         "@type": "ListItem",
         position: 1,
+        name: "홈",
+        item: site.url,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
         name: "기사 소개",
         item: `${site.url}/booster`,
       },
       {
         "@type": "ListItem",
-        position: 2,
+        position: 3,
         name: booster.name,
         item: `${site.url}/booster/${encodeURIComponent(slug)}`,
       },
@@ -113,13 +119,20 @@ export default async function BoosterDetailPage({ params }: Props) {
       />
       <Container>
         <Reveal>
-          <div className="mb-6 flex items-center gap-3 text-sm text-zinc-500">
+          <nav
+            aria-label="탐색 경로"
+            className="mb-6 flex items-center gap-3 text-sm text-zinc-500"
+          >
+            <Link href="/" className="transition hover:text-gold">
+              홈
+            </Link>
+            <span>/</span>
             <Link href="/booster" className="transition hover:text-gold">
               기사 소개
             </Link>
             <span>/</span>
             <span className="text-zinc-300">{booster.name}</span>
-          </div>
+          </nav>
         </Reveal>
 
         {/* ── 프로필 히어로 (배너 + 아바타 오버랩) ── */}

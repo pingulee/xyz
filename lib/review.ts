@@ -264,6 +264,59 @@ export async function getReviewById(id: number): Promise<Review | null> {
   return rows[0] ? toReview(rows[0]) : null;
 }
 
+/**
+ * 후기 상세 하단 관련 후기.
+ * 후기 본문은 100자 상한이라 상세 페이지 하나의 고유 텍스트가 매우 적다.
+ * 같은 기사 → 같은 서비스 순으로 채워 텍스트 분량과 후기 간 내부 링크를
+ * 동시에 확보한다(후기 페이지가 목록·이전/다음 외에는 고립돼 있었다).
+ */
+export async function getRelatedReviews(
+  excludeId: number,
+  boosterId: string | undefined,
+  service: string,
+  limit = 6,
+): Promise<Review[]> {
+  await ensureReviewSchema();
+  const safeLimit = Math.max(1, Math.min(20, Math.floor(limit)));
+  const safeExclude = Math.floor(excludeId);
+  const collected: Review[] = [];
+  const seen = new Set<string>([String(safeExclude)]);
+
+  const push = (rows: ReviewRow[]) => {
+    for (const row of rows) {
+      if (collected.length >= safeLimit) return;
+      const review = toReview(row);
+      if (seen.has(review.id)) continue;
+      seen.add(review.id);
+      collected.push(review);
+    }
+  };
+
+  // 1순위: 같은 기사의 다른 후기. 기사 프로필과 후기를 서로 엮는다.
+  const numericBoosterId = Number(boosterId);
+  if (Number.isInteger(numericBoosterId) && numericBoosterId > 0) {
+    const [rows] = await getPool().query<ReviewRow[]>(
+      `${REVIEW_SELECT} WHERE r.booster_id = ${numericBoosterId} AND r.id <> ${safeExclude}
+       ORDER BY r.created_at DESC, r.id DESC LIMIT ${safeLimit}`,
+    );
+    push(rows);
+  }
+
+  // 2순위: 같은 서비스의 최근 후기로 나머지를 채운다.
+  if (collected.length < safeLimit && service) {
+    // 이미 담은 항목과 겹칠 수 있으므로 여유분을 조회해 JS에서 걸러낸다.
+    const fetchCount = safeLimit + collected.length + 1;
+    const [rows] = await getPool().execute<ReviewRow[]>(
+      `${REVIEW_SELECT} WHERE r.service = :service AND r.id <> ${safeExclude}
+       ORDER BY r.created_at DESC, r.id DESC LIMIT ${fetchCount}`,
+      { service },
+    );
+    push(rows);
+  }
+
+  return collected;
+}
+
 export async function getReviewNavigation(id: number): Promise<{
   previous?: ReviewNavItem;
   next?: ReviewNavItem;
