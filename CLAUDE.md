@@ -25,7 +25,8 @@
 - **`lib/site.ts` = 사이트 단일 진실 소스**: `site`(name/url/description/kakaoUrl/ogImage/logo), `navItems`, `services`, 가격표(`boostingPrices`/`duoPrices`). 도메인/이미지/네비 변경은 여기서.
 - **도메인은 IDN**: `https://롤대리.xyz` → punycode `xn--vk1b65hf2a.xyz`. **`site.url`은 이미 punycode로 정규화된 값**(`lib/site.ts`의 `SITE_ORIGIN = new URL(...).origin`). 한글 원문 URL을 코드에 다시 하드코딩하지 말 것 — robots.txt/sitemap.xml/JSON-LD는 문자열을 그대로 출력하므로(Next가 인코딩 안 함) 호스트가 canonical과 어긋나 사이트맵 전량 거부됨.
 - **서비스 카드 이미지**: `/images/slider/01~03.webp` 재사용 (01=대리, 02=듀오, 03=계정). `boosting/duo/account.png`는 **존재하지 않음** — 새 경로 추가 시 실제 파일 먼저 배치할 것 (없으면 next/image가 400).
-- **DB 접근 페이지는 `export const dynamic = "force-dynamic"`** (booster, review, 상세, admin, login). `sitemap.ts`도 force-dynamic + try/catch.
+- **DB 접근 페이지는 `export const dynamic = "force-dynamic"`** (booster, review, 상세, admin, login).
+  - **`sitemap.ts`는 예외 — `export const revalidate = 3600`(ISR).** force-dynamic이면 크롤러 요청마다 `ensureSchema`(DDL) + 리뷰 수천 행 + 부스터 집계 JOIN을 재실행해 응답이 늦어지고 GSC "가져올 수 없음"(페처 타임아웃)이 난다. DB 조회는 `withFallback`(5초 상한, 실패 시 빈 배열)으로 감싸 **DB가 죽어도 정적 URL은 반드시 응답**하게 유지할 것.
 - **인증**: `lib/adminSession.ts`(관리자), `lib/boosterSession.ts`(기사) — 쿠키 기반. `SESSION_COOKIE`, `BOOSTER_SESSION_COOKIE`.
 - 부스터 slug는 저장 안 함 — `getBoosterSlug(name)`으로 파생 (`lib/booster-model.ts`).
 
