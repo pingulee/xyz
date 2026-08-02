@@ -109,6 +109,8 @@ export default async function ReviewDetailPage({ params }: Props) {
   const sessionBooster =
     !booster && boosterId ? await getBoosterById(Number(boosterId)) : null;
   const boosterName = booster?.name ?? sessionBooster?.name ?? "";
+  // 서비스명이 비어 있는 과거 데이터가 있어 name이 빈 문자열이 되지 않게 막는다.
+  const reviewedProductName = review.service || `${site.brand} 롤 서비스`;
   const reviewJsonLd = {
     "@context": "https://schema.org",
     "@type": "Review",
@@ -118,13 +120,17 @@ export default async function ReviewDetailPage({ params }: Props) {
     },
     datePublished: review.createdAt,
     reviewBody: review.content,
+    // itemReviewed에는 Service를 쓸 수 없다. 리뷰 스니펫이 허용하는 타입이
+    // 아니라 GSC가 "개체 유형이 잘못되었습니다"로 반려한다.
+    // Organization/LocalBusiness는 타입은 유효하지만 자사 사이트에 올린 자사
+    // 후기(self-serving)라 별점 표시 자체가 비적격이다. 판매 상품 단위인
+    // Product가 맞다.
     itemReviewed: {
-      "@type": "Service",
-      name: review.service,
-      provider: {
-        "@type": "Organization",
+      "@type": "Product",
+      name: reviewedProductName,
+      brand: {
+        "@type": "Brand",
         name: site.brand,
-        url: site.url,
       },
     },
     reviewRating: {

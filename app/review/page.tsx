@@ -76,6 +76,13 @@ export default async function ReviewPage({
         "@type": "Review",
         author: { "@type": "Person", name: review.name },
         reviewBody: review.content,
+        // itemReviewed는 Review의 필수 속성이다. 상세 페이지와 같은 이유로
+        // Service가 아닌 Product를 쓴다(app/review/[id]/page.tsx 주석 참고).
+        itemReviewed: {
+          "@type": "Product",
+          name: review.service || `${site.brand} 롤 서비스`,
+          brand: { "@type": "Brand", name: site.brand },
+        },
         reviewRating: {
           "@type": "Rating",
           ratingValue: review.rating,
