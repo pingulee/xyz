@@ -150,23 +150,52 @@ const REVIEW_INDEXES: Array<{ name: string; definition: string }> = [
   },
 ];
 
+/**
+ * 위 복합 인덱스의 왼쪽 접두사라 중복인 기존 단일 컬럼 인덱스.
+ * 남겨두면 쓰기마다 갱신 비용과 디스크만 더 든다.
+ *   idx_review_booster_id (booster_id) ⊂ idx_review_booster_created
+ *   idx_review_created_at (created_at) ⊂ idx_review_created_id
+ * 대체 인덱스가 실제로 존재할 때만 지운다.
+ */
+const REDUNDANT_REVIEW_INDEXES: Array<{ name: string; supersededBy: string }> = [
+  { name: "idx_review_booster_id", supersededBy: "idx_review_booster_created" },
+  { name: "idx_review_created_at", supersededBy: "idx_review_created_id" },
+];
+
 async function ensureIndexes() {
   const pool = getPool();
-  const [rows] = await pool.execute<RowDataPacket[]>(
-    `SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS
-     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'review'`,
-  );
-  const existing = new Set(rows.map((row) => String(row.INDEX_NAME)));
+  const readExisting = async () => {
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      `SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'review'`,
+    );
+    return new Set(rows.map((row) => String(row.INDEX_NAME)));
+  };
 
+  let existing = await readExisting();
+
+  let created = false;
   for (const index of REVIEW_INDEXES) {
     if (existing.has(index.name)) continue;
     try {
       await pool.execute(
         `CREATE INDEX \`${index.name}\` ON \`review\` ${index.definition}`,
       );
+      created = true;
     } catch (error) {
       // 인덱스 생성 실패로 서비스가 죽으면 안 된다. 없어도 동작은 한다.
       console.error(`ensureIndexes: ${index.name} 생성 실패`, error);
+    }
+  }
+  if (created) existing = await readExisting();
+
+  for (const { name, supersededBy } of REDUNDANT_REVIEW_INDEXES) {
+    // 대체 인덱스가 없는데 지우면 조회가 느려진다. 둘 다 확인한 뒤에만 지운다.
+    if (!existing.has(name) || !existing.has(supersededBy)) continue;
+    try {
+      await pool.execute(`DROP INDEX \`${name}\` ON \`review\``);
+    } catch (error) {
+      console.error(`ensureIndexes: ${name} 제거 실패`, error);
     }
   }
 }

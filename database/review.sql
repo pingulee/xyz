@@ -10,8 +10,12 @@ CREATE TABLE IF NOT EXISTS `review` (
     password_hash VARCHAR(200) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    INDEX idx_review_created_at (created_at),
-    INDEX idx_review_booster_id (booster_id)
+    -- 조회가 모두 `ORDER BY created_at DESC, id DESC` 형태라 정렬 컬럼까지
+    -- 인덱스에 포함해야 파일소트 없이 커버링 스캔으로 끝난다.
+    -- 단일 컬럼 인덱스는 아래 복합 인덱스의 왼쪽 접두사라 따로 두지 않는다.
+    INDEX idx_review_created_id (created_at, id),
+    INDEX idx_review_booster_created (booster_id, created_at, id),
+    INDEX idx_review_service_created (service, created_at, id)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 ALTER TABLE `review`
