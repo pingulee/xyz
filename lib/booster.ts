@@ -1,6 +1,8 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
+import { CACHE_MAX_AGE_SECONDS, CACHE_TAGS } from "@/lib/cache-tags";
 import { ensureReviewSchema } from "@/lib/review";
 import type { TierRecord } from "@/lib/review";
 import { getChampionImageMap } from "@/lib/champions";
@@ -225,7 +227,13 @@ export type BoosterOption = Pick<
  * getBoosterList는 리뷰 집계 JOIN과 전적 요약까지 돌리는데, 드롭다운에는
  * 이름·서비스·영업시간만 필요하다. 요청마다 도는 페이지라 낭비가 크다.
  */
-export async function getBoosterOptions(): Promise<BoosterOption[]> {
+export const getBoosterOptions = unstable_cache(
+  queryBoosterOptions,
+  ["booster-options"],
+  { tags: [CACHE_TAGS.boosters], revalidate: CACHE_MAX_AGE_SECONDS },
+);
+
+async function queryBoosterOptions(): Promise<BoosterOption[]> {
   const [rows] = await getPool().execute<RowDataPacket[]>(
     `SELECT id, name, services, image_url, active, weekday_hours, weekend_hours
      FROM booster WHERE active = 1 ORDER BY sort_order ASC, id ASC`,
@@ -244,12 +252,35 @@ export async function getBoosterOptions(): Promise<BoosterOption[]> {
   }));
 }
 
+/**
+ * 사이트에서 가장 무거운 조회다. 기사 전체에 리뷰 집계 JOIN과 전적 요약이
+ * 붙는데 방문자와 무관하게 결과가 같다. 요청 간 캐시하고 기사·후기 쓰기에서
+ * 무효화한다. 스키마 보정 DDL은 캐시가 적중하면 실행되지 않으므로
+ * 캐시 바깥(getBoosterList)에 둔다.
+ */
+const getBoosterListCached = unstable_cache(
+  queryBoosterList,
+  ["booster-list"],
+  {
+    // 집계가 후기에서 오므로 후기 쓰기에도 함께 무효화되어야 한다.
+    tags: [CACHE_TAGS.boosters, CACHE_TAGS.reviews],
+    revalidate: CACHE_MAX_AGE_SECONDS,
+  },
+);
+
 export async function getBoosterList(
   activeOnly = true,
   sortByReview = false,
 ): Promise<Booster[]> {
   await ensureReviewSchema();
   await ensureBoosterSchema();
+  return getBoosterListCached(activeOnly, sortByReview);
+}
+
+async function queryBoosterList(
+  activeOnly: boolean,
+  sortByReview: boolean,
+): Promise<Booster[]> {
   const [rows] = await getPool().execute<BoosterRow[]>(
     `SELECT l.*, COALESCE(stats.average_rating, 0) AS average_rating, COALESCE(stats.review_count, 0) AS review_count
      FROM booster l

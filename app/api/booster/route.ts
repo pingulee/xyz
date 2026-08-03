@@ -3,6 +3,7 @@ import { ResultSetHeader } from "mysql2";
 import { scryptSync, randomBytes } from "crypto";
 import { getPool } from "@/lib/db";
 import { ensureBoosterSchema, getBoosterList, getBoosterById } from "@/lib/booster";
+import { invalidateBoosterCaches } from "@/lib/cache-tags";
 import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession";
 
 export const runtime = "nodejs";
@@ -122,6 +123,7 @@ export async function POST(request: Request) {
        VALUES (:name, :positions, :rank, :tier, :description, :weekdayHours, :weekendHours, '', :services, :nationality, :image, :sortOrder, :active, :boosterPasswordHash)`,
       { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, boosterPasswordHash },
     );
+    invalidateBoosterCaches();
     const booster = await getBoosterById(result.insertId);
     return NextResponse.json({ booster }, { status: 201 });
   } catch (error) {
@@ -173,6 +175,7 @@ export async function PUT(request: Request) {
        WHERE id=:id`,
       { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image, id, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, ...(newPasswordHash !== undefined ? { boosterPasswordHash: newPasswordHash } : {}) },
     );
+    invalidateBoosterCaches();
     const booster = await getBoosterById(id);
     if (!booster) return NextResponse.json({ message: "기사를 찾을 수 없습니다." }, { status: 404 });
     return NextResponse.json({ booster });
@@ -201,6 +204,7 @@ export async function DELETE(request: Request) {
 
   try {
     await getPool().execute(`DELETE FROM booster WHERE id = :id`, { id });
+    invalidateBoosterCaches();
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Failed to delete booster", error);

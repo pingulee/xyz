@@ -1,6 +1,8 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
+import { CACHE_MAX_AGE_SECONDS, CACHE_TAGS } from "@/lib/cache-tags";
 import { oncePerProcess } from "@/lib/schema-once";
 
 export type TierRecord = {
@@ -272,6 +274,20 @@ export async function getBoosterReviewPage(
   perPage = 3,
 ): Promise<{ reviewList: Review[]; total: number; page: number; perPage: number }> {
   await ensureReviewSchema();
+  return getBoosterReviewPageCached(boosterId, page, perPage);
+}
+
+const getBoosterReviewPageCached = unstable_cache(
+  queryBoosterReviewPage,
+  ["booster-review-page"],
+  { tags: [CACHE_TAGS.reviews], revalidate: CACHE_MAX_AGE_SECONDS },
+);
+
+async function queryBoosterReviewPage(
+  boosterId: number,
+  page: number,
+  perPage: number,
+): Promise<{ reviewList: Review[]; total: number; page: number; perPage: number }> {
   const pool = getPool();
   const safePer = Math.max(1, Math.min(50, Math.floor(perPage)));
   const requestedPage = Math.max(1, Math.floor(page) || 1);
@@ -348,6 +364,8 @@ export async function getReviewPage(
   page = 1,
   perPage = 20,
 ): Promise<{ reviewList: Review[]; total: number; page: number; perPage: number }> {
+  // 요청 간 캐시를 붙이지 않는다. 사용자가 후기를 쓴 직후 확인하는 화면이라
+  // 한 번의 stale도 "내 글이 안 보인다"가 된다(lib/cache-tags.ts 주석 참고).
   await ensureReviewSchema();
   const pool = getPool();
   const safePer = Math.max(1, Math.min(100, Math.floor(perPage)));
