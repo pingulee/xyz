@@ -83,10 +83,9 @@ export default async function ReviewDetailPage({ params }: Props) {
     notFound();
   }
 
-  const [review, navigation] = await Promise.all([
-    getReviewById(reviewId),
-    getReviewNavigation(reviewId),
-  ]);
+  // 원격 DB라 쿼리 복잡도보다 왕복 횟수가 응답 시간을 지배한다. 후기를 먼저
+  // 읽고, 그 결과가 필요한 나머지 조회는 한 번에 병렬로 묶어 왕복을 2회로 줄인다.
+  const review = await getReviewById(reviewId);
 
   if (!review) {
     notFound();
@@ -100,9 +99,10 @@ export default async function ReviewDetailPage({ params }: Props) {
   const replyBoosterId = review.reply?.boosterId ?? review.boosterId ?? "";
 
   // 기사 한 명만 필요한데 getBoosterList는 전체 목록 + 리뷰 집계 JOIN + 전적
-  // 요약까지 돌린다(실측 5초 초과). 후기 상세는 1,600여 개라 크롤 효율에 직결돼
-  // 단건 조회로 바꾼다.
-  const [booster, relatedReviews] = await Promise.all([
+  // 요약까지 돌린다. 후기 상세는 1,600여 개라 크롤 효율에 직결돼 단건 조회로 쓴다.
+  // 이미 읽은 review의 작성 시각을 넘겨 이전/다음 조회의 기준 시각 재조회를 없앤다.
+  const [navigation, booster, relatedReviews] = await Promise.all([
+    getReviewNavigation(reviewId, review.createdAt),
     replyBoosterId ? getBoosterById(Number(replyBoosterId)) : null,
     getRelatedReviews(reviewId, replyBoosterId, review.service),
   ]);

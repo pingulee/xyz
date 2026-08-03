@@ -48,7 +48,7 @@ export default function TierBand() {
         >
           <span className="h-1 flex-1 rounded-l-full bg-linear-to-r from-white/15 via-gold/50 to-gold" />
           {/* 솔리드 삼각형 화살촉 */}
-          <span className="h-0 w-0 border-y-[7px] border-l-[12px] border-y-transparent border-l-gold" />
+          <span className="h-0 w-0 border-y-[7px] border-l-12 border-y-transparent border-l-gold" />
         </div>
 
         {/* 뒤: 양 끝 티어 노드 (라벨 색 = 아이콘 색) */}

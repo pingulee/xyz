@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { ensureReviewSchema } from "@/lib/review";
@@ -214,6 +215,35 @@ export async function getBoosterSitemapEntries(): Promise<
   return rows.map((row) => ({ name: String(row.name) }));
 }
 
+export type BoosterOption = Pick<
+  Booster,
+  "id" | "name" | "services" | "image" | "active" | "weekdayHours" | "weekendHours"
+>;
+
+/**
+ * 후기 작성 폼의 기사 선택용 경량 조회.
+ * getBoosterList는 리뷰 집계 JOIN과 전적 요약까지 돌리는데, 드롭다운에는
+ * 이름·서비스·영업시간만 필요하다. 요청마다 도는 페이지라 낭비가 크다.
+ */
+export async function getBoosterOptions(): Promise<BoosterOption[]> {
+  const [rows] = await getPool().execute<RowDataPacket[]>(
+    `SELECT id, name, services, image_url, active, weekday_hours, weekend_hours
+     FROM booster WHERE active = 1 ORDER BY sort_order ASC, id ASC`,
+  );
+  return rows.map((row) => ({
+    id: String(row.id),
+    name: String(row.name),
+    services: String(row.services ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+    image: (row.image_url as string | null) ?? null,
+    active: Boolean(row.active),
+    weekdayHours: String(row.weekday_hours ?? ""),
+    weekendHours: String(row.weekend_hours ?? ""),
+  }));
+}
+
 export async function getBoosterList(
   activeOnly = true,
   sortByReview = false,
@@ -276,15 +306,30 @@ export async function getBoosterById(id: number): Promise<Booster | null> {
 
 export { getBoosterPath } from "@/lib/booster-model";
 
-export async function getBoosterBySlug(slug: string): Promise<Booster | null> {
-  const decoded = decodeURIComponent(slug);
-  const boosterList = await getBoosterList(false);
-  return (
-    boosterList.find(
-      (booster) => getBoosterSlug(booster.name) === decoded,
-    ) ?? null
-  );
-}
+/**
+ * slug는 저장하지 않고 이름에서 파생하므로 목록을 받아 대조할 수밖에 없다.
+ * generateMetadata와 페이지 본문이 각각 호출하는데 Next는 임의 DB 호출을
+ * 중복 제거하지 않으므로, 요청 단위로 메모이즈해 같은 조회가 두 번 돌지 않게 한다.
+ */
+export const getBoosterBySlug = cache(
+  async (slug: string): Promise<Booster | null> => {
+    // 퍼센트 인코딩이 깨진 값이 들어와도 던지지 않게 막는다.
+    // (경로 자체가 잘못된 요청은 Next 라우터가 이 함수 전에 거른다.)
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(slug);
+    } catch {
+      return null;
+    }
+
+    const boosterList = await getBoosterList(false);
+    return (
+      boosterList.find(
+        (booster) => getBoosterSlug(booster.name) === decoded,
+      ) ?? null
+    );
+  },
+);
 
 const TIER_ORDER = [
   "언랭크", "아이언", "브론즈", "실버", "골드", "플래티넘",

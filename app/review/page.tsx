@@ -6,7 +6,7 @@ import ReviewBoard from "@/components/review/ReviewBoard";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { getReviewPage } from "@/lib/review";
 import { REVIEW_PAGE_SIZE } from "@/components/review/constants";
-import { getBoosterList } from "@/lib/booster";
+import { getBoosterOptions } from "@/lib/booster";
 import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
 import {
   BOOSTER_SESSION_COOKIE,
@@ -73,11 +73,11 @@ type Props = {
 export default async function ReviewPage({ searchParams }: Props) {
   const { page: pageParam } = await searchParams;
   const requestedPage = Math.max(1, Number(pageParam) || 1);
-  const { reviewList, total, page } = await getReviewPage(
-    requestedPage,
-    REVIEW_PAGE_SIZE,
-  );
-  const boosterList = await getBoosterList(true);
+  // 서로 의존하지 않으므로 함께 던진다. 원격 DB라 왕복 횟수가 응답 시간을 좌우한다.
+  const [{ reviewList, total, page }, boosterList] = await Promise.all([
+    getReviewPage(requestedPage, REVIEW_PAGE_SIZE),
+    getBoosterOptions(),
+  ]);
 
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value ?? "";
