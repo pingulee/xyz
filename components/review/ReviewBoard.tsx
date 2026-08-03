@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { TierRecord } from "@/lib/review";
 import {
@@ -15,7 +16,12 @@ import {
   blankEditForm,
   SERVICE_LABEL,
 } from "@/components/review/constants";
-import { getPageItems, formatDate, PAGE_BLOCK } from "@/components/review/helpers";
+import {
+  getPageItems,
+  formatDate,
+  PAGE_ARROW_CLASS,
+  PAGE_BLOCK,
+} from "@/components/review/helpers";
 import type {
   Review,
   ReviewReply,
@@ -129,9 +135,6 @@ export default function ReviewBoard({
     form.content.trim().length > 0 &&
     form.content.trim().length < REVIEW_CONTENT_MIN_LENGTH;
 
-  const openReview = (reviewId: string) => {
-    router.push(`/review/${reviewId}`);
-  };
 
   useEffect(() => {
     if (writeOpen) {
@@ -144,12 +147,29 @@ export default function ReviewBoard({
     };
   }, [writeOpen]);
 
-  const goToPage = (nextPage: number) => {
-    const target = Math.min(Math.max(nextPage, 1), totalPages);
+  // 상세뷰 내부 이전/다음 이동. 목록 행·페이지네이션은 실제 링크를 쓴다.
+  const openReview = (reviewId: string) => {
+    router.push(`/review/${reviewId}`);
+  };
+
+  const clampPage = (nextPage: number) =>
+    Math.min(Math.max(nextPage, 1), totalPages);
+
+  /**
+   * 페이지네이션은 실제 링크(<a href>)로 렌더한다. 버튼 + router.push로만
+   * 이동하면 크롤러가 2페이지 이후를 발견하지 못해 거기에만 걸린 후기들이
+   * 게시판 경로에서 색인되지 않는다.
+   */
+  const pageHref = (nextPage: number) => {
+    const target = clampPage(nextPage);
+    return target === 1 ? "/review" : `/review?page=${target}`;
+  };
+
+  // 페이지 이동 시 열려 있던 상세/삭제/수정 상태를 닫는다.
+  const resetRowState = () => {
     setSelectedReviewId("");
     setDeleteOpenId("");
     setEditOpenId("");
-    router.push(target === 1 ? "/review" : `/review?page=${target}`);
   };
 
   const updateDeleteForm = (reviewId: string, updates: Partial<DeleteForm>) => {
@@ -903,10 +923,12 @@ export default function ReviewBoard({
                   ((currentPage - 1) * REVIEW_PAGE_SIZE + i);
 
                 return (
-                  <button
+                  // 목록 행은 실제 링크여야 한다. 버튼 + router.push였을 때는
+                  // 게시판에서 후기 상세로 가는 크롤 경로가 전혀 없었다.
+                  <Link
                     key={review.id}
-                    type="button"
-                    onClick={() => openReview(review.id)}
+                    href={`/review/${review.id}`}
+                    prefetch={false}
                     className="group grid w-full cursor-pointer gap-4 border-b border-white/8 px-5 py-5 text-left transition last:border-b-0 hover:bg-white/5.5 lg:grid-cols-[3.25rem_minmax(0,1.45fr)_6rem_7rem_5.5rem_10rem_7rem_5rem] lg:items-center"
                   >
                     <span className="hidden text-sm font-black text-zinc-500 transition group-hover:text-gold lg:block">
@@ -973,22 +995,30 @@ export default function ReviewBoard({
                       <span>조회수 {review.viewCount ?? 0}</span>
                       <span>작성자 {review.name}</span>
                     </span>
-                  </button>
+                  </Link>
                 );
               })}
             </div>
 
             {totalPages > 1 && (
               <div className="flex flex-wrap items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => goToPage(currentPage - PAGE_BLOCK)}
-                  disabled={Math.ceil(currentPage / PAGE_BLOCK) <= 1}
-                  aria-label="이전 10페이지"
-                  className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-2 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <ChevronLeft size={16} />
-                </button>
+                {Math.ceil(currentPage / PAGE_BLOCK) > 1 ? (
+                  <Link
+                    href={pageHref(currentPage - PAGE_BLOCK)}
+                    onClick={resetRowState}
+                    aria-label="이전 10페이지"
+                    className={PAGE_ARROW_CLASS}
+                  >
+                    <ChevronLeft size={16} aria-hidden="true" />
+                  </Link>
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className={`${PAGE_ARROW_CLASS} cursor-not-allowed opacity-40`}
+                  >
+                    <ChevronLeft size={16} />
+                  </span>
+                )}
 
                 {pageItems.map((item, i) =>
                   item === "..." ? (
@@ -999,10 +1029,12 @@ export default function ReviewBoard({
                       ...
                     </span>
                   ) : (
-                    <button
+                    <Link
                       key={item}
-                      type="button"
-                      onClick={() => goToPage(item)}
+                      href={pageHref(item)}
+                      onClick={resetRowState}
+                      aria-label={`${item}페이지`}
+                      aria-current={item === currentPage ? "page" : undefined}
                       className={`grid h-10 w-10 place-items-center rounded-full text-sm font-black transition ${
                         item === currentPage
                           ? "bg-gold text-black"
@@ -1010,22 +1042,28 @@ export default function ReviewBoard({
                       }`}
                     >
                       {item}
-                    </button>
+                    </Link>
                   ),
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => goToPage(currentPage + PAGE_BLOCK)}
-                  disabled={
-                    Math.ceil(currentPage / PAGE_BLOCK) >=
-                    Math.ceil(totalPages / PAGE_BLOCK)
-                  }
-                  aria-label="다음 10페이지"
-                  className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-2 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <ChevronRight size={16} />
-                </button>
+                {Math.ceil(currentPage / PAGE_BLOCK) <
+                Math.ceil(totalPages / PAGE_BLOCK) ? (
+                  <Link
+                    href={pageHref(currentPage + PAGE_BLOCK)}
+                    onClick={resetRowState}
+                    aria-label="다음 10페이지"
+                    className={PAGE_ARROW_CLASS}
+                  >
+                    <ChevronRight size={16} aria-hidden="true" />
+                  </Link>
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className={`${PAGE_ARROW_CLASS} cursor-not-allowed opacity-40`}
+                  >
+                    <ChevronRight size={16} />
+                  </span>
+                )}
               </div>
             )}
           </>

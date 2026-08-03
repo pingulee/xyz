@@ -19,39 +19,58 @@ export const dynamic = "force-dynamic";
 const reviewDescription =
   "XYZ 롤 대리·롤 듀오·롤 계정 실제 작업 후기. 담당 기사의 티어·챔피언·KDA 전적이 후기마다 함께 공개되어 직접 검증할 수 있습니다. 이용 후기도 남겨보세요.";
 
-export const metadata: Metadata = {
-  title: "롤 대리 · 듀오 작업 후기 | 실제 전적 공개",
-  description: reviewDescription,
-  keywords: [
-    "롤 대리 후기",
-    "롤대리 후기",
-    "롤 듀오 후기",
-    "롤 작업 후기",
-    "롤 계정 후기",
-    "XYZ 후기",
-  ],
-  alternates: { canonical: "/review" },
-  openGraph: {
-    title: "롤 대리 · 듀오 작업 후기 | XYZ",
-    description: reviewDescription,
-    url: "/review",
-    type: "website",
-    siteName: site.brand,
-    images: [{ url: site.ogImage }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "롤 대리 · 듀오 작업 후기 | XYZ",
-    description: reviewDescription,
-    images: [site.ogImage],
-  },
+/**
+ * 페이지네이션은 자기 자신을 canonical로 선언해야 한다.
+ * 2페이지 이후가 1페이지를 canonical로 가리키면 구글이 중복으로 보고 색인에서
+ * 제외하며, 그 페이지에만 링크된 후기들은 게시판 경로로 발견되지 않는다.
+ */
+export async function generateMetadata({
+  searchParams,
+}: Props): Promise<Metadata> {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
+  const isFirstPage = page === 1;
+  const canonical = isFirstPage ? "/review" : `/review?page=${page}`;
+  const pageSuffix = isFirstPage ? "" : ` (${page}페이지)`;
+  const title = `롤 대리 · 듀오 작업 후기 | 실제 전적 공개${pageSuffix}`;
+  const description = isFirstPage
+    ? reviewDescription
+    : `${reviewDescription} ${page}페이지입니다.`;
+
+  return {
+    title,
+    description,
+    keywords: [
+      "롤 대리 후기",
+      "롤대리 후기",
+      "롤 듀오 후기",
+      "롤 작업 후기",
+      "롤 계정 후기",
+      "XYZ 후기",
+    ],
+    alternates: { canonical },
+    openGraph: {
+      title: `롤 대리 · 듀오 작업 후기${pageSuffix}`,
+      description,
+      url: canonical,
+      type: "website",
+      siteName: site.brand,
+      images: [{ url: site.ogImage }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `롤 대리 · 듀오 작업 후기${pageSuffix}`,
+      description,
+      images: [site.ogImage],
+    },
+  };
+}
+
+type Props = {
+  searchParams: Promise<{ page?: string }>;
 };
 
-export default async function ReviewPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>;
-}) {
+export default async function ReviewPage({ searchParams }: Props) {
   const { page: pageParam } = await searchParams;
   const requestedPage = Math.max(1, Number(pageParam) || 1);
   const { reviewList, total, page } = await getReviewPage(

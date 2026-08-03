@@ -41,7 +41,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const service = review.service || "롤 서비스";
   const boosterName = review.boosterName ?? review.reply?.boosterName ?? "검증 기사";
   const description = `${review.content.replace(/\s+/g, " ").slice(0, 110)}${review.content.length > 110 ? "..." : ""}`;
-  const title = `${review.name}님의 ${service} 후기 | XYZ`;
+  // 루트 레이아웃 template이 "| XYZ"를 붙이므로 여기서 브랜드를 다시 쓰지 않는다.
+  const title = `${review.name}님의 ${service} 후기`;
   const url = `/review/${id}`;
 
   return {

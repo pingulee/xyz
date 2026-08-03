@@ -9,7 +9,8 @@ const description =
   "XYZ에서 함께할 상위 티어 롤 대리·롤 듀오 기사를 모집합니다. 챌린저·그랜드마스터 실력자라면 자유로운 일정으로 활동하고 정산받으세요.";
 
 export const metadata: Metadata = {
-  title: "롤 대리 기사 모집 | XYZ 부스터 채용",
+  // 루트 레이아웃 template이 "| XYZ"를 붙이므로 여기서 브랜드를 다시 쓰지 않는다.
+  title: "롤 대리 기사 모집 | 부스터 채용 안내",
   description,
   keywords: [
     "롤 대리 기사 모집",

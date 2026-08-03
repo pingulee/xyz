@@ -7,7 +7,8 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin", "/login", "/api/"],
+        // /admax는 관리자 로그아웃 리디렉트 라우트다. 크롤 대상이 아니다.
+        disallow: ["/admin", "/admax", "/login", "/api/"],
       },
     ],
     // 사이트맵은 용도별로 분리되어 있다. robots.txt는 Sitemap 지시자 복수 줄을
