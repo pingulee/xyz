@@ -1,3 +1,5 @@
+import { promises as fs, existsSync } from "fs";
+import path from "path";
 import { RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { oncePerProcess } from "@/lib/schema-once";
@@ -27,6 +29,51 @@ type DataDragonChampionResponse = {
 };
 
 const DDRAGON_BASE = "https://ddragon.leagueoflegends.com";
+
+// 챔피언 이미지 저장 위치. 마퀴(ChampionMarquee)와 견적계산기가
+// /images/champion/{riot_id}.png 로 참조하므로 기본값은 public 아래다.
+// 배포와 분리된 영속 디렉토리를 쓰려면 환경변수로 덮는다.
+const CHAMPION_IMAGE_DIR =
+  process.env.CHAMPION_IMAGE_DIR ??
+  path.join(process.cwd(), "public", "images", "champion");
+
+/**
+ * 로컬에 없는 챔피언 이미지만 DDragon에서 내려받는다.
+ * DB에 새 챔피언이 들어와도 이미지 파일이 없으면 마퀴에 안 뜨고 견적계산기에서
+ * 404가 난다. 이름 동기화(syncChampionsFromRiot)에 이어 이미지도 채운다.
+ * 이미 있는 파일은 건너뛰므로 보통 새 챔피언 몇 개만 받는다.
+ */
+async function syncChampionImages(
+  champions: DataDragonChampion[],
+  version: string,
+): Promise<number> {
+  await fs.mkdir(CHAMPION_IMAGE_DIR, { recursive: true });
+  let downloaded = 0;
+
+  for (const champion of champions) {
+    const filePath = path.join(CHAMPION_IMAGE_DIR, `${champion.id}.png`);
+    if (existsSync(filePath)) continue;
+
+    try {
+      const res = await fetch(
+        `${DDRAGON_BASE}/cdn/${version}/img/champion/${champion.id}.png`,
+      );
+      if (!res.ok) {
+        console.error(
+          `champion image fetch ${champion.id}: HTTP ${res.status}`,
+        );
+        continue;
+      }
+      await fs.writeFile(filePath, Buffer.from(await res.arrayBuffer()));
+      downloaded += 1;
+    } catch (error) {
+      // 이미지 하나가 실패해도 나머지와 이름 동기화는 계속한다.
+      console.error(`champion image download failed: ${champion.id}`, error);
+    }
+  }
+
+  return downloaded;
+}
 
 const ensureChampionsSchema = oncePerProcess(async () => {
   await getPool().execute(`
@@ -106,6 +153,16 @@ export async function syncChampionsFromRiot() {
     `UPDATE champions SET active = FALSE WHERE ddragon_version <> :version`,
     { version },
   );
+
+  // 이름 동기화 후 누락 이미지를 채운다. 실패해도 이름 갱신은 유지한다.
+  try {
+    const downloaded = await syncChampionImages(champions, version);
+    if (downloaded > 0) {
+      console.log(`champion images downloaded: ${downloaded}`);
+    }
+  } catch (error) {
+    console.error("champion image sync failed", error);
+  }
 
   championCache = null;
 }
