@@ -1,31 +1,12 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
-import Container from "@/components/layout/Container";
-import Reveal from "@/components/ui/Reveal";
-import { getSafeReturnPath } from "@/lib/returnPath";
-import AdminLoginForm from "./AdminLoginForm";
-
-export const dynamic = "force-dynamic";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "관리자",
   robots: { index: false, follow: false },
 };
 
-export default async function AdminPage() {
-  const headerStore = await headers();
-  const returnPath = getSafeReturnPath(
-    headerStore.get("referer") ?? "",
-    headerStore.get("host") ?? "",
-  );
-
-  return (
-    <section className="py-20">
-      <Container>
-        <Reveal>
-          <AdminLoginForm fallbackFrom={returnPath} />
-        </Reveal>
-      </Container>
-    </section>
-  );
+// 관리자 전용 로그인 폼은 통합 로그인으로 흡수됐다. 북마크 보존을 위해 리다이렉트.
+export default function AdminPage() {
+  redirect("/login");
 }

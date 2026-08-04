@@ -8,7 +8,7 @@ import { useState } from "react";
 import type { MouseEvent } from "react";
 import clsx from "clsx";
 import { navItems, services, site } from "@/lib/site";
-import BoosterAuthControls from "@/components/booster/BoosterAuthControls";
+import AuthControls from "@/components/auth/AuthControls";
 
 type MenuItem = {
   label: string;
@@ -164,7 +164,7 @@ export default function Header() {
           >
             빠른 상담
           </a>
-          <BoosterAuthControls />
+          <AuthControls />
         </div>
 
         <button
@@ -249,7 +249,7 @@ export default function Header() {
             </div>
           ))}
 
-          <BoosterAuthControls className="mt-4 block w-full" />
+          <AuthControls className="mt-4" />
           <a
             href={site.kakaoUrl}
             target="_blank"

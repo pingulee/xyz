@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
-import {
-  BOOSTER_SESSION_COOKIE,
-  validateBoosterSession,
-} from "@/lib/boosterSession";
-import BoosterLoginForm from "./BoosterLoginForm";
+import { SESSION_COOKIE, validateSessionToken } from "@/lib/session";
+import { getSafeReturnPath } from "@/lib/returnPath";
+import LoginForm from "@/components/auth/LoginForm";
 
 export const dynamic = "force-dynamic";
 
@@ -16,19 +14,30 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function BoosterLoginPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(BOOSTER_SESSION_COOKIE)?.value ?? "";
-
-  if (validateBoosterSession(token)) {
-    redirect("/review");
+export default async function LoginPage() {
+  const store = await cookies();
+  const session = validateSessionToken(store.get(SESSION_COOKIE)?.value ?? "");
+  if (session) {
+    redirect(
+      session.role === "admin"
+        ? "/booster"
+        : session.role === "booster"
+          ? "/review"
+          : "/mypage",
+    );
   }
+
+  const headerStore = await headers();
+  const returnPath = getSafeReturnPath(
+    headerStore.get("referer") ?? "",
+    headerStore.get("host") ?? "",
+  );
 
   return (
     <section className="py-20">
       <Container>
         <Reveal>
-          <BoosterLoginForm />
+          <LoginForm fallbackFrom={returnPath} />
         </Reveal>
       </Container>
     </section>
