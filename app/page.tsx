@@ -24,6 +24,7 @@ import ServiceCard from "@/components/home/ServiceCard";
 import QuoteCalculator from "@/components/quote/QuoteCalculator";
 import JsonLd from "@/components/ui/JsonLd";
 import { services, site } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/jsonld";
 import { getBoosterList } from "@/lib/booster";
 import type { Booster } from "@/lib/booster-model";
 
@@ -356,11 +357,11 @@ export default async function Home() {
       <JsonLd />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(howToJsonLd) }}
       />
       <HeroSlider />
 

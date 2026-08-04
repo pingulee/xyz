@@ -18,6 +18,7 @@ import {
 } from "@/lib/boosterSession";
 import { SESSION_COOKIE, validateSession } from "@/lib/adminSession";
 import { site } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/jsonld";
 
 export const dynamic = "force-dynamic";
 
@@ -171,11 +172,11 @@ export default async function ReviewDetailPage({ params }: Props) {
     <section className="py-20">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(reviewJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
       <Container>
         <Reveal>

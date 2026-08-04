@@ -5,6 +5,7 @@ import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 import ServiceDetail from "@/components/service/ServiceDetail";
 import { site } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/jsonld";
 
 const description =
   "XYZ 롤 대리 가격표와 티어별 승률 보장, 진행 방식, 기사 배정, 환불 기준을 확인하세요. 현재 티어와 목표 티어 기준으로 맞춤 견적을 안내합니다.";
@@ -111,11 +112,11 @@ export default function BoostingPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(serviceJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqJsonLd) }}
       />
       <ServiceDetail
         eyebrow="boosting"

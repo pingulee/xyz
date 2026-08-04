@@ -9,6 +9,7 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import { getBoosterList } from "@/lib/booster";
 import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
 import { site } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/jsonld";
 
 export const dynamic = "force-dynamic";
 
@@ -85,7 +86,7 @@ export default async function BoosterPage() {
     <section className="py-20">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(itemListJsonLd) }}
       />
       <Container>
         <Reveal>

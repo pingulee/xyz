@@ -16,6 +16,7 @@ import {
   validateBoosterSession,
 } from "@/lib/boosterSession";
 import { site } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/jsonld";
 
 export const dynamic = "force-dynamic";
 
@@ -115,7 +116,7 @@ export default async function BoosterDetailPage({ params }: Props) {
     <section className="py-16">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
       <Container>
         <Reveal>

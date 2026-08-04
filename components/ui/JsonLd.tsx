@@ -1,4 +1,5 @@
 import { services, site } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/jsonld";
 
 const BRAND_NAME = "XYZ";
 
@@ -62,7 +63,7 @@ export default function JsonLd() {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(json) }}
     />
   );
 }

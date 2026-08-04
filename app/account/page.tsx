@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import ServiceDetail from "@/components/service/ServiceDetail";
 import { site } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/jsonld";
 
 const description =
   "XYZ 롤 계정 가격과 맞춤 상담 안내입니다. 원하는 티어, 챔피언, 스킨, 예산 조건에 맞춰 구매 전 확인 항목과 상담 기준을 안내합니다.";
@@ -52,7 +53,7 @@ export default function AccountPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(serviceJsonLd) }}
       />
       <ServiceDetail
         eyebrow="account"

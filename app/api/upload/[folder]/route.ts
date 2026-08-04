@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { writeFile, mkdir, access } from "fs/promises";
 import { constants } from "fs";
 import { join, resolve, basename } from "path";
+import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession";
 
 export const runtime = "nodejs";
 
@@ -35,6 +36,18 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ folder: string }> },
 ) {
+  // 업로드는 관리자 기사 관리 화면에서만 쓴다. 인증이 없으면 누구나 5MB
+  // 파일을 무제한으로 써서 디스크를 채우거나, 임의 바이트를 이 도메인의
+  // 공개 URL로 호스팅할 수 있다(MIME은 클라이언트가 보내는 값이라 못 믿는다).
+  // 본문 파싱보다 먼저 막아 미인증 요청이 파일을 읽지도 못하게 한다.
+  const token = getSessionTokenFromRequest(request);
+  if (!token || !validateSession(token)) {
+    return NextResponse.json(
+      { message: "관리자 권한이 필요합니다." },
+      { status: 403 },
+    );
+  }
+
   const { folder } = await params;
 
   if (!ALLOWED_FOLDERS.has(folder)) {

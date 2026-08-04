@@ -4,6 +4,7 @@ import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { site } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/jsonld";
 
 const description =
   "XYZ에서 함께할 상위 티어 롤 대리·롤 듀오 기사를 모집합니다. 챌린저·그랜드마스터 실력자라면 자유로운 일정으로 활동하고 정산받으세요.";
@@ -113,7 +114,7 @@ export default function RecruitPage() {
     <section className="py-20">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jobPostingJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jobPostingJsonLd) }}
       />
       <Container>
         <Reveal>

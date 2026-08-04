@@ -16,6 +16,9 @@ export function createBoosterSession(boosterId: number): string {
 
 export function validateBoosterSession(token: string): number | null {
   if (!token) return null;
+  // 비밀키가 없으면 빈 키로도 HMAC이 성립해 누구나 토큰을 위조할 수 있다.
+  if (!getSecret()) return null;
+
   const parts = token.split(":");
   if (parts.length !== 3) return null;
   const [boosterIdStr, expiryStr, sig] = parts;
@@ -23,13 +26,16 @@ export function validateBoosterSession(token: string): number | null {
   const expiry = Number(expiryStr);
   if (!boosterId || !expiry || Date.now() > expiry) return null;
 
+  // 16진수가 아닌 문자가 섞이면 Buffer.from(_, "hex")이 거기서 잘라내 길이가
+  // 달라지고, timingSafeEqual이 예외를 던져 요청이 500으로 죽는다.
+  if (!/^[0-9a-f]{64}$/.test(sig)) return null;
+
   const payload = `booster:${boosterId}:${expiry}`;
   const expectedSig = createHmac("sha256", getSecret()).update(payload).digest("hex");
 
-  const sigBuf = Buffer.from(sig.padEnd(128, "0"), "hex");
-  const expectedBuf = Buffer.from(expectedSig.padEnd(128, "0"), "hex");
-
-  if (!timingSafeEqual(sigBuf, expectedBuf) || sig !== expectedSig) return null;
+  if (!timingSafeEqual(Buffer.from(sig, "hex"), Buffer.from(expectedSig, "hex"))) {
+    return null;
+  }
   return boosterId;
 }
 

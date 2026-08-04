@@ -13,6 +13,7 @@ import {
   validateBoosterSession,
 } from "@/lib/boosterSession";
 import { site } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/jsonld";
 
 export const dynamic = "force-dynamic";
 
@@ -115,7 +116,7 @@ export default async function ReviewPage({ searchParams }: Props) {
     <section className="py-20">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredReviewData) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredReviewData) }}
       />
       <Container>
         <Reveal>
