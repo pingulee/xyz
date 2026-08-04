@@ -23,10 +23,15 @@ const EXT_MAP: Record<string, string> = {
   "image/webp": "webp",
 };
 
+// 업로드 저장 루트. 프로덕션은 배포와 분리된 영속 디렉토리를 UPLOAD_DIR로
+// 주입한다(standalone 배포는 배포마다 앱 경로가 바뀌어, 앱 안에 저장하면
+// 다음 배포에서 파일이 사라진다). 로컬 개발 기본값만 앱 옆 upload/ 를 쓴다.
+function getUploadBase(): string {
+  return process.env.UPLOAD_DIR ?? join(process.cwd(), "upload");
+}
+
 async function getUploadDir(folder: string): Promise<string> {
-  const base = process.env.UPLOAD_BASE_DIR
-    ?? join(process.cwd(), "upload");
-  const dir = resolve(join(base, folder));
+  const dir = resolve(join(getUploadBase(), folder));
   await mkdir(dir, { recursive: true });
   await access(dir, constants.W_OK);
   return dir;
@@ -86,7 +91,7 @@ export async function POST(
   } catch (err) {
     console.error(`[upload/${folder}] 디렉터리 접근 실패:`, err);
     return NextResponse.json(
-      { message: "업로드 디렉터리에 접근할 수 없습니다. UPLOAD_BASE_DIR 환경변수를 확인해주세요." },
+      { message: "업로드 디렉터리에 접근할 수 없습니다. UPLOAD_DIR 환경변수를 확인해주세요." },
       { status: 500 },
     );
   }

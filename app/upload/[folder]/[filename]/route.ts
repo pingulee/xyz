@@ -13,9 +13,10 @@ const MIME_MAP: Record<string, string> = {
   webp: "image/webp",
 };
 
+// 업로드 서빙 루트. 저장(api/upload)과 반드시 같은 값이어야 한다.
+// 프로덕션은 UPLOAD_DIR(영속 디렉토리)을 주입한다.
 function getUploadBase(): string {
-  return process.env.UPLOAD_BASE_DIR
-    ?? join(process.cwd(), "upload");
+  return process.env.UPLOAD_DIR ?? join(process.cwd(), "upload");
 }
 
 export async function GET(
