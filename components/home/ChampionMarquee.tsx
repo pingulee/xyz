@@ -48,6 +48,11 @@ export default async function ChampionMarquee() {
                 loading="lazy"
                 sizes="48px"
                 draggable={false}
+                // 최대 80개를 한 페이지에서 렌더한다. next/image 온디맨드 최적화를
+                // 거치면 리소스 적은 호스팅이 80개 동시 sharp 변환을 못 버텨
+                // 타임아웃 난다(GSC 페이지 리소스 로드 실패). 56px 장식 아이콘이라
+                // 최적화 이득이 없으므로 정적 원본을 그대로 서빙한다.
+                unoptimized
                 className="aspect-square w-full object-cover opacity-90"
               />
             </span>
