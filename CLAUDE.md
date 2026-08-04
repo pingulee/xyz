@@ -16,8 +16,8 @@
 - `npm run lint` — eslint
 
 ## 디렉토리 구조
-- **컴포넌트는 기능별 폴더**(평면 아님): `components/{layout,ui,home,service,quote,review,booster}` + `hooks/`. import는 항상 `@/` alias 절대경로(상대경로 `./` 안 씀). 새 컴포넌트는 해당 기능 폴더에.
-  - `layout`(Header/Footer/FloatingContact/Container), `ui`(SectionTitle/Reveal/JsonLd/FaqItem), `home`(HeroSlider/ServiceCard/HomeFaq), `service`(ServiceDetail/PriceTable), `quote`(QuoteCalculator+RankPicker/constants/types/utils), `review`(ReviewBoard+ReviewDetail/ReplySection/Stars/StarRating/ReviewNavButton/helpers/types/constants, ReviewDetailView, BoosterReview), `booster`(AdminBoosterBoard+AdminBoosterCard/adminBoosterConstants, BoosterCard/BoosterAvatar/BoosterAuthControls/WinStatsCard/TierRecords)
+- **컴포넌트는 기능별 폴더**(평면 아님): `components/{layout,ui,home,service,quote,review,booster,auth}` + `hooks/`. import는 항상 `@/` alias 절대경로(상대경로 `./` 안 씀). 새 컴포넌트는 해당 기능 폴더에.
+  - `layout`(Header/Footer/FloatingContact/Container), `ui`(SectionTitle/Reveal/JsonLd/FaqItem), `home`(HeroSlider/ServiceCard/HomeFaq), `service`(ServiceDetail/PriceTable), `quote`(QuoteCalculator+RankPicker/constants/types/utils), `review`(ReviewBoard+ReviewDetail/ReplySection/Stars/StarRating/ReviewNavButton/helpers/types/constants, ReviewDetailView, BoosterReview), `booster`(AdminBoosterBoard+AdminBoosterCard/adminBoosterConstants, BoosterCard/BoosterAvatar/WinStatsCard/TierRecords), `auth`(LoginForm/SignupForm/AuthControls/MyReviewList — 통합 인증 UI)
   - `hooks/useChampionOptions.ts` = quote·booster 공용 챔피언 데이터 훅.
 - 큰 컴포넌트는 하위 컴포넌트/상수/타입/헬퍼를 같은 폴더 내 파일로 분리(예: review/, quote/). `booster/`는 여러 컴포넌트 공유 폴더라 상수 파일명에 접두사(`adminBoosterConstants.ts`).
 
@@ -35,7 +35,15 @@
   - 동적 사이트맵은 `export const revalidate = 3600`(ISR). **리터럴이어야 함** — 상수 import 시 "Invalid segment configuration export"로 빌드 실패.
   - DB 조회는 `lib/sitemap.ts`의 `withFallback`(5초 상한, 실패 시 빈 배열)으로 감쌀 것. 에러 없이 매달리는 조회는 try/catch로 못 잡는다.
   - **사이트맵용 쿼리는 전용 경량 함수로.** `getBoosterList`는 DDL 보정 + 리뷰 집계 JOIN + 전적 요약까지 돌아 5초를 넘겼다(실측). slug엔 이름만 필요 → `getBoosterSitemapEntries`. 후기는 `getSitemapReviewEntries`(5000건 상한).
-- **인증**: `lib/adminSession.ts`(관리자), `lib/boosterSession.ts`(기사) — 쿠키 기반. `SESSION_COOKIE`, `BOOSTER_SESSION_COOKIE`. 쿠키는 `HttpOnly; SameSite=Strict`(프로덕션 `Secure`) → JS로 못 읽는다. 클라이언트에서 세션이 필요하면(ISR 페이지 편집 UI 등) `app/api/session/me`(`{isAdmin, boosterId, boosterName}` 반환) + `hooks/useSession.ts`를 쓴다. `validateSession→boolean`, `validateBoosterSession→number|null`.
+- **인증(통합)**: 세 역할 `admin`/`booster`/`customer`를 **단일 쿠키 `xyz_session`**(`lib/session.ts`)으로 통합. 토큰은 `role:userId:expiry` HMAC-SHA256 서명(role이 서명에 포함돼 위조 불가). 서명 키 `getAuthSecret()` = `AUTH_SECRET ?? ADMIN_PASSWORD`(빈 값이면 fail-closed). 쿠키 `HttpOnly; SameSite=Strict`(prod `Secure`).
+  - **`lib/authz.ts` = 통합 권한 게이트**: `getSession`/`isAdmin`/`resolveBoosterId`. 모든 API 라우트·서버 페이지가 이걸 쓴다(라우트마다 중복이던 `isAdminRequest` 폐기). 서버 컴포넌트(page)는 Request가 없어 `getSessionFromCookieHeader(headers().get("cookie"))`를 쓴다.
+  - **`lib/users.ts` = users 테이블**(username UNIQUE·소문자 정규화, scrypt 해시, role `customer`/`booster`). **관리자는 DB가 아니라 env** `ADMIN_USERNAME`+`ADMIN_PASSWORD`(role=admin, userId=0). `lib/password.ts`(scrypt 단일화, 열거 방지 더미검증), `lib/authRateLimit.ts`(로그인·가입 IP 레이트리밋).
+  - **엔드포인트/UI**: `/api/auth/{login,signup,logout}`, 통합 폼 `/login`(회원가입 링크)·`/signup`, 마이페이지 `/mypage`. 헤더 `components/auth/AuthControls`. 클라이언트 세션은 `hooks/useSession`+`app/api/session/me`(`{role,userId,username,isAdmin,boosterId,boosterName}` — 하위호환 필드 유지).
+  - **기사** = `booster` 프로필 + `users`(role=booster) `booster.user_id`로 연결(booster.id는 답글권한·통계·조인의 안정 식별자라 유지). 관리자가 `/api/booster` POST(username+비번)로 users+booster를 **한 트랜잭션**으로 생성. **고객** = 셀프 회원가입 → 로그인 후기 작성(`review.user_id` 소유, 비번 없이) + 마이페이지. **관리자 슈퍼권한**: 모든 기사 답글·후기 수정·삭제(서버 세션 role로만 판정).
+  - **후기 소유권**: `admin` | `review.user_id === session.userId`(로그인 고객) | 비번(비로그인) 순. 클라가 보낸 id 불신 — 서명된 `session.userId`만 신뢰.
+  - **과도기 폴백(Phase 5에서 제거 예정)**: 구 쿠키(`xyz_admin_session`/`xyz_booster_session`) 병행 읽기, 구 기사 `name+비번` 로그인 폴백, `booster_password_hash` 병행 기입, 구 라우트(`/api/admin/login`·`/api/booster/{login,logout,status}`·`/admax`, `lib/{adminSession,boosterSession}.ts`) 유지. **원본 해시 삭제 금지**(롤백 안전망). scrypt 해시 포맷이 동일해 기존 기사 해시를 users로 그대로 복사(`ensureAuthSchema` 백필).
+  - **DDL 배치**: users 테이블·백필 = `ensureAuthSchema`(users.ts). `booster.user_id` = `ensureBoosterSchema`. `review.user_id`+password_hash NULL 완화 = `ensureReviewSchema`. 자기 테이블 컬럼은 자기 ensure에서(그 테이블만 쓰는 라우트에서도 보장). 전부 추가만, FK·DROP 없음.
+  - **필수 env**: `ADMIN_USERNAME`, `ADMIN_PASSWORD`, (권장) `AUTH_SECRET`.
 - **인프로세스 집계 캐시 `lib/stats-cache.ts`**: 무거운 `tier_records` 집계를 60초 TTL로 메모이즈. `MAX_ENTRIES=500` 상한 + eviction(만료분→최오래분 순으로 제거, 무한 증가 방지). 리뷰/답글/부스터 쓰기 시 `clearStatsCache()`(각 `invalidate*Caches`에 포함)로 무효화.
 - 부스터 slug는 저장 안 함 — `getBoosterSlug(name)`으로 파생 (`lib/booster-model.ts`).
 
