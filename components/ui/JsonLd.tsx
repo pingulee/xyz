@@ -11,7 +11,6 @@ export default function JsonLd() {
         "@type": "Organization",
         "@id": `${site.url}/#organization`,
         name: BRAND_NAME,
-        alternateName: site.name,
         url: site.url,
         logo: {
           "@type": "ImageObject",
@@ -32,7 +31,6 @@ export default function JsonLd() {
         "@type": "WebSite",
         "@id": `${site.url}/#website`,
         name: BRAND_NAME,
-        alternateName: site.name,
         url: site.url,
         inLanguage: "ko-KR",
         publisher: { "@id": `${site.url}/#organization` },
@@ -41,7 +39,6 @@ export default function JsonLd() {
         "@type": "Service",
         "@id": `${site.url}/#service`,
         name: BRAND_NAME,
-        alternateName: site.name,
         url: site.url,
         description: site.description,
         areaServed: "KR",
