@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { LogIn, LogOut, User } from "lucide-react";
+import { LogIn, LogOut, Settings, User } from "lucide-react";
 import { useSession } from "@/hooks/useSession";
 
 // 헤더 인증 컨트롤. 비로그인=로그인 링크, 로그인=로그아웃(+고객은 마이페이지).
@@ -40,6 +40,11 @@ export default function AuthControls({ className = "" }: { className?: string })
 
   return (
     <div className="flex items-center gap-2">
+      {session.role === "admin" && (
+        <Link href="/admin" aria-label="관리자" className={iconCls}>
+          <Settings size={18} />
+        </Link>
+      )}
       {session.role === "customer" && (
         <Link href="/mypage" aria-label="마이페이지" className={iconCls}>
           <User size={18} />

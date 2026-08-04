@@ -57,7 +57,7 @@ function LoginFormInner({ fallbackFrom = "/" }: { fallbackFrom?: string }) {
         data.role === "admin"
           ? isSafeReturnPath(from)
             ? from
-            : "/booster"
+            : "/admin"
           : data.role === "booster"
             ? "/review"
             : isSafeReturnPath(from)

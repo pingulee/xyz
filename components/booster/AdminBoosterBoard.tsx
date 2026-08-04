@@ -2,7 +2,6 @@
 
 import { Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import AdminBoosterCard from "@/components/booster/AdminBoosterCard";
 import {
   blankForm,
@@ -13,8 +12,8 @@ import type {
   FormState,
   BoosterResponse,
 } from "@/components/booster/adminBoosterConstants";
-import { getBoosterPath } from "@/lib/booster-model";
 import type { Booster } from "@/lib/booster-model";
+import type { SignupCode } from "@/lib/signupCodes";
 
 const MAX_IMAGE_SIZE = 1024 * 1024 * 5;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -38,10 +37,15 @@ const TIME_SLOTS = [
 
 export default function AdminBoosterBoard({
   initialBoosterList = [],
+  initialCodes = [],
 }: {
   initialBoosterList?: Booster[];
+  initialCodes?: SignupCode[];
 }) {
   const [boosterList, setBoosterList] = useState(initialBoosterList);
+  const [codes, setCodes] = useState(initialCodes);
+  const [issuing, setIssuing] = useState(false);
+  const [codeError, setCodeError] = useState("");
   const [form, setForm] = useState(blankForm);
   const [editingId, setEditingId] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -56,7 +60,6 @@ export default function AdminBoosterBoard({
   const [imageError, setImageError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mousedownOnOverlay = useRef(false);
-  const router = useRouter();
 
   useEffect(() => {
     if (modalOpen) {
@@ -129,14 +132,41 @@ export default function AdminBoosterBoard({
     setImageError("");
   };
 
-  const openWrite = () => {
-    setEditingId("");
-    setForm(blankForm);
-    setSubmitAttempted(false);
-    resetImageState();
-    setMessage("");
-    setSubmitAttempted(false);
-    setModalOpen(true);
+  const issueCode = async () => {
+    setIssuing(true);
+    setCodeError("");
+    try {
+      const res = await fetch("/api/admin/signup-codes", { method: "POST" });
+      const data = (await res.json()) as { code?: string; message?: string };
+      if (!res.ok || !data.code) throw new Error(data.message ?? "코드 발급에 실패했습니다.");
+      const code = data.code;
+      setCodes((c) => [
+        { code, used: false, usedByUserId: null, createdAt: new Date().toISOString(), usedAt: null },
+        ...c,
+      ]);
+      try {
+        await navigator.clipboard.writeText(code);
+      } catch {
+        /* 클립보드 실패는 무시(코드는 목록에 표시됨) */
+      }
+    } catch (err) {
+      setCodeError(err instanceof Error ? err.message : "코드 발급에 실패했습니다.");
+    } finally {
+      setIssuing(false);
+    }
+  };
+
+  const deleteCode = async (code: string) => {
+    try {
+      const res = await fetch("/api/admin/signup-codes", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      if (res.ok) setCodes((c) => c.filter((x) => x.code !== code));
+    } catch {
+      /* noop */
+    }
   };
 
   const parseHours = (hours: string): { start: string; end: string; all: boolean } => {
@@ -219,9 +249,7 @@ export default function AdminBoosterBoard({
       form.positionSet.size === 0 ||
       form.description.trim().length < BOOSTER_DESCRIPTION_MIN_LENGTH ||
       (!form.serviceBoost && !form.serviceDuo) ||
-      (!editingId && form.boosterPassword.trim().length < BOOSTER_PASSWORD_MIN_LENGTH) ||
-      (Boolean(editingId) &&
-        form.boosterPassword.trim().length > 0 &&
+      (form.boosterPassword.trim().length > 0 &&
         form.boosterPassword.trim().length < BOOSTER_PASSWORD_MIN_LENGTH);
 
     if (missingRequired) {
@@ -253,26 +281,18 @@ export default function AdminBoosterBoard({
       }
 
       const response = await fetch("/api/booster", {
-        method: editingId ? "PUT" : "POST",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: editingId || undefined,
+          id: editingId,
           ...buildPayload(imageUrl),
-          ...(editingId ? {} : { username: form.username }),
-          sortOrder: editingId
-            ? (boosterList.find((l) => l.id === editingId)?.sortOrder ?? 0)
-            : boosterList.length,
+          sortOrder: boosterList.find((l) => l.id === editingId)?.sortOrder ?? 0,
         }),
       });
       const data = (await response.json()) as BoosterResponse;
       if (!response.ok) throw new Error(data.message ?? "저장하지 못했습니다.");
 
-      if (editingId) {
-        setBoosterList((cur) => cur.map((l) => (l.id === editingId ? data.booster : l)));
-      } else {
-        setBoosterList((cur) => [...cur, data.booster]);
-        router.push(getBoosterPath(data.booster));
-      }
+      setBoosterList((cur) => cur.map((l) => (l.id === editingId ? data.booster : l)));
       closeModal();
     } catch (err) {
       setUploading(false);
@@ -343,7 +363,7 @@ export default function AdminBoosterBoard({
                   admin
                 </p>
                 <h2 className="mt-1 text-xl font-black text-white md:text-2xl">
-                  {editingId ? "기사 수정" : "기사 추가"}
+                  기사 수정
                 </h2>
               </div>
               <button
@@ -593,20 +613,6 @@ export default function AdminBoosterBoard({
                   )}
                 </label>
 
-                {!editingId && (
-                  <label className={labelCls}>
-                    로그인 아이디
-                    <input
-                      value={form.username}
-                      onChange={set("username")}
-                      maxLength={30}
-                      className={inputCls}
-                      placeholder="영문 소문자·숫자·밑줄 3~30자"
-                      autoComplete="off"
-                    />
-                  </label>
-                )}
-
                 <label className={labelCls}>
                   기사 로그인 비밀번호
                   <input
@@ -650,7 +656,7 @@ export default function AdminBoosterBoard({
                   {(saving || uploading) && (
                     <Loader2 size={18} className="animate-spin" />
                   )}
-                  {uploading ? "이미지 업로드 중..." : editingId ? "수정 저장" : "기사 등록"}
+                  {uploading ? "이미지 업로드 중..." : "수정 저장"}
                 </button>
               </div>
             </form>
@@ -659,18 +665,77 @@ export default function AdminBoosterBoard({
       )}
 
       <div className="space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-xl font-black text-white">기사 {boosterList.length}명</h2>
-          <div className="flex items-center gap-3">
+        {/* 기사 가입 코드: 합격자에게 발급해 전달. 코드로만 기사 회원가입 가능. */}
+        <div className="space-y-4 rounded-3xl border border-gold/15 bg-white/3.5 p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-black text-white">기사 가입 코드</h2>
+              <p className="mt-1 text-xs text-zinc-500">
+                합격한 기사에게 코드를 발급해 전달하세요. 코드 1개당 1명 가입.
+              </p>
+            </div>
             <button
               type="button"
-              onClick={openWrite}
-              className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black transition hover:brightness-110"
+              onClick={() => void issueCode()}
+              disabled={issuing}
+              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black transition hover:brightness-110 disabled:opacity-60"
             >
-              <Plus size={16} />
-              기사 추가
+              {issuing ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+              코드 발급
             </button>
           </div>
+          {codeError && (
+            <p className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-200">
+              {codeError}
+            </p>
+          )}
+          {codes.length === 0 ? (
+            <p className="text-sm text-zinc-500">발급된 코드가 없습니다.</p>
+          ) : (
+            <ul className="grid gap-2">
+              {codes.map((c) => (
+                <li
+                  key={c.code}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-white/8 bg-black/25 px-4 py-3"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <code className="truncate font-mono text-sm text-white">{c.code}</code>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-black ${
+                        c.used
+                          ? "bg-white/5 text-zinc-500"
+                          : "bg-emerald-400/10 text-emerald-300"
+                      }`}
+                    >
+                      {c.used ? "사용됨" : "미사용"}
+                    </span>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => void navigator.clipboard.writeText(c.code)}
+                      className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-bold text-zinc-400 transition hover:text-white"
+                    >
+                      복사
+                    </button>
+                    {!c.used && (
+                      <button
+                        type="button"
+                        onClick={() => void deleteCode(c.code)}
+                        className="rounded-full border border-red-400/25 px-3 py-1.5 text-xs font-bold text-red-200 transition hover:bg-red-400/10"
+                      >
+                        삭제
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-xl font-black text-white">기사 {boosterList.length}명</h2>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
