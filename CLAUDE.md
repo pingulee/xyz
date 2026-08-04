@@ -6,7 +6,7 @@
 - **Next.js 16.2.9** (App Router, **Turbopack**, **React Compiler** `reactCompiler: true`)
 - React 19.2 / TypeScript 5 / Tailwind CSS v4 (`@tailwindcss/postcss`)
 - **MySQL** (`mysql2`) — 부스터/후기 데이터
-- framer-motion(애니메이션), lucide-react(아이콘)
+- lucide-react(아이콘). **framer-motion 안 씀**(성능 이유로 제거 — 아래 성능 섹션).
 - 경로 alias `@/*` → 프로젝트 루트
 
 ## 명령어
@@ -25,22 +25,30 @@
 - **`lib/site.ts` = 사이트 단일 진실 소스**: `site`(name/url/description/kakaoUrl/ogImage/logo), `navItems`, `services`, 가격표(`boostingPrices`/`duoPrices`). 도메인/이미지/네비 변경은 여기서.
 - **도메인은 IDN**: `https://롤대리.xyz` → punycode `xn--vk1b65hf2a.xyz`. **`site.url`은 이미 punycode로 정규화된 값**(`lib/site.ts`의 `SITE_ORIGIN = new URL(...).origin`). 한글 원문 URL을 코드에 다시 하드코딩하지 말 것 — robots.txt/sitemap.xml/JSON-LD는 문자열을 그대로 출력하므로(Next가 인코딩 안 함) 호스트가 canonical과 어긋나 사이트맵 전량 거부됨.
 - **서비스 카드 이미지**: `/images/slider/01~03.webp` 재사용 (01=대리, 02=듀오, 03=계정). `boosting/duo/account.png`는 **존재하지 않음** — 새 경로 추가 시 실제 파일 먼저 배치할 것 (없으면 next/image가 400).
-- **DB 접근 페이지는 `export const dynamic = "force-dynamic"`** (booster, review, 상세, admin, login).
+- **DB 접근 페이지 렌더링 정책** (목록·관리는 동적, 상세는 ISR):
+  - **목록·관리 페이지는 `force-dynamic`** (booster 목록, review 목록, admin, login). 세션·실시간성이 필요하고 페이지 수가 적어 매요청 조회가 부담되지 않는다.
+  - **상세 페이지(`review/[id]`, `booster/[slug]`)는 온디맨드 ISR** — `export const revalidate = 3600` + `generateStaticParams()` **빈 배열**. force-dynamic 아님. 과거엔 force-dynamic이었으나(항상 최신 + 세션 SSR + 무효화 불필요라는 이점), 1,600여 상세가 방문·크롤마다 DB를 4~5회 왕복(`getReviewById`+`getReviewNavigation`+`getBoosterById`+`getRelatedReviews`, 기사 로그인 시 `sessionBooster` 추가)해 리소스 대비 이점이 역전됐다 → revalidate 주기당 1회로 축소.
+    - **동적 세그먼트는 `generateStaticParams`가 없으면 revalidate가 있어도 SSR(ƒ)로 남는다.** 빈 배열이라도 있어야 SSG(●)/온디맨드 ISR로 전환(빌드 프리렌더 0, 각 상세는 첫 요청 시 생성 후 캐시). 빌드 로그 Route 표에서 ● 확인.
+    - **ISR 페이지의 세션 UI는 클라이언트로 분리해야 한다.** 페이지에서 `cookies()`를 없애야 정적화된다(그게 유일한 force-dynamic 원인이었다). 관리자/기사 편집 UI는 `hooks/useSession.ts`가 `app/api/session/me`(force-dynamic)를 조회해 켠다. 세션 쿠키가 **HttpOnly**라 `document.cookie`로 못 읽어 서버 왕복이 필수. 초기값은 비로그인이라 캐시 HTML과 일치(하이드레이션 안전), 로그인 상태면 뒤이어 편집 UI가 켜진다.
+    - **ISR 페이지 무효화는 `revalidatePath`** (태그로는 안 지워진다). `revalidateTag`는 `unstable_cache` 목록류만 무효화하고 렌더된 페이지 HTML은 못 지운다. 후기/답글 쓰기 route가 `invalidateReviewCaches(reviewId)`를 호출하면 `revalidatePath('/review/[id]')`로 상세가 즉시 갱신된다(`lib/cache-tags.ts`). 기사 상세(`booster/[slug]`)의 집계 지연은 revalidate 안전망(1h)으로 흡수 — 답글 즉시성은 후기 상세 쪽이 핵심.
   - **사이트맵은 예외 — 용도별 3분할.** `app/sitemap.ts`(정적 7개, **DB 접근 0** → 빌드 시 프리렌더, 절대 안 죽음), `app/booster/sitemap.ts`, `app/review/sitemap.ts`. 합치면 DB 조회 하나가 늦을 때 정적 URL까지 죽고, GSC가 사이트맵 단위로만 상태를 보고해 원인 특정이 불가능하다. `app/robots.ts`는 `sitemap` 배열로 3줄 노출(복수 `Sitemap:` 지시자는 규격 허용, 인덱스 파일 불필요).
   - 동적 사이트맵은 `export const revalidate = 3600`(ISR). **리터럴이어야 함** — 상수 import 시 "Invalid segment configuration export"로 빌드 실패.
   - DB 조회는 `lib/sitemap.ts`의 `withFallback`(5초 상한, 실패 시 빈 배열)으로 감쌀 것. 에러 없이 매달리는 조회는 try/catch로 못 잡는다.
   - **사이트맵용 쿼리는 전용 경량 함수로.** `getBoosterList`는 DDL 보정 + 리뷰 집계 JOIN + 전적 요약까지 돌아 5초를 넘겼다(실측). slug엔 이름만 필요 → `getBoosterSitemapEntries`. 후기는 `getSitemapReviewEntries`(5000건 상한).
-- **인증**: `lib/adminSession.ts`(관리자), `lib/boosterSession.ts`(기사) — 쿠키 기반. `SESSION_COOKIE`, `BOOSTER_SESSION_COOKIE`.
+- **인증**: `lib/adminSession.ts`(관리자), `lib/boosterSession.ts`(기사) — 쿠키 기반. `SESSION_COOKIE`, `BOOSTER_SESSION_COOKIE`. 쿠키는 `HttpOnly; SameSite=Strict`(프로덕션 `Secure`) → JS로 못 읽는다. 클라이언트에서 세션이 필요하면(ISR 페이지 편집 UI 등) `app/api/session/me`(`{isAdmin, boosterId, boosterName}` 반환) + `hooks/useSession.ts`를 쓴다. `validateSession→boolean`, `validateBoosterSession→number|null`.
+- **인프로세스 집계 캐시 `lib/stats-cache.ts`**: 무거운 `tier_records` 집계를 60초 TTL로 메모이즈. `MAX_ENTRIES=500` 상한 + eviction(만료분→최오래분 순으로 제거, 무한 증가 방지). 리뷰/답글/부스터 쓰기 시 `clearStatsCache()`(각 `invalidate*Caches`에 포함)로 무효화.
 - 부스터 slug는 저장 안 함 — `getBoosterSlug(name)`으로 파생 (`lib/booster-model.ts`).
 
 ## SEO 컨벤션 (준수 필수)
 - **페이지당 `<h1>` 정확히 1개.** `SectionTitle`은 기본 `h2`, 주 제목엔 `as="h1"` 전달. `ServiceDetail`은 내부에서 이미 `as="h1"`.
 - 모든 공개 페이지: per-page `metadata` + `alternates.canonical` + `openGraph`(siteName/images) + twitter. 이미지 기본값 `site.ogImage`.
+- **루트 `app/layout.tsx`의 `openGraph`/`twitter`에 `images` 지정**(=`site.ogImage`, 500×500). 자기 og 이미지를 둔 자식 페이지는 이를 덮어쓰고, 안 둔 페이지는 이 대표 이미지를 상속한다. 없으면 홈 소셜 공유에 미리보기 이미지가 안 뜬다. (단 `alternates.canonical`은 아래 규칙대로 루트에 절대 두지 말 것 — `images`만 두는 것과 구분.)
 - **`alternates.canonical`은 루트 `app/layout.tsx`에 절대 넣지 말 것.** Next metadata는 `alternates`를 자식으로 상속시키므로, 루트에 `"/"`를 두면 자기 canonical을 지정하지 않은 모든 페이지가 홈을 정본으로 선언 → 색인 제외("대체 페이지, 적절한 표준 태그 있음"). 홈 canonical은 `app/page.tsx`에. **새 공개 페이지 추가 시 canonical 지정 필수.**
 - 동적 라우트는 `generateMetadata`.
 - 구조화 데이터: `components/ui/JsonLd.tsx`(홈, `@graph`: Organization+WebSite+Service), 서비스 페이지 Service/FAQPage, 후기 Review, 상세 페이지 BreadcrumbList.
 - `app/robots.ts` — `/admin`, `/login`, `/api/` disallow. `app/sitemap.ts` — 정적 + 동적(부스터 slug, 후기 id).
 - 비공개 페이지(admin/login) `robots: { index: false }`.
+- **상세 페이지 ISR은 SEO에 무해(오히려 유리).** 크롤러가 받는 HTML은 SSR/ISR 동일(완성 HTML). JSON-LD·`generateMetadata`(canonical/og)·본문 그대로 출력된다. 세션 편집 UI를 클라이언트로 뺐으므로 크롤러는 비로그인 상태의 깨끗한 HTML을 본다. 캐시 서빙이라 TTFB가 빨라 크롤 예산·CWV에 이득. 첫 요청 1회 생성 지연만 있고 이후 캐시.
 
 ## 접근성 (Lighthouse 통과 유지)
 - 아이콘 전용 버튼엔 반드시 `aria-label`.
@@ -56,6 +64,9 @@
 - `next.config.ts` `experimental.inlineCss: true` — 렌더 차단 CSS 제거.
 - `package.json` `browserslist` 최신 타깃(safari 15.4+) — 레거시 폴리필 트랜스파일 방지. 구형 브라우저 지원 필요 시에만 완화.
 - **이미지**: `next/image`, 정확한 `sizes` 필수(과대 다운로드 방지, `object-contain`이면 실제 렌더 폭 기준). 히어로/서비스 이미지는 `/images/slider/*.webp` 공용 — 모바일 4G에서 큼. 전용 소스/`quality` 조정 여지 있음.
+- **이미지 최적화(sharp)는 크기로 갈린다 — "자동 최적화 = 리소스 절약"이 아니다.** Next 이미지 최적화는 서버가 요청 시 sharp로 리사이즈·webp 변환하므로 CPU·메모리를 쓴다. 리소스 적은 공유호스팅에선 이게 부담(첫 요청 변환 스파이크).
+  - **작은 반복 아이콘은 `unoptimized`**: 티어 아이콘(`/images/tier/*.png` 80×80), 국기 svg, 챔피언 초상화(`/upload|images/champion/*.png`), 로고. 파일 축소 이득이 사실상 0인데 sharp CPU만 쓴다. **마퀴 챔피언 80개를 최적화하다 GSC "페이지 리소스 78/91개 로드 실패"가 났던 이력** — 소형 아이콘은 전부 unoptimized로 통일(WinStatsCard/TierRecords/BoosterCard/AdminBoosterCard/TierBand/PriceTable/RankPicker/booster·review 상세 등). 새 아이콘도 동일.
+  - **큰 컨텐츠 이미지는 최적화 유지**: slider webp(1448×1086), gotoc.png(1024×1024), 서비스카드, 아바타. 리사이즈 이득이 크고 장수가 적어 sharp 폭주가 없다. 여기엔 `unoptimized`를 붙이지 말 것.
 - 애니메이션은 GPU 합성 속성(opacity/transform)만. `width`/`top`/`offsetWidth` 등 레이아웃 유발 속성 애니메이션 금지.
 - **폰트 = Pretendard 동적 서브셋**(`public/fonts/pretendard/`). 단일 2MB `PretendardVariable.woff2`(`next/font/local`)는 **제거됨** — 느린 4G에서 통짜 2MB 프리로드가 모바일 LCP 13초 원인이었음. 동적 서브셋은 페이지에 실제 쓰인 unicode-range woff2(수십KB)만 다운로드 → LCP 13s→4.7s. 폰트 패밀리는 `--font-pretendard`(globals.css `:root`)로 배선, `next/font` 안 씀. 통짜 폰트 재도입 금지.
   - **서브셋 CSS는 `layout.tsx`에서 `fs.readFileSync`로 읽어 `url(./)`→절대경로 치환 후 인라인 `<style>`**(렌더 차단 `<link>` 제거 → LCP 추가 개선 ~1.5s). `.css` 파일은 빌드 시 읽으므로 유지 필수, woff2는 절대경로로 참조됨.

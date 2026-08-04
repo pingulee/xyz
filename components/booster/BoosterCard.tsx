@@ -69,6 +69,7 @@ export default function BoosterCard({
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1">
                 <Image
+                  unoptimized
                   src={booster.tier}
                   alt={booster.rank}
                   width={18}
@@ -83,6 +84,7 @@ export default function BoosterCard({
             <p className="mt-1.5 flex items-center gap-2 font-black text-white">
               <span className="truncate">{booster.name}</span>
               <Image
+                unoptimized
                 src={nationalityFlag(booster.nationality)}
                 alt={nationalityLabel(booster.nationality)}
                 title={nationalityLabel(booster.nationality)}

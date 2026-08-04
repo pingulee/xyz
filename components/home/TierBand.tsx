@@ -18,6 +18,7 @@ function TierNode({
         className={`grid h-full w-full place-items-center rounded-2xl border ${boxClass}`}
       >
         <Image
+          unoptimized
           src={`/images/tier/${file}.png`}
           alt={`${label} 구간 롤 대리·듀오`}
           width={56}

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
@@ -12,19 +11,25 @@ import {
   getReviewById,
   getReviewNavigation,
 } from "@/lib/review";
-import {
-  BOOSTER_SESSION_COOKIE,
-  validateBoosterSession,
-} from "@/lib/boosterSession";
-import { SESSION_COOKIE, validateSession } from "@/lib/adminSession";
 import { site } from "@/lib/site";
 import { serializeJsonLd } from "@/lib/jsonld";
 
-export const dynamic = "force-dynamic";
+// 세션(관리자/기사) 읽기를 클라이언트로 옮겨(cookies() 제거) 페이지를 정적
+// 캐시한다. 방문·크롤마다 DB를 4~5회 왕복하던 부하가 revalidate 주기당 1회로
+// 준다. 편집 UI는 ReviewDetailView가 /api/session/me 로 세션을 확인해 켠다.
+// 후기/답글 쓰기 시 해당 API에서 revalidatePath("/review/[id]")로 즉시 갱신한다.
+export const revalidate = 3600;
 
 type Props = {
   params: Promise<{ id: string }>;
 };
+
+// 동적 세그먼트를 ISR 대상으로 전환한다. 빈 배열이라 빌드 프리렌더는 0(1,600여
+// 개를 빌드에 올리지 않는다). dynamicParams(기본 true)로 각 후기는 첫 요청 시
+// 생성돼 revalidate 기간 캐시된다(온디맨드 ISR). 쓰기 시 revalidatePath로 갱신.
+export function generateStaticParams() {
+  return [];
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
@@ -92,25 +97,16 @@ export default async function ReviewDetailPage({ params }: Props) {
     notFound();
   }
 
-  const cookieStore = await cookies();
-  const adminToken = cookieStore.get(SESSION_COOKIE)?.value ?? "";
-  const isAdmin = validateSession(adminToken);
-  const boosterToken = cookieStore.get(BOOSTER_SESSION_COOKIE)?.value ?? "";
-  const boosterId = validateBoosterSession(boosterToken);
   const replyBoosterId = review.reply?.boosterId ?? review.boosterId ?? "";
 
-  // 기사 한 명만 필요한데 getBoosterList는 전체 목록 + 리뷰 집계 JOIN + 전적
-  // 요약까지 돌린다. 후기 상세는 1,600여 개라 크롤 효율에 직결돼 단건 조회로 쓴다.
-  // 이미 읽은 review의 작성 시각을 넘겨 이전/다음 조회의 기준 시각 재조회를 없앤다.
+  // 답글 단 기사 한 명만 필요한데 getBoosterList는 전체 목록 + 리뷰 집계 JOIN +
+  // 전적 요약까지 돌린다. 후기 상세는 1,600여 개라 크롤 효율에 직결돼 단건 조회로
+  // 쓴다. 이미 읽은 review의 작성 시각을 넘겨 이전/다음 조회의 기준 시각 재조회를 없앤다.
   const [navigation, booster, relatedReviews] = await Promise.all([
     getReviewNavigation(reviewId, review.createdAt),
     replyBoosterId ? getBoosterById(Number(replyBoosterId)) : null,
     getRelatedReviews(reviewId, replyBoosterId, review.service),
   ]);
-  // 기사가 로그인한 상태라면 답변 폼에 본인 이름을 채워준다.
-  const sessionBooster =
-    !booster && boosterId ? await getBoosterById(Number(boosterId)) : null;
-  const boosterName = booster?.name ?? sessionBooster?.name ?? "";
   // 서비스명이 비어 있는 과거 데이터가 있어 name이 빈 문자열이 되지 않게 막는다.
   const reviewedProductName = review.service || `${site.brand} 롤 서비스`;
   const reviewJsonLd = {
@@ -198,13 +194,10 @@ export default async function ReviewDetailPage({ params }: Props) {
         <Reveal>
           <ReviewDetailView
             initialReview={review}
-            boosterId={boosterId}
-            boosterName={boosterName}
             boosterImage={booster?.image ?? ""}
             boosterAvailability={booster ?? null}
             previousReview={navigation.previous}
             nextReview={navigation.next}
-            isAdmin={isAdmin}
           />
         </Reveal>
         <Reveal>

@@ -11,6 +11,7 @@ import {
   isTierRecordsComplete,
   normalizeTierRecords,
 } from "@/components/booster/TierRecords";
+import { useSession } from "@/hooks/useSession";
 import type { Review, ReviewReply, TierRecord } from "@/lib/review";
 
 const RECENT_LIMIT = 3; // 기사 상세: 최근 후기 3개만 표시(페이지네이션 없음)
@@ -308,17 +309,21 @@ function ReplyBlock({
 
 export default function BoosterReview({
   reviewList,
-  boosterId = null,
   boosterName = "",
   boosterImage = "",
   boosterAvailability = null,
 }: {
   reviewList: Review[];
-  boosterId?: number | null;
   boosterName?: string;
   boosterImage?: string;
   boosterAvailability?: BoosterAvailability | null;
 }) {
+  // 답글 권한 판정용 세션 기사 id는 ISR 캐시된 페이지에서 서버 props로 받을 수
+  // 없어 클라이언트에서 조회한다. boosterName/Image/Availability는 프로필 주인
+  // 값(정적)이라 그대로 props로 받는다.
+  const { session } = useSession();
+  const boosterId = session.boosterId;
+
   if (reviewList.length === 0) {
     return (
       <div className="rounded-3xl border border-white/8 bg-white/3 px-6 py-10 text-center text-sm text-zinc-500">

@@ -104,6 +104,7 @@ export default function RankPicker({
                 </span>
               ) : (
                 <Image
+                  unoptimized
                   src={item.image}
                   alt=""
                   width={52}

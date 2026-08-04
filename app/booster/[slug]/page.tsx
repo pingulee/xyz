@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { Clock, MessageCircle, Star, Swords } from "lucide-react";
 import Container from "@/components/layout/Container";
@@ -11,14 +10,14 @@ import BoosterReview from "@/components/review/BoosterReview";
 import WinStatsCard from "@/components/booster/WinStatsCard";
 import { getBoosterBySlug, getBoosterReviewStats, getBoosterWinStats } from "@/lib/booster";
 import { getBoosterReviewPage } from "@/lib/review";
-import {
-  BOOSTER_SESSION_COOKIE,
-  validateBoosterSession,
-} from "@/lib/boosterSession";
 import { site } from "@/lib/site";
 import { serializeJsonLd } from "@/lib/jsonld";
 
-export const dynamic = "force-dynamic";
+// 세션(기사) 읽기를 클라이언트로 옮겨(cookies() 제거) 페이지를 정적 캐시한다.
+// 방문·크롤마다 DB를 4회 왕복하던 부하가 revalidate 주기당 1회로 준다. 답글
+// 편집 UI는 BoosterReview가 /api/session/me 로 세션을 확인해 켠다. 답글 쓰기
+// 시 reply API에서 revalidatePath("/booster/[slug]")로 통계를 즉시 갱신한다.
+export const revalidate = 3600;
 
 function nationalityFlag(code: number) {
   return code === 2 ? "/images/flags/cn.svg" : "/images/flags/kr.svg";
@@ -30,6 +29,13 @@ function nationalityLabel(code: number) {
 type Props = {
   params: Promise<{ slug: string }>;
 };
+
+// 동적 세그먼트를 ISR 대상으로 전환한다. 빈 배열이라 빌드 프리렌더는 0.
+// dynamicParams(기본 true)로 각 기사는 첫 요청 시 생성돼 revalidate 기간
+// 캐시된다(온디맨드 ISR). slug는 저장 안 하고 이름에서 파생된다.
+export function generateStaticParams() {
+  return [];
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -73,10 +79,6 @@ export default async function BoosterDetailPage({ params }: Props) {
   if (!booster) {
     notFound();
   }
-
-  const cookieStore = await cookies();
-  const boosterToken = cookieStore.get(BOOSTER_SESSION_COOKIE)?.value ?? "";
-  const boosterId = validateBoosterSession(boosterToken);
 
   const [stats, reviewPage, winStats] = await Promise.all([
     getBoosterReviewStats(Number(booster.id)),
@@ -158,6 +160,7 @@ export default async function BoosterDetailPage({ params }: Props) {
                   <div className="text-center md:pb-1 md:text-left">
                     <div className="inline-flex items-center gap-1.5 rounded-full border border-gold/25 bg-gold/8 px-3 py-1">
                       <Image
+                        unoptimized
                         src={booster.tier}
                         alt=""
                         width={16}
@@ -171,6 +174,7 @@ export default async function BoosterDetailPage({ params }: Props) {
                     <h1 className="mt-2 flex items-center justify-center gap-2.5 text-3xl font-black text-white md:justify-start">
                       {booster.name}
                       <Image
+                        unoptimized
                         src={nationalityFlag(booster.nationality)}
                         alt={nationalityLabel(booster.nationality)}
                         title={nationalityLabel(booster.nationality)}
@@ -334,7 +338,6 @@ export default async function BoosterDetailPage({ params }: Props) {
                 <h2 className="mb-4 text-lg font-black text-white">최근 후기</h2>
                 <BoosterReview
                   reviewList={reviewList}
-                  boosterId={boosterId}
                   boosterName={booster.name}
                   boosterImage={booster.image ?? ""}
                   boosterAvailability={booster}

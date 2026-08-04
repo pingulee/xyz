@@ -32,6 +32,7 @@ export default function PriceTable({ variant }: PriceTableProps) {
                 {row.icons.map((src, i) => (
                   <Image
                     key={i}
+                    unoptimized
                     src={src}
                     alt=""
                     width={32}
@@ -82,6 +83,7 @@ export default function PriceTable({ variant }: PriceTableProps) {
                   {row.icons.map((src, i) => (
                     <Image
                       key={i}
+                      unoptimized
                       src={src}
                       alt=""
                       width={32}
@@ -134,6 +136,7 @@ export default function PriceTable({ variant }: PriceTableProps) {
                   {row.icons.map((src, i) => (
                     <Image
                       key={i}
+                      unoptimized
                       src={src}
                       alt=""
                       width={32}

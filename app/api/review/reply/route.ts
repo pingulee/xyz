@@ -143,7 +143,7 @@ export async function POST(request: Request) {
     `SELECT id, booster_id, booster_name, content, tier_records, created_at FROM review_replies WHERE id = :id`,
     { id: result.insertId },
   );
-  invalidateReviewCaches();
+  invalidateReviewCaches(reviewId);
   const r = replyRows[0];
   const parsedTier = r.tier_records
     ? ((typeof r.tier_records === "string"
@@ -208,6 +208,6 @@ export async function DELETE(request: Request) {
     `DELETE FROM review_replies WHERE review_id = :reviewId`,
     { reviewId },
   );
-  invalidateReviewCaches();
+  invalidateReviewCaches(reviewId);
   return NextResponse.json({ ok: true });
 }

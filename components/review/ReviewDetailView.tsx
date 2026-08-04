@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import BoosterAvatar, {
   type BoosterAvailability,
 } from "@/components/booster/BoosterAvatar";
+import { useSession } from "@/hooks/useSession";
 import {
   TierRecordBadges,
   TierRecordEditor,
@@ -144,23 +145,22 @@ function NavLink({
 
 export default function ReviewDetailView({
   initialReview,
-  boosterId,
-  boosterName,
   boosterImage,
   boosterAvailability,
   previousReview,
   nextReview,
-  isAdmin = false,
 }: {
   initialReview: Review;
-  boosterId: number | null;
-  boosterName: string;
   boosterImage: string;
   boosterAvailability?: BoosterAvailability | null;
   previousReview?: ReviewNavItem;
   nextReview?: ReviewNavItem;
-  isAdmin?: boolean;
 }) {
+  // 세션 값(관리자 여부·기사 id·기사 이름)은 페이지가 ISR로 정적 캐시되므로
+  // 서버 props가 아니라 클라이언트에서 조회한다. 초기값은 비로그인이라 캐시된
+  // HTML과 일치(하이드레이션 안전)하고, 로그인 상태면 편집 UI가 뒤이어 켜진다.
+  const { session } = useSession();
+  const { isAdmin, boosterId, boosterName } = session;
   const router = useRouter();
   const [review, setReview] = useState(initialReview);
   const [reviewEditOpen, setReviewEditOpen] = useState(false);

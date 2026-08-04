@@ -380,6 +380,7 @@ export function TierRecordBadges({
           >
             {icon && (
               <Image
+                unoptimized
                 src={icon}
                 alt={group.tier}
                 width={28}

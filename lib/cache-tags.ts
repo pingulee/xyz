@@ -1,4 +1,4 @@
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { clearStatsCache } from "@/lib/stats-cache";
 
 /**
@@ -38,9 +38,16 @@ export const CACHE_MAX_AGE_SECONDS = 300;
  * 인프로세스 집계 캐시(stats-cache)와 요청 간 데이터 캐시를 항상 함께 비운다.
  * 둘을 따로 호출하면 한쪽만 빠뜨리기 쉬워 한 함수로 묶는다.
  */
-export function invalidateReviewCaches(): void {
+export function invalidateReviewCaches(reviewId?: number | string): void {
   clearStatsCache();
   revalidateTag(CACHE_TAGS.reviews, "max");
+  // 후기 상세(review/[id])는 ISR로 페이지 HTML이 렌더 캐시된다. 태그 무효화는
+  // unstable_cache로 감싼 목록류만 지우고 페이지 HTML은 못 지우므로, 수정·삭제·
+  // 답글이 즉시 반영되도록 해당 경로를 직접 무효화한다. (기사 상세의 집계 지연은
+  // revalidate 안전망으로 흡수 — 답글 즉시성은 후기 상세 쪽이 핵심이다.)
+  if (reviewId) {
+    revalidatePath(`/review/${reviewId}`);
+  }
 }
 
 /** 기사 정보를 쓴 뒤 호출한다. */

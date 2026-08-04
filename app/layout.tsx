@@ -33,11 +33,15 @@ export const metadata: Metadata = {
     siteName: BRAND_NAME,
     locale: "ko_KR",
     type: "website",
+    // images 미지정 시 소셜 공유 미리보기 이미지가 없다. 자기 og 이미지를 둔
+    // 자식 페이지는 이 값을 덮어쓰고, 안 둔 페이지는 이 대표 이미지를 상속한다.
+    images: [{ url: site.ogImage, width: 500, height: 500, alt: HOME_TITLE }],
   },
   twitter: {
     card: "summary_large_image",
     title: HOME_TITLE,
     description: HOME_DESCRIPTION,
+    images: [site.ogImage],
   },
   verification: {
     google: "bd8AUpF-AipHBtAmr4brhshsGfRijvw5TmLDUlMS2rA",

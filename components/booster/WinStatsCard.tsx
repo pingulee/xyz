@@ -111,6 +111,7 @@ export default function WinStatsCard({
                   <span className="flex w-32 shrink-0 items-center gap-2 text-xs text-zinc-300">
                     {TIER_ICON_BY_NAME[tier] && (
                       <Image
+                        unoptimized
                         src={TIER_ICON_BY_NAME[tier]}
                         alt={tier}
                         width={22}
@@ -172,6 +173,7 @@ export default function WinStatsCard({
                 >
                   {c.image ? (
                     <Image
+                      unoptimized
                       src={c.image}
                       alt={c.champion}
                       width={40}
@@ -272,6 +274,7 @@ export default function WinStatsCard({
                   <div className="flex min-w-0 items-center gap-2.5 sm:w-36 sm:shrink-0">
                     {game.image ? (
                       <Image
+                        unoptimized
                         src={game.image}
                         alt={game.champion}
                         width={40}
@@ -311,6 +314,7 @@ export default function WinStatsCard({
                   <div className="flex items-center gap-1.5 sm:w-28 sm:shrink-0 sm:justify-center">
                     {TIER_ICON_BY_NAME[game.tier] && (
                       <Image
+                        unoptimized
                         src={TIER_ICON_BY_NAME[game.tier]}
                         alt={game.tier}
                         width={20}

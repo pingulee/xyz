@@ -360,7 +360,7 @@ export async function PUT(request: Request) {
       { id },
     );
 
-    invalidateReviewCaches();
+    invalidateReviewCaches(id);
     return NextResponse.json({ review: toReview(rows[0]) });
   } catch (error) {
     console.error("Failed to update review", error);
@@ -476,7 +476,7 @@ export async function DELETE(request: Request) {
     }
 
     await getPool().execute(`DELETE FROM \`review\` WHERE id = :id`, { id });
-    invalidateReviewCaches();
+    invalidateReviewCaches(id);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Failed to delete review", error);
