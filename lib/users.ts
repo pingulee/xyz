@@ -1,6 +1,7 @@
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 import { getPool } from "@/lib/db";
 import { oncePerProcess } from "@/lib/schema-once";
+import { ensureBoosterSchema } from "@/lib/booster";
 
 export type UserRole = "customer" | "booster";
 
@@ -24,11 +25,6 @@ type BoosterBackfillRow = RowDataPacket & {
   booster_password_hash: string;
 };
 
-type ColumnMetaRow = RowDataPacket & {
-  IS_NULLABLE: "YES" | "NO";
-  COLUMN_TYPE: string;
-};
-
 const USERNAME_RE = /^[a-z0-9_]{3,30}$/;
 
 // 대소문자·동형문자 중복과 열거를 막기 위해 소문자·trim 정규화 후 저장·조회한다.
@@ -44,9 +40,12 @@ export function isValidUsername(username: string): boolean {
  * 통합 인증 스키마 보정(프로세스당 1회). 전부 "추가만" — DROP·NOT NULL화 없음이라
  * 이전 배포와 공존하고 롤백 안전하다.
  *  - users 테이블 신설(username UNIQUE, scrypt 해시, role)
- *  - booster.user_id / review.user_id 논리 연결 컬럼(NULL 허용, FK 안 검)
- *  - review.password_hash 를 NULL 허용으로 완화(로그인 후기는 비번이 없다)
  *  - 기존 기사 계정을 users로 승계(해시 문자열 그대로 복사, 재해싱 없음)
+ *
+ * 테이블 연결 컬럼은 각 테이블의 스키마 보정이 담당한다(자기 테이블 컬럼은 자기
+ * ensure에서 만들어야 그 테이블만 쓰는 라우트에서도 컬럼이 보장된다):
+ *  - booster.user_id → ensureBoosterSchema
+ *  - review.user_id / password_hash NULL 완화 → ensureReviewSchema
  */
 export const ensureAuthSchema = oncePerProcess(async () => {
   const pool = getPool();
@@ -64,33 +63,8 @@ export const ensureAuthSchema = oncePerProcess(async () => {
     ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
-  await pool.execute(
-    `ALTER TABLE booster ADD COLUMN IF NOT EXISTS user_id BIGINT UNSIGNED NULL`,
-  );
-  await pool.execute(
-    `ALTER TABLE review ADD COLUMN IF NOT EXISTS user_id BIGINT UNSIGNED NULL`,
-  );
-  await pool.execute(
-    `ALTER TABLE review ADD INDEX IF NOT EXISTS idx_review_user (user_id)`,
-  );
-
-  // review.password_hash 가 정본 스키마에선 NOT NULL이라 로그인 후기(비번 없음)
-  // INSERT가 막힌다. 현재 nullability를 확인해 NOT NULL일 때만 완화한다(타입 유지).
-  const [cols] = await pool.execute<ColumnMetaRow[]>(
-    `SELECT IS_NULLABLE, COLUMN_TYPE
-     FROM INFORMATION_SCHEMA.COLUMNS
-     WHERE TABLE_SCHEMA = DATABASE()
-       AND TABLE_NAME = 'review'
-       AND COLUMN_NAME = 'password_hash'
-     LIMIT 1`,
-  );
-  const meta = cols[0];
-  if (meta && meta.IS_NULLABLE === "NO" && /^[a-z0-9()]+$/i.test(meta.COLUMN_TYPE)) {
-    await pool.execute(
-      `ALTER TABLE review MODIFY COLUMN password_hash ${meta.COLUMN_TYPE} NULL`,
-    );
-  }
-
+  // 백필이 booster.user_id를 쓰므로 booster 스키마(user_id 컬럼)를 먼저 보장한다.
+  await ensureBoosterSchema();
   await backfillBoosterUsers();
 });
 

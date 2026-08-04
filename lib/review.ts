@@ -70,6 +70,11 @@ type SchemaColumnRow = RowDataPacket & {
   COLUMN_NAME: string;
 };
 
+type ReviewColumnMeta = RowDataPacket & {
+  IS_NULLABLE: "YES" | "NO";
+  COLUMN_TYPE: string;
+};
+
 export const ensureReviewSchema = oncePerProcess(async () => {
   await getPool().execute(
     `ALTER TABLE \`review\` ADD COLUMN IF NOT EXISTS booster_id BIGINT UNSIGNED NULL`,
@@ -80,6 +85,28 @@ export const ensureReviewSchema = oncePerProcess(async () => {
   await getPool().execute(
     `ALTER TABLE \`review\` ADD COLUMN IF NOT EXISTS view_count INT UNSIGNED NOT NULL DEFAULT 0`,
   );
+  // 통합 인증: 로그인 고객 후기 소유권(user_id, 논리 참조) + 마이페이지 조회 인덱스.
+  await getPool().execute(
+    `ALTER TABLE \`review\` ADD COLUMN IF NOT EXISTS user_id BIGINT UNSIGNED NULL`,
+  );
+  await getPool().execute(
+    `ALTER TABLE \`review\` ADD INDEX IF NOT EXISTS idx_review_user (user_id)`,
+  );
+  // 로그인 후기는 비번이 없으므로 password_hash를 NULL 허용으로 완화(NOT NULL일 때만, 타입 유지).
+  const [pwCols] = await getPool().execute<ReviewColumnMeta[]>(
+    `SELECT IS_NULLABLE, COLUMN_TYPE
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'review'
+       AND COLUMN_NAME = 'password_hash'
+     LIMIT 1`,
+  );
+  const pw = pwCols[0];
+  if (pw && pw.IS_NULLABLE === "NO" && /^[a-z0-9()]+$/i.test(pw.COLUMN_TYPE)) {
+    await getPool().execute(
+      `ALTER TABLE \`review\` MODIFY COLUMN password_hash ${pw.COLUMN_TYPE} NULL`,
+    );
+  }
   await getPool().execute(`
     CREATE TABLE IF NOT EXISTS review_replies (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -334,6 +361,19 @@ export async function getReviewList(limit = 5000) {
   const safeLimit = Math.max(1, Math.min(100000, Math.floor(limit)));
   const [rows] = await getPool().query<ReviewRow[]>(
     `${REVIEW_SELECT} ORDER BY r.created_at DESC, r.id DESC LIMIT ${safeLimit}`,
+  );
+  return rows.map(toReview);
+}
+
+// 마이페이지: 로그인 상태로 작성한 내 후기(user_id 매칭). 비로그인 비번 후기는
+// user_id가 NULL이라 여기 안 잡힌다(종전대로 비번으로만 관리).
+export async function getReviewsByUser(userId: number, limit = 100) {
+  await ensureReviewSchema();
+  const safeLimit = Math.max(1, Math.min(200, Math.floor(limit)));
+  const [rows] = await getPool().execute<ReviewRow[]>(
+    `${REVIEW_SELECT} WHERE r.user_id = :userId
+     ORDER BY r.created_at DESC, r.id DESC LIMIT ${safeLimit}`,
+    { userId },
   );
   return rows.map(toReview);
 }

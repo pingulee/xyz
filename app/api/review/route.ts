@@ -3,10 +3,7 @@ import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { ensureReviewSchema, getReviewList, toReview } from "@/lib/review";
-import {
-  getSessionTokenFromRequest,
-  validateSession,
-} from "@/lib/adminSession";
+import { getSession } from "@/lib/authz";
 import { invalidateReviewCaches } from "@/lib/cache-tags";
 
 export const runtime = "nodejs";
@@ -21,6 +18,7 @@ type ReviewRow = RowDataPacket & {
   content: string;
   view_count: number | null;
   password_hash: string | null;
+  user_id: number | null;
   created_at: Date;
   reply_id: number | null;
   reply_booster_id: number | null;
@@ -45,7 +43,7 @@ type ReviewPayload = {
 const REVIEW_SELECT = `
   SELECT r.id, r.name, r.service, r.booster_id,
          COALESCE(b.name, r.booster_name) AS booster_name,
-         r.rating, r.content, r.view_count, r.password_hash, r.created_at,
+         r.rating, r.content, r.view_count, r.password_hash, r.user_id, r.created_at,
          rr.id AS reply_id, rr.booster_id AS reply_booster_id,
          rr.booster_name AS reply_booster_name,
          rr.content AS reply_content, rr.tier_records AS reply_tier_records,
@@ -83,8 +81,7 @@ function verifyPassword(password: string, stored: string) {
 }
 
 function isAdminRequest(request: Request): boolean {
-  const token = getSessionTokenFromRequest(request);
-  return token ? validateSession(token) : false;
+  return getSession(request)?.role === "admin";
 }
 
 function canModifyReview(password: string, review: ReviewRow) {
@@ -193,7 +190,11 @@ export async function POST(request: Request) {
     );
   }
 
-  if (password.length < 4 || password.length > 40) {
+  // 로그인 고객은 user_id로 소유권을 잇고 비번을 받지 않는다(비번은 비로그인 전용).
+  const session = getSession(request);
+  const ownerUserId = session?.role === "customer" ? session.userId : null;
+
+  if (ownerUserId === null && (password.length < 4 || password.length > 40)) {
     return NextResponse.json(
       { message: "비밀번호는 4~40자로 입력해주세요." },
       { status: 400 },
@@ -226,11 +227,11 @@ export async function POST(request: Request) {
       }
     }
 
-    const passwordHash = hashPassword(password);
+    const passwordHash = password ? hashPassword(password) : null;
     const [result] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO \`review\` (name, service, booster_id, booster_name, rating, content, password_hash)
-       VALUES (:name, :service, :boosterId, :boosterName, :rating, :content, :passwordHash)`,
-      { name, service, boosterId, boosterName, rating, content, passwordHash },
+      `INSERT INTO \`review\` (name, service, booster_id, booster_name, rating, content, password_hash, user_id)
+       VALUES (:name, :service, :boosterId, :boosterName, :rating, :content, :passwordHash, :userId)`,
+      { name, service, boosterId, boosterName, rating, content, passwordHash, userId: ownerUserId },
     );
 
     const [rows] = await getPool().execute<ReviewRow[]>(
@@ -275,9 +276,11 @@ export async function PUT(request: Request) {
     );
   }
 
-  const adminRequest = isAdminRequest(request);
+  const session = getSession(request);
+  const adminRequest = session?.role === "admin";
 
-  if (!adminRequest && !password) {
+  // 로그인 고객은 소유 후기를 비번 없이 수정하므로, 비로그인만 비번을 요구한다.
+  if (!adminRequest && session?.role !== "customer" && !password) {
     return NextResponse.json(
       { message: "비밀번호를 입력해주세요." },
       { status: 400 },
@@ -320,7 +323,16 @@ export async function PUT(request: Request) {
       );
     }
 
-    if (!adminRequest && !canModifyReview(password, existingReview)) {
+    const ownsByUser =
+      session?.role === "customer" &&
+      existingReview.user_id !== null &&
+      existingReview.user_id === session.userId;
+
+    if (
+      !adminRequest &&
+      !ownsByUser &&
+      !canModifyReview(password, existingReview)
+    ) {
       return NextResponse.json(
         { message: "비밀번호가 일치하지 않습니다." },
         { status: 403 },
@@ -437,9 +449,10 @@ export async function DELETE(request: Request) {
     );
   }
 
-  const adminRequest = isAdminRequest(request);
+  const session = getSession(request);
+  const adminRequest = session?.role === "admin";
 
-  if (!adminRequest && !password) {
+  if (!adminRequest && session?.role !== "customer" && !password) {
     return NextResponse.json(
       { message: "비밀번호를 입력해주세요." },
       { status: 400 },
@@ -461,7 +474,12 @@ export async function DELETE(request: Request) {
       );
     }
 
-    if (!adminRequest && !canModifyReview(password, review)) {
+    const ownsByUser =
+      session?.role === "customer" &&
+      review.user_id !== null &&
+      review.user_id === session.userId;
+
+    if (!adminRequest && !ownsByUser && !canModifyReview(password, review)) {
       return NextResponse.json(
         { message: "비밀번호가 일치하지 않습니다." },
         { status: 403 },

@@ -57,6 +57,11 @@ export const ensureBoosterSchema = oncePerProcess(async () => {
   await getPool().execute(
     `ALTER TABLE booster ADD COLUMN IF NOT EXISTS booster_password_hash VARCHAR(200) NULL`,
   );
+  // 통합 인증: 기사 프로필을 users 계정에 연결(NULL 허용, 논리 참조). 백필·기사
+  // 로그인이 이 컬럼을 쓴다.
+  await getPool().execute(
+    `ALTER TABLE booster ADD COLUMN IF NOT EXISTS user_id BIGINT UNSIGNED NULL`,
+  );
 
   // 배포 전에 저장된 기사 로그인 비밀번호를 새 컬럼으로 안전하게 승계한다.
   const [legacyPasswordColumns] = await getPool().execute<ColumnRow[]>(

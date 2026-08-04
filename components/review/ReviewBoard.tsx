@@ -32,6 +32,7 @@ import type {
 import Stars from "@/components/review/Stars";
 import StarRating from "@/components/review/StarRating";
 import ReviewDetail from "@/components/review/ReviewDetail";
+import { useSession } from "@/hooks/useSession";
 
 export default function ReviewBoard({
   initialReviewList = [],
@@ -56,6 +57,8 @@ export default function ReviewBoard({
   }>;
   boosterId?: number | null;
 }) {
+  const { session } = useSession();
+  const isLoggedInCustomer = session.role === "customer";
   const boosterName = boosterId
     ? (boosterList.find((l) => l.id === String(boosterId))?.name ?? "")
     : "";
@@ -118,7 +121,8 @@ export default function ReviewBoard({
   );
   const canSubmitReview = Boolean(
     form.name.trim() &&
-      form.password.trim().length >= REVIEW_PASSWORD_MIN_LENGTH &&
+      (isLoggedInCustomer ||
+        form.password.trim().length >= REVIEW_PASSWORD_MIN_LENGTH) &&
       form.boosterId &&
       form.service &&
       form.content.trim().length >= REVIEW_CONTENT_MIN_LENGTH,
@@ -262,8 +266,12 @@ export default function ReviewBoard({
     const password = form.password.trim();
     const content = form.content.trim();
 
-    if (!name || !password || !content) {
-      setError("닉네임, 비밀번호, 후기를 모두 입력해주세요.");
+    if (!name || (!isLoggedInCustomer && !password) || !content) {
+      setError(
+        isLoggedInCustomer
+          ? "닉네임과 후기를 모두 입력해주세요."
+          : "닉네임, 비밀번호, 후기를 모두 입력해주세요.",
+      );
       return;
     }
 
@@ -277,7 +285,10 @@ export default function ReviewBoard({
       return;
     }
 
-    if (password.length < REVIEW_PASSWORD_MIN_LENGTH) {
+    if (
+      !isLoggedInCustomer &&
+      password.length < REVIEW_PASSWORD_MIN_LENGTH
+    ) {
       setError(`비밀번호는 ${REVIEW_PASSWORD_MIN_LENGTH}자 이상 입력해주세요.`);
       return;
     }
@@ -305,7 +316,7 @@ export default function ReviewBoard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
-          password,
+          ...(isLoggedInCustomer ? {} : { password }),
           service: form.service,
           boosterId: form.boosterId || undefined,
           rating: form.rating,
@@ -609,38 +620,40 @@ export default function ReviewBoard({
                     )}
                   </label>
 
-                  <label className="grid gap-2">
-                    <span className="text-sm font-bold text-zinc-300">
-                      비밀번호
-                    </span>
-                    <input
-                      type="password"
-                      value={form.password}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          password: event.target.value,
-                        }))
-                      }
-                      maxLength={40}
-                      className={`rounded-2xl border bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 ${
-                        missingReviewPassword || invalidReviewPassword
-                          ? "border-red-400/50"
-                          : "border-white/10"
-                      }`}
-                      placeholder="후기 삭제 시 필요"
-                    />
-                    {missingReviewPassword && (
-                      <p className="text-xs font-bold text-red-300">
-                        비밀번호를 입력해주세요.
-                      </p>
-                    )}
-                    {invalidReviewPassword && (
-                      <p className="text-xs font-bold text-red-300">
-                        비밀번호는 {REVIEW_PASSWORD_MIN_LENGTH}자 이상 입력해주세요.
-                      </p>
-                    )}
-                  </label>
+                  {!isLoggedInCustomer && (
+                    <label className="grid gap-2">
+                      <span className="text-sm font-bold text-zinc-300">
+                        비밀번호
+                      </span>
+                      <input
+                        type="password"
+                        value={form.password}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            password: event.target.value,
+                          }))
+                        }
+                        maxLength={40}
+                        className={`rounded-2xl border bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 ${
+                          missingReviewPassword || invalidReviewPassword
+                            ? "border-red-400/50"
+                            : "border-white/10"
+                        }`}
+                        placeholder="후기 삭제 시 필요"
+                      />
+                      {missingReviewPassword && (
+                        <p className="text-xs font-bold text-red-300">
+                          비밀번호를 입력해주세요.
+                        </p>
+                      )}
+                      {invalidReviewPassword && (
+                        <p className="text-xs font-bold text-red-300">
+                          비밀번호는 {REVIEW_PASSWORD_MIN_LENGTH}자 이상 입력해주세요.
+                        </p>
+                      )}
+                    </label>
+                  )}
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">

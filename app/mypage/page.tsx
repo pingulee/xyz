@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Container from "@/components/layout/Container";
 import { SESSION_COOKIE, validateSessionToken } from "@/lib/session";
+import { getReviewsByUser } from "@/lib/review";
+import MyReviewList from "@/components/auth/MyReviewList";
 
 export const dynamic = "force-dynamic";
 
@@ -18,14 +20,18 @@ export default async function MyPage() {
     redirect("/login?from=/mypage");
   }
 
-  // Phase 3에서 내가 로그인 상태로 쓴 후기 목록(수정/삭제)을 채운다.
+  // 로그인 상태로 쓴 내 후기(user_id 매칭). 고객만 user_id로 소유된다.
+  const reviews =
+    session.role === "customer" ? await getReviewsByUser(session.userId) : [];
+
   return (
     <section className="py-20">
       <Container>
         <h1 className="text-2xl font-black text-white">마이페이지</h1>
-        <p className="mt-4 text-sm text-zinc-500">
-          내가 작성한 후기를 여기서 관리할 수 있습니다.
+        <p className="mt-3 text-sm text-zinc-500">
+          로그인 상태로 작성한 후기를 관리할 수 있습니다.
         </p>
+        <MyReviewList initial={reviews} />
       </Container>
     </section>
   );
