@@ -59,37 +59,42 @@ export function validateSessionToken(token: string): Session | null {
   return { role: role as Role, userId };
 }
 
-function readCookie(request: Request, name: string): string | null {
-  const cookie = request.headers.get("cookie") ?? "";
-  const match = cookie.match(new RegExp(`${name}=([^;]+)`));
+function readCookieFrom(cookieHeader: string, name: string): string | null {
+  const match = cookieHeader.match(new RegExp(`${name}=([^;]+)`));
   return match?.[1] ?? null;
 }
 
 /**
- * 요청에서 통합 세션을 읽는다. 신규 쿠키(xyz_session)를 우선 검증하고, 없으면
- * 구 관리자·기사 쿠키를 폴백으로 읽어 배포 순간 재로그인 없이 넘어간다.
+ * 쿠키 헤더 문자열에서 통합 세션을 읽는다. 신규 쿠키(xyz_session)를 우선 검증하고,
+ * 없으면 구 관리자·기사 쿠키를 폴백으로 읽어 배포 순간 재로그인 없이 넘어간다.
  * 구 쿠키는 24h 내 자연 만료되므로 Phase 5에서 폴백 블록을 제거한다.
  *
  * 주의: 구 기사 쿠키의 값은 booster.id다(users.id 아님). Session.userId에 그대로
  * 담고, authz.resolveBoosterId가 user_id 매칭 → booster.id 직접 매칭 순으로 흡수한다.
+ *
+ * Request가 없는 서버 컴포넌트(page)에서는 `headers().get("cookie")`를 넘겨 쓴다.
  */
-export function getSessionFromRequest(request: Request): Session | null {
-  const token = readCookie(request, SESSION_COOKIE);
+export function getSessionFromCookieHeader(cookieHeader: string): Session | null {
+  const token = readCookieFrom(cookieHeader, SESSION_COOKIE);
   const session = token ? validateSessionToken(token) : null;
   if (session) return session;
 
-  const adminToken = readCookie(request, LEGACY_ADMIN_COOKIE);
+  const adminToken = readCookieFrom(cookieHeader, LEGACY_ADMIN_COOKIE);
   if (adminToken && validateLegacyAdmin(adminToken)) {
     return { role: "admin", userId: 0 };
   }
 
-  const boosterToken = readCookie(request, LEGACY_BOOSTER_COOKIE);
+  const boosterToken = readCookieFrom(cookieHeader, LEGACY_BOOSTER_COOKIE);
   const legacyBoosterId = boosterToken ? validateLegacyBooster(boosterToken) : null;
   if (legacyBoosterId) {
     return { role: "booster", userId: legacyBoosterId };
   }
 
   return null;
+}
+
+export function getSessionFromRequest(request: Request): Session | null {
+  return getSessionFromCookieHeader(request.headers.get("cookie") ?? "");
 }
 
 export function getSessionCookieHeader(token: string): string {

@@ -1,17 +1,9 @@
 import { NextResponse } from "next/server";
 import { getChampions, syncChampionsFromRiot } from "@/lib/champions";
-import {
-  getSessionTokenFromRequest,
-  validateSession,
-} from "@/lib/adminSession";
+import { isAdmin } from "@/lib/authz";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function isAdminRequest(request: Request): boolean {
-  const token = getSessionTokenFromRequest(request);
-  return token ? validateSession(token) : false;
-}
 
 export async function GET() {
   try {
@@ -26,7 +18,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (!isAdminRequest(request)) {
+  if (!isAdmin(request)) {
     return NextResponse.json(
       { message: "관리자 권한이 필요합니다." },
       { status: 403 },

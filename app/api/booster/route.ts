@@ -4,7 +4,12 @@ import { scryptSync, randomBytes } from "crypto";
 import { getPool } from "@/lib/db";
 import { ensureBoosterSchema, getBoosterList, getBoosterById } from "@/lib/booster";
 import { invalidateBoosterCaches } from "@/lib/cache-tags";
-import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession";
+import { isAdmin } from "@/lib/authz";
+import {
+  ensureAuthSchema,
+  isValidUsername,
+  normalizeUsername,
+} from "@/lib/users";
 
 export const runtime = "nodejs";
 
@@ -27,17 +32,13 @@ type BoosterPayload = {
   sortOrder?: number;
   active?: boolean;
   boosterPassword?: string;
+  username?: string;
 };
 
 function hashPassword(password: string): string {
   const salt = randomBytes(16).toString("hex");
   const hash = scryptSync(password, salt, 64).toString("hex");
   return `${salt}:${hash}`;
-}
-
-function isAdminRequest(request: Request): boolean {
-  const token = getSessionTokenFromRequest(request);
-  return token ? validateSession(token) : false;
 }
 
 function isValidImageUrl(image: string | null | undefined): boolean {
@@ -95,7 +96,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (!isAdminRequest(request)) {
+  if (!isAdmin(request)) {
     return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
   }
 
@@ -116,24 +117,66 @@ export async function POST(request: Request) {
   }
   const boosterPasswordHash = hashPassword(rawBoosterPassword);
 
+  // 기사 로그인은 통합 users 계정으로 한다. 기사 생성 시 로그인 아이디를 받아
+  // users(role='booster')와 booster 프로필을 함께 만들고 user_id로 연결한다.
+  const username = normalizeUsername(payload.username ?? "");
+  if (!isValidUsername(username)) {
+    return NextResponse.json(
+      { message: "기사 로그인 아이디는 영문 소문자·숫자·밑줄 3~30자로 입력해주세요." },
+      { status: 400 },
+    );
+  }
+  if (username === normalizeUsername(process.env.ADMIN_USERNAME ?? "")) {
+    return NextResponse.json({ message: "사용할 수 없는 아이디입니다." }, { status: 409 });
+  }
+
   try {
     await ensureBoosterSchema();
-    const [result] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO booster (name, positions, rank, tier, description, weekday_hours, weekend_hours, champions, services, nationality, image_url, sort_order, active, booster_password_hash)
-       VALUES (:name, :positions, :rank, :tier, :description, :weekdayHours, :weekendHours, '', :services, :nationality, :image, :sortOrder, :active, :boosterPasswordHash)`,
-      { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, boosterPasswordHash },
-    );
+    await ensureAuthSchema();
+
+    // users + booster를 한 트랜잭션으로 만들어 orphan 계정을 막는다.
+    const conn = await getPool().getConnection();
+    let insertId: number;
+    try {
+      await conn.beginTransaction();
+      const [userRes] = await conn.execute<ResultSetHeader>(
+        `INSERT INTO users (username, password_hash, role)
+         VALUES (:username, :hash, 'booster')`,
+        { username, hash: boosterPasswordHash },
+      );
+      const userId = userRes.insertId;
+      // booster_password_hash도 병행 기입(Phase 5까지 롤백 안전망).
+      const [boosterRes] = await conn.execute<ResultSetHeader>(
+        `INSERT INTO booster (name, positions, rank, tier, description, weekday_hours, weekend_hours, champions, services, nationality, image_url, sort_order, active, booster_password_hash, user_id)
+         VALUES (:name, :positions, :rank, :tier, :description, :weekdayHours, :weekendHours, '', :services, :nationality, :image, :sortOrder, :active, :boosterPasswordHash, :userId)`,
+        { name, positions, rank, tier, description, weekdayHours, weekendHours, services, nationality, image, sortOrder: payload.sortOrder ?? 0, active: payload.active !== false, boosterPasswordHash, userId },
+      );
+      insertId = boosterRes.insertId;
+      await conn.commit();
+    } catch (txError) {
+      await conn.rollback();
+      throw txError;
+    } finally {
+      conn.release();
+    }
+
     invalidateBoosterCaches();
-    const booster = await getBoosterById(result.insertId);
+    const booster = await getBoosterById(insertId);
     return NextResponse.json({ booster }, { status: 201 });
   } catch (error) {
+    if ((error as { code?: string }).code === "ER_DUP_ENTRY") {
+      return NextResponse.json(
+        { message: "이미 사용 중인 로그인 아이디입니다." },
+        { status: 409 },
+      );
+    }
     console.error("Failed to create booster", error);
     return NextResponse.json({ message: "기사를 저장하지 못했습니다." }, { status: 500 });
   }
 }
 
 export async function PUT(request: Request) {
-  if (!isAdminRequest(request)) {
+  if (!isAdmin(request)) {
     return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
   }
 
@@ -186,7 +229,7 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!isAdminRequest(request)) {
+  if (!isAdmin(request)) {
     return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
   }
 

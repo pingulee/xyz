@@ -174,6 +174,7 @@ export default function AdminBoosterBoard({
       imageUrl: booster.image,
       active: booster.active,
       boosterPassword: "",
+      username: "", // 수정 폼에선 미사용(생성 전용). 타입 충족용.
     });
     resetImageState();
     setImageName(booster.image ? "현재 이미지" : "");
@@ -257,6 +258,7 @@ export default function AdminBoosterBoard({
         body: JSON.stringify({
           id: editingId || undefined,
           ...buildPayload(imageUrl),
+          ...(editingId ? {} : { username: form.username }),
           sortOrder: editingId
             ? (boosterList.find((l) => l.id === editingId)?.sortOrder ?? 0)
             : boosterList.length,
@@ -590,6 +592,20 @@ export default function AdminBoosterBoard({
                     "소개는 10자 이상 입력해주세요.",
                   )}
                 </label>
+
+                {!editingId && (
+                  <label className={labelCls}>
+                    로그인 아이디
+                    <input
+                      value={form.username}
+                      onChange={set("username")}
+                      maxLength={30}
+                      className={inputCls}
+                      placeholder="영문 소문자·숫자·밑줄 3~30자"
+                      autoComplete="off"
+                    />
+                  </label>
+                )}
 
                 <label className={labelCls}>
                   기사 로그인 비밀번호

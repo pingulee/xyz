@@ -32,6 +32,7 @@ export const blankForm = {
   imageUrl: null as string | null,
   active: true,
   boosterPassword: "",
+  username: "",
 };
 
 export type FormState = typeof blankForm;

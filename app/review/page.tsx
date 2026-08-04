@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
 import ReviewBoard from "@/components/review/ReviewBoard";
@@ -7,11 +7,8 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import { getReviewPage } from "@/lib/review";
 import { REVIEW_PAGE_SIZE } from "@/components/review/constants";
 import { getBoosterOptions } from "@/lib/booster";
-import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
-import {
-  BOOSTER_SESSION_COOKIE,
-  validateBoosterSession,
-} from "@/lib/boosterSession";
+import { getSessionFromCookieHeader } from "@/lib/session";
+import { resolveBoosterId } from "@/lib/authz";
 import { site } from "@/lib/site";
 import { serializeJsonLd } from "@/lib/jsonld";
 
@@ -80,11 +77,11 @@ export default async function ReviewPage({ searchParams }: Props) {
     getBoosterOptions(),
   ]);
 
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE)?.value ?? "";
-  const isAdmin = validateSession(token);
-  const boosterToken = cookieStore.get(BOOSTER_SESSION_COOKIE)?.value ?? "";
-  const boosterId = validateBoosterSession(boosterToken);
+  const h = await headers();
+  const session = getSessionFromCookieHeader(h.get("cookie") ?? "");
+  const isAdmin = session?.role === "admin";
+  const boosterId =
+    session?.role === "booster" ? await resolveBoosterId(session) : null;
 
   const structuredReviewData = {
     "@context": "https://schema.org",

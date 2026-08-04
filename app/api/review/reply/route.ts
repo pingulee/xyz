@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
-import { getBoosterId } from "@/lib/boosterSession";
-import {
-  getSessionTokenFromRequest,
-  validateSession,
-} from "@/lib/adminSession";
+import { getSession, resolveBoosterId } from "@/lib/authz";
 import { ensureReviewSchema, type TierRecord } from "@/lib/review";
 import { invalidateReviewCaches } from "@/lib/cache-tags";
 
@@ -15,11 +11,6 @@ const REPLY_CONTENT_MIN_LENGTH = 10;
 
 type ReviewRow = RowDataPacket & { booster_id: number | null };
 type BoosterRow = RowDataPacket & { name: string };
-
-function isAdminRequest(request: Request): boolean {
-  const token = getSessionTokenFromRequest(request);
-  return token ? validateSession(token) : false;
-}
 
 const MAX_TIER_RECORDS = 200;
 
@@ -52,7 +43,9 @@ function toCountStat(value: number | undefined | null): number {
 }
 
 export async function POST(request: Request) {
-  const boosterId = getBoosterId(request);
+  // 답글 작성은 기사 본인만(role=booster → 자기 booster.id). 관리자는 작성 대상이
+  // 아니라 resolveBoosterId가 null → 401. 슈퍼권한은 아래 DELETE에서 처리.
+  const boosterId = await resolveBoosterId(getSession(request));
   if (!boosterId) {
     return NextResponse.json(
       { message: "로그인이 필요합니다." },
@@ -167,8 +160,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const boosterId = getBoosterId(request);
-  const admin = isAdminRequest(request);
+  const session = getSession(request);
+  const boosterId = await resolveBoosterId(session);
+  const admin = session?.role === "admin"; // 관리자 슈퍼권한: 모든 답글 삭제
   if (!boosterId && !admin) {
     return NextResponse.json({ message: "권한이 없습니다." }, { status: 401 });
   }

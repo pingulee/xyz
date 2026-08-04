@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { Clock, Medal, Shield } from "lucide-react";
 import Container from "@/components/layout/Container";
 import AdminBoosterBoard from "@/components/booster/AdminBoosterBoard";
@@ -7,7 +7,7 @@ import BoosterCard from "@/components/booster/BoosterCard";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { getBoosterList } from "@/lib/booster";
-import { validateSession, SESSION_COOKIE } from "@/lib/adminSession";
+import { getSessionFromCookieHeader } from "@/lib/session";
 import { site } from "@/lib/site";
 import { serializeJsonLd } from "@/lib/jsonld";
 
@@ -45,9 +45,9 @@ export const metadata: Metadata = {
 };
 
 export default async function BoosterPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE)?.value ?? "";
-  const isAdmin = validateSession(token);
+  const h = await headers();
+  const isAdmin =
+    getSessionFromCookieHeader(h.get("cookie") ?? "")?.role === "admin";
 
   const boosterList = await getBoosterList(isAdmin ? false : true, !isAdmin);
 
