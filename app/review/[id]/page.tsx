@@ -10,6 +10,7 @@ import {
   getRelatedReviews,
   getReviewById,
   getReviewNavigation,
+  getServiceRatingAggregates,
 } from "@/lib/review";
 import { site } from "@/lib/site";
 import { serializeJsonLd } from "@/lib/jsonld";
@@ -102,11 +103,14 @@ export default async function ReviewDetailPage({ params }: Props) {
   // 답글 단 기사 한 명만 필요한데 getBoosterList는 전체 목록 + 리뷰 집계 JOIN +
   // 전적 요약까지 돌린다. 후기 상세는 1,600여 개라 크롤 효율에 직결돼 단건 조회로
   // 쓴다. 이미 읽은 review의 작성 시각을 넘겨 이전/다음 조회의 기준 시각 재조회를 없앤다.
-  const [navigation, booster, relatedReviews] = await Promise.all([
-    getReviewNavigation(reviewId, review.createdAt),
-    replyBoosterId ? getBoosterById(Number(replyBoosterId)) : null,
-    getRelatedReviews(reviewId, replyBoosterId, review.service),
-  ]);
+  const [navigation, booster, relatedReviews, serviceAggregates] =
+    await Promise.all([
+      getReviewNavigation(reviewId, review.createdAt),
+      replyBoosterId ? getBoosterById(Number(replyBoosterId)) : null,
+      getRelatedReviews(reviewId, replyBoosterId, review.service),
+      getServiceRatingAggregates(),
+    ]);
+  const serviceAgg = serviceAggregates[review.service];
   // 서비스명이 비어 있는 과거 데이터가 있어 name이 빈 문자열이 되지 않게 막는다.
   const reviewedProductName = review.service || `${site.brand} 롤 서비스`;
   const reviewJsonLd = {
@@ -130,6 +134,18 @@ export default async function ReviewDetailPage({ params }: Props) {
         "@type": "Brand",
         name: site.brand,
       },
+      // 제품 스니펫 자격을 위해 해당 서비스의 집계 별점을 붙인다(실제 값).
+      ...(serviceAgg && serviceAgg.reviewCount > 0
+        ? {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: serviceAgg.ratingValue,
+              reviewCount: serviceAgg.reviewCount,
+              bestRating: 5,
+              worstRating: 1,
+            },
+          }
+        : {}),
     },
     reviewRating: {
       "@type": "Rating",

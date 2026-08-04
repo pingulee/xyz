@@ -4,7 +4,7 @@ import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
 import ReviewBoard from "@/components/review/ReviewBoard";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { getReviewPage } from "@/lib/review";
+import { getReviewPage, getServiceRatingAggregates } from "@/lib/review";
 import { REVIEW_PAGE_SIZE } from "@/components/review/constants";
 import { getBoosterOptions } from "@/lib/booster";
 import { getSessionFromCookieHeader } from "@/lib/session";
@@ -72,10 +72,12 @@ export default async function ReviewPage({ searchParams }: Props) {
   const { page: pageParam } = await searchParams;
   const requestedPage = Math.max(1, Number(pageParam) || 1);
   // 서로 의존하지 않으므로 함께 던진다. 원격 DB라 왕복 횟수가 응답 시간을 좌우한다.
-  const [{ reviewList, total, page }, boosterList] = await Promise.all([
-    getReviewPage(requestedPage, REVIEW_PAGE_SIZE),
-    getBoosterOptions(),
-  ]);
+  const [{ reviewList, total, page }, boosterList, serviceAggregates] =
+    await Promise.all([
+      getReviewPage(requestedPage, REVIEW_PAGE_SIZE),
+      getBoosterOptions(),
+      getServiceRatingAggregates(),
+    ]);
 
   const h = await headers();
   const session = getSessionFromCookieHeader(h.get("cookie") ?? "");
@@ -99,6 +101,17 @@ export default async function ReviewPage({ searchParams }: Props) {
           "@type": "Product",
           name: review.service || `${site.brand} 롤 서비스`,
           brand: { "@type": "Brand", name: site.brand },
+          ...(serviceAggregates[review.service]?.reviewCount
+            ? {
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: serviceAggregates[review.service].ratingValue,
+                  reviewCount: serviceAggregates[review.service].reviewCount,
+                  bestRating: 5,
+                  worstRating: 1,
+                },
+              }
+            : {}),
         },
         reviewRating: {
           "@type": "Rating",

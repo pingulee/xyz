@@ -379,6 +379,37 @@ export async function getReviewsByUser(userId: number, limit = 100) {
 }
 
 /** sitemap용 경량 조회: id/created_at만 (조인·JSON 파싱 없음) */
+type ServiceAggRow = RowDataPacket & {
+  service: string;
+  avg_rating: number;
+  cnt: number;
+};
+
+// 서비스별 후기 평균 별점·개수. 후기 상세/목록의 itemReviewed(Product)에
+// aggregateRating을 붙여 GSC "제품 스니펫: offers/review/aggregateRating 필요"
+// 경고를 없앤다. 실제 집계 값이라 정책 안전. reviews 태그로 캐시(쓰기 시 무효화).
+export const getServiceRatingAggregates = unstable_cache(
+  async (): Promise<
+    Record<string, { ratingValue: number; reviewCount: number }>
+  > => {
+    await ensureReviewSchema();
+    const [rows] = await getPool().execute<ServiceAggRow[]>(
+      `SELECT service, AVG(rating) AS avg_rating, COUNT(*) AS cnt
+       FROM \`review\` WHERE service <> '' GROUP BY service`,
+    );
+    const map: Record<string, { ratingValue: number; reviewCount: number }> = {};
+    for (const row of rows) {
+      map[row.service] = {
+        ratingValue: Math.round(Number(row.avg_rating) * 10) / 10,
+        reviewCount: Number(row.cnt),
+      };
+    }
+    return map;
+  },
+  ["service-rating-aggregates"],
+  { tags: [CACHE_TAGS.reviews], revalidate: CACHE_MAX_AGE_SECONDS },
+);
+
 export async function getSitemapReviewEntries(
   limit = 5000,
 ): Promise<Array<{ id: string; createdAt: string }>> {
