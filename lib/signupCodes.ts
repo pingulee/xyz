@@ -45,6 +45,20 @@ export async function createSignupCode(): Promise<string> {
   return code;
 }
 
+/**
+ * 코드 유효성만 확인(소진 안 함). 회원가입 1단계에서 코드부터 검증하는 용도.
+ * 미사용 코드가 존재하면 true. 실제 소진은 가입 트랜잭션의 consumeCode가 한다
+ * (확인~가입 사이 경합은 거기서 최종 판정하므로 여기선 낙관적 확인만).
+ */
+export async function verifyCode(code: string): Promise<boolean> {
+  await ensureCodeSchema();
+  const [rows] = await getPool().execute<CodeRow[]>(
+    `SELECT code FROM booster_signup_codes WHERE code = :code AND used = 0 LIMIT 1`,
+    { code },
+  );
+  return rows.length === 1;
+}
+
 export async function listSignupCodes(): Promise<SignupCode[]> {
   await ensureCodeSchema();
   const [rows] = await getPool().execute<CodeRow[]>(
