@@ -1,4 +1,4 @@
-const BLOCKED_RETURN_PREFIXES = ["/admin", "/admax"];
+const BLOCKED_RETURN_PREFIXES = ["/admin"];
 
 export function getSafeReturnPath(referer: string, host: string) {
   if (!referer) return "/";
