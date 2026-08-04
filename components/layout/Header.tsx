@@ -9,6 +9,7 @@ import type { MouseEvent } from "react";
 import clsx from "clsx";
 import { navItems, services, site } from "@/lib/site";
 import AuthControls from "@/components/auth/AuthControls";
+import { useSession } from "@/hooks/useSession";
 
 type MenuItem = {
   label: string;
@@ -33,6 +34,18 @@ export default function Header() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [mobileOpenItem, setMobileOpenItem] = useState("");
+  const { session } = useSession();
+
+  // 로그인 role별 전용 메뉴. 관리자=대시보드, 기사·고객=마이페이지(내용은 role별).
+  const roleMenu: MenuItem | null =
+    session.role === "admin"
+      ? { label: "관리자 페이지", href: "/admin" }
+      : session.role === "booster"
+        ? { label: "마이페이지", href: "/mypage" }
+        : session.role === "customer"
+          ? { label: "마이페이지", href: "/mypage" }
+          : null;
+  const allMenuItems = roleMenu ? [...menuItems, roleMenu] : menuItems;
 
   const handleNavClick = (
     href: string,
@@ -90,7 +103,7 @@ export default function Header() {
         </Link>
 
         <nav className="hidden items-center gap-9 lg:flex">
-          {menuItems.map((item) => {
+          {allMenuItems.map((item) => {
             const active = isActive(item.href);
 
             if (item.children) {
@@ -184,7 +197,7 @@ export default function Header() {
         )}
       >
         <div className="space-y-2 px-5 py-5">
-          {menuItems.map((item) => (
+          {allMenuItems.map((item) => (
             <div key={item.href}>
               {item.children ? (
                 <button
