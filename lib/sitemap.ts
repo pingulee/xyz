@@ -26,7 +26,7 @@ const staticLastModified: Record<string, string> = {
 };
 
 /**
- * 정적 페이지 목록. 루트 /sitemap.xml 과 대체 경로 /pages/sitemap.xml 이 공유한다.
+ * 정적 페이지 목록. 루트 /sitemap.xml을 반환한다.
  */
 export function staticSitemapEntries(): MetadataRoute.Sitemap {
   const staticPaths = [
