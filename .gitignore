@@ -44,3 +44,7 @@ next-env.d.ts
 .vscode
 .claude/settings.local.json
 database/review-backup.json
+
+# 챔피언 이미지는 서버가 자동 관리(cron이 DDragon에서 UPLOAD_DIR/champion으로).
+# 소스에 두지 않는다. 로컬 개발용 파일은 디스크에 남지만 커밋하지 않는다.
+/public/images/champion/

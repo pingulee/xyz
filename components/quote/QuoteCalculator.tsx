@@ -801,10 +801,11 @@ export default function QuoteCalculator() {
                           className={`rounded-lg border p-1.5 text-center ${active ? "border-gold bg-gold/12" : "border-white/8 bg-black/20"}`}
                         >
                           <Image
-                            src={`/images/champion/${champion.id}.png`}
+                            src={champion.imageUrl}
                             alt=""
                             width={30}
                             height={30}
+                            unoptimized
                             className="mx-auto h-7 w-7 rounded-full object-cover"
                           />
                           <span

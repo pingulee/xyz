@@ -7,6 +7,8 @@ export type ChampionOption = {
   key: string;
   name: string;
   version: string;
+  /** 서버가 환경에 맞게 만든 이미지 URL (/upload/champion 또는 /images/champion). */
+  imageUrl: string;
 };
 
 export function useChampionOptions() {

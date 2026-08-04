@@ -9,6 +9,8 @@ export type Champion = {
   key: string;
   name: string;
   version: string;
+  /** 렌더용 이미지 URL. 환경에 따라 /upload/champion 또는 /images/champion. */
+  imageUrl: string;
 };
 
 type ChampionRow = RowDataPacket & {
@@ -30,38 +32,61 @@ type DataDragonChampionResponse = {
 
 const DDRAGON_BASE = "https://ddragon.leagueoflegends.com";
 
-// 챔피언 이미지 저장 위치. 마퀴(ChampionMarquee)와 견적계산기가
-// /images/champion/{riot_id}.png 로 참조하므로 기본값은 public 아래다.
-// 배포와 분리된 영속 디렉토리를 쓰려면 환경변수로 덮는다.
-const CHAMPION_IMAGE_DIR =
-  process.env.CHAMPION_IMAGE_DIR ??
-  path.join(process.cwd(), "public", "images", "champion");
+// 챔피언 이미지는 소스(git)에 두지 않고 서버가 자동 관리한다. 롤 패치마다
+// cron이 DDragon에서 받아 UPLOAD_DIR/champion(배포와 분리된 영속 디렉토리)에
+// 저장하고, /upload/champion 으로 서빙한다. 관리자 개입도, 코드 배포도 필요 없다.
+// 로컬 개발에서는 UPLOAD_DIR이 없으므로 public/images/champion 을 그대로 쓴다.
+export function championImageDir(): string {
+  return process.env.UPLOAD_DIR
+    ? path.join(process.env.UPLOAD_DIR, "champion")
+    : path.join(process.cwd(), "public", "images", "champion");
+}
+
+export function championImageUrlBase(): string {
+  return process.env.UPLOAD_DIR ? "/upload/champion" : "/images/champion";
+}
+
+export function championImageUrl(riotId: string): string {
+  return `${championImageUrlBase()}/${riotId}.png`;
+}
 
 /**
- * 로컬에 없는 챔피언 이미지만 DDragon에서 내려받는다.
- * DB에 새 챔피언이 들어와도 이미지 파일이 없으면 마퀴에 안 뜨고 견적계산기에서
- * 404가 난다. 이름 동기화(syncChampionsFromRiot)에 이어 이미지도 채운다.
- * 이미 있는 파일은 건너뛰므로 보통 새 챔피언 몇 개만 받는다.
+ * DDragon에서 챔피언 이미지를 내려받아 영속 디렉토리에 채운다.
+ *
+ * 평소에는 로컬에 없는 파일(새 챔피언)만 받는다. 롤 패치로 DDragon 버전이
+ * 오르면(리워크 등으로 기존 초상화도 바뀔 수 있어) 전체를 다시 받는다.
+ * 마지막으로 받은 버전을 디렉토리의 .version 파일에 기록해 비교한다.
+ * cron이 이 함수를 매일 호출하므로 새 패치가 하루 안에 자동 반영된다.
  */
 async function syncChampionImages(
   champions: DataDragonChampion[],
   version: string,
 ): Promise<number> {
-  await fs.mkdir(CHAMPION_IMAGE_DIR, { recursive: true });
-  let downloaded = 0;
+  const dir = championImageDir();
+  await fs.mkdir(dir, { recursive: true });
 
+  const versionFile = path.join(dir, ".version");
+  let storedVersion = "";
+  try {
+    storedVersion = (await fs.readFile(versionFile, "utf8")).trim();
+  } catch {
+    /* 최초 실행: 마커 없음 */
+  }
+  const versionChanged = storedVersion !== version;
+
+  let downloaded = 0;
   for (const champion of champions) {
-    const filePath = path.join(CHAMPION_IMAGE_DIR, `${champion.id}.png`);
-    if (existsSync(filePath)) continue;
+    const filePath = path.join(dir, `${champion.id}.png`);
+    // 버전이 그대로면 이미 있는 파일은 건너뛴다. 패치로 버전이 오르면
+    // 전체를 다시 받아 리워크된 초상화까지 갱신한다.
+    if (!versionChanged && existsSync(filePath)) continue;
 
     try {
       const res = await fetch(
         `${DDRAGON_BASE}/cdn/${version}/img/champion/${champion.id}.png`,
       );
       if (!res.ok) {
-        console.error(
-          `champion image fetch ${champion.id}: HTTP ${res.status}`,
-        );
+        console.error(`champion image fetch ${champion.id}: HTTP ${res.status}`);
         continue;
       }
       await fs.writeFile(filePath, Buffer.from(await res.arrayBuffer()));
@@ -69,6 +94,15 @@ async function syncChampionImages(
     } catch (error) {
       // 이미지 하나가 실패해도 나머지와 이름 동기화는 계속한다.
       console.error(`champion image download failed: ${champion.id}`, error);
+    }
+  }
+
+  // 이번 버전 기준으로 한 번이라도 받았으면 마커를 갱신한다.
+  if (downloaded > 0 || versionChanged) {
+    try {
+      await fs.writeFile(versionFile, version);
+    } catch (error) {
+      console.error("champion .version write failed", error);
     }
   }
 
@@ -99,6 +133,7 @@ function toChampion(row: ChampionRow): Champion {
     key: row.riot_key,
     name: row.name,
     version: row.ddragon_version,
+    imageUrl: championImageUrl(row.riot_id),
   };
 }
 
@@ -167,12 +202,12 @@ export async function syncChampionsFromRiot() {
   championCache = null;
 }
 
-/** 챔피언 한글 이름 → 로컬 이미지 경로(/images/champion/{riot_id}.png) 매핑 */
+/** 챔피언 한글 이름 → 이미지 URL 매핑(기사 전적 챔피언 아이콘용) */
 export async function getChampionImageMap(): Promise<Record<string, string>> {
   const champions = await getChampions();
   const map: Record<string, string> = {};
   for (const champion of champions) {
-    map[champion.name] = `/images/champion/${champion.id}.png`;
+    map[champion.name] = champion.imageUrl;
   }
   return map;
 }

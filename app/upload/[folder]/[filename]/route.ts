@@ -4,7 +4,8 @@ import { join, resolve, basename } from "path";
 
 export const runtime = "nodejs";
 
-const ALLOWED_FOLDERS = new Set(["booster"]);
+// booster=기사 업로드 이미지, champion=cron이 받아둔 챔피언 이미지.
+const ALLOWED_FOLDERS = new Set(["booster", "champion"]);
 
 const MIME_MAP: Record<string, string> = {
   jpg: "image/jpeg",

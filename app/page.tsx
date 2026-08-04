@@ -28,6 +28,11 @@ import { serializeJsonLd } from "@/lib/jsonld";
 import { getBoosterList } from "@/lib/booster";
 import type { Booster } from "@/lib/booster-model";
 
+// 홈은 ISR로 둔다. 순수 정적이면 챔피언·기사 목록이 빌드타임에 고정돼
+// 재배포 전까지 갱신되지 않는다. 1시간마다 재생성해 cron이 갱신한 챔피언과
+// 기사 변경을 자동 반영한다. 정적 캐시로 서빙되므로 성능은 유지된다.
+export const revalidate = 3600;
+
 // title·description·openGraph는 루트 레이아웃 기본값을 그대로 상속받는다.
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
