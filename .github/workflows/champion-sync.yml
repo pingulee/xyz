@@ -1,0 +1,42 @@
+name: 챔피언 동기화
+
+# 호스팅(Hostinger 공유 서버)에 cron 기능이 없어 GitHub Actions로 대신 돌린다.
+# 매일 새벽 4시(KST)에 사이트의 cron 엔드포인트를 호출해 Riot DDragon에서
+# 챔피언 이름·이미지를 최신으로 동기화한다.
+on:
+  schedule:
+    # GitHub Actions는 UTC 기준. KST 04:00 = UTC 19:00(전날).
+    - cron: "0 19 * * *"
+  # 수동 실행도 허용(Actions 탭에서 즉시 트리거).
+  workflow_dispatch:
+
+# 동시 실행 방지.
+concurrency:
+  group: champion-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 챔피언 동기화 호출
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET 시크릿이 설정되지 않았습니다 (repo Settings → Secrets)."
+            exit 1
+          fi
+          # 응답 본문과 상태 코드를 함께 확인한다.
+          response=$(curl -sS -w "\n%{http_code}" --max-time 120 \
+            -H "x-cron-secret: $CRON_SECRET" \
+            "https://xn--vk1b65hf2a.xyz/api/cron/champions")
+          body=$(echo "$response" | head -n -1)
+          code=$(echo "$response" | tail -n 1)
+          echo "HTTP $code"
+          echo "$body"
+          # 2xx가 아니면 실패 처리.
+          case "$code" in
+            2*) echo "동기화 성공" ;;
+            *) echo "동기화 실패"; exit 1 ;;
+          esac
