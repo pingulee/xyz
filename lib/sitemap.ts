@@ -1,3 +1,6 @@
+import type { MetadataRoute } from "next";
+import { navItems, services, site } from "@/lib/site";
+
 /**
  * 사이트맵 공용 설정/헬퍼.
  *
@@ -9,6 +12,40 @@
 // 캐시 주기는 각 sitemap.ts에서 `export const revalidate = 3600` 리터럴로 선언한다.
 // 라우트 세그먼트 설정은 정적 분석 대상이라 여기서 상수로 빼 import하면
 // "Invalid segment configuration export" 로 빌드가 깨진다.
+
+// 정적 페이지의 실제 콘텐츠 변경일. 요청 시각을 lastModified로 사용하면
+// 검색엔진에 매번 잘못된 갱신 신호를 보내므로 콘텐츠 수정 시에만 갱신한다.
+const staticLastModified: Record<string, string> = {
+  "": "2026-07-22",
+  "/booster": "2026-07-22",
+  "/review": "2026-07-22",
+  "/recruit": "2026-07-21",
+  "/boosting": "2026-07-21",
+  "/duo": "2026-07-21",
+  "/account": "2026-07-21",
+};
+
+/**
+ * 정적 페이지 목록. 루트 /sitemap.xml 과 대체 경로 /pages/sitemap.xml 이 공유한다.
+ */
+export function staticSitemapEntries(): MetadataRoute.Sitemap {
+  const staticPaths = [
+    "",
+    ...navItems
+      .filter((item) => item.href !== "/" && !item.href.startsWith("#"))
+      .map((item) => item.href),
+    ...services.map((service) => service.href),
+  ];
+
+  return staticPaths.map((path) => ({
+    url: `${site.url}${path}`,
+    ...(staticLastModified[path]
+      ? { lastModified: new Date(staticLastModified[path]) }
+      : {}),
+    changeFrequency: "weekly",
+    priority: path === "" ? 1 : 0.8,
+  }));
+}
 
 const DB_TIMEOUT_MS = 5000;
 
