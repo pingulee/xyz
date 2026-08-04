@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { Clock, Medal, Shield } from "lucide-react";
 import Container from "@/components/layout/Container";
-import AdminBoosterBoard from "@/components/booster/AdminBoosterBoard";
 import BoosterCard from "@/components/booster/BoosterCard";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { getBoosterList } from "@/lib/booster";
-import { getSessionFromCookieHeader } from "@/lib/session";
 import { site } from "@/lib/site";
 import { serializeJsonLd } from "@/lib/jsonld";
 
@@ -45,31 +42,8 @@ export const metadata: Metadata = {
 };
 
 export default async function BoosterPage() {
-  const h = await headers();
-  const isAdmin =
-    getSessionFromCookieHeader(h.get("cookie") ?? "")?.role === "admin";
-
-  const boosterList = await getBoosterList(isAdmin ? false : true, !isAdmin);
-
-  if (isAdmin) {
-    return (
-      <section className="py-20">
-        <Container>
-          <Reveal>
-            <SectionTitle
-              eyebrow="booster"
-              title="기사 소개"
-              desc="검증된 상위 티어 기사진이 직접 진행합니다."
-              as="h1"
-            />
-          </Reveal>
-          <Reveal>
-            <AdminBoosterBoard initialBoosterList={boosterList} />
-          </Reveal>
-        </Container>
-      </section>
-    );
-  }
+  // 공개 목록만(활성 기사). 관리 UI는 /admin 대시보드로 분리됐다.
+  const boosterList = await getBoosterList(true, true);
 
   const itemListJsonLd = {
     "@context": "https://schema.org",
