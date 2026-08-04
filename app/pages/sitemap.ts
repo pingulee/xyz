@@ -14,7 +14,12 @@ import { staticSitemapEntries } from "@/lib/sitemap";
  * 스코프 제한은 적용되지 않는다(구글 문서 확인).
  * 루트 /sitemap.xml 도 그대로 둔다. 관례적으로 그 경로를 먼저 찾는
  * 크롤러가 있고, 유지 비용이 없다.
+ *
+ * 순수 정적이 아니라 ISR로 둔다. 성공하는 /booster·/review sitemap 이 ISR이고
+ * 실패하는 순수 정적 사이트맵과 서빙 경로가 다르기 때문이다(app/sitemap.ts 참고).
  */
+export const revalidate = 3600;
+
 export default function sitemap(): MetadataRoute.Sitemap {
   return staticSitemapEntries();
 }
