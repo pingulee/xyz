@@ -108,7 +108,7 @@ export default function QuoteCalculator() {
   const accountLevel = resolved?.level ?? null;
   const under30 = accountLevel !== null && accountLevel < 30;
   const placementOnly = Boolean(
-    resolved && !under30 && resolved.gamesPlayed < 5,
+    resolved && !resolved.ranked && !under30 && resolved.gamesPlayed < 5,
   );
   const remainingPlacementGames = placementOnly
     ? Math.max(1, 5 - (resolved?.gamesPlayed ?? 0))
@@ -116,6 +116,7 @@ export default function QuoteCalculator() {
   const visibleServices = SERVICES.filter((item) => {
     if (under30) return item.key === "normal";
     if (placementOnly) return item.key === "placement";
+    if (resolved?.ranked && item.key === "placement") return false;
     if (item.key === "low-win") return currentTier <= 6;
     if (item.key === "high-score") return currentTier >= 6;
     return true;
@@ -516,6 +517,10 @@ export default function QuoteCalculator() {
           gamesPlayed,
           previousTier,
         });
+        if (serviceKey === "placement") {
+          setServiceKey("hourly");
+          setQuantity(SERVICES[0].initial);
+        }
         setTierMsg(null);
       } else {
         if (previousTier) {
@@ -533,7 +538,7 @@ export default function QuoteCalculator() {
         });
         setTierMsg(null);
       }
-      if (level === null || level >= 30) {
+      if (!data.ranked && (level === null || level >= 30)) {
         if (gamesPlayed < 5) {
           setServiceKey("placement");
           setQuantity(Math.max(1, 5 - gamesPlayed));
@@ -863,10 +868,15 @@ export default function QuoteCalculator() {
                         const value = Number(
                           event.target.value.replace(/[^0-9]/g, ""),
                         );
+                        const steppedValue =
+                          Math.round(value / service.step) * service.step;
                         setQuantity(
                           Math.min(
                             quantityMax,
-                            Math.max(service.min, value || service.min),
+                            Math.max(
+                              service.min,
+                              steppedValue || service.min,
+                            ),
                           ),
                         );
                       }}
