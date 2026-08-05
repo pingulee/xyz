@@ -414,16 +414,6 @@ export default function QuoteCalculator() {
                 );
               })}
             </div>
-            <div className="ml-auto text-right">
-              <p className="text-[10px] font-bold text-zinc-500">예상</p>
-              <p className="text-sm font-black text-gold">
-                {priceConsultRequired
-                  ? "별도 상담"
-                  : validTarget
-                    ? won(quote.total)
-                    : "-"}
-              </p>
-            </div>
           </div>
         </div>
       </div>
