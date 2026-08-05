@@ -534,7 +534,7 @@ export default function QuoteCalculator() {
       </div>
 
       <div className="p-4 sm:p-6 lg:p-7">
-        <div className="min-h-105 space-y-4">
+        <div className={`space-y-4 ${stepKey === "account" ? "" : "min-h-105"}`}>
           {stepKey === "account" && (
             <div className="rounded-3xl border border-gold/20 bg-gold/3.5 p-5 sm:p-6">
               <p className="text-lg font-black text-white">롤 닉네임</p>
@@ -635,10 +635,11 @@ export default function QuoteCalculator() {
                           {resolved.tierIndex < 7 ? ` ${resolved.division}` : ""}{" "}
                           <span className="text-gold">{resolved.lp}LP</span>
                         </p>
-                        <p className="mt-0.5 text-[11px] font-bold text-zinc-400">
-                          {resolved.level !== null ? `레벨 ${resolved.level} · ` : ""}
-                          현재 티어로 반영됨
-                        </p>
+                        {resolved.level !== null && (
+                          <p className="mt-0.5 text-[11px] font-bold text-zinc-400">
+                            레벨 {resolved.level}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -653,16 +654,8 @@ export default function QuoteCalculator() {
                       있습니다.
                     </p>
                   )}
-                  <p className="mt-3 text-[11px] font-bold text-zinc-500">
-                    확인되면 아래 &ldquo;다음&rdquo;으로 진행해주세요.
-                  </p>
                 </div>
               )}
-
-              <p className="mt-4 text-[11px] leading-5 text-zinc-600">
-                티어 조회는 op.gg 공개 정보 기준입니다. 언랭·조회 실패 시
-                정확한 견적은 카카오톡 상담에서 안내해 드립니다.
-              </p>
             </div>
           )}
 
