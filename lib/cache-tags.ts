@@ -55,3 +55,15 @@ export function invalidateBoosterCaches(): void {
   clearStatsCache();
   revalidateTag(CACHE_TAGS.boosters, "max");
 }
+
+/**
+ * 공지사항을 쓴 뒤 호출한다. 상세(notice/[id])는 ISR로 HTML이 렌더 캐시되므로
+ * 해당 경로를 직접 무효화한다. 목록(/notice)은 force-dynamic이라 매요청 최신이지만,
+ * 캐시 계층이 낀 경우까지 대비해 함께 무효화한다.
+ */
+export function invalidateNoticeCaches(noticeId?: number | string): void {
+  revalidatePath("/notice");
+  if (noticeId) {
+    revalidatePath(`/notice/${noticeId}`);
+  }
+}

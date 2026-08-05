@@ -17,7 +17,7 @@
 
 ## 디렉토리 구조
 - **컴포넌트는 기능별 폴더**(평면 아님): `components/{layout,ui,home,service,quote,review,booster,auth}` + `hooks/`. import는 항상 `@/` alias 절대경로(상대경로 `./` 안 씀). 새 컴포넌트는 해당 기능 폴더에.
-  - `layout`(Header/Footer/FloatingContact/Container), `ui`(SectionTitle/Reveal/JsonLd/FaqItem), `home`(HeroSlider/ServiceCard/HomeFaq), `service`(ServiceDetail/PriceTable), `quote`(QuoteCalculator+RankPicker/constants/types/utils), `review`(ReviewBoard+ReviewDetail/ReplySection/Stars/StarRating/ReviewNavButton/helpers/types/constants, ReviewDetailView, BoosterReview), `booster`(AdminBoosterBoard+AdminBoosterCard/adminBoosterConstants, BoosterCard/BoosterAvatar/WinStatsCard/TierRecords), `auth`(LoginForm/SignupForm/AuthControls/MyReviewList — 통합 인증 UI)
+  - `layout`(Header/Footer/FloatingContact/Container), `ui`(SectionTitle/Reveal/JsonLd/FaqItem), `home`(HeroSlider/ServiceCard/HomeFaq), `service`(ServiceDetail/PriceTable), `quote`(QuoteCalculator+RankPicker/constants/types/utils), `review`(ReviewBoard+ReviewDetail/ReplySection/Stars/StarRating/ReviewNavButton/helpers/types/constants, ReviewDetailView, BoosterReview), `booster`(AdminBoosterBoard+AdminBoosterCard/adminBoosterConstants, BoosterCard/BoosterAvatar/WinStatsCard/TierRecords), `auth`(LoginForm/SignupForm/AuthControls/MyReviewList — 통합 인증 UI), `notice`(NoticeBoard/NoticeDetailView/NoticeForm/format — 공지사항, 관리자만 작성·수정·삭제)
   - `hooks/useChampionOptions.ts` = quote·booster 공용 챔피언 데이터 훅.
 - 큰 컴포넌트는 하위 컴포넌트/상수/타입/헬퍼를 같은 폴더 내 파일로 분리(예: review/, quote/). `booster/`는 여러 컴포넌트 공유 폴더라 상수 파일명에 접두사(`adminBoosterConstants.ts`).
 
@@ -26,12 +26,12 @@
 - **도메인은 IDN**: `https://롤대리.xyz` → punycode `xn--vk1b65hf2a.xyz`. **`site.url`은 이미 punycode로 정규화된 값**(`lib/site.ts`의 `SITE_ORIGIN = new URL(...).origin`). 한글 원문 URL을 코드에 다시 하드코딩하지 말 것 — robots.txt/sitemap.xml/JSON-LD는 문자열을 그대로 출력하므로(Next가 인코딩 안 함) 호스트가 canonical과 어긋나 사이트맵 전량 거부됨.
 - **서비스 카드 이미지**: `/images/slider/01~03.webp` 재사용 (01=대리, 02=듀오, 03=계정). `boosting/duo/account.png`는 **존재하지 않음** — 새 경로 추가 시 실제 파일 먼저 배치할 것 (없으면 next/image가 400).
 - **DB 접근 페이지 렌더링 정책** (목록·관리는 동적, 상세는 ISR):
-  - **목록·관리 페이지는 `force-dynamic`** (booster 목록, review 목록, admin, login). 세션·실시간성이 필요하고 페이지 수가 적어 매요청 조회가 부담되지 않는다.
-  - **상세 페이지(`review/[id]`, `booster/[slug]`)는 온디맨드 ISR** — `export const revalidate = 3600` + `generateStaticParams()` **빈 배열**. force-dynamic 아님. 과거엔 force-dynamic이었으나(항상 최신 + 세션 SSR + 무효화 불필요라는 이점), 1,600여 상세가 방문·크롤마다 DB를 4~5회 왕복(`getReviewById`+`getReviewNavigation`+`getBoosterById`+`getRelatedReviews`, 기사 로그인 시 `sessionBooster` 추가)해 리소스 대비 이점이 역전됐다 → revalidate 주기당 1회로 축소.
+  - **목록·관리 페이지는 `force-dynamic`** (booster 목록, review 목록, notice 목록, admin, login). 세션·실시간성이 필요하고 페이지 수가 적어 매요청 조회가 부담되지 않는다.
+  - **상세 페이지(`review/[id]`, `booster/[slug]`, `notice/[id]`)는 온디맨드 ISR** — `export const revalidate = 3600` + `generateStaticParams()` **빈 배열**. force-dynamic 아님. 과거엔 force-dynamic이었으나(항상 최신 + 세션 SSR + 무효화 불필요라는 이점), 1,600여 상세가 방문·크롤마다 DB를 4~5회 왕복(`getReviewById`+`getReviewNavigation`+`getBoosterById`+`getRelatedReviews`, 기사 로그인 시 `sessionBooster` 추가)해 리소스 대비 이점이 역전됐다 → revalidate 주기당 1회로 축소.
     - **동적 세그먼트는 `generateStaticParams`가 없으면 revalidate가 있어도 SSR(ƒ)로 남는다.** 빈 배열이라도 있어야 SSG(●)/온디맨드 ISR로 전환(빌드 프리렌더 0, 각 상세는 첫 요청 시 생성 후 캐시). 빌드 로그 Route 표에서 ● 확인.
     - **ISR 페이지의 세션 UI는 클라이언트로 분리해야 한다.** 페이지에서 `cookies()`를 없애야 정적화된다(그게 유일한 force-dynamic 원인이었다). 관리자/기사 편집 UI는 `hooks/useSession.ts`가 `app/api/session/me`(force-dynamic)를 조회해 켠다. 세션 쿠키가 **HttpOnly**라 `document.cookie`로 못 읽어 서버 왕복이 필수. 초기값은 비로그인이라 캐시 HTML과 일치(하이드레이션 안전), 로그인 상태면 뒤이어 편집 UI가 켜진다.
     - **ISR 페이지 무효화는 `revalidatePath`** (태그로는 안 지워진다). `revalidateTag`는 `unstable_cache` 목록류만 무효화하고 렌더된 페이지 HTML은 못 지운다. 후기/답글 쓰기 route가 `invalidateReviewCaches(reviewId)`를 호출하면 `revalidatePath('/review/[id]')`로 상세가 즉시 갱신된다(`lib/cache-tags.ts`). 기사 상세(`booster/[slug]`)의 집계 지연은 revalidate 안전망(1h)으로 흡수 — 답글 즉시성은 후기 상세 쪽이 핵심.
-  - **사이트맵은 루트 인덱스 + 용도별 3분할.** `/sitemap.xml`은 `app/sitemap.xml/route.ts`가 만드는 인덱스이며, `app/pages/sitemap.ts`(정적 7개, DB 접근 0), `app/booster/sitemap.ts`, `app/review/sitemap.ts`를 참조한다. Search Console과 `app/robots.ts`에는 루트 인덱스 하나만 제출한다.
+  - **사이트맵은 루트 인덱스 + 용도별 4분할.** `/sitemap.xml`은 `app/sitemap.xml/route.ts`가 만드는 인덱스이며, `app/pages/sitemap.ts`(정적 페이지, DB 접근 0 — navItems 공개 경로 자동 포함), `app/booster/sitemap.ts`, `app/review/sitemap.ts`, `app/notice/sitemap.ts`를 참조한다. Search Console과 `app/robots.ts`에는 루트 인덱스 하나만 제출한다. **새 사이트맵 추가 시 인덱스(`sitemapPaths`)에도 등록할 것.**
   - 동적 사이트맵은 `export const revalidate = 3600`(ISR). **리터럴이어야 함** — 상수 import 시 "Invalid segment configuration export"로 빌드 실패.
   - DB 조회는 `lib/sitemap.ts`의 `withFallback`(5초 상한, 실패 시 빈 배열)으로 감쌀 것. 에러 없이 매달리는 조회는 try/catch로 못 잡는다.
   - **사이트맵용 쿼리는 전용 경량 함수로.** `getBoosterList`는 DDL 보정 + 리뷰 집계 JOIN + 전적 요약까지 돌아 5초를 넘겼다(실측). slug엔 이름만 필요 → `getBoosterSitemapEntries`. 후기는 `getSitemapReviewEntries`(5000건 상한).
@@ -55,8 +55,8 @@
 - **`alternates.canonical`은 루트 `app/layout.tsx`에 절대 넣지 말 것.** Next metadata는 `alternates`를 자식으로 상속시키므로, 루트에 `"/"`를 두면 자기 canonical을 지정하지 않은 모든 페이지가 홈을 정본으로 선언 → 색인 제외("대체 페이지, 적절한 표준 태그 있음"). 홈 canonical은 `app/page.tsx`에. **새 공개 페이지 추가 시 canonical 지정 필수.**
 - 동적 라우트는 `generateMetadata`.
 - 구조화 데이터: `components/ui/JsonLd.tsx`(홈, `@graph`: Organization+WebSite+Service), 서비스 페이지 Service/FAQPage, 후기 Review, 상세 페이지 BreadcrumbList.
-- `app/robots.ts` — `/admin`, `/login`, `/api/` disallow. `app/sitemap.ts` — 정적 + 동적(부스터 slug, 후기 id).
-- 비공개 페이지(admin/login) `robots: { index: false }`.
+- `app/robots.ts` — `/admin`, `/login`, `/signup`, `/mypage`, `/api/` disallow(유틸리티·비공개 경로). 공개 게시판(`/notice` 등)은 disallow하지 않는다.
+- 비공개·유틸리티 페이지(admin/login/signup/mypage) `robots: { index: false }` + robots.txt disallow 병행. **새 공개 게시판은 색인 허용, 유틸리티/개인 페이지는 둘 다 적용.**
 - **상세 페이지 ISR은 SEO에 무해(오히려 유리).** 크롤러가 받는 HTML은 SSR/ISR 동일(완성 HTML). JSON-LD·`generateMetadata`(canonical/og)·본문 그대로 출력된다. 세션 편집 UI를 클라이언트로 뺐으므로 크롤러는 비로그인 상태의 깨끗한 HTML을 본다. 캐시 서빙이라 TTFB가 빨라 크롤 예산·CWV에 이득. 첫 요청 1회 생성 지연만 있고 이후 캐시.
 
 ## 접근성 (Lighthouse 통과 유지)

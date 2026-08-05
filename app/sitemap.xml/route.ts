@@ -6,6 +6,7 @@ const sitemapPaths = [
   "/pages/sitemap.xml",
   "/booster/sitemap.xml",
   "/review/sitemap.xml",
+  "/notice/sitemap.xml",
 ] as const;
 
 function escapeXml(value: string): string {
