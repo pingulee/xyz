@@ -382,10 +382,10 @@ export default function QuoteCalculator() {
     ...(needsQuantity ? [{ key: "current", label: quantityTitle }] : []),
     ...(needsTargetRank ? [{ key: "target", label: "목표 랭크" }] : []),
     { key: "options", label: "추가 옵션" },
-    { key: "result", label: "견적 결과" },
   ];
   const safeIndex = Math.min(stepIndex, wizardSteps.length - 1);
   const stepKey = wizardSteps[safeIndex].key;
+  const isLastStep = safeIndex === wizardSteps.length - 1;
   const stepValid =
     stepKey === "current"
       ? serviceRankValid
@@ -534,7 +534,9 @@ export default function QuoteCalculator() {
       </div>
 
       <div className="p-4 sm:p-6 lg:p-7">
-        <div className={`space-y-4 ${stepKey === "account" ? "" : "min-h-105"}`}>
+        <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
+          <div className="min-w-0">
+            <div className="space-y-4">
           {stepKey === "account" && (
             <div className="rounded-3xl border border-gold/20 bg-gold/3.5 p-5 sm:p-6">
               <p className="text-lg font-black text-white">롤 닉네임</p>
@@ -994,7 +996,35 @@ export default function QuoteCalculator() {
           </div>
           )}
 
-          {stepKey === "result" && (
+          </div>
+
+          <div className="mt-5 flex items-center justify-between gap-3">
+            {safeIndex > 0 ? (
+              <button
+                type="button"
+                onClick={goPrev}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-gold"
+              >
+                <ChevronLeft size={16} /> 이전
+              </button>
+            ) : (
+              <span />
+            )}
+            {!isLastStep && (
+              <button
+                type="button"
+                onClick={goNext}
+                disabled={!stepValid}
+                className={`inline-flex items-center gap-1.5 rounded-full px-6 py-3 text-sm font-black transition ${stepValid ? "bg-gold-gradient text-black hover:brightness-110" : "pointer-events-none bg-white/5 text-zinc-600"}`}
+              >
+                다음 <ChevronRight size={16} />
+              </button>
+            )}
+          </div>
+          </div>
+
+          {/* 예상 견적: 닉네임 입력 전부터 오른쪽에 상시 표시(모바일은 아래로). */}
+          <div className="lg:sticky lg:top-6 lg:self-start">
           <div className="rounded-3xl border border-gold/25 bg-[radial-gradient(circle_at_top_right,rgba(222,176,67,.15),transparent_45%),rgba(0,0,0,.32)] p-6">
           <div className="flex items-center justify-between">
             <p className="text-sm font-black text-gold">예상 견적</p>
@@ -1094,31 +1124,7 @@ export default function QuoteCalculator() {
             발생하지 않습니다.
           </div>
           </div>
-          )}
-        </div>
-
-        <div className="mt-5 flex items-center justify-between gap-3">
-          {safeIndex > 0 ? (
-            <button
-              type="button"
-              onClick={goPrev}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-zinc-300 transition hover:border-gold/40 hover:text-gold"
-            >
-              <ChevronLeft size={16} /> 이전
-            </button>
-          ) : (
-            <span />
-          )}
-          {stepKey !== "result" && (
-            <button
-              type="button"
-              onClick={goNext}
-              disabled={!stepValid}
-              className={`inline-flex items-center gap-1.5 rounded-full px-6 py-3 text-sm font-black transition ${stepValid ? "bg-gold-gradient text-black hover:brightness-110" : "pointer-events-none bg-white/5 text-zinc-600"}`}
-            >
-              다음 <ChevronRight size={16} />
-            </button>
-          )}
+          </div>
         </div>
       </div>
     </div>
