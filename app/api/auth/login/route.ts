@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
-import { RowDataPacket } from "mysql2";
-import { getPool } from "@/lib/db";
-import { ensureBoosterSchema } from "@/lib/booster";
 import { verifyPassword, dummyVerify } from "@/lib/password";
 import { getUserByUsername, normalizeUsername } from "@/lib/users";
 import {
@@ -17,12 +14,6 @@ import {
 } from "@/lib/authRateLimit";
 
 export const runtime = "nodejs";
-
-type LegacyBoosterRow = RowDataPacket & {
-  id: number;
-  user_id: number | null;
-  booster_password_hash: string | null;
-};
 
 // 길이가 다르면 timingSafeEqual이 던지므로 먼저 길이를 확인한다.
 function safeEqual(a: string, b: string): boolean {
@@ -49,30 +40,6 @@ async function fail(request: Request) {
   );
 }
 
-/**
- * 과도기 폴백: users로 아직 승계되지 않았거나 기사가 신규 username을 모르는 동안,
- * 기존 방식(booster.name + 비번)으로 로그인시킨다. 세션 userId는 연결된 users.id가
- * 있으면 그걸, 없으면 booster.id를 쓴다(authz.resolveBoosterId가 둘 다 흡수).
- * Phase 4에서 이 폴백을 종료한다.
- */
-async function tryLegacyBoosterLogin(
-  rawName: string,
-  password: string,
-): Promise<number | null> {
-  const name = rawName.trim();
-  if (!name) return null;
-  await ensureBoosterSchema();
-  const [rows] = await getPool().execute<LegacyBoosterRow[]>(
-    `SELECT id, user_id, booster_password_hash
-     FROM booster WHERE name = :name AND active = 1 LIMIT 1`,
-    { name },
-  );
-  const booster = rows[0];
-  if (!booster?.booster_password_hash) return null;
-  if (!verifyPassword(password, booster.booster_password_hash)) return null;
-  return booster.user_id ?? booster.id;
-}
-
 export async function POST(request: Request) {
   if (await isAuthRateLimited(request)) {
     return NextResponse.json(
@@ -88,8 +55,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "요청 형식이 올바르지 않습니다." }, { status: 400 });
   }
 
-  const rawUsername = payload.username ?? "";
-  const username = normalizeUsername(rawUsername);
+  const username = normalizeUsername(payload.username ?? "");
   const password = payload.password?.trim() ?? "";
   if (!username || !password) {
     return NextResponse.json({ message: "아이디와 비밀번호를 입력해주세요." }, { status: 400 });
@@ -103,19 +69,13 @@ export async function POST(request: Request) {
     return fail(request);
   }
 
-  // 2) users 테이블(고객·기사). ensureAuthSchema는 getUserByUsername 안에서 실행되며
-  //    첫 호출 시 스키마 생성 + 기존 기사 백필까지 수행한다.
+  // 2) users 테이블(고객·기사). getUserByUsername이 첫 호출 시 스키마 생성 + 백필.
   const user = await getUserByUsername(username);
   if (user && verifyPassword(password, user.password_hash)) {
     return success(request, user.role, user.id);
   }
 
-  // 3) 과도기: users 미매칭 시 구 기사 로그인(name+비번) 폴백. 정규화 전 원본 이름으로.
-  if (!user) {
-    const legacyBoosterUserId = await tryLegacyBoosterLogin(rawUsername, password);
-    if (legacyBoosterUserId) return success(request, "booster", legacyBoosterUserId);
-    dummyVerify(password); // 미존재 계정도 scrypt 1회 태워 타이밍 균일화(열거 방지)
-  }
-
+  // 미존재 계정도 scrypt 1회 태워 타이밍 균일화(열거 방지)
+  if (!user) dummyVerify(password);
   return fail(request);
 }

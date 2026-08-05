@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import { writeFile, mkdir, access } from "fs/promises";
 import { constants } from "fs";
 import { join, resolve, basename } from "path";
-import { getSessionTokenFromRequest, validateSession } from "@/lib/adminSession";
+import { isAdmin } from "@/lib/authz";
 
 export const runtime = "nodejs";
 
@@ -45,8 +45,7 @@ export async function POST(
   // 파일을 무제한으로 써서 디스크를 채우거나, 임의 바이트를 이 도메인의
   // 공개 URL로 호스팅할 수 있다(MIME은 클라이언트가 보내는 값이라 못 믿는다).
   // 본문 파싱보다 먼저 막아 미인증 요청이 파일을 읽지도 못하게 한다.
-  const token = getSessionTokenFromRequest(request);
-  if (!token || !validateSession(token)) {
+  if (!isAdmin(request)) {
     return NextResponse.json(
       { message: "관리자 권한이 필요합니다." },
       { status: 403 },

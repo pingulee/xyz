@@ -4,7 +4,8 @@ import { navItems, services, site } from "@/lib/site";
 /**
  * 사이트맵 공용 설정/헬퍼.
  *
- * 사이트맵은 용도별로 분리해 서빙한다(정적 페이지 / 부스터 / 후기).
+ * 사이트맵은 용도별로 분리해 서빙하고 루트 인덱스에서 묶는다
+ * (정적 페이지 / 부스터 / 후기).
  * 하나로 합치면 DB 조회 하나가 늦어질 때 정적 페이지 URL까지 함께 죽고,
  * GSC가 사이트맵 단위로만 상태를 보고하므로 어느 쪽이 실패했는지 알 수 없다.
  */
@@ -26,7 +27,7 @@ const staticLastModified: Record<string, string> = {
 };
 
 /**
- * 정적 페이지 목록. 루트 /sitemap.xml을 반환한다.
+ * 정적 페이지 목록. /pages/sitemap.xml을 반환한다.
  */
 export function staticSitemapEntries(): MetadataRoute.Sitemap {
   const staticPaths = [
