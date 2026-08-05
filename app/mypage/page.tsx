@@ -97,6 +97,7 @@ export default async function MyPage() {
 
         <MyAccountSettings
           initialEmail={account?.email ?? null}
+          initialDisplayName={account?.displayName ?? null}
           initialNicknames={nicknames}
         />
 

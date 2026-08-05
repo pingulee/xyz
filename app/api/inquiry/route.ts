@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/authz";
 import { guardMutationRequest } from "@/lib/request-security";
 import { hashPassword } from "@/lib/password";
+import { getDisplayNameById } from "@/lib/users";
 import { createInquiry, getInquiryList } from "@/lib/inquiry";
 
 export const runtime = "nodejs";
@@ -54,7 +55,8 @@ export async function POST(request: Request) {
 
   if (isMember) {
     userId = session!.userId;
-    if (!authorName) authorName = "회원";
+    // 작성자명은 계정의 사이트 닉네임에서 끌어온다(클라 입력 무시).
+    authorName = (await getDisplayNameById(userId)) ?? "회원";
   } else {
     // 비회원: 임시 비밀번호 필수(본인 문의 열람·삭제용).
     const password = payload.password?.trim() ?? "";

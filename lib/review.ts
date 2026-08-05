@@ -73,6 +73,7 @@ type SchemaColumnRow = RowDataPacket & {
 type ReviewColumnMeta = RowDataPacket & {
   IS_NULLABLE: "YES" | "NO";
   COLUMN_TYPE: string;
+  CHARACTER_MAXIMUM_LENGTH: number | null;
 };
 
 export const ensureReviewSchema = oncePerProcess(async () => {
@@ -85,6 +86,21 @@ export const ensureReviewSchema = oncePerProcess(async () => {
   await getPool().execute(
     `ALTER TABLE \`review\` ADD COLUMN IF NOT EXISTS view_count INT UNSIGNED NOT NULL DEFAULT 0`,
   );
+  // 작성자명(name)에 사이트 닉네임(최대 20자)을 저장하므로 컬럼이 좁으면 넓힌다.
+  // 나머지 정의(NULL 여부)는 유지하고 길이만 확장 — 축소·데이터 손실 없음.
+  const [nameCols] = await getPool().execute<ReviewColumnMeta[]>(
+    `SELECT IS_NULLABLE, COLUMN_TYPE, CHARACTER_MAXIMUM_LENGTH
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'review' AND COLUMN_NAME = 'name'
+     LIMIT 1`,
+  );
+  const nameCol = nameCols[0];
+  if (nameCol && (nameCol.CHARACTER_MAXIMUM_LENGTH ?? 0) < 30) {
+    const nullSql = nameCol.IS_NULLABLE === "NO" ? "NOT NULL" : "NULL";
+    await getPool().execute(
+      `ALTER TABLE \`review\` MODIFY COLUMN name VARCHAR(30) ${nullSql}`,
+    );
+  }
   // 통합 인증: 로그인 고객 후기 소유권(user_id, 논리 참조) + 마이페이지 조회 인덱스.
   await getPool().execute(
     `ALTER TABLE \`review\` ADD COLUMN IF NOT EXISTS user_id BIGINT UNSIGNED NULL`,

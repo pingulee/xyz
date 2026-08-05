@@ -21,6 +21,7 @@ type SignupBody = {
   password: string;
   role: "customer" | "booster";
   email?: string;
+  displayName?: string;
   nicknames?: string[];
   code?: string;
   name?: string;
@@ -41,6 +42,7 @@ export default function SignupForm() {
   const [confirm, setConfirm] = useState("");
   // 일반회원 전용 필드
   const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [nicknames, setNicknames] = useState<string[]>([]);
   // 기사 전용 필드
   const [code, setCode] = useState("");
@@ -169,7 +171,12 @@ export default function SignupForm() {
         setMessage("올바른 이메일을 입력해주세요.");
         return;
       }
-      body = { ...body, email: em, nicknames };
+      const dn = displayName.trim();
+      if (dn.length < 2 || dn.length > 20) {
+        setMessage("사이트 닉네임은 2~20자로 입력해주세요.");
+        return;
+      }
+      body = { ...body, email: em, displayName: dn, nicknames };
     }
 
     setLoading(true);
@@ -312,6 +319,17 @@ export default function SignupForm() {
 
         {role === "customer" && (
           <>
+            <label className={labelCls}>
+              사이트 닉네임
+              <input
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                maxLength={20}
+                className={inputCls}
+                placeholder="후기·문의에 표시될 이름 (2~20자)"
+                autoComplete="nickname"
+              />
+            </label>
             <label className={labelCls}>
               이메일
               <input

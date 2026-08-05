@@ -121,12 +121,13 @@ export default function ReviewBoard({
   );
   const canSubmitReview = Boolean(
     (isLoggedInCustomer || isAdmin) &&
-      form.name.trim() &&
+      // 회원 닉네임은 계정에서 끌어오므로 관리자만 이름 입력이 필요하다.
+      (isAdmin ? form.name.trim() : true) &&
       form.boosterId &&
       form.service &&
       form.content.trim().length >= REVIEW_CONTENT_MIN_LENGTH,
   );
-  const missingReviewName = submitAttempted && !form.name.trim();
+  const missingReviewName = submitAttempted && isAdmin && !form.name.trim();
   const missingReviewBooster = submitAttempted && !form.boosterId;
   const missingService = submitAttempted && !form.service;
   const missingReviewContent = submitAttempted && !form.content.trim();
@@ -265,8 +266,14 @@ export default function ReviewBoard({
       return;
     }
 
-    if (!name || !content) {
-      setError("닉네임과 후기를 모두 입력해주세요.");
+    // 회원은 계정의 사이트 닉네임을 서버가 붙인다. 관리자(대행 작성)만 이름을 입력한다.
+    if (isAdmin && !name) {
+      setError("닉네임을 입력해주세요.");
+      return;
+    }
+
+    if (!content) {
+      setError("후기를 입력해주세요.");
       return;
     }
 
@@ -280,7 +287,7 @@ export default function ReviewBoard({
       return;
     }
 
-    if (name.length > REVIEW_NAME_MAX_LENGTH) {
+    if (isAdmin && name.length > REVIEW_NAME_MAX_LENGTH) {
       setError(`닉네임은 ${REVIEW_NAME_MAX_LENGTH}자 이하로 입력해주세요.`);
       return;
     }
@@ -302,7 +309,8 @@ export default function ReviewBoard({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
+          // 회원 닉네임은 서버가 계정에서 붙인다. 관리자만 이름을 보낸다.
+          ...(isAdmin ? { name } : {}),
           service: form.service,
           boosterId: form.boosterId || undefined,
           rating: form.rating,
@@ -575,36 +583,41 @@ export default function ReviewBoard({
             <form onSubmit={submitReview}>
               <div className="grid gap-4">
                 <div className="grid gap-4">
-                  <label className="grid gap-2">
-                    <span className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-bold text-zinc-300">
-                        닉네임
+                  {isAdmin ? (
+                    <label className="grid gap-2">
+                      <span className="flex items-center justify-between gap-3">
+                        <span className="text-sm font-bold text-zinc-300">
+                          닉네임
+                        </span>
+                        <span className="text-xs font-bold text-zinc-600">
+                          {form.name.length}/{REVIEW_NAME_MAX_LENGTH}
+                        </span>
                       </span>
-                      <span className="text-xs font-bold text-zinc-600">
-                        {form.name.length}/{REVIEW_NAME_MAX_LENGTH}
-                      </span>
-                    </span>
-                    <input
-                      value={form.name}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          name: event.target.value,
-                        }))
-                      }
-                      maxLength={REVIEW_NAME_MAX_LENGTH}
-                      className={`rounded-2xl border bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 ${
-                        missingReviewName ? "border-red-400/50" : "border-white/10"
-                      }`}
-                      placeholder="예: 다이아 목표"
-                    />
-                    {missingReviewName && (
-                      <p className="text-xs font-bold text-red-300">
-                        닉네임을 입력해주세요.
-                      </p>
-                    )}
-                  </label>
-
+                      <input
+                        value={form.name}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            name: event.target.value,
+                          }))
+                        }
+                        maxLength={REVIEW_NAME_MAX_LENGTH}
+                        className={`rounded-2xl border bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 ${
+                          missingReviewName ? "border-red-400/50" : "border-white/10"
+                        }`}
+                        placeholder="예: 다이아 목표"
+                      />
+                      {missingReviewName && (
+                        <p className="text-xs font-bold text-red-300">
+                          닉네임을 입력해주세요.
+                        </p>
+                      )}
+                    </label>
+                  ) : (
+                    <p className="text-xs text-zinc-500">
+                      작성자명은 회원 정보의 사이트 닉네임으로 표시됩니다.
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">

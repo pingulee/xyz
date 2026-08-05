@@ -4,6 +4,7 @@ import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { ensureReviewSchema, getReviewList, toReview } from "@/lib/review";
 import { getSession } from "@/lib/authz";
+import { getDisplayNameById } from "@/lib/users";
 import { invalidateReviewCaches } from "@/lib/cache-tags";
 import { guardMutationRequest } from "@/lib/request-security";
 
@@ -135,17 +136,31 @@ export async function POST(request: Request) {
     );
   }
 
-  const name = payload.name?.trim() ?? "";
   const service = payload.service?.trim() ?? "";
   const boosterId = payload.boosterId ? Number(payload.boosterId) : null;
   const content = payload.content?.trim() ?? "";
   const rating = Number(payload.rating);
 
-  if (name.length < 1 || name.length > reviewNameMaxLength) {
-    return NextResponse.json(
-      { message: `닉네임은 1~${reviewNameMaxLength}자로 입력해주세요.` },
-      { status: 400 },
-    );
+  // 작성자명: 로그인 고객은 계정의 사이트 닉네임을 서버에서 끌어 쓴다(클라 입력 불신).
+  // 관리자는 대행 작성이라 payload.name을 그대로 쓴다.
+  let name: string;
+  if (session.role === "customer") {
+    const displayName = await getDisplayNameById(session.userId);
+    if (!displayName) {
+      return NextResponse.json(
+        { message: "사이트 닉네임이 없습니다. 마이페이지에서 설정해주세요." },
+        { status: 400 },
+      );
+    }
+    name = displayName;
+  } else {
+    name = payload.name?.trim() ?? "";
+    if (name.length < 1 || name.length > reviewNameMaxLength) {
+      return NextResponse.json(
+        { message: `닉네임은 1~${reviewNameMaxLength}자로 입력해주세요.` },
+        { status: 400 },
+      );
+    }
   }
 
   if (!allowedServices.has(service)) {

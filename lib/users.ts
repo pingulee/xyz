@@ -15,6 +15,7 @@ export type Account = {
   id: number;
   username: string;
   email: string | null;
+  displayName: string | null;
   role: UserRole;
 };
 
@@ -23,6 +24,7 @@ type UserRow = RowDataPacket & {
   username: string;
   password_hash: string;
   email: string | null;
+  display_name: string | null;
   role: UserRole;
   active: 0 | 1;
 };
@@ -55,6 +57,15 @@ export function normalizeEmail(raw: string): string {
 
 export function isValidEmail(email: string): boolean {
   return email.length <= 255 && EMAIL_RE.test(email);
+}
+
+// 사이트 닉네임(표시용). 후기·문의 작성자로 쓰인다. 2~20자, 공백만 불가.
+export function normalizeDisplayName(raw: string): string {
+  return raw.trim();
+}
+
+export function isValidDisplayName(name: string): boolean {
+  return name.length >= 2 && name.length <= 20;
 }
 
 // Riot ID 검증 + 정규화(양끝 공백 제거). 저장 형식은 입력 그대로(태그 대소문자 유지).
@@ -101,6 +112,10 @@ export const ensureAuthSchema = oncePerProcess(async () => {
   );
   await pool.execute(
     `ALTER TABLE users ADD UNIQUE INDEX IF NOT EXISTS uq_users_email (email)`,
+  );
+  // 사이트 닉네임(표시용, 고유 아님). 추가만.
+  await pool.execute(
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name VARCHAR(20) NULL`,
   );
 
   await pool.execute(`
@@ -176,13 +191,19 @@ export async function getUserByUsername(username: string): Promise<UserRow | nul
 export async function getUserByEmail(email: string): Promise<Account | null> {
   await ensureAuthSchema();
   const [rows] = await getPool().execute<UserRow[]>(
-    `SELECT id, username, email, role FROM users
+    `SELECT id, username, email, display_name, role FROM users
      WHERE email = :email AND active = 1 LIMIT 1`,
     { email: normalizeEmail(email) },
   );
   const row = rows[0];
   return row
-    ? { id: row.id, username: row.username, email: row.email, role: row.role }
+    ? {
+        id: row.id,
+        username: row.username,
+        email: row.email,
+        displayName: row.display_name,
+        role: row.role,
+      }
     : null;
 }
 
@@ -197,17 +218,36 @@ export async function getAuthUserById(id: number): Promise<AuthUser | null> {
   return row ? { id: row.id, username: row.username, role: row.role } : null;
 }
 
-// 마이페이지 표시용(이메일 포함, 비번 제외).
+// 마이페이지 표시용(이메일·닉네임 포함, 비번 제외).
 export async function getAccountById(id: number): Promise<Account | null> {
   await ensureAuthSchema();
   const [rows] = await getPool().execute<UserRow[]>(
-    `SELECT id, username, email, role FROM users WHERE id = :id AND active = 1 LIMIT 1`,
+    `SELECT id, username, email, display_name, role
+     FROM users WHERE id = :id AND active = 1 LIMIT 1`,
     { id },
   );
   const row = rows[0];
   return row
-    ? { id: row.id, username: row.username, email: row.email, role: row.role }
+    ? {
+        id: row.id,
+        username: row.username,
+        email: row.email,
+        displayName: row.display_name,
+        role: row.role,
+      }
     : null;
+}
+
+// 후기·문의 작성자명으로 쓸 사이트 닉네임. 미설정이면 username 폴백.
+export async function getDisplayNameById(id: number): Promise<string | null> {
+  await ensureAuthSchema();
+  const [rows] = await getPool().execute<UserRow[]>(
+    `SELECT display_name, username FROM users WHERE id = :id AND active = 1 LIMIT 1`,
+    { id },
+  );
+  const row = rows[0];
+  if (!row) return null;
+  return row.display_name?.trim() || row.username;
 }
 
 // 현재 비밀번호 검증용(내부). password_hash 포함이라 라우트 밖으로 내보내지 않는다.
@@ -226,16 +266,18 @@ export async function createCustomer(
   username: string,
   passwordHash: string,
   email: string,
+  displayName: string,
 ): Promise<{ id: number } | { error: "username" | "email" | "unknown" }> {
   await ensureAuthSchema();
   try {
     const [res] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO users (username, password_hash, email, role)
-       VALUES (:username, :hash, :email, 'customer')`,
+      `INSERT INTO users (username, password_hash, email, display_name, role)
+       VALUES (:username, :hash, :email, :displayName, 'customer')`,
       {
         username: normalizeUsername(username),
         hash: passwordHash,
         email: normalizeEmail(email),
+        displayName: normalizeDisplayName(displayName),
       },
     );
     return { id: res.insertId };
@@ -246,6 +288,17 @@ export async function createCustomer(
     }
     return { error: "unknown" };
   }
+}
+
+export async function updateUserDisplayName(
+  id: number,
+  displayName: string,
+): Promise<void> {
+  await ensureAuthSchema();
+  await getPool().execute(
+    `UPDATE users SET display_name = :name WHERE id = :id`,
+    { name: normalizeDisplayName(displayName), id },
+  );
 }
 
 export async function updateUserPassword(

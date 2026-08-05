@@ -32,11 +32,37 @@ function Notice({ msg }: { msg: Msg }) {
 // 모든 변경은 세션 게이트된 /api/account/* 로 나가고, 서버가 재검증한다.
 export default function MyAccountSettings({
   initialEmail,
+  initialDisplayName,
   initialNicknames,
 }: {
   initialEmail: string | null;
+  initialDisplayName: string | null;
   initialNicknames: LolNickname[];
 }) {
+  // ── 사이트 닉네임 ──
+  const [displayName, setDisplayName] = useState(initialDisplayName ?? "");
+  const [dnBusy, setDnBusy] = useState(false);
+  const [dnMsg, setDnMsg] = useState<Msg>(null);
+
+  const changeDisplayName = async () => {
+    setDnBusy(true);
+    setDnMsg(null);
+    try {
+      const res = await fetch("/api/account/display-name", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ displayName: displayName.trim() }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { message?: string };
+      if (res.ok) setDnMsg({ text: "닉네임이 변경되었습니다.", ok: true });
+      else setDnMsg({ text: data.message ?? "변경에 실패했습니다.", ok: false });
+    } catch {
+      setDnMsg({ text: "변경에 실패했습니다.", ok: false });
+    } finally {
+      setDnBusy(false);
+    }
+  };
+
   // ── 닉네임 ──
   const [nicknames, setNicknames] = useState<LolNickname[]>(initialNicknames);
   const [nickInput, setNickInput] = useState("");
@@ -158,6 +184,34 @@ export default function MyAccountSettings({
 
   return (
     <div className="mt-6 grid gap-4">
+      {/* 사이트 닉네임 */}
+      <section className={cardCls}>
+        <p className="text-sm font-black text-gold">사이트 닉네임</p>
+        <p className="mt-1 text-sm text-zinc-500">후기·문의에 표시되는 이름입니다.</p>
+        <div className="mt-4 flex gap-2">
+          <input
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            maxLength={20}
+            className={inputCls}
+            placeholder="2~20자"
+            autoComplete="nickname"
+          />
+          <button
+            type="button"
+            onClick={changeDisplayName}
+            disabled={dnBusy}
+            className={btnCls}
+          >
+            {dnBusy && <Loader2 size={15} className="animate-spin" />}
+            변경
+          </button>
+        </div>
+        <div className="mt-2">
+          <Notice msg={dnMsg} />
+        </div>
+      </section>
+
       {/* 롤 닉네임 */}
       <section className={cardCls}>
         <p className="text-sm font-black text-gold">롤 닉네임 (Riot ID)</p>

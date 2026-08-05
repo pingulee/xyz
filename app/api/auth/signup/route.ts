@@ -6,9 +6,11 @@ import {
   addNicknamesBulk,
   createCustomer,
   ensureAuthSchema,
+  isValidDisplayName,
   isValidEmail,
   isValidRiotId,
   isValidUsername,
+  normalizeDisplayName,
   normalizeEmail,
   normalizeRiotId,
   normalizeUsername,
@@ -31,6 +33,7 @@ type SignupPayload = BoosterProfileInput & {
   role?: string;
   code?: string;
   email?: string;
+  displayName?: string;
   nicknames?: string[];
 };
 
@@ -94,9 +97,16 @@ export async function POST(request: Request) {
     if (!isValidEmail(email)) {
       return NextResponse.json({ message: "올바른 이메일을 입력해주세요." }, { status: 400 });
     }
+    const displayName = normalizeDisplayName(payload.displayName ?? "");
+    if (!isValidDisplayName(displayName)) {
+      return NextResponse.json(
+        { message: "사이트 닉네임은 2~20자로 입력해주세요." },
+        { status: 400 },
+      );
+    }
     const nicknames = Array.isArray(payload.nicknames) ? payload.nicknames : [];
 
-    const created = await createCustomer(username, passwordHash, email);
+    const created = await createCustomer(username, passwordHash, email, displayName);
     if ("error" in created) {
       const message =
         created.error === "email"
@@ -146,9 +156,9 @@ export async function POST(request: Request) {
   try {
     await conn.beginTransaction();
     const [userRes] = await conn.execute<ResultSetHeader>(
-      `INSERT INTO users (username, password_hash, role, active)
-       VALUES (:username, :hash, 'booster', 1)`,
-      { username, hash: passwordHash },
+      `INSERT INTO users (username, password_hash, display_name, role, active)
+       VALUES (:username, :hash, :displayName, 'booster', 1)`,
+      { username, hash: passwordHash, displayName: profile.name.slice(0, 20) },
     );
     userId = userRes.insertId;
 

@@ -83,16 +83,22 @@ export default function InquiryForm({
           placeholder="문의 내용을 입력해주세요."
         />
       </label>
-      <label className={labelCls}>
-        작성자 <span className="font-normal text-zinc-500">(선택)</span>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          maxLength={60}
-          className={inputCls}
-          placeholder={isMember ? "미입력 시 '회원'" : "미입력 시 '비회원'"}
-        />
-      </label>
+      {isMember ? (
+        <p className="text-xs text-zinc-500">
+          작성자명은 회원 정보의 사이트 닉네임으로 표시됩니다.
+        </p>
+      ) : (
+        <label className={labelCls}>
+          작성자 <span className="font-normal text-zinc-500">(선택)</span>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={60}
+            className={inputCls}
+            placeholder="미입력 시 '비회원'"
+          />
+        </label>
+      )}
       {!isMember && (
         <label className={labelCls}>
           비밀번호
