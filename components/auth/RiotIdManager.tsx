@@ -60,12 +60,13 @@ export default function RiotIdManager({
     }
   };
 
-  const remove = (rid: string) =>
-    onChange(nicknames.filter((n) => n !== rid));
+  const remove = (rid: string) => onChange(nicknames.filter((n) => n !== rid));
 
   return (
     <div className="grid gap-2">
-      <span className="text-sm font-bold text-zinc-300">롤 닉네임 (Riot ID)</span>
+      <span className="text-sm font-bold text-zinc-300">
+        롤 닉네임 (Riot ID)
+      </span>
 
       {nicknames.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -115,7 +116,7 @@ export default function RiotIdManager({
         </button>
       </div>
       <p className="text-xs text-zinc-500">
-        확인 버튼을 눌러 실존하는 Riot ID만 등록됩니다. (op.gg 조회)
+        확인 버튼을 눌러 실존하는 Riot ID만 등록됩니다. (여러 아이디 추가 가능)
       </p>
       {error && <p className="text-xs font-bold text-red-300">{error}</p>}
     </div>

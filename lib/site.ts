@@ -22,6 +22,7 @@ export const navItems = [
   { label: "가격표", href: "#price" },
   { label: "작업 후기", href: "/review" },
   { label: "기사 모집", href: "/recruit" },
+  { label: "문의하기", href: "/inquiry" },
 ];
 
 export const services = [

@@ -34,7 +34,13 @@ export function staticSitemapEntries(): MetadataRoute.Sitemap {
   const staticPaths = [
     "",
     ...navItems
-      .filter((item) => item.href !== "/" && !item.href.startsWith("#"))
+      .filter(
+        (item) =>
+          item.href !== "/" &&
+          !item.href.startsWith("#") &&
+          // 문의하기는 개인 문의라 noindex — 사이트맵에서도 제외.
+          item.href !== "/inquiry",
+      )
       .map((item) => item.href),
     ...services.map((service) => service.href),
   ];
