@@ -31,16 +31,16 @@
     - **동적 세그먼트는 `generateStaticParams`가 없으면 revalidate가 있어도 SSR(ƒ)로 남는다.** 빈 배열이라도 있어야 SSG(●)/온디맨드 ISR로 전환(빌드 프리렌더 0, 각 상세는 첫 요청 시 생성 후 캐시). 빌드 로그 Route 표에서 ● 확인.
     - **ISR 페이지의 세션 UI는 클라이언트로 분리해야 한다.** 페이지에서 `cookies()`를 없애야 정적화된다(그게 유일한 force-dynamic 원인이었다). 관리자/기사 편집 UI는 `hooks/useSession.ts`가 `app/api/session/me`(force-dynamic)를 조회해 켠다. 세션 쿠키가 **HttpOnly**라 `document.cookie`로 못 읽어 서버 왕복이 필수. 초기값은 비로그인이라 캐시 HTML과 일치(하이드레이션 안전), 로그인 상태면 뒤이어 편집 UI가 켜진다.
     - **ISR 페이지 무효화는 `revalidatePath`** (태그로는 안 지워진다). `revalidateTag`는 `unstable_cache` 목록류만 무효화하고 렌더된 페이지 HTML은 못 지운다. 후기/답글 쓰기 route가 `invalidateReviewCaches(reviewId)`를 호출하면 `revalidatePath('/review/[id]')`로 상세가 즉시 갱신된다(`lib/cache-tags.ts`). 기사 상세(`booster/[slug]`)의 집계 지연은 revalidate 안전망(1h)으로 흡수 — 답글 즉시성은 후기 상세 쪽이 핵심.
-  - **사이트맵은 예외 — 용도별 3분할.** `app/sitemap.ts`(정적 7개, **DB 접근 0** → 빌드 시 프리렌더, 절대 안 죽음), `app/booster/sitemap.ts`, `app/review/sitemap.ts`. 합치면 DB 조회 하나가 늦을 때 정적 URL까지 죽고, GSC가 사이트맵 단위로만 상태를 보고해 원인 특정이 불가능하다. `app/robots.ts`는 `sitemap` 배열로 3줄 노출(복수 `Sitemap:` 지시자는 규격 허용, 인덱스 파일 불필요).
+  - **사이트맵은 루트 인덱스 + 용도별 3분할.** `/sitemap.xml`은 `app/sitemap.xml/route.ts`가 만드는 인덱스이며, `app/pages/sitemap.ts`(정적 7개, DB 접근 0), `app/booster/sitemap.ts`, `app/review/sitemap.ts`를 참조한다. Search Console과 `app/robots.ts`에는 루트 인덱스 하나만 제출한다.
   - 동적 사이트맵은 `export const revalidate = 3600`(ISR). **리터럴이어야 함** — 상수 import 시 "Invalid segment configuration export"로 빌드 실패.
   - DB 조회는 `lib/sitemap.ts`의 `withFallback`(5초 상한, 실패 시 빈 배열)으로 감쌀 것. 에러 없이 매달리는 조회는 try/catch로 못 잡는다.
   - **사이트맵용 쿼리는 전용 경량 함수로.** `getBoosterList`는 DDL 보정 + 리뷰 집계 JOIN + 전적 요약까지 돌아 5초를 넘겼다(실측). slug엔 이름만 필요 → `getBoosterSitemapEntries`. 후기는 `getSitemapReviewEntries`(5000건 상한).
 - **인증(통합)**: 세 역할 `admin`/`booster`/`customer`를 **단일 쿠키 `xyz_session`**(`lib/session.ts`)으로 통합. 토큰은 `role:userId:expiry` HMAC-SHA256 서명(role이 서명에 포함돼 위조 불가). 서명 키 `getAuthSecret()` = `AUTH_SECRET ?? ADMIN_PASSWORD`(빈 값이면 fail-closed). 쿠키 `HttpOnly; SameSite=Strict`(prod `Secure`).
   - **`lib/authz.ts` = 통합 권한 게이트**: `getSession`/`isAdmin`/`resolveBoosterId`. 모든 API 라우트·서버 페이지가 이걸 쓴다(라우트마다 중복이던 `isAdminRequest` 폐기). 서버 컴포넌트(page)는 Request가 없어 `getSessionFromCookieHeader(headers().get("cookie"))`를 쓴다.
-  - **`lib/users.ts` = users 테이블**(username UNIQUE·소문자 정규화, scrypt 해시, role `customer`/`booster`). **관리자는 DB가 아니라 env** `ADMIN_USERNAME`+`ADMIN_PASSWORD`(role=admin, userId=0). `lib/password.ts`(scrypt 단일화, 열거 방지 더미검증), `lib/authRateLimit.ts`(로그인·가입 IP 레이트리밋).
+  - **`lib/users.ts` = users 테이블**(username UNIQUE·소문자 정규화, scrypt 해시, role `customer`/`booster`). **관리자는 DB가 아니라 env** `ADMIN_USERNAME`+`ADMIN_PASSWORD`(role=admin, userId=0). `lib/password.ts`(scrypt 단일화, 열거 방지 더미검증), `lib/authRateLimit.ts`(로그인·가입 IP + 계정 레이트리밋, 15분 10회).
   - **엔드포인트/UI**: `/api/auth/{login,signup,logout}`, 통합 폼 `/login`(회원가입 링크)·`/signup`, 마이페이지 `/mypage`. 헤더 `components/auth/AuthControls`. 클라이언트 세션은 `hooks/useSession`+`app/api/session/me`(`{role,userId,username,isAdmin,boosterId,boosterName}` — 하위호환 필드 유지).
   - **기사** = `booster` 프로필 + `users`(role=booster) `booster.user_id`로 연결(booster.id는 답글권한·통계·조인의 안정 식별자라 유지). **기사 계정 생성 = 가입 코드제**: 관리자가 `/admin`에서 코드 발급(`booster_signup_codes`) → 합격 기사가 `/signup` 기사 탭에서 **코드 선인증**(`/api/auth/verify-code`, 소진 안 함) 후 프로필 입력 → `/api/auth/signup`이 **한 트랜잭션**으로 users(role=booster)+booster 생성 + `consumeCode`(1회용, `WHERE used=0`+affectedRows로 재사용·동시성 차단). 관리자 직접 생성(`/api/booster` POST)은 폐기. **고객** = 셀프 회원가입 → 로그인 후기 작성(`review.user_id` 소유, 비번 없이) + 마이페이지. **관리자 슈퍼권한**: 모든 기사 답글·후기 수정·삭제(서버 세션 role로만 판정).
-  - **후기 소유권**: `admin` | `review.user_id === session.userId`(로그인 고객) | 비번(비로그인) 순. 클라가 보낸 id 불신 — 서명된 `session.userId`만 신뢰.
+  - **후기 작성·소유권**: 신규 후기는 로그인 고객만 작성한다. 수정·삭제는 `admin` 또는 `review.user_id === session.userId`만 가능하며, 비로그인 비밀번호 인증 경로는 없다. 클라가 보낸 id 불신 — 서명된 `session.userId`만 신뢰.
   - **레거시 정리 완료**: 구 쿠키(`xyz_admin_session`/`xyz_booster_session`) 병행 읽기, 구 기사 `name+비번` 로그인 폴백, 구 라우트(`/api/admin/{login,logout,session}`·`/api/booster/{login,logout,status}`·`/admax`), `lib/{adminSession,boosterSession}.ts` **전부 삭제됨**. 인증은 이제 통합 경로(`/api/auth/*` + `lib/{session,authz,users}.ts`) 단일. 업로드 라우트도 `isAdmin`로 이관.
   - **남은 과도기 항목 = `booster_password_hash`**: 기사 로그인 검증은 `users.password_hash`만 쓰므로 이 컬럼은 현재 흐름에서 **읽히지 않는다**(write-only). 하지만 (1) `ensureAuthSchema` 백필이 이 값을 users로 복사해 기존 기사를 users로 승계하는 마이그레이션 근거이고, (2) 롤백 안전망이라 **아직 유지**. 기사 PUT·가입 시 users 해시와 동일값으로 병행 기입 중. 모든 기사의 users 승계가 확실해지면 컬럼+병행 기입+백필을 **한 번에** 제거(별도 DDL, 데이터 손실이라 확인 후). **원본 해시 삭제 금지**.
   - **DDL 배치**: users 테이블·백필 = `ensureAuthSchema`(users.ts). `booster.user_id` = `ensureBoosterSchema`. `review.user_id`+password_hash NULL 완화 = `ensureReviewSchema`. 자기 테이블 컬럼은 자기 ensure에서(그 테이블만 쓰는 라우트에서도 보장). 전부 추가만, FK·DROP 없음.
@@ -81,6 +81,11 @@
   - **서브셋 CSS는 `layout.tsx`에서 `fs.readFileSync`로 읽어 `url(./)`→절대경로 치환 후 인라인 `<style>`**(렌더 차단 `<link>` 제거 → LCP 추가 개선 ~1.5s). `.css` 파일은 빌드 시 읽으므로 유지 필수, woff2는 절대경로로 참조됨.
   - 폰트 파일 장기 캐시: `next.config.ts` `headers()` `/fonts/:path*` → `Cache-Control: immutable, max-age=1yr`.
 - **effect에서 동기 `setState` 금지**(`react-hooks/set-state-in-effect`) — cascading render. "mount 플래그"는 이벤트/타이머 콜백에서 플래그 켜는 방식으로(HeroSlider `animate`), reduced-motion 같은 조건부 표시는 CSS 미디어쿼리로(Reveal `.reveal` + globals.css).
+
+## 외부 웹 요청은 SSH 경유 (직접 접속 금지)
+- **경쟁사 사이트 분석, 라이브 `sitemap.xml`/`robots.txt` 도달 확인, 우리 도메인 curl 점검 등 외부 웹 요청은 이 개발 머신에서 직접 하지 말고 SSH 호스트를 경유한다.** 이 머신은 회사 네트워크라 외부 접속 로그가 남아 확인이 번거롭다(사내 정책).
+- **SSH 경유 방법**: `~/.ssh/config`의 Host alias **`pingulee`**(→ `ssh.pingulee.dev:2222`, user `pingulee`, key `id_ed25519`). 예: `ssh pingulee 'curl -sI https://xn--vk1b65hf2a.xyz/sitemap.xml'`. 원격 셸에서 curl/wget으로 받아 결과만 가져온다.
+- **주의**: 서버가 fail2ban/허용목록으로 출발지 IP를 막으면 키 교환 단계에서 끊긴다(`kex_exchange_identification: Connection closed by remote host`). 키·config가 정상인데 끊기면 서버 측 차단이니 호스트에서 unban/IP 허용 확인.
 
 ## Windows 개발 환경 주의
 - `.next/dev` 파일 쓰기 실패 `os error 1224`(ERROR_USER_MAPPED_FILE) → **node 프로세스 과다/좀비**가 `.next`를 메모리 매핑으로 잠근 것. 조치: 잉여 node 종료 → `.next` 삭제 → dev 1회만 실행. `npm run dev`를 여러 터미널에서 중복 실행 금지.
