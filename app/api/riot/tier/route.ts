@@ -30,12 +30,17 @@ export async function POST(request: Request) {
     const tier = await getSoloTier(riotId);
     if (!tier.ranked) {
       return NextResponse.json(
-        { ranked: false, message: "티어 정보를 찾을 수 없습니다. 다음 단계에서 직접 선택해주세요." },
+        {
+          ranked: false,
+          level: tier.level,
+          message: "티어 정보(솔로랭크)를 찾을 수 없습니다.",
+        },
         { status: 200 },
       );
     }
     return NextResponse.json({
       ranked: true,
+      level: tier.level,
       tierIndex: tier.tierIndex,
       division: tier.division,
       lp: tier.lp,

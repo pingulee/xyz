@@ -59,6 +59,18 @@ export default function QuoteCalculator() {
   const [tierMsg, setTierMsg] = useState<{ text: string; ok: boolean } | null>(
     null,
   );
+  // 조회 결과(표시용). 확인을 눌러도 자동으로 넘어가지 않고 여기 티어·레벨을 보여준다.
+  const [resolved, setResolved] = useState<
+    | {
+        ranked: true;
+        tierIndex: number;
+        division: number;
+        lp: number;
+        level: number | null;
+      }
+    | { ranked: false; level: number | null }
+    | null
+  >(null);
 
   // 로그인 상태면 저장된 롤 닉네임을 끌어와 선택지로 제공한다(비로그인 401은 무시).
   useEffect(() => {
@@ -76,6 +88,17 @@ export default function QuoteCalculator() {
 
   const currentScore = rankScore(currentTier, currentDivision);
   const targetScore = rankScore(targetTier, targetDivision);
+  // 서비스 노출 필터. 30레벨 미만이면 랭크 불가라 일반 게임만. 그 외에는 현재
+  // 티어로 거른다: 다이아 초과(고티어)면 저티어 티어 보장제를, 다이아 미만(저티어)
+  // 이면 고티어 점수 보장제를 숨긴다.
+  const accountLevel = resolved?.level ?? null;
+  const under30 = accountLevel !== null && accountLevel < 30;
+  const visibleServices = SERVICES.filter((item) => {
+    if (under30) return item.key === "normal";
+    if (item.key === "low-win") return currentTier <= 6;
+    if (item.key === "high-score") return currentTier >= 6;
+    return true;
+  });
   const service =
     SERVICES.find((item) => item.key === serviceKey) ?? SERVICES[0];
   const needsTargetRank = service.needsTarget && serviceKey !== "hourly";
@@ -265,9 +288,13 @@ export default function QuoteCalculator() {
   };
 
   const moveService = (direction: -1 | 1) => {
-    const index = SERVICES.findIndex((item) => item.key === serviceKey);
-    const nextIndex = (index + direction + SERVICES.length) % SERVICES.length;
-    slideToService(SERVICES[nextIndex].key);
+    const list = visibleServices;
+    const index = Math.max(
+      0,
+      list.findIndex((item) => item.key === serviceKey),
+    );
+    const nextIndex = (index + direction + list.length) % list.length;
+    slideToService(list[nextIndex].key);
   };
 
   const changeQuantity = (amount: number) => {
@@ -384,6 +411,14 @@ export default function QuoteCalculator() {
     setCurrentDivision(division);
     const bucket = lp <= 20 ? 0 : lp <= 40 ? 1 : lp <= 60 ? 2 : lp <= 80 ? 3 : 4;
     setCurrentLp(bucket);
+    // 새 티어에서 안 보이는 서비스가 선택돼 있으면 기본(시간제)으로 되돌린다.
+    if (
+      (serviceKey === "low-win" && tierIndex > 6) ||
+      (serviceKey === "high-score" && tierIndex < 6)
+    ) {
+      setServiceKey("hourly");
+      setQuantity(SERVICES[0].initial);
+    }
     if (serviceKey === "hourly" && tierIndex >= 7) {
       setAddons((items) => items.filter((item) => item !== "solo"));
     }
@@ -418,24 +453,40 @@ export default function QuoteCalculator() {
         tierIndex?: number;
         division?: number;
         lp?: number;
+        level?: number | null;
         message?: string;
       };
-      if (res.ok && data.ranked && data.tierIndex !== undefined) {
-        const div = data.division ?? 1;
-        applyCurrentTier(data.tierIndex, div, data.lp ?? 0);
-        const name = TIERS[data.tierIndex].name;
+      if (!res.ok) {
+        setResolved(null);
         setTierMsg({
-          text: `현재 티어를 ${name}${data.tierIndex < 7 ? ` ${div}` : ""}로 반영했습니다.`,
-          ok: true,
-        });
-        goNext();
-      } else {
-        setTierMsg({
-          text: data.message ?? "티어 정보를 찾을 수 없습니다.",
+          text: data.message ?? "조회에 실패했습니다.",
           ok: false,
         });
+        return;
+      }
+      const level = data.level ?? null;
+      // 30레벨 미만은 랭크 불가 → 일반 게임만. 다른 서비스가 선택돼 있으면 되돌린다.
+      if (level !== null && level < 30) {
+        setServiceKey("normal");
+        setQuantity(SERVICES[SERVICES.length - 1].initial);
+      }
+      if (data.ranked && data.tierIndex !== undefined) {
+        const div = data.division ?? 1;
+        applyCurrentTier(data.tierIndex, div, data.lp ?? 0);
+        setResolved({
+          ranked: true,
+          tierIndex: data.tierIndex,
+          division: div,
+          lp: data.lp ?? 0,
+          level,
+        });
+        setTierMsg(null);
+      } else {
+        setResolved({ ranked: false, level });
+        setTierMsg(null);
       }
     } catch {
+      setResolved(null);
       setTierMsg({ text: "조회에 실패했습니다.", ok: false });
     } finally {
       setTierBusy(false);
@@ -504,6 +555,7 @@ export default function QuoteCalculator() {
                         onClick={() => {
                           setRiotId(n.riotId);
                           setTierMsg(null);
+                          setResolved(null);
                         }}
                         className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition ${active ? "border-gold/70 bg-gold/10" : "border-white/8 bg-black/20 hover:border-gold/30"}`}
                       >
@@ -528,6 +580,7 @@ export default function QuoteCalculator() {
                   onChange={(e) => {
                     setRiotId(e.target.value);
                     setTierMsg(null);
+                    setResolved(null);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -562,6 +615,48 @@ export default function QuoteCalculator() {
                 >
                   {tierMsg.text}
                 </p>
+              )}
+
+              {resolved && (
+                <div className="mt-4 rounded-2xl border border-gold/25 bg-gold/8 p-4">
+                  {resolved.ranked ? (
+                    <div className="flex items-center gap-3">
+                      <Image
+                        src={TIERS[resolved.tierIndex].image}
+                        alt=""
+                        width={44}
+                        height={44}
+                        unoptimized
+                        className="h-11 w-11 shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-lg font-black text-white">
+                          {TIERS[resolved.tierIndex].name}
+                          {resolved.tierIndex < 7 ? ` ${resolved.division}` : ""}{" "}
+                          <span className="text-gold">{resolved.lp}LP</span>
+                        </p>
+                        <p className="mt-0.5 text-[11px] font-bold text-zinc-400">
+                          {resolved.level !== null ? `레벨 ${resolved.level} · ` : ""}
+                          현재 티어로 반영됨
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm font-bold text-zinc-200">
+                      {resolved.level !== null ? `레벨 ${resolved.level} · ` : ""}
+                      솔로랭크 기록이 없습니다(언랭).
+                    </p>
+                  )}
+                  {under30 && (
+                    <p className="mt-3 rounded-xl border border-gold/20 bg-black/20 px-3 py-2 text-[11px] font-bold text-gold">
+                      30레벨 미만은 랭크 게임을 할 수 없어 일반 게임만 신청할 수
+                      있습니다.
+                    </p>
+                  )}
+                  <p className="mt-3 text-[11px] font-bold text-zinc-500">
+                    확인되면 아래 &ldquo;다음&rdquo;으로 진행해주세요.
+                  </p>
+                </div>
               )}
 
               <p className="mt-4 text-[11px] leading-5 text-zinc-600">
@@ -603,7 +698,7 @@ export default function QuoteCalculator() {
               ref={serviceSliderRef}
               className="mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 scrollbar-none [&::-webkit-scrollbar]:hidden"
             >
-              {SERVICES.map((item) => {
+              {visibleServices.map((item) => {
                 const active = item.key === serviceKey;
                 const Icon = serviceIcon(item.key);
                 return (
@@ -646,7 +741,7 @@ export default function QuoteCalculator() {
               })}
             </div>
             <div className="mt-3 flex items-center justify-center gap-1.5">
-              {SERVICES.map((item) => (
+              {visibleServices.map((item) => (
                 <button
                   key={item.key}
                   type="button"

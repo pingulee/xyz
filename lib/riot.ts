@@ -14,16 +14,18 @@ const UA =
 export type RiotVerifyResult = { valid: boolean };
 
 // 솔로랭크 티어 조회 결과. ranked=false는 언랭(또는 티어 정보 없음)이다.
+// level은 소환사 레벨(op.gg 프로필 배지). 파싱 실패 시 null.
 export type SoloTier =
   | {
       ranked: true;
+      level: number | null;
       tierKey: string; // TIERS[key] (iron..challenger)
       tierIndex: number; // 0(아이언) ~ 9(챌린저)
       division: number; // 1(I) ~ 4(IV), 마스터 이상은 1
       lp: number;
       tierName: string; // op.gg 원문(예: grandmaster)
     }
-  | { ranked: false };
+  | { ranked: false; level: number | null };
 
 export class RiotUnavailableError extends Error {}
 
@@ -103,13 +105,13 @@ export async function verifyRiotId(rawRiotId: string): Promise<RiotVerifyResult>
  */
 export async function getSoloTier(rawRiotId: string): Promise<SoloTier> {
   const riotId = normalizeRiotId(rawRiotId);
-  if (!isValidRiotId(riotId)) return { ranked: false };
+  if (!isValidRiotId(riotId)) return { ranked: false, level: null };
 
   const cached = tierCache().get(riotId);
   if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached.result;
 
   const parts = splitRiotId(riotId);
-  if (!parts) return { ranked: false };
+  if (!parts) return { ranked: false, level: null };
 
   const url = `https://op.gg/lol/summoners/${OPGG_REGION}/${encodeURIComponent(parts.gameName)}-${encodeURIComponent(parts.tagLine)}`;
 
@@ -125,7 +127,7 @@ export async function getSoloTier(rawRiotId: string): Promise<SoloTier> {
   }
 
   if (res.status === 404) {
-    const result: SoloTier = { ranked: false };
+    const result: SoloTier = { ranked: false, level: null };
     tierCache().set(riotId, { at: Date.now(), result });
     return result;
   }
@@ -134,6 +136,12 @@ export async function getSoloTier(rawRiotId: string): Promise<SoloTier> {
   }
 
   const html = await res.text();
+  // 프로필 아이콘 아래 레벨 배지(op.gg): <div class="mt-[-11px] text-center"><span ...>923</span>
+  const lvMatch = html.match(
+    /mt-\[-11px\] text-center"><span\b[^>]*>(\d{1,4})<\/span>/,
+  );
+  const level = lvMatch ? Number(lvMatch[1]) : null;
+
   // 설명문의 솔로랭크 문장에서 티어·단계·LP를 뽑는다.
   const m = html.match(
     /current SOLORANKED rank is ([a-z]+) Division (\d+) (\d+)\s*LP/i,
@@ -144,13 +152,14 @@ export async function getSoloTier(rawRiotId: string): Promise<SoloTier> {
     m && tierIndex !== undefined
       ? {
           ranked: true,
+          level,
           tierKey: tierName,
           tierIndex,
           division: Math.min(4, Math.max(1, Number(m[2]))),
           lp: Number(m[3]),
           tierName,
         }
-      : { ranked: false };
+      : { ranked: false, level };
   tierCache().set(riotId, { at: Date.now(), result });
   return result;
 }
