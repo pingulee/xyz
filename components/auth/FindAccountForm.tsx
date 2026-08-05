@@ -23,11 +23,14 @@ function EmailRequestPanel({
   endpoint,
   description,
   submitLabel,
+  withUsername = false,
 }: {
   endpoint: string;
   description: string;
   submitLabel: string;
+  withUsername?: boolean;
 }) {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState("");
@@ -41,7 +44,10 @@ function EmailRequestPanel({
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({
+          email: email.trim(),
+          ...(withUsername ? { username: username.trim() } : {}),
+        }),
       });
       const data = (await res.json().catch(() => ({}))) as { message?: string };
       if (res.ok) setDone(data.message ?? "메일을 확인해주세요.");
@@ -62,6 +68,15 @@ function EmailRequestPanel({
         </p>
       ) : (
         <div className="mt-5 grid gap-4">
+          {withUsername && (
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className={inputCls}
+              placeholder="아이디"
+              autoComplete="username"
+            />
+          )}
           <input
             type="email"
             value={email}
@@ -139,8 +154,9 @@ export default function FindAccountForm({
       ) : (
         <EmailRequestPanel
           endpoint="/api/auth/request-reset"
-          description="가입 이메일로 비밀번호 재설정 링크를 보내드립니다. (1시간 유효)"
+          description="아이디와 가입 이메일을 입력하면 재설정 링크를 보내드립니다. (1시간 유효)"
           submitLabel="재설정 링크 보내기"
+          withUsername
         />
       )}
 

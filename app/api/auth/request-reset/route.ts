@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { guardMutationRequest } from "@/lib/request-security";
 import { isAuthRateLimited, recordAuthAttempt } from "@/lib/authRateLimit";
-import { getUserByEmail, isValidEmail, normalizeEmail } from "@/lib/users";
+import {
+  getUserByEmail,
+  isValidEmail,
+  normalizeEmail,
+  normalizeUsername,
+} from "@/lib/users";
 import { createResetToken } from "@/lib/passwordReset";
 import { sendPasswordResetEmail } from "@/lib/mail";
 import { site } from "@/lib/site";
@@ -27,11 +32,16 @@ export async function POST(request: Request) {
   await recordAuthAttempt(request);
 
   let email = "";
+  let username = "";
   try {
-    const body = (await request.json()) as { email?: string };
+    const body = (await request.json()) as { email?: string; username?: string };
     email = normalizeEmail(body.email ?? "");
+    username = normalizeUsername(body.username ?? "");
   } catch {
     return NextResponse.json({ message: "요청 형식이 올바르지 않습니다." }, { status: 400 });
+  }
+  if (!username) {
+    return NextResponse.json({ message: "아이디를 입력해주세요." }, { status: 400 });
   }
   if (!isValidEmail(email)) {
     return NextResponse.json({ message: "올바른 이메일을 입력해주세요." }, { status: 400 });
@@ -39,7 +49,8 @@ export async function POST(request: Request) {
 
   try {
     const user = await getUserByEmail(email);
-    if (user) {
+    // 아이디와 이메일이 같은 계정을 가리킬 때만 발송한다(둘 다 맞아야 함).
+    if (user && user.username === username) {
       const token = await createResetToken(user.id);
       const url = `${site.url}/reset-password?token=${token}`;
       await sendPasswordResetEmail(email, url);
