@@ -117,7 +117,7 @@ export default function FindAccountForm({
         FIND ACCOUNT
       </p>
       <h1 className="mt-3 text-center text-2xl font-black text-white">
-        아이디·비밀번호 찾기
+        아이디/비밀번호 찾기
       </h1>
 
       <div

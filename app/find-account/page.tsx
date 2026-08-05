@@ -6,7 +6,7 @@ import FindAccountForm from "@/components/auth/FindAccountForm";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "아이디·비밀번호 찾기",
+  title: "아이디/비밀번호 찾기",
   robots: { index: false, follow: false },
 };
 

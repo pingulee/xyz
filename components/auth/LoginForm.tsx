@@ -127,17 +127,10 @@ function LoginFormInner({ fallbackFrom = "/" }: { fallbackFrom?: string }) {
 
       <div className="mt-6 flex items-center justify-center gap-4 text-sm">
         <Link
-          href="/find-account?tab=id"
+          href="/find-account"
           className="font-bold text-zinc-400 transition hover:text-gold"
         >
-          아이디 찾기
-        </Link>
-        <span className="h-3 w-px bg-white/15" />
-        <Link
-          href="/find-account?tab=pw"
-          className="font-bold text-zinc-400 transition hover:text-gold"
-        >
-          비밀번호 찾기
+          아이디/비밀번호 찾기
         </Link>
         <span className="h-3 w-px bg-white/15" />
         <Link
