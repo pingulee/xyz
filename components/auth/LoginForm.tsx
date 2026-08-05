@@ -75,12 +75,15 @@ function LoginFormInner({ fallbackFrom = "/" }: { fallbackFrom?: string }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="card-premium mx-auto max-w-xl rounded-[34px] p-6 sm:p-8"
+      className="card-premium mx-auto max-w-md rounded-[34px] p-6 sm:p-8"
     >
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-gold">
+      <p className="text-center text-xs font-black uppercase tracking-[0.22em] text-gold">
         LOGIN
       </p>
-      <h1 className="mt-3 text-2xl font-black text-white">로그인</h1>
+      <h1 className="mt-3 text-center text-2xl font-black text-white">로그인</h1>
+      <p className="mt-2 text-center text-sm text-zinc-500">
+        아이디와 비밀번호를 입력해주세요.
+      </p>
 
       <div className="mt-7 grid gap-4">
         <label className="grid gap-2">
@@ -122,12 +125,28 @@ function LoginFormInner({ fallbackFrom = "/" }: { fallbackFrom?: string }) {
         로그인
       </button>
 
-      <p className="mt-5 text-center text-sm text-zinc-500">
-        계정이 없으신가요?{" "}
-        <Link href="/signup" className="font-bold text-gold hover:underline">
+      <div className="mt-6 flex items-center justify-center gap-4 text-sm">
+        <Link
+          href="/find-account?tab=id"
+          className="font-bold text-zinc-400 transition hover:text-gold"
+        >
+          아이디 찾기
+        </Link>
+        <span className="h-3 w-px bg-white/15" />
+        <Link
+          href="/find-account?tab=pw"
+          className="font-bold text-zinc-400 transition hover:text-gold"
+        >
+          비밀번호 찾기
+        </Link>
+        <span className="h-3 w-px bg-white/15" />
+        <Link
+          href="/signup"
+          className="font-bold text-gold transition hover:brightness-110"
+        >
           회원가입
         </Link>
-      </p>
+      </div>
     </form>
   );
 }
