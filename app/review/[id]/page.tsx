@@ -4,10 +4,8 @@ import { notFound } from "next/navigation";
 import Container from "@/components/layout/Container";
 import Reveal from "@/components/ui/Reveal";
 import ReviewDetailView from "@/components/review/ReviewDetailView";
-import ReviewRelated from "@/components/review/ReviewRelated";
 import { getBoosterById } from "@/lib/booster";
 import {
-  getRelatedReviews,
   getReviewById,
   getReviewNavigation,
   getServiceRatingAggregates,
@@ -103,13 +101,11 @@ export default async function ReviewDetailPage({ params }: Props) {
   // 답글 단 기사 한 명만 필요한데 getBoosterList는 전체 목록 + 리뷰 집계 JOIN +
   // 전적 요약까지 돌린다. 후기 상세는 1,600여 개라 크롤 효율에 직결돼 단건 조회로
   // 쓴다. 이미 읽은 review의 작성 시각을 넘겨 이전/다음 조회의 기준 시각 재조회를 없앤다.
-  const [navigation, booster, relatedReviews, serviceAggregates] =
-    await Promise.all([
-      getReviewNavigation(reviewId, review.createdAt),
-      replyBoosterId ? getBoosterById(Number(replyBoosterId)) : null,
-      getRelatedReviews(reviewId, replyBoosterId, review.service),
-      getServiceRatingAggregates(),
-    ]);
+  const [navigation, booster, serviceAggregates] = await Promise.all([
+    getReviewNavigation(reviewId, review.createdAt),
+    replyBoosterId ? getBoosterById(Number(replyBoosterId)) : null,
+    getServiceRatingAggregates(),
+  ]);
   const serviceAgg = serviceAggregates[review.service];
   // 서비스명이 비어 있는 과거 데이터가 있어 name이 빈 문자열이 되지 않게 막는다.
   const reviewedProductName = review.service || `${site.brand} 롤 서비스`;
@@ -168,12 +164,6 @@ export default async function ReviewDetailPage({ params }: Props) {
       {
         "@type": "ListItem",
         position: 2,
-        name: "작업 후기",
-        item: `${site.url}/review`,
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
         name: `#${review.id}`,
         item: `${site.url}/review/${review.id}`,
       },
@@ -200,10 +190,6 @@ export default async function ReviewDetailPage({ params }: Props) {
               홈
             </Link>
             <span>/</span>
-            <Link href="/review" className="transition hover:text-gold">
-              후기 게시판
-            </Link>
-            <span>/</span>
             <span className="text-zinc-300">#{review.id}</span>
           </nav>
         </Reveal>
@@ -214,13 +200,6 @@ export default async function ReviewDetailPage({ params }: Props) {
             boosterAvailability={booster ?? null}
             previousReview={navigation.previous}
             nextReview={navigation.next}
-          />
-        </Reveal>
-        <Reveal>
-          <ReviewRelated
-            review={review}
-            booster={booster}
-            relatedReviews={relatedReviews}
           />
         </Reveal>
       </Container>
