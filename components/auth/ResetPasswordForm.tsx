@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { isValidPassword, PASSWORD_RULE_TEXT } from "@/lib/authPolicy";
 
 const inputCls =
   "w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50";
@@ -102,8 +103,8 @@ function SetNewPassword({ token }: { token: string }) {
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (pw.length < 8) {
-      setError("비밀번호는 8자 이상이어야 합니다.");
+    if (!isValidPassword(pw)) {
+      setError(PASSWORD_RULE_TEXT);
       return;
     }
     if (pw !== confirm) {
@@ -156,7 +157,7 @@ function SetNewPassword({ token }: { token: string }) {
             value={pw}
             onChange={(e) => setPw(e.target.value)}
             className={inputCls}
-            placeholder="새 비밀번호 (8자 이상)"
+            placeholder="새 비밀번호 (영문·숫자·특수문자 포함 8~64자)"
             autoComplete="new-password"
           />
           <input

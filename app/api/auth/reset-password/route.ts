@@ -4,11 +4,9 @@ import { isAuthRateLimited, recordAuthAttempt } from "@/lib/authRateLimit";
 import { hashPassword } from "@/lib/password";
 import { consumeResetToken } from "@/lib/passwordReset";
 import { updateUserPassword } from "@/lib/users";
+import { isValidPassword, PASSWORD_RULE_TEXT } from "@/lib/authPolicy";
 
 export const runtime = "nodejs";
-
-const MIN = 8;
-const MAX = 128;
 
 // 재설정 링크의 토큰 + 새 비밀번호로 실제 변경. 토큰은 1회용·1시간 유효.
 export async function POST(request: Request) {
@@ -31,11 +29,8 @@ export async function POST(request: Request) {
 
   const token = (payload.token ?? "").trim();
   const next = payload.newPassword?.trim() ?? "";
-  if (next.length < MIN || next.length > MAX) {
-    return NextResponse.json(
-      { message: `새 비밀번호는 ${MIN}~${MAX}자여야 합니다.` },
-      { status: 400 },
-    );
+  if (!isValidPassword(next)) {
+    return NextResponse.json({ message: PASSWORD_RULE_TEXT }, { status: 400 });
   }
 
   const userId = await consumeResetToken(token);

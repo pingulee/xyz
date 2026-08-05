@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, Loader2, X } from "lucide-react";
 import type { LolNickname } from "@/lib/users";
+import { isValidPassword, PASSWORD_RULE_TEXT } from "@/lib/authPolicy";
 
 const inputCls =
   "w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50";
@@ -150,8 +151,8 @@ export default function MyAccountSettings({
   const [pwMsg, setPwMsg] = useState<Msg>(null);
 
   const changePassword = async () => {
-    if (newPw.length < 8) {
-      setPwMsg({ text: "새 비밀번호는 8자 이상이어야 합니다.", ok: false });
+    if (!isValidPassword(newPw)) {
+      setPwMsg({ text: PASSWORD_RULE_TEXT, ok: false });
       return;
     }
     if (newPw !== confirmPw) {
@@ -330,7 +331,7 @@ export default function MyAccountSettings({
               value={newPw}
               onChange={(e) => setNewPw(e.target.value)}
               className={inputCls}
-              placeholder="8자 이상"
+              placeholder="영문·숫자·특수문자 포함 8~64자"
               autoComplete="new-password"
             />
           </label>

@@ -6,6 +6,12 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { NATIONALITIES, POSITIONS } from "@/components/booster/adminBoosterConstants";
 import RiotIdManager from "@/components/auth/RiotIdManager";
+import {
+  isValidPassword,
+  isValidUsername,
+  USERNAME_RULE_TEXT,
+  PASSWORD_RULE_TEXT,
+} from "@/lib/authPolicy";
 
 const inputCls =
   "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
@@ -120,8 +126,12 @@ export default function SignupForm() {
       setMessage("아이디와 비밀번호를 입력해주세요.");
       return;
     }
-    if (pw.length < 8) {
-      setMessage("비밀번호는 8자 이상이어야 합니다.");
+    if (!isValidUsername(u.toLowerCase())) {
+      setMessage(USERNAME_RULE_TEXT);
+      return;
+    }
+    if (!isValidPassword(pw)) {
+      setMessage(PASSWORD_RULE_TEXT);
       return;
     }
     if (pw !== confirm.trim()) {
@@ -290,7 +300,7 @@ export default function SignupForm() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className={inputCls}
-            placeholder="영문 소문자·숫자·밑줄 3~30자"
+            placeholder="영문 소문자로 시작, 4~20자"
             autoComplete="username"
           />
         </label>
@@ -301,9 +311,12 @@ export default function SignupForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={inputCls}
-            placeholder="8자 이상"
+            placeholder="영문·숫자·특수문자 포함 8~64자"
             autoComplete="new-password"
           />
+          <span className="text-xs font-normal text-zinc-500">
+            {PASSWORD_RULE_TEXT}
+          </span>
         </label>
         <label className={labelCls}>
           비밀번호 확인

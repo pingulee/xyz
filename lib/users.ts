@@ -2,6 +2,10 @@ import { RowDataPacket, ResultSetHeader } from "mysql2";
 import { getPool } from "@/lib/db";
 import { oncePerProcess } from "@/lib/schema-once";
 import { ensureBoosterSchema } from "@/lib/booster";
+// 아이디 규칙은 서버·클라 공용 정책 모듈에서 온다(중복 방지). 내부에서도 쓰므로
+// import 후 재노출한다(기존 `@/lib/users`의 isValidUsername import 경로 유지).
+import { isValidUsername } from "@/lib/authPolicy";
+export { isValidUsername };
 
 export type UserRole = "customer" | "booster";
 
@@ -35,7 +39,6 @@ type BoosterBackfillRow = RowDataPacket & {
   booster_password_hash: string;
 };
 
-const USERNAME_RE = /^[a-z0-9_]{3,30}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Riot ID = 게임명#태그. 게임명 3~16자(공백·# 제외), 태그 영숫자 2~5자.
 const RIOT_ID_RE = /^[^#\s][^#]{1,14}[^#\s]#[A-Za-z0-9]{2,5}$/;
@@ -45,10 +48,6 @@ export const MAX_NICKNAMES = 10;
 // 대소문자·동형문자 중복과 열거를 막기 위해 소문자·trim 정규화 후 저장·조회한다.
 export function normalizeUsername(raw: string): string {
   return raw.trim().toLowerCase();
-}
-
-export function isValidUsername(username: string): boolean {
-  return USERNAME_RE.test(username);
 }
 
 export function normalizeEmail(raw: string): string {

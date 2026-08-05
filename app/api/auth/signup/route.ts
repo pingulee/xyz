@@ -22,10 +22,13 @@ import { ensureCodeSchema, consumeCode } from "@/lib/signupCodes";
 import { createSessionToken, getSessionCookieHeader } from "@/lib/session";
 import { isAuthRateLimited, isAuthAccountRateLimited, recordAuthAttempt } from "@/lib/authRateLimit";
 import { guardMutationRequest } from "@/lib/request-security";
+import {
+  isValidPassword,
+  USERNAME_RULE_TEXT,
+  PASSWORD_RULE_TEXT,
+} from "@/lib/authPolicy";
 
 export const runtime = "nodejs";
-
-const PASSWORD_MIN_LENGTH = 8;
 
 type SignupPayload = BoosterProfileInput & {
   username?: string;
@@ -67,10 +70,7 @@ export async function POST(request: Request) {
   const role = payload.role === "booster" ? "booster" : "customer";
 
   if (!isValidUsername(username)) {
-    return NextResponse.json(
-      { message: "아이디는 영문 소문자·숫자·밑줄 3~30자로 입력해주세요." },
-      { status: 400 },
-    );
+    return NextResponse.json({ message: USERNAME_RULE_TEXT }, { status: 400 });
   }
   if (await isAuthAccountRateLimited(username)) {
     return NextResponse.json(
@@ -78,11 +78,8 @@ export async function POST(request: Request) {
       { status: 429 },
     );
   }
-  if (password.length < PASSWORD_MIN_LENGTH || password.length > 128) {
-    return NextResponse.json(
-      { message: `비밀번호는 ${PASSWORD_MIN_LENGTH}~128자여야 합니다.` },
-      { status: 400 },
-    );
+  if (!isValidPassword(password)) {
+    return NextResponse.json({ message: PASSWORD_RULE_TEXT }, { status: 400 });
   }
   if (username === normalizeUsername(process.env.ADMIN_USERNAME ?? "")) {
     return NextResponse.json({ message: "사용할 수 없는 아이디입니다." }, { status: 409 });

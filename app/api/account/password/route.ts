@@ -3,11 +3,9 @@ import { getSession } from "@/lib/authz";
 import { guardMutationRequest } from "@/lib/request-security";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { getPasswordHashById, updateUserPassword } from "@/lib/users";
+import { isValidPassword, PASSWORD_RULE_TEXT } from "@/lib/authPolicy";
 
 export const runtime = "nodejs";
-
-const MIN = 8;
-const MAX = 128;
 
 // 로그인 회원 본인 비밀번호 변경. 현재 비밀번호 확인 필수(세션 탈취 시 임의 변경 방지).
 export async function POST(request: Request) {
@@ -28,11 +26,8 @@ export async function POST(request: Request) {
 
   const current = payload.currentPassword ?? "";
   const next = payload.newPassword?.trim() ?? "";
-  if (next.length < MIN || next.length > MAX) {
-    return NextResponse.json(
-      { message: `새 비밀번호는 ${MIN}~${MAX}자여야 합니다.` },
-      { status: 400 },
-    );
+  if (!isValidPassword(next)) {
+    return NextResponse.json({ message: PASSWORD_RULE_TEXT }, { status: 400 });
   }
 
   const hash = await getPasswordHashById(session.userId);
