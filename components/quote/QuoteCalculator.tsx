@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BadgeCheck,
   Check,
@@ -18,6 +18,9 @@ import {
   TrendingUp,
   ClipboardCheck,
   Gamepad2,
+  Loader2,
+  Search,
+  User,
 } from "lucide-react";
 import { site } from "@/lib/site";
 import { useChampionOptions } from "@/hooks/useChampionOptions";
@@ -48,6 +51,30 @@ export default function QuoteCalculator() {
   const [championSearch, setChampionSearch] = useState("");
   const [stepIndex, setStepIndex] = useState(0);
   const { champions, loading: championsLoading } = useChampionOptions();
+
+  // ── 롤 닉네임(Riot ID) → 현재 티어 자동 조회 ──
+  const [riotId, setRiotId] = useState("");
+  const [savedNicknames, setSavedNicknames] = useState<
+    { id: number; riotId: string }[]
+  >([]);
+  const [tierBusy, setTierBusy] = useState(false);
+  const [tierMsg, setTierMsg] = useState<{ text: string; ok: boolean } | null>(
+    null,
+  );
+
+  // 로그인 상태면 저장된 롤 닉네임을 끌어와 선택지로 제공한다(비로그인 401은 무시).
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/account/nicknames")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (alive && data?.nicknames) setSavedNicknames(data.nicknames);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const currentScore = rankScore(currentTier, currentDivision);
   const targetScore = rankScore(targetTier, targetDivision);
@@ -358,6 +385,7 @@ export default function QuoteCalculator() {
   const priceConsultRequired = serviceKey === "hourly" && currentTier >= 8;
 
   const wizardSteps = [
+    { key: "account", label: "롤 닉네임" },
     { key: "service", label: "서비스" },
     { key: "current", label: currentRankTitle },
     ...(needsTargetRank ? [{ key: "target", label: "목표 랭크" }] : []),
@@ -377,6 +405,67 @@ export default function QuoteCalculator() {
   const goNext = () =>
     setStepIndex((i) => Math.min(i + 1, wizardSteps.length - 1));
   const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0));
+
+  // op.gg 조회로 받은 현재 티어를 계산기 상태에 반영한다(목표가 현재 이하면 올림).
+  const applyCurrentTier = (tierIndex: number, division: number) => {
+    setCurrentTier(tierIndex);
+    setCurrentDivision(division);
+    if (serviceKey === "hourly" && tierIndex >= 7) {
+      setAddons((items) => items.filter((item) => item !== "solo"));
+    }
+    if (
+      rankScore(targetTier, targetDivision) <= rankScore(tierIndex, division)
+    ) {
+      const next = Math.min(tierIndex + 1, TIERS.length - 1);
+      setTargetTier(next);
+      setTargetDivision(TIERS[next].divisions[0]);
+    }
+  };
+
+  const confirmTier = async () => {
+    const id = riotId.trim();
+    if (!id) {
+      setTierMsg({
+        text: "롤 닉네임을 입력해주세요. (예: 소환사명#KR1)",
+        ok: false,
+      });
+      return;
+    }
+    setTierBusy(true);
+    setTierMsg(null);
+    try {
+      const res = await fetch("/api/riot/tier", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ riotId: id }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ranked?: boolean;
+        tierIndex?: number;
+        division?: number;
+        message?: string;
+      };
+      if (res.ok && data.ranked && data.tierIndex !== undefined) {
+        const div = data.division ?? 1;
+        applyCurrentTier(data.tierIndex, div);
+        const name = TIERS[data.tierIndex].name;
+        setTierMsg({
+          text: `현재 티어를 ${name}${data.tierIndex < 7 ? ` ${div}` : ""}로 반영했습니다.`,
+          ok: true,
+        });
+        goNext();
+      } else {
+        setTierMsg({
+          text: data.message ?? "티어 정보를 찾을 수 없습니다.",
+          ok: false,
+        });
+      }
+    } catch {
+      setTierMsg({ text: "조회에 실패했습니다.", ok: false });
+    } finally {
+      setTierBusy(false);
+    }
+  };
 
   return (
     <div className="card-premium overflow-hidden rounded-4xl">
@@ -420,6 +509,93 @@ export default function QuoteCalculator() {
 
       <div className="p-4 sm:p-6 lg:p-7">
         <div className="min-h-105 space-y-4">
+          {stepKey === "account" && (
+            <div className="rounded-3xl border border-gold/20 bg-gold/3.5 p-5 sm:p-6">
+              <p className="text-lg font-black text-white">롤 닉네임</p>
+              <p className="mt-1 text-xs text-zinc-500">
+                {savedNicknames.length > 0
+                  ? "등록된 롤 닉네임을 선택하고 확인을 누르면 현재 티어가 자동 반영됩니다."
+                  : "롤 닉네임을 입력하고 확인을 누르면 현재 티어가 자동 반영됩니다."}
+              </p>
+
+              {savedNicknames.length > 0 ? (
+                <div className="mt-5 grid gap-2">
+                  {savedNicknames.map((n) => {
+                    const active = riotId === n.riotId;
+                    return (
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={() => {
+                          setRiotId(n.riotId);
+                          setTierMsg(null);
+                        }}
+                        className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition ${active ? "border-gold/70 bg-gold/10" : "border-white/8 bg-black/20 hover:border-gold/30"}`}
+                      >
+                        <span
+                          className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${active ? "bg-gold text-black" : "bg-white/5 text-zinc-500"}`}
+                        >
+                          <User size={15} />
+                        </span>
+                        <b className="truncate text-sm text-white">{n.riotId}</b>
+                        {active && (
+                          <span className="ml-auto grid h-5 w-5 shrink-0 place-items-center rounded-full bg-gold text-black">
+                            <Check size={11} strokeWidth={4} />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <input
+                  value={riotId}
+                  onChange={(e) => {
+                    setRiotId(e.target.value);
+                    setTierMsg(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      confirmTier();
+                    }
+                  }}
+                  maxLength={40}
+                  placeholder="소환사명#KR1"
+                  autoComplete="off"
+                  className="mt-5 w-full rounded-2xl border border-gold/25 bg-black/30 px-4 py-3 text-white outline-none placeholder:text-zinc-600 focus:border-gold"
+                />
+              )}
+
+              <button
+                type="button"
+                onClick={confirmTier}
+                disabled={tierBusy || !riotId.trim()}
+                className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3.5 text-sm font-black transition ${tierBusy || !riotId.trim() ? "pointer-events-none bg-white/5 text-zinc-600" : "bg-gold-gradient text-black hover:brightness-110"}`}
+              >
+                {tierBusy ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Search size={16} />
+                )}
+                확인
+              </button>
+
+              {tierMsg && (
+                <p
+                  className={`mt-3 rounded-2xl border px-4 py-3 text-sm font-bold ${tierMsg.ok ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200" : "border-red-400/20 bg-red-500/10 text-red-200"}`}
+                >
+                  {tierMsg.text}
+                </p>
+              )}
+
+              <p className="mt-4 text-[11px] leading-5 text-zinc-600">
+                티어 조회는 op.gg 공개 정보 기준입니다. 언랭·조회 실패 시 다음
+                단계에서 현재 티어를 직접 선택할 수 있습니다.
+              </p>
+            </div>
+          )}
+
           {stepKey === "service" && (
           <div className="rounded-3xl border border-gold/20 bg-gold/3.5 p-5 sm:p-6">
             <div className="flex items-start justify-between gap-4">

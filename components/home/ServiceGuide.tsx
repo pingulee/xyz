@@ -63,7 +63,7 @@ export default function ServiceGuide() {
               id="service-guide-title"
               className="mt-5 text-3xl font-black tracking-tighter text-balance text-white sm:text-4xl lg:text-5xl"
             >
-              롤 대리 vs 롤 듀오,
+              롤 대리 vs 롤 듀오
               <br className="sm:hidden" />{" "}
               <span className="gold-text">한눈에 비교</span>
             </h2>

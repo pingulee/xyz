@@ -13,13 +13,43 @@ const UA =
 
 export type RiotVerifyResult = { valid: boolean };
 
+// 솔로랭크 티어 조회 결과. ranked=false는 언랭(또는 티어 정보 없음)이다.
+export type SoloTier =
+  | {
+      ranked: true;
+      tierKey: string; // TIERS[key] (iron..challenger)
+      tierIndex: number; // 0(아이언) ~ 9(챌린저)
+      division: number; // 1(I) ~ 4(IV), 마스터 이상은 1
+      lp: number;
+      tierName: string; // op.gg 원문(예: grandmaster)
+    }
+  | { ranked: false };
+
 export class RiotUnavailableError extends Error {}
+
+// op.gg 소환사 페이지 설명문의 티어 단어 → TIERS 인덱스.
+const TIER_INDEX: Record<string, number> = {
+  iron: 0,
+  bronze: 1,
+  silver: 2,
+  gold: 3,
+  platinum: 4,
+  emerald: 5,
+  diamond: 6,
+  master: 7,
+  grandmaster: 8,
+  challenger: 9,
+};
 
 const globalForRiot = globalThis as typeof globalThis & {
   riotVerifyCache?: Map<string, { at: number; result: RiotVerifyResult }>;
+  riotTierCache?: Map<string, { at: number; result: SoloTier }>;
 };
 function cache() {
   return (globalForRiot.riotVerifyCache ??= new Map());
+}
+function tierCache() {
+  return (globalForRiot.riotTierCache ??= new Map());
 }
 
 function splitRiotId(riotId: string): { gameName: string; tagLine: string } | null {
@@ -63,4 +93,64 @@ export async function verifyRiotId(rawRiotId: string): Promise<RiotVerifyResult>
   }
   // 403(차단)·429(레이트리밋)·5xx 등 → 일시 조회 불가.
   throw new RiotUnavailableError(`op.gg ${res.status}`);
+}
+
+/**
+ * 솔로랭크 현재 티어 조회. op.gg 소환사 페이지를 GET해 서버 렌더된 설명문
+ * ("... current SOLORANKED rank is grandmaster Division 1 1611 LP ...")을
+ * 파싱한다. API 키가 필요 없고, 언랭·미존재면 { ranked:false }.
+ * op.gg 차단/장애면 RiotUnavailableError. 결과는 10분 캐시.
+ */
+export async function getSoloTier(rawRiotId: string): Promise<SoloTier> {
+  const riotId = normalizeRiotId(rawRiotId);
+  if (!isValidRiotId(riotId)) return { ranked: false };
+
+  const cached = tierCache().get(riotId);
+  if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached.result;
+
+  const parts = splitRiotId(riotId);
+  if (!parts) return { ranked: false };
+
+  const url = `https://op.gg/lol/summoners/${OPGG_REGION}/${encodeURIComponent(parts.gameName)}-${encodeURIComponent(parts.tagLine)}`;
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      headers: { "User-Agent": UA },
+      redirect: "follow",
+      cache: "no-store",
+    });
+  } catch {
+    throw new RiotUnavailableError("op.gg 연결 실패");
+  }
+
+  if (res.status === 404) {
+    const result: SoloTier = { ranked: false };
+    tierCache().set(riotId, { at: Date.now(), result });
+    return result;
+  }
+  if (res.status !== 200) {
+    throw new RiotUnavailableError(`op.gg ${res.status}`);
+  }
+
+  const html = await res.text();
+  // 설명문의 솔로랭크 문장에서 티어·단계·LP를 뽑는다.
+  const m = html.match(
+    /current SOLORANKED rank is ([a-z]+) Division (\d+) (\d+)\s*LP/i,
+  );
+  const tierName = m?.[1]?.toLowerCase() ?? "";
+  const tierIndex = TIER_INDEX[tierName];
+  const result: SoloTier =
+    m && tierIndex !== undefined
+      ? {
+          ranked: true,
+          tierKey: tierName,
+          tierIndex,
+          division: Math.min(4, Math.max(1, Number(m[2]))),
+          lp: Number(m[3]),
+          tierName,
+        }
+      : { ranked: false };
+  tierCache().set(riotId, { at: Date.now(), result });
+  return result;
 }
