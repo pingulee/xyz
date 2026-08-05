@@ -7,7 +7,7 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import { useState } from "react";
 import type { MouseEvent } from "react";
 import clsx from "clsx";
-import { navItems, services, site } from "@/lib/site";
+import { navItems, priceMenuItems, site } from "@/lib/site";
 import AuthControls from "@/components/auth/AuthControls";
 import { useSession } from "@/hooks/useSession";
 
@@ -24,7 +24,7 @@ const menuItems: MenuItem[] = navItems.map((item) =>
   item.href === "#price"
     ? {
         ...item,
-        children: services.map(({ title, href }) => ({ label: title, href })),
+        children: priceMenuItems,
       }
     : item,
 );
@@ -71,7 +71,7 @@ export default function Header() {
 
   const isActive = (href: string) => {
     if (href === "#price")
-      return ["/boosting", "/duo", "/account"].some((p) =>
+      return ["/boosting", "/duo", "/account", "/leveling"].some((p) =>
         pathname.startsWith(p),
       );
     return href === "/" ? pathname === "/" : pathname.startsWith(href);

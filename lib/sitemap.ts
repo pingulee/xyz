@@ -24,6 +24,7 @@ const staticLastModified: Record<string, string> = {
   "/boosting": "2026-07-21",
   "/duo": "2026-07-21",
   "/account": "2026-07-21",
+  "/leveling": "2026-08-05",
 };
 
 /**
@@ -42,6 +43,7 @@ export function staticSitemapEntries(): MetadataRoute.Sitemap {
       )
       .map((item) => item.href),
     ...services.map((service) => service.href),
+    "/leveling",
   ];
 
   return staticPaths.map((path) => ({

@@ -53,6 +53,13 @@ export const services = [
   },
 ];
 
+// 헤더 가격표 드롭다운. 홈 서비스 카드 목록(services)과 분리해 메뉴 전용
+// 서비스도 기존 홈 레이아웃을 바꾸지 않고 추가할 수 있게 한다.
+export const priceMenuItems = [
+  ...services.map(({ title, href }) => ({ label: title, href })),
+  { label: "롤 육성", href: "/leveling" },
+];
+
 const T = {
   iron: "/images/tier/1-iron.png",
   bronze: "/images/tier/2-bronze.png",
