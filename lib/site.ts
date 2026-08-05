@@ -17,10 +17,10 @@ export const site = {
 
 export const navItems = [
   { label: "메인", href: "/" },
+  { label: "공지사항", href: "/notice" },
   { label: "기사 소개", href: "/booster" },
   { label: "가격표", href: "#price" },
   { label: "작업 후기", href: "/review" },
-  { label: "공지사항", href: "/notice" },
   { label: "기사 모집", href: "/recruit" },
 ];
 
