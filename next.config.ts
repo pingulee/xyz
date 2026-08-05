@@ -6,13 +6,37 @@ import type { NextConfig } from "next";
 //   해석되는 것을 막는다.
 // - Referrer-Policy: 외부로 전체 URL이 새지 않게 제한.
 // - Permissions-Policy: 안 쓰는 강력 기능(카메라·마이크·위치)을 끈다.
-// CSP는 두지 않는다. inlineCss·인라인 JSON-LD·폰트 로더 인라인 스크립트가 있어
-// nonce 없이는 안전한 정책을 만들 수 없고, 잘못 걸면 사이트가 깨진다. 저장형
-// XSS는 출력 인코딩(lib/jsonld.ts)으로 원천 차단했다.
+// CSP는 Next 인라인 부트스트랩 때문에 script/style unsafe-inline이 필요하지만,
+// 외부 리소스·object·base·frame·교차 출처 폼을 차단해 XSS 피해 범위를 줄인다.
+// JSON-LD의 저장형 XSS는 출력 인코딩(lib/jsonld.ts)으로 별도 차단한다.
 const SECURITY_HEADERS = [
+  {
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+      "object-src 'none'",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "font-src 'self'",
+      "connect-src 'self'",
+      "manifest-src 'self'",
+      "media-src 'self'",
+      "worker-src 'self' blob:",
+      "upgrade-insecure-requests",
+    ].join("; "),
+  },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=31536000; includeSubDomains",
+  },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   {
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",

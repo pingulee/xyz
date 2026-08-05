@@ -5,6 +5,7 @@ import { ensureBoosterSchema, getBoosterList, getBoosterById } from "@/lib/boost
 import { invalidateBoosterCaches } from "@/lib/cache-tags";
 import { isAdmin } from "@/lib/authz";
 import { validateBooster, type BoosterProfileInput } from "@/lib/booster-model";
+import { guardMutationRequest } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 
@@ -35,6 +36,9 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const rejected = guardMutationRequest(request);
+  if (rejected) return rejected;
+
   if (!isAdmin(request)) {
     return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
   }
@@ -88,6 +92,9 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const rejected = guardMutationRequest(request, { maxBytes: 4 * 1024 });
+  if (rejected) return rejected;
+
   if (!isAdmin(request)) {
     return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
   }

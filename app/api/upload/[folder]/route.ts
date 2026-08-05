@@ -4,6 +4,7 @@ import { writeFile, mkdir, access } from "fs/promises";
 import { constants } from "fs";
 import { join, resolve, basename } from "path";
 import { isAdmin } from "@/lib/authz";
+import { guardMutationRequest } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 
@@ -23,6 +24,19 @@ const EXT_MAP: Record<string, string> = {
   "image/webp": "webp",
 };
 
+function hasValidImageSignature(buffer: Buffer, mime: string): boolean {
+  if (mime === "image/jpeg" || mime === "image/jpg") {
+    return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  }
+  if (mime === "image/png") {
+    return buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  }
+  if (mime === "image/webp") {
+    return buffer.length >= 12 && buffer.subarray(0, 4).toString("ascii") === "RIFF" && buffer.subarray(8, 12).toString("ascii") === "WEBP";
+  }
+  return false;
+}
+
 // 업로드 저장 루트. 프로덕션은 배포와 분리된 영속 디렉토리를 UPLOAD_DIR로
 // 주입한다(standalone 배포는 배포마다 앱 경로가 바뀌어, 앱 안에 저장하면
 // 다음 배포에서 파일이 사라진다). 로컬 개발 기본값만 앱 옆 upload/ 를 쓴다.
@@ -41,6 +55,12 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ folder: string }> },
 ) {
+  const rejected = guardMutationRequest(request, {
+    maxBytes: MAX_FILE_SIZE + 64 * 1024,
+    contentTypes: ["multipart/form-data"],
+  });
+  if (rejected) return rejected;
+
   // 업로드는 관리자 기사 관리 화면에서만 쓴다. 인증이 없으면 누구나 5MB
   // 파일을 무제한으로 써서 디스크를 채우거나, 임의 바이트를 이 도메인의
   // 공개 URL로 호스팅할 수 있다(MIME은 클라이언트가 보내는 값이라 못 믿는다).
@@ -99,12 +119,18 @@ export async function POST(
   const safeName = basename(`${randomUUID()}.${ext}`);
   const filePath = resolve(join(uploadDir, safeName));
 
-  if (!filePath.startsWith(uploadDir)) {
+  if (filePath !== join(uploadDir, safeName)) {
     return NextResponse.json({ message: "잘못된 파일명입니다." }, { status: 400 });
   }
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
+    if (!hasValidImageSignature(buffer, file.type)) {
+      return NextResponse.json(
+        { message: "파일 내용이 올바른 이미지 형식이 아닙니다." },
+        { status: 400 },
+      );
+    }
     await writeFile(filePath, buffer);
   } catch (err) {
     console.error(`[upload/${folder}] 파일 저장 실패:`, filePath, err);

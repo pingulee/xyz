@@ -8,7 +8,6 @@ import type { TierRecord } from "@/lib/review";
 import {
   REVIEW_PAGE_SIZE,
   REVIEW_NAME_MAX_LENGTH,
-  REVIEW_PASSWORD_MIN_LENGTH,
   REVIEW_CONTENT_MIN_LENGTH,
   REVIEW_CONTENT_MAX_LENGTH,
   blankForm,
@@ -59,6 +58,7 @@ export default function ReviewBoard({
 }) {
   const { session } = useSession();
   const isLoggedInCustomer = session.role === "customer";
+  const canManageReview = isAdmin || isLoggedInCustomer;
   const boosterName = boosterId
     ? (boosterList.find((l) => l.id === String(boosterId))?.name ?? "")
     : "";
@@ -120,18 +120,13 @@ export default function ReviewBoard({
     [currentPage, totalPages],
   );
   const canSubmitReview = Boolean(
-    form.name.trim() &&
-      (isLoggedInCustomer ||
-        form.password.trim().length >= REVIEW_PASSWORD_MIN_LENGTH) &&
+    (isLoggedInCustomer || isAdmin) &&
+      form.name.trim() &&
       form.boosterId &&
       form.service &&
       form.content.trim().length >= REVIEW_CONTENT_MIN_LENGTH,
   );
   const missingReviewName = submitAttempted && !form.name.trim();
-  const missingReviewPassword = submitAttempted && !form.password.trim();
-  const invalidReviewPassword =
-    form.password.trim().length > 0 &&
-    form.password.trim().length < REVIEW_PASSWORD_MIN_LENGTH;
   const missingReviewBooster = submitAttempted && !form.boosterId;
   const missingService = submitAttempted && !form.service;
   const missingReviewContent = submitAttempted && !form.content.trim();
@@ -263,15 +258,15 @@ export default function ReviewBoard({
     setSubmitAttempted(true);
 
     const name = form.name.trim();
-    const password = form.password.trim();
     const content = form.content.trim();
 
-    if (!name || (!isLoggedInCustomer && !password) || !content) {
-      setError(
-        isLoggedInCustomer
-          ? "닉네임과 후기를 모두 입력해주세요."
-          : "닉네임, 비밀번호, 후기를 모두 입력해주세요.",
-      );
+    if (!isLoggedInCustomer && !isAdmin) {
+      setError("로그인한 회원만 후기를 작성할 수 있습니다.");
+      return;
+    }
+
+    if (!name || !content) {
+      setError("닉네임과 후기를 모두 입력해주세요.");
       return;
     }
 
@@ -282,14 +277,6 @@ export default function ReviewBoard({
 
     if (!form.service) {
       setError("서비스를 선택해주세요.");
-      return;
-    }
-
-    if (
-      !isLoggedInCustomer &&
-      password.length < REVIEW_PASSWORD_MIN_LENGTH
-    ) {
-      setError(`비밀번호는 ${REVIEW_PASSWORD_MIN_LENGTH}자 이상 입력해주세요.`);
       return;
     }
 
@@ -316,7 +303,6 @@ export default function ReviewBoard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
-          ...(isLoggedInCustomer ? {} : { password }),
           service: form.service,
           boosterId: form.boosterId || undefined,
           rating: form.rating,
@@ -351,9 +337,9 @@ export default function ReviewBoard({
 
     try {
       const deleteForm = deleteForms[reviewId] ?? blankDeleteForm;
-      const password = isAdmin ? "" : deleteForm.password.trim();
+      const password = canManageReview ? "" : deleteForm.password.trim();
 
-      if (!isAdmin && !password) {
+      if (!canManageReview && !password) {
         setError("삭제하려면 비밀번호를 입력해주세요.");
         setDeletingId("");
         return;
@@ -397,12 +383,12 @@ export default function ReviewBoard({
 
   const editReview = async (review: Review) => {
     const editForm = editForms[review.id] ?? blankEditForm;
-    const password = isAdmin ? "" : editForm.password.trim();
+    const password = canManageReview ? "" : editForm.password.trim();
     const content = editForm.content.trim();
 
     setError("");
 
-    if (!isAdmin && !password) {
+    if (!canManageReview && !password) {
       setError("수정하려면 비밀번호와 후기 내용을 입력해주세요.");
       return;
     }
@@ -530,7 +516,6 @@ export default function ReviewBoard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: review.name,
-          password: "admin_duplicate",
           service: review.service,
           boosterId: review.boosterId,
           rating: review.rating,
@@ -620,40 +605,6 @@ export default function ReviewBoard({
                     )}
                   </label>
 
-                  {!isLoggedInCustomer && (
-                    <label className="grid gap-2">
-                      <span className="text-sm font-bold text-zinc-300">
-                        비밀번호
-                      </span>
-                      <input
-                        type="password"
-                        value={form.password}
-                        onChange={(event) =>
-                          setForm((current) => ({
-                            ...current,
-                            password: event.target.value,
-                          }))
-                        }
-                        maxLength={40}
-                        className={`rounded-2xl border bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 ${
-                          missingReviewPassword || invalidReviewPassword
-                            ? "border-red-400/50"
-                            : "border-white/10"
-                        }`}
-                        placeholder="후기 삭제 시 필요"
-                      />
-                      {missingReviewPassword && (
-                        <p className="text-xs font-bold text-red-300">
-                          비밀번호를 입력해주세요.
-                        </p>
-                      )}
-                      {invalidReviewPassword && (
-                        <p className="text-xs font-bold text-red-300">
-                          비밀번호는 {REVIEW_PASSWORD_MIN_LENGTH}자 이상 입력해주세요.
-                        </p>
-                      )}
-                    </label>
-                  )}
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
@@ -857,7 +808,7 @@ export default function ReviewBoard({
             editOpen={editOpenId === selectedReview.id}
             editVerified={editVerifiedIds.has(selectedReview.id)}
             editing={editingId === selectedReview.id}
-            isAdmin={isAdmin}
+            isAdmin={canManageReview}
             boosterId={boosterId}
             boosterName={boosterName}
             replying={replyingId === selectedReview.id}
@@ -878,7 +829,7 @@ export default function ReviewBoard({
             onDeleteReply={() => void deleteReply(selectedReview.id)}
             onDelete={() => void deleteReview(selectedReview.id)}
             onDeleteOpenChange={() => {
-              if (isAdmin) {
+              if (canManageReview) {
                 void deleteReview(selectedReview.id);
                 return;
               }
@@ -1084,16 +1035,25 @@ export default function ReviewBoard({
 
         {!selectedReview && (
           <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => {
-                setSubmitAttempted(false);
-                setWriteOpen(true);
-              }}
-              className="cursor-pointer rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black transition hover:brightness-110"
-            >
-              후기 등록
-            </button>
+            {isLoggedInCustomer || isAdmin ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSubmitAttempted(false);
+                  setWriteOpen(true);
+                }}
+                className="cursor-pointer rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black transition hover:brightness-110"
+              >
+                후기 등록
+              </button>
+            ) : (
+              <Link
+                href="/login?from=/review"
+                className="rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black transition hover:brightness-110"
+              >
+                로그인 후 후기 등록
+              </Link>
+            )}
           </div>
         )}
       </div>

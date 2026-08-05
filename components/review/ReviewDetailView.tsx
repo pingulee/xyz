@@ -165,7 +165,6 @@ export default function ReviewDetailView({
   const [review, setReview] = useState(initialReview);
   const [reviewEditOpen, setReviewEditOpen] = useState(false);
   const [reviewDeleteOpen, setReviewDeleteOpen] = useState(false);
-  const [reviewPassword, setReviewPassword] = useState("");
   const [savingReview, setSavingReview] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const [editService, setEditService] = useState(review.service);
@@ -189,7 +188,7 @@ export default function ReviewDetailView({
   const isLoggedIn = boosterId !== null;
   const displayBoosterName =
     review.reply?.boosterName || boosterName || "기사 답변";
-  const canModifyReview = isAdmin || !review.reply;
+  const canModifyReview = isAdmin || session.role === "customer";
   const replyFormVisible = canReply && (formOpen || !review.reply);
 
   useEffect(() => {
@@ -223,15 +222,13 @@ export default function ReviewDetailView({
     setEditService(review.service);
     setEditRating(review.rating);
     setEditContent(review.content);
-    setReviewPassword("");
     setReviewEditOpen((current) => !current);
   };
 
   const updateReview = async () => {
-    const password = reviewPassword.trim();
     const content = editContent.trim();
-    if ((!isAdmin && !password) || !content) {
-      setReviewError("수정하려면 비밀번호와 후기 내용을 입력해주세요.");
+    if (!content) {
+      setReviewError("후기 내용을 입력해주세요.");
       return;
     }
     setSavingReview(true);
@@ -242,7 +239,6 @@ export default function ReviewDetailView({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: review.id,
-          password,
           service: editService,
           rating: editRating,
           content,
@@ -257,7 +253,6 @@ export default function ReviewDetailView({
       }
       setReview(data.review);
       setReviewEditOpen(false);
-      setReviewPassword("");
     } catch (caught) {
       setReviewError(
         caught instanceof Error
@@ -270,18 +265,13 @@ export default function ReviewDetailView({
   };
 
   const deleteReview = async () => {
-    const password = reviewPassword.trim();
-    if (!isAdmin && !password) {
-      setReviewError("삭제하려면 비밀번호를 입력해주세요.");
-      return;
-    }
     setSavingReview(true);
     setReviewError("");
     try {
       const response = await fetch("/api/review", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: review.id, password }),
+        body: JSON.stringify({ id: review.id }),
       });
       const data = (await response.json()) as { message?: string };
       if (!response.ok) {
@@ -406,7 +396,6 @@ export default function ReviewDetailView({
                     onClick={() => {
                       setReviewError("");
                       setReviewEditOpen(false);
-                      setReviewPassword("");
                       setReviewDeleteOpen((current) => !current);
                     }}
                     className="rounded-full border border-red-400/25 px-3 py-1 text-xs font-bold text-red-200 transition hover:bg-red-400/10"
@@ -437,26 +426,9 @@ export default function ReviewDetailView({
                     <option>롤 계정</option>
                   </select>
                 </label>
-                <label className="grid gap-2">
-                  <span className="text-sm font-bold text-zinc-300">
-                    {isAdmin ? "관리자 권한" : "비밀번호"}
-                  </span>
-                  {isAdmin ? (
-                    <div className="rounded-2xl border border-gold/20 bg-gold/10 px-4 py-3 text-sm font-bold text-gold">
-                      비밀번호 없이 강제 수정
-                    </div>
-                  ) : (
-                    <input
-                      type="password"
-                      value={reviewPassword}
-                      onChange={(event) =>
-                        setReviewPassword(event.target.value)
-                      }
-                      className={inputCls}
-                      placeholder="작성 시 입력한 비밀번호"
-                    />
-                  )}
-                </label>
+                <div className="rounded-2xl border border-gold/20 bg-gold/10 px-4 py-3 text-sm font-bold text-gold">
+                  로그인한 작성자 또는 관리자 권한으로 수정
+                </div>
               </div>
               <div className="grid gap-2">
                 <span className="text-sm font-bold text-zinc-300">평점</span>
@@ -495,24 +467,9 @@ export default function ReviewDetailView({
           {reviewDeleteOpen && canModifyReview && (
             <div className="grid gap-3 rounded-3xl border border-red-400/20 bg-red-500/8 p-4">
               <p className="text-sm font-bold text-zinc-300">
-                {isAdmin
-                  ? "관리자 권한으로 이 후기를 삭제합니다."
-                  : "삭제하려면 작성 시 입력한 비밀번호를 입력해주세요."}
+                작성자 또는 관리자 권한으로 이 후기를 삭제합니다.
               </p>
-              <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                {isAdmin ? (
-                  <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-100">
-                    비밀번호 없이 강제 삭제
-                  </div>
-                ) : (
-                  <input
-                    type="password"
-                    value={reviewPassword}
-                    onChange={(event) => setReviewPassword(event.target.value)}
-                    className={inputCls}
-                    placeholder="삭제 비밀번호"
-                  />
-                )}
+              <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={deleteReview}

@@ -19,11 +19,8 @@ function isAuthorized(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false;
 
-  const url = new URL(request.url);
-  const provided =
-    request.headers.get("x-cron-secret") ??
-    url.searchParams.get("key") ??
-    "";
+  // 쿼리스트링 비밀키는 접근 로그·분석 도구·리퍼러에 남을 수 있으므로 금지한다.
+  const provided = request.headers.get("x-cron-secret") ?? "";
 
   // 길이가 다르면 timingSafeEqual이 던지므로 먼저 거른다.
   const a = Buffer.from(provided);

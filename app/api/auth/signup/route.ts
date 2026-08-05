@@ -12,11 +12,12 @@ import { ensureBoosterSchema } from "@/lib/booster";
 import { validateBooster, type BoosterProfileInput } from "@/lib/booster-model";
 import { ensureCodeSchema, consumeCode } from "@/lib/signupCodes";
 import { createSessionToken, getSessionCookieHeader } from "@/lib/session";
-import { isAuthRateLimited, recordAuthAttempt } from "@/lib/authRateLimit";
+import { isAuthRateLimited, isAuthAccountRateLimited, recordAuthAttempt } from "@/lib/authRateLimit";
+import { guardMutationRequest } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 
-const PASSWORD_MIN_LENGTH = 4;
+const PASSWORD_MIN_LENGTH = 8;
 
 type SignupPayload = BoosterProfileInput & {
   username?: string;
@@ -33,6 +34,9 @@ function authCookie(role: "customer" | "booster", userId: number) {
 // 발급한 가입 코드 + 프로필을 함께 제출해야 하며, 코드 유효 시 즉시 활성 기사가 된다.
 // role은 이 둘만 허용(admin은 env 전용이라 가입 불가).
 export async function POST(request: Request) {
+  const rejected = guardMutationRequest(request, { maxBytes: 32 * 1024 });
+  if (rejected) return rejected;
+
   if (await isAuthRateLimited(request)) {
     return NextResponse.json(
       { message: "시도가 많습니다. 잠시 후 다시 시도해주세요." },
@@ -57,9 +61,15 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  if (password.length < PASSWORD_MIN_LENGTH) {
+  if (await isAuthAccountRateLimited(username)) {
     return NextResponse.json(
-      { message: `비밀번호는 ${PASSWORD_MIN_LENGTH}자 이상이어야 합니다.` },
+      { message: "시도가 많습니다. 잠시 후 다시 시도해주세요." },
+      { status: 429 },
+    );
+  }
+  if (password.length < PASSWORD_MIN_LENGTH || password.length > 128) {
+    return NextResponse.json(
+      { message: `비밀번호는 ${PASSWORD_MIN_LENGTH}~128자여야 합니다.` },
       { status: 400 },
     );
   }
@@ -68,7 +78,7 @@ export async function POST(request: Request) {
   }
 
   const passwordHash = hashPassword(password);
-  await recordAuthAttempt(request);
+  await recordAuthAttempt(request, username);
 
   // ── 일반회원 ──
   if (role === "customer") {

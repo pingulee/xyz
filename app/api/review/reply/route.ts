@@ -4,6 +4,7 @@ import { getPool } from "@/lib/db";
 import { getSession, resolveBoosterId } from "@/lib/authz";
 import { ensureReviewSchema, type TierRecord } from "@/lib/review";
 import { invalidateReviewCaches } from "@/lib/cache-tags";
+import { guardMutationRequest } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 
@@ -43,6 +44,9 @@ function toCountStat(value: number | undefined | null): number {
 }
 
 export async function POST(request: Request) {
+  const rejected = guardMutationRequest(request);
+  if (rejected) return rejected;
+
   // 답글 작성은 기사 본인만(role=booster → 자기 booster.id). 관리자는 작성 대상이
   // 아니라 resolveBoosterId가 null → 401. 슈퍼권한은 아래 DELETE에서 처리.
   const boosterId = await resolveBoosterId(getSession(request));
@@ -160,6 +164,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const rejected = guardMutationRequest(request, { maxBytes: 4 * 1024 });
+  if (rejected) return rejected;
+
   const session = getSession(request);
   const boosterId = await resolveBoosterId(session);
   const admin = session?.role === "admin"; // 관리자 슈퍼권한: 모든 답글 삭제

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import { createHash } from "crypto";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { getPool } from "@/lib/db";
 import { ensureReviewSchema, getReviewList, toReview } from "@/lib/review";
 import { getSession } from "@/lib/authz";
 import { invalidateReviewCaches } from "@/lib/cache-tags";
+import { guardMutationRequest } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 
@@ -17,7 +18,6 @@ type ReviewRow = RowDataPacket & {
   rating: number;
   content: string;
   view_count: number | null;
-  password_hash: string | null;
   user_id: number | null;
   created_at: Date;
   reply_id: number | null;
@@ -36,14 +36,13 @@ type ReviewPayload = {
   boosterId?: string;
   rating?: number;
   content?: string;
-  password?: string;
   createdAt?: string;
 };
 
 const REVIEW_SELECT = `
   SELECT r.id, r.name, r.service, r.booster_id,
          COALESCE(b.name, r.booster_name) AS booster_name,
-         r.rating, r.content, r.view_count, r.password_hash, r.user_id, r.created_at,
+         r.rating, r.content, r.view_count, r.user_id, r.created_at,
          rr.id AS reply_id, rr.booster_id AS reply_booster_id,
          rr.booster_name AS reply_booster_name,
          rr.content AS reply_content, rr.tier_records AS reply_tier_records,
@@ -63,31 +62,8 @@ const reviewNameMaxLength = 7;
 const reviewContentMinLength = 10;
 const reviewContentMaxLength = 100;
 
-function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const hash = scryptSync(password, salt, 64).toString("hex");
-  return `${salt}:${hash}`;
-}
-
-function verifyPassword(password: string, stored: string) {
-  const [salt, hash] = stored.split(":");
-  if (!salt || !hash) return false;
-  const hashBuffer = Buffer.from(hash, "hex");
-  const inputBuffer = scryptSync(password, salt, 64);
-  return (
-    hashBuffer.length === inputBuffer.length &&
-    timingSafeEqual(hashBuffer, inputBuffer)
-  );
-}
-
 function isAdminRequest(request: Request): boolean {
   return getSession(request)?.role === "admin";
-}
-
-function canModifyReview(password: string, review: ReviewRow) {
-  return review.password_hash
-    ? verifyPassword(password, review.password_hash)
-    : false;
 }
 
 function getClientIp(request: Request) {
@@ -138,6 +114,17 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const rejected = guardMutationRequest(request);
+  if (rejected) return rejected;
+
+  const session = getSession(request);
+  if (session?.role !== "customer" && session?.role !== "admin") {
+    return NextResponse.json(
+      { message: "로그인한 회원만 후기를 작성할 수 있습니다." },
+      { status: 401 },
+    );
+  }
+
   let payload: ReviewPayload;
   try {
     payload = await request.json();
@@ -153,7 +140,6 @@ export async function POST(request: Request) {
   const boosterId = payload.boosterId ? Number(payload.boosterId) : null;
   const content = payload.content?.trim() ?? "";
   const rating = Number(payload.rating);
-  const password = payload.password?.trim() ?? "";
 
   if (name.length < 1 || name.length > reviewNameMaxLength) {
     return NextResponse.json(
@@ -190,16 +176,8 @@ export async function POST(request: Request) {
     );
   }
 
-  // 로그인 고객은 user_id로 소유권을 잇고 비번을 받지 않는다(비번은 비로그인 전용).
-  const session = getSession(request);
+  // 고객 후기는 서명된 세션의 user_id로만 소유권을 연결한다.
   const ownerUserId = session?.role === "customer" ? session.userId : null;
-
-  if (ownerUserId === null && (password.length < 4 || password.length > 40)) {
-    return NextResponse.json(
-      { message: "비밀번호는 4~40자로 입력해주세요." },
-      { status: 400 },
-    );
-  }
 
   try {
     await ensureReviewSchema();
@@ -227,11 +205,10 @@ export async function POST(request: Request) {
       }
     }
 
-    const passwordHash = password ? hashPassword(password) : null;
     const [result] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO \`review\` (name, service, booster_id, booster_name, rating, content, password_hash, user_id)
-       VALUES (:name, :service, :boosterId, :boosterName, :rating, :content, :passwordHash, :userId)`,
-      { name, service, boosterId, boosterName, rating, content, passwordHash, userId: ownerUserId },
+      `INSERT INTO \`review\` (name, service, booster_id, booster_name, rating, content, user_id)
+       VALUES (:name, :service, :boosterId, :boosterName, :rating, :content, :userId)`,
+      { name, service, boosterId, boosterName, rating, content, userId: ownerUserId },
     );
 
     const [rows] = await getPool().execute<ReviewRow[]>(
@@ -253,6 +230,9 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const rejected = guardMutationRequest(request);
+  if (rejected) return rejected;
+
   let payload: ReviewPayload & { id?: string };
   try {
     payload = await request.json();
@@ -267,7 +247,6 @@ export async function PUT(request: Request) {
   const service = payload.service?.trim() ?? "";
   const content = payload.content?.trim() ?? "";
   const rating = Number(payload.rating);
-  const password = payload.password?.trim() ?? "";
 
   if (!Number.isInteger(id) || id < 1) {
     return NextResponse.json(
@@ -279,11 +258,10 @@ export async function PUT(request: Request) {
   const session = getSession(request);
   const adminRequest = session?.role === "admin";
 
-  // 로그인 고객은 소유 후기를 비번 없이 수정하므로, 비로그인만 비번을 요구한다.
-  if (!adminRequest && session?.role !== "customer" && !password) {
+  if (!adminRequest && session?.role !== "customer") {
     return NextResponse.json(
-      { message: "비밀번호를 입력해주세요." },
-      { status: 400 },
+      { message: "로그인이 필요합니다." },
+      { status: 401 },
     );
   }
 
@@ -330,11 +308,10 @@ export async function PUT(request: Request) {
 
     if (
       !adminRequest &&
-      !ownsByUser &&
-      !canModifyReview(password, existingReview)
+      !ownsByUser
     ) {
       return NextResponse.json(
-        { message: "비밀번호가 일치하지 않습니다." },
+        { message: "본인이 작성한 후기만 수정할 수 있습니다." },
         { status: 403 },
       );
     }
@@ -384,6 +361,9 @@ export async function PUT(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const rejected = guardMutationRequest(request, { maxBytes: 4 * 1024 });
+  if (rejected) return rejected;
+
   let payload: { id?: string };
   try {
     payload = await request.json();
@@ -429,6 +409,9 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const rejected = guardMutationRequest(request, { maxBytes: 4 * 1024 });
+  if (rejected) return rejected;
+
   let payload: ReviewPayload & { id?: string };
   try {
     payload = await request.json();
@@ -440,7 +423,6 @@ export async function DELETE(request: Request) {
   }
 
   const id = Number(payload.id);
-  const password = payload.password?.trim() ?? "";
 
   if (!Number.isInteger(id) || id < 1) {
     return NextResponse.json(
@@ -452,10 +434,10 @@ export async function DELETE(request: Request) {
   const session = getSession(request);
   const adminRequest = session?.role === "admin";
 
-  if (!adminRequest && session?.role !== "customer" && !password) {
+  if (!adminRequest && session?.role !== "customer") {
     return NextResponse.json(
-      { message: "비밀번호를 입력해주세요." },
-      { status: 400 },
+      { message: "로그인이 필요합니다." },
+      { status: 401 },
     );
   }
 
@@ -479,9 +461,9 @@ export async function DELETE(request: Request) {
       review.user_id !== null &&
       review.user_id === session.userId;
 
-    if (!adminRequest && !ownsByUser && !canModifyReview(password, review)) {
+    if (!adminRequest && !ownsByUser) {
       return NextResponse.json(
-        { message: "비밀번호가 일치하지 않습니다." },
+        { message: "본인이 작성한 후기만 삭제할 수 있습니다." },
         { status: 403 },
       );
     }

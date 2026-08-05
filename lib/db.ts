@@ -26,7 +26,10 @@ export function getPool() {
       database: process.env.MYSQL_DATABASE,
       waitForConnections: true,
       connectionLimit: 5,
-      queueLimit: 0,
+      // 무제한 대기열은 요청 폭주 때 메모리를 계속 소비한다. DB가 포화되면
+      // 제한된 수만 대기시키고 나머지는 빠르게 실패시켜 프로세스를 보호한다.
+      queueLimit: 50,
+      connectTimeout: 5_000,
       namedPlaceholders: true,
       // 원격 DB가 유휴 커넥션을 끊어도 죽은 커넥션을 재사용하지 않도록 방지
       enableKeepAlive: true,

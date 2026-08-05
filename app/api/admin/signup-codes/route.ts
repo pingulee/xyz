@@ -5,6 +5,7 @@ import {
   listSignupCodes,
   deleteSignupCode,
 } from "@/lib/signupCodes";
+import { guardMutationRequest } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +19,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const rejected = guardMutationRequest(request, { maxBytes: 1024, contentTypes: ["application/json", "text/plain"] });
+  if (rejected) return rejected;
+
   if (!isAdmin(request)) {
     return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
   }
@@ -26,6 +30,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const rejected = guardMutationRequest(request, { maxBytes: 4 * 1024 });
+  if (rejected) return rejected;
+
   if (!isAdmin(request)) {
     return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 403 });
   }

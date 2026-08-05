@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyCode } from "@/lib/signupCodes";
 import { isAuthRateLimited, recordAuthAttempt } from "@/lib/authRateLimit";
+import { guardMutationRequest } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 
@@ -8,6 +9,9 @@ export const runtime = "nodejs";
 // 프로필 입력 단계로 넘어간다. 최종 소진·활성화는 /api/auth/signup 트랜잭션.
 // 코드는 96비트 랜덤이라 추측 불가하나, 열거 방지로 레이트리밋을 건다.
 export async function POST(request: Request) {
+  const rejected = guardMutationRequest(request, { maxBytes: 4 * 1024 });
+  if (rejected) return rejected;
+
   if (await isAuthRateLimited(request)) {
     return NextResponse.json(
       { message: "시도가 많습니다. 잠시 후 다시 시도해주세요." },

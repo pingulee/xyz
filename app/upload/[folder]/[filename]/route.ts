@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { existsSync, readFileSync } from "fs";
+import { readFile, stat } from "fs/promises";
 import { join, resolve, basename } from "path";
 
 export const runtime = "nodejs";
@@ -34,12 +34,18 @@ export async function GET(
   const uploadDir = resolve(join(getUploadBase(), folder));
   const filePath = resolve(join(uploadDir, safeFile));
 
-  if (!filePath.startsWith(uploadDir)) {
+  if (filePath !== join(uploadDir, safeFile)) {
     return NextResponse.json({ message: "잘못된 요청입니다." }, { status: 400 });
   }
 
-  if (!existsSync(filePath)) {
+  let fileStat;
+  try {
+    fileStat = await stat(filePath);
+  } catch {
     return NextResponse.json({ message: "파일을 찾을 수 없습니다." }, { status: 404 });
+  }
+  if (!fileStat.isFile() || fileStat.size > 10 * 1024 * 1024) {
+    return NextResponse.json({ message: "지원하지 않는 파일입니다." }, { status: 400 });
   }
 
   const ext = safeFile.split(".").pop()?.toLowerCase() ?? "";
@@ -48,7 +54,7 @@ export async function GET(
     return NextResponse.json({ message: "지원하지 않는 파일 형식입니다." }, { status: 400 });
   }
 
-  const fileBuffer = readFileSync(filePath);
+  const fileBuffer = await readFile(filePath);
 
   return new Response(fileBuffer, {
     headers: {

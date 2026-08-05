@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getChampions, syncChampionsFromRiot } from "@/lib/champions";
 import { isAdmin } from "@/lib/authz";
+import { guardMutationRequest } from "@/lib/request-security";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +19,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const rejected = guardMutationRequest(request, { maxBytes: 1024, contentTypes: ["application/json", "text/plain"] });
+  if (rejected) return rejected;
+
   if (!isAdmin(request)) {
     return NextResponse.json(
       { message: "관리자 권한이 필요합니다." },
