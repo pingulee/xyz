@@ -1060,12 +1060,16 @@ export default function ReviewBoard({
                 후기 등록
               </button>
             ) : (
-              <Link
-                href="/login?from=/review"
-                className="rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black transition hover:brightness-110"
+              <button
+                type="button"
+                onClick={() => {
+                  alert("로그인 후 이용 가능합니다.");
+                  router.push("/login?from=/review");
+                }}
+                className="cursor-pointer rounded-full bg-gold-gradient px-5 py-3 text-sm font-black text-black transition hover:brightness-110"
               >
-                로그인 후 후기 등록
-              </Link>
+                후기 등록
+              </button>
             )}
           </div>
         )}
