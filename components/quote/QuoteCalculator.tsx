@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BadgeCheck,
   Check,
-  ChevronDown,
   Clock3,
   MessageCircle,
   ShieldCheck,
@@ -26,7 +25,6 @@ import { site } from "@/lib/site";
 import { useChampionOptions } from "@/hooks/useChampionOptions";
 import {
   TIERS,
-  LP_OPTIONS,
   LP_DISCOUNTS,
   SERVICES,
   ADDONS,
@@ -278,29 +276,6 @@ export default function QuoteCalculator() {
     );
   };
 
-  const selectCurrentTier = (index: number) => {
-    setCurrentTier(index);
-    setCurrentDivision(TIERS[index].divisions[0]);
-    if (serviceKey === "hourly" && index >= 7) {
-      setAddons((items) => items.filter((item) => item !== "solo"));
-    }
-    if (
-      rankScore(targetTier, targetDivision) <=
-      rankScore(index, TIERS[index].divisions[0])
-    ) {
-      const next = Math.min(index + 1, TIERS.length - 1);
-      setTargetTier(next);
-      setTargetDivision(TIERS[next].divisions[0]);
-    }
-  };
-
-  const selectCurrentDivision = (division: number) => {
-    setCurrentDivision(division);
-    if (serviceKey === "hourly" && currentTier === 6 && division === -1) {
-      setAddons((items) => items.filter((item) => item !== "solo"));
-    }
-  };
-
   const toggleAddon = (key: string) => {
     if (key === "champion" && !addons.includes("lane")) return;
     setAddons((items) => {
@@ -337,19 +312,9 @@ export default function QuoteCalculator() {
     });
   };
 
-  const needsCurrentRank = serviceKey !== "normal";
-  const needsCurrentLp =
-    serviceKey !== "normal" &&
-    serviceKey !== "placement" &&
-    serviceKey !== "hourly";
-  const currentRankTitle =
-    serviceKey === "placement" ? "전시즌 랭크" : "현재 랭크";
-  const currentRankHint =
-    serviceKey === "placement"
-      ? "지난 시즌에 마감한 티어와 단계를 선택해주세요."
-      : serviceKey === "hourly"
-        ? "현재 티어를 선택해주세요. 다이아몬드는 구간이 분리됩니다."
-        : "지금 계정의 티어와 단계를 선택해주세요.";
+  // 현재 티어는 1단계(롤 닉네임) 조회로 자동 반영되므로 수동 랭크 입력 단계는
+  // 없앴다. 수량 입력이 필요한 서비스만 이 단계를 노출한다(저티어 보장제는 없음).
+  const needsQuantity = serviceKey !== "low-win";
   const quantityTitle =
     serviceKey === "hourly"
       ? "신청 시간"
@@ -387,7 +352,7 @@ export default function QuoteCalculator() {
   const wizardSteps = [
     { key: "account", label: "롤 닉네임" },
     { key: "service", label: "서비스" },
-    { key: "current", label: currentRankTitle },
+    ...(needsQuantity ? [{ key: "current", label: quantityTitle }] : []),
     ...(needsTargetRank ? [{ key: "target", label: "목표 랭크" }] : []),
     { key: "options", label: "추가 옵션" },
     { key: "result", label: "견적 결과" },
@@ -397,7 +362,9 @@ export default function QuoteCalculator() {
   const stepValid =
     stepKey === "current"
       ? serviceRankValid
-      : stepKey === "target"
+      : stepKey === "account"
+        ? true
+        : stepKey === "target"
         ? validTarget
         : stepKey === "options"
           ? championSelectionValid
@@ -407,9 +374,16 @@ export default function QuoteCalculator() {
   const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0));
 
   // op.gg 조회로 받은 현재 티어를 계산기 상태에 반영한다(목표가 현재 이하면 올림).
-  const applyCurrentTier = (tierIndex: number, division: number) => {
+  // LP는 할인 계산용 버킷(LP_OPTIONS 0~4)으로 환산해 함께 반영한다.
+  const applyCurrentTier = (
+    tierIndex: number,
+    division: number,
+    lp: number,
+  ) => {
     setCurrentTier(tierIndex);
     setCurrentDivision(division);
+    const bucket = lp <= 20 ? 0 : lp <= 40 ? 1 : lp <= 60 ? 2 : lp <= 80 ? 3 : 4;
+    setCurrentLp(bucket);
     if (serviceKey === "hourly" && tierIndex >= 7) {
       setAddons((items) => items.filter((item) => item !== "solo"));
     }
@@ -443,11 +417,12 @@ export default function QuoteCalculator() {
         ranked?: boolean;
         tierIndex?: number;
         division?: number;
+        lp?: number;
         message?: string;
       };
       if (res.ok && data.ranked && data.tierIndex !== undefined) {
         const div = data.division ?? 1;
-        applyCurrentTier(data.tierIndex, div);
+        applyCurrentTier(data.tierIndex, div, data.lp ?? 0);
         const name = TIERS[data.tierIndex].name;
         setTierMsg({
           text: `현재 티어를 ${name}${data.tierIndex < 7 ? ` ${div}` : ""}로 반영했습니다.`,
@@ -590,8 +565,8 @@ export default function QuoteCalculator() {
               )}
 
               <p className="mt-4 text-[11px] leading-5 text-zinc-600">
-                티어 조회는 op.gg 공개 정보 기준입니다. 언랭·조회 실패 시 다음
-                단계에서 현재 티어를 직접 선택할 수 있습니다.
+                티어 조회는 op.gg 공개 정보 기준입니다. 언랭·조회 실패 시
+                정확한 견적은 카카오톡 상담에서 안내해 드립니다.
               </p>
             </div>
           )}
@@ -686,65 +661,7 @@ export default function QuoteCalculator() {
 
           {stepKey === "current" && (
             <>
-          {needsCurrentRank && (
-            <RankPicker
-              title={currentRankTitle}
-              hint={currentRankHint}
-              tierIndex={currentTier}
-              division={currentDivision}
-              onTierChange={selectCurrentTier}
-              onDivisionChange={selectCurrentDivision}
-              hideDivision={
-                serviceKey === "placement" || serviceKey === "hourly"
-              }
-              splitDiamond={serviceKey === "hourly"}
-              splitMaster={serviceKey === "hourly"}
-              minTierIndex={serviceKey === "high-score" ? 6 : 0}
-              maxTierIndex={
-                serviceKey === "hourly"
-                  ? 7
-                  : serviceKey === "low-win"
-                    ? 6
-                    : TIERS.length - 1
-              }
-              divisionOptions={
-                serviceKey === "low-win" && currentTier === 6
-                  ? [4, 3, 2]
-                  : undefined
-              }
-            />
-          )}
-
-          {needsCurrentLp && (
-            <div className="rounded-3xl border border-white/8 bg-black/20 p-5">
-              <label className="block max-w-sm">
-                <span className="text-xs font-black text-zinc-400">
-                  현재 LP
-                </span>
-                <span className="relative mt-2 block">
-                  <select
-                    value={currentLp}
-                    onChange={(event) =>
-                      setCurrentLp(Number(event.target.value))
-                    }
-                    className="w-full appearance-none rounded-2xl border border-white/8 bg-[#15130f] px-4 py-3 text-sm font-bold text-white outline-none focus:border-gold/50"
-                  >
-                    {LP_OPTIONS.map((lp, index) => (
-                      <option key={lp} value={index}>
-                        {lp} LP
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown
-                    size={15}
-                    className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500"
-                  />
-                </span>
-              </label>
-            </div>
-          )}
-
-          {serviceKey !== "low-win" && (
+          {needsQuantity && (
             <div className="rounded-3xl border border-white/8 bg-black/20 p-5 sm:p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
