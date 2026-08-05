@@ -3,11 +3,17 @@ import { ResultSetHeader } from "mysql2";
 import { getPool } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
 import {
+  addNicknamesBulk,
   createCustomer,
   ensureAuthSchema,
+  isValidEmail,
+  isValidRiotId,
   isValidUsername,
+  normalizeEmail,
+  normalizeRiotId,
   normalizeUsername,
 } from "@/lib/users";
+import { verifyRiotId } from "@/lib/riot";
 import { ensureBoosterSchema } from "@/lib/booster";
 import { validateBooster, type BoosterProfileInput } from "@/lib/booster-model";
 import { ensureCodeSchema, consumeCode } from "@/lib/signupCodes";
@@ -24,6 +30,8 @@ type SignupPayload = BoosterProfileInput & {
   password?: string;
   role?: string;
   code?: string;
+  email?: string;
+  nicknames?: string[];
 };
 
 function authCookie(role: "customer" | "booster", userId: number) {
@@ -80,15 +88,42 @@ export async function POST(request: Request) {
   const passwordHash = hashPassword(password);
   await recordAuthAttempt(request, username);
 
-  // ── 일반회원 ──
+  // ── 일반회원 ── (이메일 필수·고유 + 롤 닉네임 여러 개)
   if (role === "customer") {
-    const userId = await createCustomer(username, passwordHash);
-    if (userId === null) {
-      return NextResponse.json({ message: "이미 사용 중인 아이디입니다." }, { status: 409 });
+    const email = normalizeEmail(payload.email ?? "");
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ message: "올바른 이메일을 입력해주세요." }, { status: 400 });
     }
+    const nicknames = Array.isArray(payload.nicknames) ? payload.nicknames : [];
+
+    const created = await createCustomer(username, passwordHash, email);
+    if ("error" in created) {
+      const message =
+        created.error === "email"
+          ? "이미 사용 중인 이메일입니다."
+          : created.error === "username"
+            ? "이미 사용 중인 아이디입니다."
+            : "회원가입에 실패했습니다.";
+      const status = created.error === "unknown" ? 500 : 409;
+      return NextResponse.json({ message }, { status });
+    }
+    // 닉네임은 서버에서 실존 재확인한 것만 저장(클라 "확인" 불신). 형식 오류·미존재·
+    // 조회불가는 조용히 건너뛴다 — 가입 자체는 막지 않는다(이메일이 주 식별자).
+    const verified: string[] = [];
+    for (const raw of nicknames.slice(0, 10)) {
+      const rid = normalizeRiotId(raw);
+      if (!isValidRiotId(rid)) continue;
+      try {
+        if ((await verifyRiotId(rid)).valid) verified.push(rid);
+      } catch {
+        // op.gg 조회 불가 → 이 닉네임은 건너뜀(마이페이지에서 나중에 추가 가능)
+      }
+    }
+    if (verified.length > 0) await addNicknamesBulk(created.id, verified);
+
     return NextResponse.json(
       { ok: true, role: "customer" },
-      { headers: authCookie("customer", userId) },
+      { headers: authCookie("customer", created.id) },
     );
   }
 

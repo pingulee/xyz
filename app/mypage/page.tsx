@@ -9,7 +9,9 @@ import { resolveBoosterId } from "@/lib/authz";
 import { getReviewsByUser } from "@/lib/review";
 import { getBoosterById } from "@/lib/booster";
 import { getBoosterPath } from "@/lib/booster-model";
+import { getAccountById, listNicknames } from "@/lib/users";
 import MyReviewList from "@/components/auth/MyReviewList";
+import MyAccountSettings from "@/components/auth/MyAccountSettings";
 
 export const dynamic = "force-dynamic";
 
@@ -79,16 +81,29 @@ export default async function MyPage() {
   }
 
   // ── 고객 마이페이지 ──
-  const reviews = await getReviewsByUser(session.userId);
+  const [reviews, account, nicknames] = await Promise.all([
+    getReviewsByUser(session.userId),
+    getAccountById(session.userId),
+    listNicknames(session.userId),
+  ]);
 
   return (
     <section className="py-20">
       <Container>
         <h1 className="text-2xl font-black text-white">마이페이지</h1>
         <p className="mt-3 text-sm text-zinc-500">
-          로그인 상태로 작성한 후기를 관리할 수 있습니다.
+          계정 정보와 작성한 후기를 관리할 수 있습니다.
         </p>
-        <MyReviewList initial={reviews} />
+
+        <MyAccountSettings
+          initialEmail={account?.email ?? null}
+          initialNicknames={nicknames}
+        />
+
+        <div className="mt-10">
+          <h2 className="text-lg font-black text-white">내 후기</h2>
+          <MyReviewList initial={reviews} />
+        </div>
       </Container>
     </section>
   );

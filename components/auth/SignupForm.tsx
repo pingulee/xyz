@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { NATIONALITIES, POSITIONS } from "@/components/booster/adminBoosterConstants";
+import RiotIdManager from "@/components/auth/RiotIdManager";
 
 const inputCls =
   "rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-zinc-600 focus:border-gold/50 w-full";
@@ -19,6 +20,8 @@ type SignupBody = {
   username: string;
   password: string;
   role: "customer" | "booster";
+  email?: string;
+  nicknames?: string[];
   code?: string;
   name?: string;
   rank?: string;
@@ -36,6 +39,9 @@ export default function SignupForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  // 일반회원 전용 필드
+  const [email, setEmail] = useState("");
+  const [nicknames, setNicknames] = useState<string[]>([]);
   // 기사 전용 필드
   const [code, setCode] = useState("");
   const [codeVerified, setCodeVerified] = useState(false);
@@ -156,6 +162,14 @@ export default function SignupForm() {
           .join(","),
         description: description.trim(),
       };
+    } else {
+      // 일반회원: 이메일 필수(고유). 롤 닉네임은 확인된 것만 담긴다(선택).
+      const em = email.trim();
+      if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
+        setMessage("올바른 이메일을 입력해주세요.");
+        return;
+      }
+      body = { ...body, email: em, nicknames };
     }
 
     setLoading(true);
@@ -295,6 +309,24 @@ export default function SignupForm() {
             autoComplete="new-password"
           />
         </label>
+
+        {role === "customer" && (
+          <>
+            <label className={labelCls}>
+              이메일
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                maxLength={255}
+                className={inputCls}
+                placeholder="아이디·비밀번호 찾기에 사용됩니다"
+                autoComplete="email"
+              />
+            </label>
+            <RiotIdManager nicknames={nicknames} onChange={setNicknames} />
+          </>
+        )}
 
         {role === "booster" && (
           <>

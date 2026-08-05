@@ -11,10 +11,18 @@ export type AuthUser = {
   role: UserRole;
 };
 
+export type Account = {
+  id: number;
+  username: string;
+  email: string | null;
+  role: UserRole;
+};
+
 type UserRow = RowDataPacket & {
   id: number;
   username: string;
   password_hash: string;
+  email: string | null;
   role: UserRole;
   active: 0 | 1;
 };
@@ -26,6 +34,11 @@ type BoosterBackfillRow = RowDataPacket & {
 };
 
 const USERNAME_RE = /^[a-z0-9_]{3,30}$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Riot ID = 게임명#태그. 게임명 3~16자(공백·# 제외), 태그 영숫자 2~5자.
+const RIOT_ID_RE = /^[^#\s][^#]{1,14}[^#\s]#[A-Za-z0-9]{2,5}$/;
+
+export const MAX_NICKNAMES = 10;
 
 // 대소문자·동형문자 중복과 열거를 막기 위해 소문자·trim 정규화 후 저장·조회한다.
 export function normalizeUsername(raw: string): string {
@@ -36,10 +49,29 @@ export function isValidUsername(username: string): boolean {
   return USERNAME_RE.test(username);
 }
 
+export function normalizeEmail(raw: string): string {
+  return raw.trim().toLowerCase();
+}
+
+export function isValidEmail(email: string): boolean {
+  return email.length <= 255 && EMAIL_RE.test(email);
+}
+
+// Riot ID 검증 + 정규화(양끝 공백 제거). 저장 형식은 입력 그대로(태그 대소문자 유지).
+export function normalizeRiotId(raw: string): string {
+  return raw.trim();
+}
+
+export function isValidRiotId(riotId: string): boolean {
+  return RIOT_ID_RE.test(riotId);
+}
+
 /**
  * 통합 인증 스키마 보정(프로세스당 1회). 전부 "추가만" — DROP·NOT NULL화 없음이라
  * 이전 배포와 공존하고 롤백 안전하다.
  *  - users 테이블 신설(username UNIQUE, scrypt 해시, role)
+ *  - users.email 컬럼 + UNIQUE(가입 이메일 필수·고유, 기존 행은 NULL 허용)
+ *  - user_lol_nicknames(회원별 Riot ID 여러 개)
  *  - 기존 기사 계정을 users로 승계(해시 문자열 그대로 복사, 재해싱 없음)
  *
  * 테이블 연결 컬럼은 각 테이블의 스키마 보정이 담당한다(자기 테이블 컬럼은 자기
@@ -60,6 +92,26 @@ export const ensureAuthSchema = oncePerProcess(async () => {
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       UNIQUE KEY uq_users_username (username)
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `);
+
+  // 이메일: 추가만. NULL 허용(기존 행 보존) + UNIQUE(NULL은 MySQL에서 중복 허용).
+  await pool.execute(
+    `ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(255) NULL`,
+  );
+  await pool.execute(
+    `ALTER TABLE users ADD UNIQUE INDEX IF NOT EXISTS uq_users_email (email)`,
+  );
+
+  await pool.execute(`
+    CREATE TABLE IF NOT EXISTS user_lol_nicknames (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+      user_id BIGINT UNSIGNED NOT NULL,
+      riot_id VARCHAR(40) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      INDEX idx_nick_user (user_id),
+      UNIQUE KEY uq_nick_user_riot (user_id, riot_id)
     ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
@@ -110,11 +162,28 @@ async function backfillBoosterUsers(): Promise<void> {
 export async function getUserByUsername(username: string): Promise<UserRow | null> {
   await ensureAuthSchema();
   const [rows] = await getPool().execute<UserRow[]>(
-    `SELECT id, username, password_hash, role, active
+    `SELECT id, username, password_hash, email, role, active
      FROM users WHERE username = :username AND active = 1 LIMIT 1`,
     { username: normalizeUsername(username) },
   );
   return rows[0] ?? null;
+}
+
+/**
+ * 이메일로 계정 조회(아이디 찾기·비번 재설정용). 열거 방지를 위해 호출부는
+ * 존재 여부와 무관하게 동일 응답을 낸다. active=1만.
+ */
+export async function getUserByEmail(email: string): Promise<Account | null> {
+  await ensureAuthSchema();
+  const [rows] = await getPool().execute<UserRow[]>(
+    `SELECT id, username, email, role FROM users
+     WHERE email = :email AND active = 1 LIMIT 1`,
+    { email: normalizeEmail(email) },
+  );
+  const row = rows[0];
+  return row
+    ? { id: row.id, username: row.username, email: row.email, role: row.role }
+    : null;
 }
 
 // password_hash를 절대 노출하지 않는 공개 조회.
@@ -128,21 +197,157 @@ export async function getAuthUserById(id: number): Promise<AuthUser | null> {
   return row ? { id: row.id, username: row.username, role: row.role } : null;
 }
 
-// 고객 셀프 회원가입. role은 서버에서 'customer'로 강제한다. username UNIQUE 경쟁은
-// INSERT 실패로 잡는다. 성공 시 새 user id 반환, username 중복이면 null.
+// 마이페이지 표시용(이메일 포함, 비번 제외).
+export async function getAccountById(id: number): Promise<Account | null> {
+  await ensureAuthSchema();
+  const [rows] = await getPool().execute<UserRow[]>(
+    `SELECT id, username, email, role FROM users WHERE id = :id AND active = 1 LIMIT 1`,
+    { id },
+  );
+  const row = rows[0];
+  return row
+    ? { id: row.id, username: row.username, email: row.email, role: row.role }
+    : null;
+}
+
+// 현재 비밀번호 검증용(내부). password_hash 포함이라 라우트 밖으로 내보내지 않는다.
+export async function getPasswordHashById(id: number): Promise<string | null> {
+  await ensureAuthSchema();
+  const [rows] = await getPool().execute<UserRow[]>(
+    `SELECT password_hash FROM users WHERE id = :id AND active = 1 LIMIT 1`,
+    { id },
+  );
+  return rows[0]?.password_hash ?? null;
+}
+
+// 고객 셀프 회원가입. role은 서버에서 'customer'로 강제한다. username·email UNIQUE
+// 경쟁은 INSERT 실패로 잡는다. 성공 시 새 user id, 중복이면 어떤 컬럼이 충돌했는지 반환.
 export async function createCustomer(
   username: string,
   passwordHash: string,
-): Promise<number | null> {
+  email: string,
+): Promise<{ id: number } | { error: "username" | "email" | "unknown" }> {
   await ensureAuthSchema();
   try {
     const [res] = await getPool().execute<ResultSetHeader>(
-      `INSERT INTO users (username, password_hash, role)
-       VALUES (:username, :hash, 'customer')`,
-      { username: normalizeUsername(username), hash: passwordHash },
+      `INSERT INTO users (username, password_hash, email, role)
+       VALUES (:username, :hash, :email, 'customer')`,
+      {
+        username: normalizeUsername(username),
+        hash: passwordHash,
+        email: normalizeEmail(email),
+      },
     );
-    return res.insertId;
-  } catch {
-    return null;
+    return { id: res.insertId };
+  } catch (e) {
+    const err = e as { code?: string; message?: string };
+    if (err.code === "ER_DUP_ENTRY") {
+      return { error: err.message?.includes("uq_users_email") ? "email" : "username" };
+    }
+    return { error: "unknown" };
+  }
+}
+
+export async function updateUserPassword(
+  id: number,
+  passwordHash: string,
+): Promise<void> {
+  await ensureAuthSchema();
+  await getPool().execute(
+    `UPDATE users SET password_hash = :hash WHERE id = :id`,
+    { hash: passwordHash, id },
+  );
+}
+
+// 이메일 변경. UNIQUE 충돌이면 false.
+export async function updateUserEmail(
+  id: number,
+  email: string,
+): Promise<boolean> {
+  await ensureAuthSchema();
+  try {
+    await getPool().execute(
+      `UPDATE users SET email = :email WHERE id = :id`,
+      { email: normalizeEmail(email), id },
+    );
+    return true;
+  } catch (e) {
+    if ((e as { code?: string }).code === "ER_DUP_ENTRY") return false;
+    throw e;
+  }
+}
+
+// ── Riot ID(롤 닉네임) ──
+
+export type LolNickname = { id: number; riotId: string };
+
+export async function listNicknames(userId: number): Promise<LolNickname[]> {
+  await ensureAuthSchema();
+  const [rows] = await getPool().execute<
+    (RowDataPacket & { id: number; riot_id: string })[]
+  >(
+    `SELECT id, riot_id FROM user_lol_nicknames
+     WHERE user_id = :uid ORDER BY created_at ASC`,
+    { uid: userId },
+  );
+  return rows.map((r) => ({ id: r.id, riotId: r.riot_id }));
+}
+
+/**
+ * Riot ID 추가. 상한(MAX_NICKNAMES) 초과 또는 중복이면 실패 코드 반환.
+ * 상한 확인과 INSERT 사이 경쟁은 UNIQUE(user_id, riot_id)로 중복만 막고,
+ * 개수 상한은 낙관적으로 본다(회원 본인만 호출하는 저빈도 경로).
+ */
+export async function addNickname(
+  userId: number,
+  riotId: string,
+): Promise<{ id: number } | { error: "limit" | "duplicate" }> {
+  await ensureAuthSchema();
+  const existing = await listNicknames(userId);
+  if (existing.length >= MAX_NICKNAMES) return { error: "limit" };
+
+  try {
+    const [res] = await getPool().execute<ResultSetHeader>(
+      `INSERT INTO user_lol_nicknames (user_id, riot_id) VALUES (:uid, :riot)`,
+      { uid: userId, riot: normalizeRiotId(riotId) },
+    );
+    return { id: res.insertId };
+  } catch (e) {
+    if ((e as { code?: string }).code === "ER_DUP_ENTRY") {
+      return { error: "duplicate" };
+    }
+    throw e;
+  }
+}
+
+export async function deleteNickname(
+  userId: number,
+  nicknameId: number,
+): Promise<boolean> {
+  await ensureAuthSchema();
+  const [res] = await getPool().execute<ResultSetHeader>(
+    `DELETE FROM user_lol_nicknames WHERE id = :id AND user_id = :uid`,
+    { id: nicknameId, uid: userId },
+  );
+  return res.affectedRows > 0;
+}
+
+// 가입 시 여러 Riot ID를 한 번에 저장(검증 통과분만, 중복 무시).
+export async function addNicknamesBulk(
+  userId: number,
+  riotIds: string[],
+): Promise<void> {
+  const unique = Array.from(
+    new Set(riotIds.map(normalizeRiotId).filter(isValidRiotId)),
+  ).slice(0, MAX_NICKNAMES);
+  for (const riotId of unique) {
+    try {
+      await getPool().execute(
+        `INSERT INTO user_lol_nicknames (user_id, riot_id) VALUES (:uid, :riot)`,
+        { uid: userId, riot: riotId },
+      );
+    } catch {
+      // 중복(UNIQUE) 무시
+    }
   }
 }

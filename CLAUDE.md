@@ -17,7 +17,7 @@
 
 ## 디렉토리 구조
 - **컴포넌트는 기능별 폴더**(평면 아님): `components/{layout,ui,home,service,quote,review,booster,auth}` + `hooks/`. import는 항상 `@/` alias 절대경로(상대경로 `./` 안 씀). 새 컴포넌트는 해당 기능 폴더에.
-  - `layout`(Header/Footer/FloatingContact/Container), `ui`(SectionTitle/Reveal/JsonLd/FaqItem), `home`(HeroSlider/ServiceCard/HomeFaq), `service`(ServiceDetail/PriceTable), `quote`(QuoteCalculator+RankPicker/constants/types/utils), `review`(ReviewBoard+ReviewDetail/ReplySection/Stars/StarRating/ReviewNavButton/helpers/types/constants, ReviewDetailView, BoosterReview), `booster`(AdminBoosterBoard+AdminBoosterCard/adminBoosterConstants, BoosterCard/BoosterAvatar/WinStatsCard/TierRecords), `auth`(LoginForm/SignupForm/AuthControls/MyReviewList — 통합 인증 UI), `notice`(NoticeBoard/NoticeDetailView/NoticeForm/format — 공지사항, 관리자만 작성·수정·삭제)
+  - `layout`(Header/Footer/FloatingContact/Container), `ui`(SectionTitle/Reveal/JsonLd/FaqItem), `home`(HeroSlider/ServiceCard/HomeFaq), `service`(ServiceDetail/PriceTable), `quote`(QuoteCalculator+RankPicker/constants/types/utils), `review`(ReviewBoard+ReviewDetail/ReplySection/Stars/StarRating/ReviewNavButton/helpers/types/constants, ReviewDetailView, BoosterReview), `booster`(AdminBoosterBoard+AdminBoosterCard/adminBoosterConstants, BoosterCard/BoosterAvatar/WinStatsCard/TierRecords), `auth`(LoginForm/SignupForm/AuthControls/MyReviewList/MyAccountSettings/RiotIdManager/FindUsernameForm/ResetPasswordForm — 통합 인증 UI), `notice`(NoticeBoard/NoticeDetailView/NoticeForm/format — 공지사항, 관리자만 작성·수정·삭제)
   - `hooks/useChampionOptions.ts` = quote·booster 공용 챔피언 데이터 훅.
 - 큰 컴포넌트는 하위 컴포넌트/상수/타입/헬퍼를 같은 폴더 내 파일로 분리(예: review/, quote/). `booster/`는 여러 컴포넌트 공유 폴더라 상수 파일명에 접두사(`adminBoosterConstants.ts`).
 
@@ -41,10 +41,13 @@
   - **엔드포인트/UI**: `/api/auth/{login,signup,logout}`, 통합 폼 `/login`(회원가입 링크)·`/signup`, 마이페이지 `/mypage`. 헤더 `components/auth/AuthControls`. 클라이언트 세션은 `hooks/useSession`+`app/api/session/me`(`{role,userId,username,isAdmin,boosterId,boosterName}` — 하위호환 필드 유지).
   - **기사** = `booster` 프로필 + `users`(role=booster) `booster.user_id`로 연결(booster.id는 답글권한·통계·조인의 안정 식별자라 유지). **기사 계정 생성 = 가입 코드제**: 관리자가 `/admin`에서 코드 발급(`booster_signup_codes`) → 합격 기사가 `/signup` 기사 탭에서 **코드 선인증**(`/api/auth/verify-code`, 소진 안 함) 후 프로필 입력 → `/api/auth/signup`이 **한 트랜잭션**으로 users(role=booster)+booster 생성 + `consumeCode`(1회용, `WHERE used=0`+affectedRows로 재사용·동시성 차단). 관리자 직접 생성(`/api/booster` POST)은 폐기. **고객** = 셀프 회원가입 → 로그인 후기 작성(`review.user_id` 소유, 비번 없이) + 마이페이지. **관리자 슈퍼권한**: 모든 기사 답글·후기 수정·삭제(서버 세션 role로만 판정).
   - **후기 작성·소유권**: 신규 후기는 로그인 고객만 작성한다. 수정·삭제는 `admin` 또는 `review.user_id === session.userId`만 가능하며, 비로그인 비밀번호 인증 경로는 없다. 클라가 보낸 id 불신 — 서명된 `session.userId`만 신뢰.
+  - **고객 계정 필드**: 가입 시 **이메일 필수·고유**(`users.email` UNIQUE, NULL 허용은 기존 행 보존용) + **롤 닉네임(Riot ID) 여러 개**(`user_lol_nicknames`, 최대 10). 마이페이지에서 비번·이메일·닉네임 수정(`/api/account/{password,email,nicknames}`, 세션 게이트 + 비번/이메일 변경은 현재 비번 재확인). 이메일·비번 변경 검증은 서버가 `getPasswordHashById`로 재확인.
+  - **Riot ID 실존 확인 = op.gg**(`lib/riot.ts`): `HEAD https://op.gg/lol/summoners/kr/{게임명}-{태그}` → 200 존재 / 404 없음. **API 키 불필요**(op.gg 상태코드만, 본문 0바이트). 결과 10분 캐시. "확인" 버튼(`/api/riot/verify`)은 UX 게이트고, 가입·닉네임 추가 시 **서버가 재검증**(클라 신뢰 안 함). op.gg 차단/장애면 `RiotUnavailableError`→503. 형식 검증 = `isValidRiotId`(`이름#태그`, 이름 3~16·태그 영숫자 2~5).
+  - **아이디/비번 찾기 = 이메일**(`lib/mail.ts` nodemailer + Hostinger SMTP, 발신 `admin@도메인`). `/api/auth/find-username`(이메일→아이디 발송), `/api/auth/request-reset`(재설정 링크 발송) — 둘 다 **열거 방지로 존재 여부 무관 동일 응답**. `/api/auth/reset-password`(토큰+새 비번). 토큰은 `password_reset_tokens`에 **SHA-256 해시만** 저장, 1시간·1회용(`consumeResetToken` 원자적 UPDATE). UI: `/find-username`, `/reset-password`(토큰 없으면 요청, 있으면 새 비번), 로그인 페이지에 링크. 메일 실패·SMTP 미설정도 응답은 동일(로그만).
   - **레거시 정리 완료**: 구 쿠키(`xyz_admin_session`/`xyz_booster_session`) 병행 읽기, 구 기사 `name+비번` 로그인 폴백, 구 라우트(`/api/admin/{login,logout,session}`·`/api/booster/{login,logout,status}`·`/admax`), `lib/{adminSession,boosterSession}.ts` **전부 삭제됨**. 인증은 이제 통합 경로(`/api/auth/*` + `lib/{session,authz,users}.ts`) 단일. 업로드 라우트도 `isAdmin`로 이관.
   - **남은 과도기 항목 = `booster_password_hash`**: 기사 로그인 검증은 `users.password_hash`만 쓰므로 이 컬럼은 현재 흐름에서 **읽히지 않는다**(write-only). 하지만 (1) `ensureAuthSchema` 백필이 이 값을 users로 복사해 기존 기사를 users로 승계하는 마이그레이션 근거이고, (2) 롤백 안전망이라 **아직 유지**. 기사 PUT·가입 시 users 해시와 동일값으로 병행 기입 중. 모든 기사의 users 승계가 확실해지면 컬럼+병행 기입+백필을 **한 번에** 제거(별도 DDL, 데이터 손실이라 확인 후). **원본 해시 삭제 금지**.
-  - **DDL 배치**: users 테이블·백필 = `ensureAuthSchema`(users.ts). `booster.user_id` = `ensureBoosterSchema`. `review.user_id`+password_hash NULL 완화 = `ensureReviewSchema`. 자기 테이블 컬럼은 자기 ensure에서(그 테이블만 쓰는 라우트에서도 보장). 전부 추가만, FK·DROP 없음.
-  - **필수 env**: `ADMIN_USERNAME`, `ADMIN_PASSWORD`, (권장) `AUTH_SECRET`.
+  - **DDL 배치**: users 테이블·백필·**email 컬럼+UNIQUE·`user_lol_nicknames`** = `ensureAuthSchema`(users.ts). `password_reset_tokens` = `ensureResetSchema`(passwordReset.ts). `booster.user_id` = `ensureBoosterSchema`. `review.user_id`+password_hash NULL 완화 = `ensureReviewSchema`. 자기 테이블 컬럼은 자기 ensure에서(그 테이블만 쓰는 라우트에서도 보장). 전부 추가만, FK·DROP 없음.
+  - **필수 env**: `ADMIN_USERNAME`, `ADMIN_PASSWORD`, (권장) `AUTH_SECRET`. **메일(아이디/비번 찾기)**: `SMTP_USER`, `SMTP_PASS`(+ 선택 `SMTP_HOST` 기본 smtp.hostinger.com, `SMTP_PORT` 기본 465, `SMTP_SECURE`, `MAIL_FROM` 기본=SMTP_USER). 미설정이면 복구 메일만 조용히 실패(가입·로그인은 정상). Riot ID 확인은 op.gg라 **키 불필요**.
 - **인프로세스 집계 캐시 `lib/stats-cache.ts`**: 무거운 `tier_records` 집계를 60초 TTL로 메모이즈. `MAX_ENTRIES=500` 상한 + eviction(만료분→최오래분 순으로 제거, 무한 증가 방지). 리뷰/답글/부스터 쓰기 시 `clearStatsCache()`(각 `invalidate*Caches`에 포함)로 무효화.
 - 부스터 slug는 저장 안 함 — `getBoosterSlug(name)`으로 파생 (`lib/booster-model.ts`).
 
@@ -55,7 +58,7 @@
 - **`alternates.canonical`은 루트 `app/layout.tsx`에 절대 넣지 말 것.** Next metadata는 `alternates`를 자식으로 상속시키므로, 루트에 `"/"`를 두면 자기 canonical을 지정하지 않은 모든 페이지가 홈을 정본으로 선언 → 색인 제외("대체 페이지, 적절한 표준 태그 있음"). 홈 canonical은 `app/page.tsx`에. **새 공개 페이지 추가 시 canonical 지정 필수.**
 - 동적 라우트는 `generateMetadata`.
 - 구조화 데이터: `components/ui/JsonLd.tsx`(홈, `@graph`: Organization+WebSite+Service), 서비스 페이지 Service/FAQPage, 후기 Review, 상세 페이지 BreadcrumbList.
-- `app/robots.ts` — `/admin`, `/login`, `/signup`, `/mypage`, `/api/` disallow(유틸리티·비공개 경로). 공개 게시판(`/notice` 등)은 disallow하지 않는다.
+- `app/robots.ts` — `/admin`, `/login`, `/signup`, `/mypage`, `/find-username`, `/reset-password`, `/api/` disallow(유틸리티·비공개 경로). 공개 게시판(`/notice` 등)은 disallow하지 않는다.
 - 비공개·유틸리티 페이지(admin/login/signup/mypage) `robots: { index: false }` + robots.txt disallow 병행. **새 공개 게시판은 색인 허용, 유틸리티/개인 페이지는 둘 다 적용.**
 - **상세 페이지 ISR은 SEO에 무해(오히려 유리).** 크롤러가 받는 HTML은 SSR/ISR 동일(완성 HTML). JSON-LD·`generateMetadata`(canonical/og)·본문 그대로 출력된다. 세션 편집 UI를 클라이언트로 뺐으므로 크롤러는 비로그인 상태의 깨끗한 HTML을 본다. 캐시 서빙이라 TTFB가 빨라 크롤 예산·CWV에 이득. 첫 요청 1회 생성 지연만 있고 이후 캐시.
 
