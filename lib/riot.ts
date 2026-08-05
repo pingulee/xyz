@@ -24,8 +24,22 @@ export type SoloTier =
       division: number; // 1(I) ~ 4(IV), 마스터 이상은 1
       lp: number;
       tierName: string; // op.gg 원문(예: grandmaster)
+      gamesPlayed: number;
+      previousTier: PreviousTier | null;
     }
-  | { ranked: false; level: number | null };
+  | {
+      ranked: false;
+      level: number | null;
+      gamesPlayed: number;
+      previousTier: PreviousTier | null;
+    };
+
+export type PreviousTier = {
+  season: string;
+  tierIndex: number;
+  division: number;
+  tierName: string;
+};
 
 export class RiotUnavailableError extends Error {}
 
@@ -42,6 +56,38 @@ const TIER_INDEX: Record<string, number> = {
   grandmaster: 8,
   challenger: 9,
 };
+
+function parsePreviousTier(html: string): PreviousTier | null {
+  // Next.js flight 데이터 안의 JSON 문자열은 따옴표가 이스케이프되어 있으므로
+  // 검색용 복사본에서만 풀어 가장 최근 시즌의 최종 솔로랭크를 찾는다.
+  const decoded = html.replace(/\\"/g, '"');
+  const matches = decoded.matchAll(
+    /"season":"([^"]+)"\s*,\s*"rank_entries":\{.*?"rank_info":\{"tier":"([^"]*)"/g,
+  );
+  for (const match of matches) {
+    const raw = match[2].trim().toLowerCase();
+    if (!raw) continue;
+    const tierName = raw.match(/^[a-z]+/)?.[0] ?? "";
+    const tierIndex = TIER_INDEX[tierName];
+    if (tierIndex === undefined) continue;
+    const rawDivision = Number(raw.match(/\b([1-4])\b/)?.[1] ?? 1);
+    return {
+      season: match[1].trim(),
+      tierIndex,
+      division: tierIndex >= 7 ? 1 : rawDivision,
+      tierName,
+    };
+  }
+  return null;
+}
+
+function parseSoloGames(html: string): number {
+  // OP.GG description: "current SOLORANKED ... with 3 wins, 1 losses ..."
+  const match = html.match(
+    /SOLORANKED[^.]*?with\s+(\d+)\s+wins,\s*(\d+)\s+losses/i,
+  );
+  return match ? Number(match[1]) + Number(match[2]) : 0;
+}
 
 const globalForRiot = globalThis as typeof globalThis & {
   riotVerifyCache?: Map<string, { at: number; result: RiotVerifyResult }>;
@@ -105,13 +151,17 @@ export async function verifyRiotId(rawRiotId: string): Promise<RiotVerifyResult>
  */
 export async function getSoloTier(rawRiotId: string): Promise<SoloTier> {
   const riotId = normalizeRiotId(rawRiotId);
-  if (!isValidRiotId(riotId)) return { ranked: false, level: null };
+  if (!isValidRiotId(riotId)) {
+    return { ranked: false, level: null, gamesPlayed: 0, previousTier: null };
+  }
 
   const cached = tierCache().get(riotId);
   if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached.result;
 
   const parts = splitRiotId(riotId);
-  if (!parts) return { ranked: false, level: null };
+  if (!parts) {
+    return { ranked: false, level: null, gamesPlayed: 0, previousTier: null };
+  }
 
   const url = `https://op.gg/lol/summoners/${OPGG_REGION}/${encodeURIComponent(parts.gameName)}-${encodeURIComponent(parts.tagLine)}`;
 
@@ -127,7 +177,12 @@ export async function getSoloTier(rawRiotId: string): Promise<SoloTier> {
   }
 
   if (res.status === 404) {
-    const result: SoloTier = { ranked: false, level: null };
+    const result: SoloTier = {
+      ranked: false,
+      level: null,
+      gamesPlayed: 0,
+      previousTier: null,
+    };
     tierCache().set(riotId, { at: Date.now(), result });
     return result;
   }
@@ -141,6 +196,8 @@ export async function getSoloTier(rawRiotId: string): Promise<SoloTier> {
     /mt-\[-11px\] text-center"><span\b[^>]*>(\d{1,4})<\/span>/,
   );
   const level = lvMatch ? Number(lvMatch[1]) : null;
+  const gamesPlayed = parseSoloGames(html);
+  const previousTier = parsePreviousTier(html);
 
   // 설명문의 솔로랭크 문장에서 티어·단계·LP를 뽑는다.
   const m = html.match(
@@ -158,8 +215,10 @@ export async function getSoloTier(rawRiotId: string): Promise<SoloTier> {
           division: Math.min(4, Math.max(1, Number(m[2]))),
           lp: Number(m[3]),
           tierName,
+          gamesPlayed,
+          previousTier,
         }
-      : { ranked: false, level };
+      : { ranked: false, level, gamesPlayed, previousTier };
   tierCache().set(riotId, { at: Date.now(), result });
   return result;
 }

@@ -33,6 +33,8 @@ export async function POST(request: Request) {
         {
           ranked: false,
           level: tier.level,
+          gamesPlayed: tier.gamesPlayed,
+          previousTier: tier.previousTier,
           message: "티어 정보(솔로랭크)를 찾을 수 없습니다.",
         },
         { status: 200 },
@@ -45,6 +47,8 @@ export async function POST(request: Request) {
       division: tier.division,
       lp: tier.lp,
       tierName: tier.tierName,
+      gamesPlayed: tier.gamesPlayed,
+      previousTier: tier.previousTier,
     });
   } catch (error) {
     if (error instanceof RiotUnavailableError) {

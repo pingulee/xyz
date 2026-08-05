@@ -67,10 +67,24 @@ export default function QuoteCalculator() {
         division: number;
         lp: number;
         level: number | null;
+        gamesPlayed: number;
+        previousTier: PreviousTier | null;
       }
-    | { ranked: false; level: number | null }
+    | {
+        ranked: false;
+        level: number | null;
+        gamesPlayed: number;
+        previousTier: PreviousTier | null;
+      }
     | null
   >(null);
+
+  type PreviousTier = {
+    season: string;
+    tierIndex: number;
+    division: number;
+    tierName: string;
+  };
 
   // 로그인 상태면 저장된 롤 닉네임을 끌어와 선택지로 제공한다(비로그인 401은 무시).
   useEffect(() => {
@@ -93,14 +107,25 @@ export default function QuoteCalculator() {
   // 이면 고티어 점수 보장제를 숨긴다.
   const accountLevel = resolved?.level ?? null;
   const under30 = accountLevel !== null && accountLevel < 30;
+  const placementOnly = Boolean(
+    resolved && !under30 && resolved.gamesPlayed < 5,
+  );
+  const remainingPlacementGames = placementOnly
+    ? Math.max(1, 5 - (resolved?.gamesPlayed ?? 0))
+    : 5;
   const visibleServices = SERVICES.filter((item) => {
     if (under30) return item.key === "normal";
+    if (placementOnly) return item.key === "placement";
     if (item.key === "low-win") return currentTier <= 6;
     if (item.key === "high-score") return currentTier >= 6;
     return true;
   });
   const service =
     SERVICES.find((item) => item.key === serviceKey) ?? SERVICES[0];
+  const quantityMax =
+    placementOnly && serviceKey === "placement"
+      ? remainingPlacementGames
+      : service.max;
   const needsTargetRank = service.needsTarget && serviceKey !== "hourly";
   const soloOptionAvailable = !(
     serviceKey === "hourly" &&
@@ -299,7 +324,7 @@ export default function QuoteCalculator() {
 
   const changeQuantity = (amount: number) => {
     setQuantity((value) =>
-      Math.min(service.max, Math.max(service.min, value + amount)),
+      Math.min(quantityMax, Math.max(service.min, value + amount)),
     );
   };
 
@@ -390,14 +415,19 @@ export default function QuoteCalculator() {
     stepKey === "current"
       ? serviceRankValid
       : stepKey === "account"
-        ? true
+        ? resolved !== null
         : stepKey === "target"
         ? validTarget
         : stepKey === "options"
           ? championSelectionValid
           : true;
-  const goNext = () =>
+  const goNext = () => {
+    if (stepKey === "account" && placementOnly) {
+      setServiceKey("placement");
+      setQuantity(remainingPlacementGames);
+    }
     setStepIndex((i) => Math.min(i + 1, wizardSteps.length - 1));
+  };
   const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0));
 
   // op.gg 조회로 받은 현재 티어를 계산기 상태에 반영한다(목표가 현재 이하면 올림).
@@ -454,6 +484,8 @@ export default function QuoteCalculator() {
         division?: number;
         lp?: number;
         level?: number | null;
+        gamesPlayed?: number;
+        previousTier?: PreviousTier | null;
         message?: string;
       };
       if (!res.ok) {
@@ -465,6 +497,8 @@ export default function QuoteCalculator() {
         return;
       }
       const level = data.level ?? null;
+      const gamesPlayed = Math.max(0, data.gamesPlayed ?? 0);
+      const previousTier = data.previousTier ?? null;
       // 30레벨 미만은 랭크 불가 → 일반 게임만. 다른 서비스가 선택돼 있으면 되돌린다.
       if (level !== null && level < 30) {
         setServiceKey("normal");
@@ -479,11 +513,31 @@ export default function QuoteCalculator() {
           division: div,
           lp: data.lp ?? 0,
           level,
+          gamesPlayed,
+          previousTier,
         });
         setTierMsg(null);
       } else {
-        setResolved({ ranked: false, level });
+        if (previousTier) {
+          applyCurrentTier(
+            previousTier.tierIndex,
+            previousTier.division,
+            0,
+          );
+        }
+        setResolved({
+          ranked: false,
+          level,
+          gamesPlayed,
+          previousTier,
+        });
         setTierMsg(null);
+      }
+      if (level === null || level >= 30) {
+        if (gamesPlayed < 5) {
+          setServiceKey("placement");
+          setQuantity(Math.max(1, 5 - gamesPlayed));
+        }
       }
     } catch {
       setResolved(null);
@@ -642,18 +696,48 @@ export default function QuoteCalculator() {
                             레벨 {resolved.level}
                           </p>
                         )}
+                        <p className="mt-0.5 text-[11px] font-bold text-zinc-400">
+                          이번 시즌 솔로랭크 {resolved.gamesPlayed}판
+                        </p>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-sm font-bold text-zinc-200">
-                      {resolved.level !== null ? `레벨 ${resolved.level} · ` : ""}
-                      솔로랭크 기록이 없습니다(언랭).
-                    </p>
+                    <div>
+                      <p className="text-sm font-bold text-zinc-200">
+                        {resolved.level !== null ? `레벨 ${resolved.level} · ` : ""}
+                        솔로랭크 기록이 없습니다(언랭).
+                      </p>
+                      {resolved.previousTier && (
+                        <div className="mt-3 flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5">
+                          <Image
+                            src={TIERS[resolved.previousTier.tierIndex].image}
+                            alt=""
+                            width={32}
+                            height={32}
+                            unoptimized
+                          />
+                          <p className="text-xs font-bold text-zinc-300">
+                            직전 시즌({resolved.previousTier.season}) 티어 · {" "}
+                            <span className="text-gold">
+                              {TIERS[resolved.previousTier.tierIndex].name}
+                              {resolved.previousTier.tierIndex < 7
+                                ? ` ${resolved.previousTier.division}`
+                                : ""}
+                            </span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   )}
                   {under30 && (
                     <p className="mt-3 rounded-xl border border-gold/20 bg-black/20 px-3 py-2 text-[11px] font-bold text-gold">
                       30레벨 미만은 랭크 게임을 할 수 없어 일반 게임만 신청할 수
                       있습니다.
+                    </p>
+                  )}
+                  {placementOnly && (
+                    <p className="mt-3 rounded-xl border border-gold/20 bg-black/20 px-3 py-2 text-[11px] font-bold text-gold">
+                      이번 시즌 배치 {resolved.gamesPlayed}판 진행 · 남은 {remainingPlacementGames}판까지만 신청할 수 있습니다.
                     </p>
                   )}
                 </div>
@@ -781,7 +865,7 @@ export default function QuoteCalculator() {
                         );
                         setQuantity(
                           Math.min(
-                            service.max,
+                            quantityMax,
                             Math.max(service.min, value || service.min),
                           ),
                         );
