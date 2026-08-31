@@ -92,6 +92,9 @@ export default function Footer() {
               카카오톡 상담
             </a>
           </div>
+          <p className="mt-4 text-sm font-bold text-zinc-300">
+            카카오톡 ID : <span className="text-gold">{site.kakaoId}</span>
+          </p>
         </div>
       </Container>
       <div className="border-t border-gold/10 py-6 text-center text-xs text-zinc-400">
