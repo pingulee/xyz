@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, Loader2, UserRound } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -42,7 +42,7 @@ type SignupBody = {
 };
 
 export default function SignupForm() {
-  const [role, setRole] = useState<"customer" | "booster">("customer");
+  const [role, setRole] = useState<"customer" | "booster" | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -118,8 +118,19 @@ export default function SignupForm() {
     setMessage("");
   };
 
+  const resetRole = () => {
+    setRole(null);
+    setCodeVerified(false);
+    setCode("");
+    setMessage("");
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!role) {
+      setMessage("회원 유형을 먼저 선택해주세요.");
+      return;
+    }
     const u = username.trim();
     const pw = password.trim();
     if (!u || !pw) {
@@ -212,17 +223,23 @@ export default function SignupForm() {
     }
   };
 
-  const roleBtn = (value: "customer" | "booster", label: string) => (
+  const roleBtn = (
+    value: "customer" | "booster",
+    label: string,
+    description: string,
+  ) => (
     <button
       type="button"
       onClick={() => selectRole(value)}
-      className={`flex-1 rounded-2xl px-4 py-3 text-sm font-black transition ${
-        role === value
-          ? "bg-gold-gradient text-black"
-          : "border border-white/10 bg-black/30 text-zinc-400 hover:text-white"
-      }`}
+      className="group flex min-h-40 flex-1 flex-col items-center justify-center gap-3 rounded-3xl border border-white/10 bg-black/30 px-5 py-6 text-center transition hover:border-gold/40 hover:bg-gold/5"
     >
-      {label}
+      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gold/10 text-gold transition group-hover:bg-gold-gradient group-hover:text-black">
+        {value === "customer" ? <UserRound size={24} /> : <BriefcaseBusiness size={24} />}
+      </span>
+      <span className="text-base font-black text-white">{label}</span>
+      <span className="text-xs font-medium leading-5 text-zinc-500">
+        {description}
+      </span>
     </button>
   );
 
@@ -236,9 +253,28 @@ export default function SignupForm() {
       </p>
       <h1 className="mt-3 text-2xl font-black text-white">회원가입</h1>
 
-      <div className="mt-6 flex gap-2">
-        {roleBtn("customer", "일반회원")}
-        {roleBtn("booster", "기사")}
+      {!role ? (
+        <>
+          <p className="mt-2 text-sm text-zinc-500">가입할 회원 유형을 선택해주세요.</p>
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {roleBtn("customer", "일반회원", "서비스 신청과 후기 작성에 이용합니다.")}
+            {roleBtn("booster", "기사", "발급받은 가입 코드가 필요합니다.")}
+          </div>
+        </>
+      ) : (
+      <>
+      <div className="mt-5 flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+        <span className="text-sm font-bold text-zinc-300">
+          {role === "customer" ? "일반회원 가입" : "기사 가입"}
+        </span>
+        <button
+          type="button"
+          onClick={resetRole}
+          className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 transition hover:text-white"
+        >
+          <ArrowLeft size={14} />
+          유형 다시 선택
+        </button>
       </div>
       {role === "booster" && !codeVerified ? (
         <div className="mt-6 grid gap-4">
@@ -495,6 +531,9 @@ export default function SignupForm() {
         {loading && <Loader2 size={18} className="animate-spin" />}
         회원가입
       </button>
+      </>
+      )}
+
       </>
       )}
 

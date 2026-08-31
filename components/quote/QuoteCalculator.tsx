@@ -791,14 +791,14 @@ export default function QuoteCalculator() {
                     data-service={item.key}
                     type="button"
                     onClick={() => slideToService(item.key)}
-                    className={`relative min-h-22 w-[72%] shrink-0 snap-center overflow-hidden rounded-2xl border p-3 text-left transition duration-300 sm:w-[42%] xl:w-[29%] ${active ? "border-gold/70 bg-[radial-gradient(circle_at_top_right,rgba(222,176,67,.22),transparent_48%),rgba(222,176,67,.08)] shadow-[0_14px_40px_rgba(0,0,0,.25)]" : "border-white/8 bg-black/20 opacity-65 hover:border-gold/30 hover:opacity-100"}`}
+                    className={`relative flex aspect-square w-36 shrink-0 snap-center flex-col justify-end overflow-hidden rounded-2xl border p-4 text-left transition duration-300 sm:w-40 ${active ? "border-gold/70 bg-[radial-gradient(circle_at_top_right,rgba(222,176,67,.22),transparent_48%),rgba(222,176,67,.08)] shadow-[0_14px_40px_rgba(0,0,0,.25)]" : "border-white/8 bg-black/20 opacity-65 hover:border-gold/30 hover:opacity-100"}`}
                   >
                     <span
                       className={`grid h-8 w-8 place-items-center rounded-xl ${active ? "bg-gold text-black" : "bg-white/5 text-zinc-500"}`}
                     >
                       <Icon size={16} />
                     </span>
-                    <span className="mt-2 flex items-center gap-1.5">
+                    <span className="mt-3 flex min-w-0 items-center gap-1.5">
                       <b
                         className={`block truncate text-xs ${active ? "text-white" : "text-zinc-400"}`}
                       >
