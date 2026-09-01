@@ -21,7 +21,6 @@ import BoosterCard from "@/components/booster/BoosterCard";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 import ServiceCard from "@/components/home/ServiceCard";
-import QuoteCalculator from "@/components/quote/QuoteCalculator";
 import JsonLd from "@/components/ui/JsonLd";
 import { services, site } from "@/lib/site";
 import { serializeJsonLd } from "@/lib/jsonld";
@@ -259,8 +258,8 @@ const faqCategories: HomeFaqCategory[] = [
     title: "견적부터 완료까지",
     description:
       "상담과 가격 산정, 남은 시간, 기사 교체와 환불처럼 진행 전후에 자주 생기는 질문입니다.",
-    detailHref: "#price",
-    detailLabel: "예상 견적 계산하기",
+    detailHref: "/boosting",
+    detailLabel: "가격표 보기",
     items: [
       {
         question: "상담은 어떻게 신청하나요?",
@@ -641,21 +640,6 @@ export default async function Home() {
         </Container>
       </section>
 
-      <section id="price" className="scroll-mt-20 py-20">
-        <Container>
-          <Reveal>
-            <SectionTitle
-              eyebrow="price"
-              title="견적 계산기"
-              desc="서비스, 진행 방식, 구간을 선택하면 예상 금액을 바로 확인할 수 있습니다. 실제 견적은 상담 후 확정됩니다."
-            />
-          </Reveal>
-          <Reveal>
-            <QuoteCalculator />
-          </Reveal>
-        </Container>
-      </section>
-
       <section id="faq" className="scroll-mt-20 py-20">
         <Container>
           <Reveal>
@@ -694,10 +678,10 @@ export default async function Home() {
                   카카오톡 상담하기
                 </a>
                 <a
-                  href="#price"
+                  href="/boosting"
                   className="inline-flex items-center gap-2 rounded-full border-2 border-black/25 px-7 py-3.5 font-black text-black transition hover:border-black/60"
                 >
-                  예상 견적 먼저 보기
+                  가격표 먼저 보기
                 </a>
               </div>
             </div>
