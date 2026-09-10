@@ -25,7 +25,6 @@ const staticLastModified: Record<string, string> = {
   "/duo": "2026-07-21",
   "/account": "2026-07-21",
   "/leveling": "2026-08-05",
-  "/payment": "2026-09-11",
 };
 
 /**
@@ -38,7 +37,7 @@ export function staticSitemapEntries(): MetadataRoute.Sitemap {
       .filter(
         (item) =>
           item.href !== "/" &&
-          !item.href.startsWith("#") &&
+          !item.href.includes("#") &&
           // 문의하기는 개인 문의라 noindex — 사이트맵에서도 제외.
           item.href !== "/inquiry",
       )

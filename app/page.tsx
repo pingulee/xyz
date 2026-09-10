@@ -17,6 +17,9 @@ import HomeFaq, { type HomeFaqCategory } from "@/components/home/HomeFaq";
 import ServiceGuide from "@/components/home/ServiceGuide";
 import TierBand from "@/components/home/TierBand";
 import ChampionMarquee from "@/components/home/ChampionMarquee";
+import HomePaymentGuide, {
+  paymentGuideSteps,
+} from "@/components/home/HomePaymentGuide";
 import BoosterCard from "@/components/booster/BoosterCard";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
@@ -258,7 +261,7 @@ const faqCategories: HomeFaqCategory[] = [
     title: "견적부터 완료까지",
     description:
       "상담과 가격 산정, 남은 시간, 기사 교체와 환불처럼 진행 전후에 자주 생기는 질문입니다.",
-    detailHref: "/payment",
+    detailHref: "#payment",
     detailLabel: "QR 결제 방법 자세히 보기",
     items: [
       {
@@ -348,6 +351,22 @@ const howToJsonLd = {
   ].map((step, i) => ({ "@type": "HowToStep", position: i + 1, ...step })),
 };
 
+const paymentHowToJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "알리페이 QR을 카카오페이·네이버페이로 결제하는 방법",
+  description:
+    "상담에서 전달받은 Alipay+ QR을 카카오페이 또는 네이버페이 앱으로 촬영해 결제하는 절차입니다.",
+  totalTime: "PT5M",
+  step: paymentGuideSteps.map((step, index) => ({
+    "@type": "HowToStep",
+    position: index + 1,
+    name: step.title,
+    text: step.description,
+    url: `${site.url}/#payment`,
+  })),
+};
+
 export default async function Home() {
   let boosterList: Booster[] = [];
   try {
@@ -366,6 +385,10 @@ export default async function Home() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(howToJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(paymentHowToJsonLd) }}
       />
       <HeroSlider />
 
@@ -639,6 +662,8 @@ export default async function Home() {
           </div>
         </Container>
       </section>
+
+      <HomePaymentGuide />
 
       <section id="faq" className="scroll-mt-20 py-20">
         <Container>
