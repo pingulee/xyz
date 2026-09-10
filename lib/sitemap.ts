@@ -25,6 +25,7 @@ const staticLastModified: Record<string, string> = {
   "/duo": "2026-07-21",
   "/account": "2026-07-21",
   "/leveling": "2026-08-05",
+  "/payment": "2026-09-11",
 };
 
 /**

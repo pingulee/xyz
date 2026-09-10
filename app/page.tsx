@@ -258,8 +258,8 @@ const faqCategories: HomeFaqCategory[] = [
     title: "견적부터 완료까지",
     description:
       "상담과 가격 산정, 남은 시간, 기사 교체와 환불처럼 진행 전후에 자주 생기는 질문입니다.",
-    detailHref: "/boosting",
-    detailLabel: "가격표 보기",
+    detailHref: "/payment",
+    detailLabel: "QR 결제 방법 자세히 보기",
     items: [
       {
         question: "상담은 어떻게 신청하나요?",
@@ -294,7 +294,7 @@ const faqCategories: HomeFaqCategory[] = [
       {
         question: "어떤 결제 수단을 사용할 수 있나요?",
         answer:
-          "이용 가능한 결제 수단은 카카오톡 상담에서 안내합니다. 진행 방식과 금액에 따라 결제 방법을 함께 확정합니다.",
+          "상담에서 전달받은 알리페이플러스(Alipay+) QR을 카카오페이 또는 네이버페이 앱으로 촬영해 결제할 수 있습니다. 결제 전 화면에 표시된 금액과 수취 정보를 확인하고, 반드시 상담에서 받은 최신 QR을 사용해 주세요.",
       },
       {
         question: "상담은 몇 시까지 가능한가요?",
