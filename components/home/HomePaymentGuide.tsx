@@ -88,8 +88,8 @@ export default function HomePaymentGuide() {
         <Reveal>
           <SectionTitle
             eyebrow="Alipay+ QR payment"
-            title="카카오페이·네이버페이 결제 방법"
-            desc="상담에서 전달받은 Alipay+ QR을 평소 사용하는 결제 앱으로 촬영하세요. 결제 전 금액과 수취 정보를 확인하면 됩니다."
+            title="알리페이 결제 안내"
+            desc="결제는 알리페이로만 가능하며, 네이버페이·카카오페이를 통해서도 알리페이 결제를 이용하실 수 있습니다. 결제 방법은 기존과 동일합니다. 상담에서 전달받은 Alipay+ QR을 결제 앱으로 촬영하고, 결제 전 금액과 수취 정보를 확인해 주세요."
           />
         </Reveal>
 
