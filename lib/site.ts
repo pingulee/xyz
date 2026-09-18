@@ -92,38 +92,43 @@ const T = {
 
 export type PriceRow = { icons: string[]; cells: string[] };
 
-export const boostingPrices = {
-  score: {
-    title: "저티어 승리 보장제 대리 랭크",
+export type CnyPriceRow = { label: string; icons: string[]; cny: number };
+export type CnyPriceGroup = { title: string; unit: string; note?: string; rows: CnyPriceRow[] };
+
+export const boostingPrices: CnyPriceGroup[] = [
+  {
+    title: "판수제 대리 랭크",
+    unit: "1판 기준",
     rows: [
-      {
-        icons: [T.iron, T.bronze, T.silver],
-        cells: ["아이언 · 브론즈 · 실버", "5,000원", "1승 단위"],
-      },
-      { icons: [T.gold], cells: ["골드", "6,000원", "1승 단위"] },
-      { icons: [T.platinum], cells: ["플래티넘", "7,000원", "1승 단위"] },
-      { icons: [T.emerald], cells: ["에메랄드", "8,000원", "1승 단위"] },
-      {
-        icons: [T.diamond],
-        cells: ["다이아몬드 4~3", "12,000원", "1승 단위"],
-      },
-      { icons: [T.diamond], cells: ["다이아몬드 2~1", "14,000원", "1승 단위"] },
-    ] as PriceRow[],
-    cols: ["구간", "금액"] as const,
-    note: "· 패배 시 승리를 복구해드립니다. [신청 승 수 + 패배 수 = 총 승 수] (예: 2승 신청 → 2패 → 총 4승 2패로 마무리)",
+      { label: "마스터 미만", icons: [T.diamond], cny: 40 },
+      { label: "마스터 0~399 LP", icons: [T.master], cny: 60 },
+      { label: "마스터 400~799 LP", icons: [T.master], cny: 70 },
+      { label: "마스터 800~1,200 LP", icons: [T.master], cny: 80 },
+    ],
   },
-  lowTierWin: {
+  {
+    title: "패배 복구 대리 랭크",
+    unit: "순승 1승 기준",
+    note: "패배한 만큼 추가 승리로 복구합니다. 5승 신청 시: 6승 1패 = 순승 5승",
+    rows: [
+      { label: "아이언 · 브론즈 · 실버", icons: [T.iron, T.bronze, T.silver], cny: 20 },
+      { label: "골드", icons: [T.gold], cny: 25 },
+      { label: "플래티넘", icons: [T.platinum], cny: 30 },
+      { label: "에메랄드", icons: [T.emerald], cny: 35 },
+      { label: "다이아몬드 4~3", icons: [T.diamond], cny: 50 },
+      { label: "다이아몬드 2~1", icons: [T.diamond], cny: 70 },
+    ],
+  },
+  {
     title: "고티어 점수 보장제 대리 랭크",
-    rows: [
-      { icons: [T.diamond], cells: ["듀오 불가", "180,000원"] },
-      { icons: [T.master], cells: ["마스터 0~199 LP", "180,000원"] },
-      { icons: [T.master], cells: ["200 LP 단위", "+20,000원"] },
-      { icons: [T.grandmaster], cells: ["그랜드마스터 이상", "상담"] },
-    ] as PriceRow[],
-    cols: ["구간", "금액"] as const,
-    note: "· 점수는 10단위 반올림을 적용합니다. (예: 92점 상승, 106점 상승 → 100점으로 계산)\n· 그랜드마스터 이상 구간은 실시간 시세를 반영하여 가격이 결정됩니다.",
+    unit: "+100 LP 기준",
+    rows: [800, 850, 950, 1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450].map((cny, index) => ({
+      label: `마스터 ${(index * 100).toLocaleString("ko-KR")}~${(index * 100 + 99).toLocaleString("ko-KR")} LP`,
+      icons: [T.master],
+      cny,
+    })),
   },
-};
+];
 
 export const duoPrices = {
   score: {
