@@ -1,22 +1,23 @@
 """Build all four banners from ONE vector typography template.
-Requires fonttools; FONT_PATH points to GmarketSansTTFBold.ttf.
+Requires fonttools; FONT_PATH points to NotoSansKR-VariableFont_wght.ttf.
 Usage: python3 scripts/build-service-banners.py
 Text is outlined so browsers never substitute fonts or corrupt Korean glyphs.
 """
 from pathlib import Path
 from fontTools.ttLib import TTFont
+from fontTools.varLib.instancer import instantiateVariableFont
 from fontTools.pens.svgPathPen import SVGPathPen
 import base64, os, subprocess
 ROOT = Path(__file__).resolve().parents[1]
-FONT = TTFont(os.environ['FONT_PATH'])
+FONT = instantiateVariableFont(TTFont(os.environ['FONT_PATH']), {'wght': 700})
 GLYPHS = FONT.getGlyphSet()
 CMAP = FONT.getBestCmap()
 UNITS = FONT['head'].unitsPerEm
 ASSETS = ROOT / 'public/images/lol'
 VECTORS = ROOT / 'design/service-banners'
 VECTORS.mkdir(parents=True, exist_ok=True)
-TITLE_SIZE, SUBTITLE_SIZE = 124, 46
-CENTER_X, TITLE_BASELINE, SUBTITLE_BASELINE = 1135, 806, 905
+TITLE_SIZE, SUBTITLE_SIZE = 112, 44
+CENTER_X, TITLE_BASELINE, SUBTITLE_BASELINE = 768, 828, 909
 
 def lettering(text, size, baseline):
     names = [CMAP[ord(c)] for c in text]
@@ -52,11 +53,11 @@ for name, artwork, title, subtitle in banners:
 <rect width="1536" height="1024" fill="url(#shade)"/>
 <rect x="22" y="22" width="1492" height="980" fill="none" stroke="#dabb70" stroke-width="2"/>
 <path d="M38 70V38H70 M1466 38H1498V70 M38 954V986H70 M1466 986H1498V954" fill="none" stroke="#dabb70" stroke-width="3"/>
-<path d="M835 664H1119 M1151 664H1435 M1135 656L1143 664L1135 672L1127 664Z M835 842H1119 M1151 842H1435 M1135 834L1143 842L1135 850L1127 842Z M835 949H1119 M1151 949H1435 M1135 941L1143 949L1135 957L1127 949Z" fill="none" stroke="#dabb70" stroke-width="2"/>
-<g fill="url(#gold)">{lettering(title,TITLE_SIZE,TITLE_BASELINE)}</g>
+<path d="M488 691H752 M784 691H1048 M768 685L774 691L768 697L762 691Z" fill="none" stroke="#dabb70" stroke-width="2"/>
+<g fill="#f5dfa1">{lettering(title,TITLE_SIZE,TITLE_BASELINE)}</g>
 <g fill="#f5dfa1">{lettering(subtitle,SUBTITLE_SIZE,SUBTITLE_BASELINE)}</g>
 </svg>'''
-    vector = VECTORS/f'{name}-uniform.svg'
+    vector = VECTORS/f'{name}-centered.svg'
     vector.write_text(svg)
-    subprocess.run(['node', '-e', "require('sharp')(process.argv[1]).webp({quality:90,effort:6}).toFile(process.argv[2])", str(vector), str(ASSETS/f'{name}-uniform.webp')], cwd=ROOT, check=True)
-    print(f'{name}: title={TITLE_SIZE}px baseline={TITLE_BASELINE}, subtitle={SUBTITLE_SIZE}px baseline={SUBTITLE_BASELINE}, center={CENTER_X}, Gmarket Sans Bold')
+    subprocess.run(['node', '-e', "require('sharp')(process.argv[1]).webp({quality:90,effort:6}).toFile(process.argv[2])", str(vector), str(ASSETS/f'{name}-centered.webp')], cwd=ROOT, check=True)
+    print(f'{name}: title={TITLE_SIZE}px baseline={TITLE_BASELINE}, subtitle={SUBTITLE_SIZE}px baseline={SUBTITLE_BASELINE}, center={CENTER_X}, Noto Sans KR 700')
