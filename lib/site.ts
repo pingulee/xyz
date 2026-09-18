@@ -32,8 +32,8 @@ export const services = [
     eyebrow: "boosting",
     description:
       "현재 티어와 목표 티어를 기준으로 검증된 기사가 안정적으로 진행합니다.",
-    image: "/images/lol/azir.webp",
-    imageAlt: "리그 오브 레전드 아지르 스플래시 아트",
+    image: "/images/lol/boosting-branded.webp",
+    imageAlt: "XYZ 롤 대리 · 1:1 전담 배정 — 아지르를 활용한 브랜드 배너",
   },
   {
     title: "롤 듀오",
@@ -41,16 +41,16 @@ export const services = [
     eyebrow: "duo queue",
     description:
       "상위 티어 기사와 함께 플레이하며 승률과 피드백을 동시에 챙깁니다.",
-    image: "/images/lol/xayah-rakan.webp",
-    imageAlt: "리그 오브 레전드 자야와 라칸 스플래시 아트",
+    image: "/images/lol/duo-branded.webp",
+    imageAlt: "XYZ 롤 듀오 · 함께하는 승리 — 자야와 라칸을 활용한 브랜드 배너",
   },
   {
     title: "롤 계정",
     href: "/account",
     eyebrow: "account",
     description: "원하는 티어, 챔피언, 일정 조건에 맞춘 계정을 구해드립니다.",
-    image: "/images/lol/elementalist-lux.webp",
-    imageAlt: "리그 오브 레전드 원소술사 럭스 스플래시 아트",
+    image: "/images/lol/account-branded.webp",
+    imageAlt: "XYZ 롤 계정 · 나만의 맞춤 계정 — 원소술사 럭스를 활용한 브랜드 배너",
   },
 ];
 

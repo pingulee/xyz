@@ -15,9 +15,6 @@ const slides = [
     desc: "현재 티어부터 목표 티어까지. 상위 티어 기사와 1:1 전담 배정으로, 나에게 맞는 진행을 시작하세요.",
     image: services[0].image,
     alt: services[0].imageAlt,
-    champion: "AZIR",
-    championKo: "아지르 · 사막의 황제",
-    position: "68% 35%",
     href: "/boosting",
     tags: ["1:1 전담 배정", "진행 상황 공유"],
   },
@@ -29,9 +26,6 @@ const slides = [
     desc: "혼자보다 함께, 라인전부터 한타까지. 상위 티어 기사와 호흡을 맞추며 실전 피드백을 받아보세요.",
     image: services[1].image,
     alt: services[1].imageAlt,
-    champion: "XAYAH & RAKAN",
-    championKo: "자야 & 라칸 · 함께할 때 더 강하게",
-    position: "52% 30%",
     href: "/duo",
     tags: ["듀오 플레이", "실시간 피드백"],
   },
@@ -43,9 +37,6 @@ const slides = [
     desc: "원하는 티어, 챔피언, 스킨까지. 다양한 조건을 확인하고 나에게 맞는 계정을 상담해보세요.",
     image: services[2].image,
     alt: services[2].imageAlt,
-    champion: "ELEMENTALIST LUX",
-    championKo: "원소술사 럭스 · 다채로운 가능성",
-    position: "58% 32%",
     href: "/account",
     tags: ["조건별 상담", "맞춤 계정 추천"],
   },
@@ -89,7 +80,7 @@ export default function HeroSlider() {
       }}
     >
       <div
-        className="relative h-72 touch-pan-y overflow-hidden sm:h-100 lg:absolute lg:inset-y-0 lg:right-0 lg:h-full lg:w-[72%]"
+        className="relative mx-5 mt-6 aspect-3/2 touch-pan-y overflow-hidden rounded-2xl border border-gold/20 shadow-[0_20px_80px_rgba(0,0,0,0.4)] sm:mx-8 lg:absolute lg:right-8 lg:top-1/2 lg:mx-0 lg:mt-0 lg:w-[56%] lg:-translate-y-1/2 2xl:right-[calc((100%-1280px)/2)] 2xl:w-[740px]"
         onPointerDown={(event) => { pointerStart.current = { x: event.clientX, y: event.clientY }; }}
         onPointerCancel={() => { pointerStart.current = null; }}
         onPointerUp={(event) => {
@@ -106,19 +97,14 @@ export default function HeroSlider() {
           alt={slide.alt}
           fill
           priority={index === 0}
-          sizes="(min-width: 1024px) 72vw, 100vw"
-          className="object-cover"
-          style={{ objectPosition: slide.position }}
+          sizes="(min-width: 1536px) 740px, (min-width: 1024px) 56vw, calc(100vw - 40px)"
+          className="object-contain"
         />
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-[#0c0b08] via-transparent to-black/10" />
-        <div className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,#0c0b08_0%,rgba(12,11,8,0.94)_12%,rgba(12,11,8,0.6)_35%,transparent_68%)] lg:block" />
-        <div className="absolute right-6 top-6 flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] text-white/80 sm:right-10">
-          <span className="h-1 w-1 rounded-full bg-gold" /> LEAGUE OF LEGENDS
-        </div>
+
       </div>
 
       <div className="relative mx-auto max-w-7xl px-5 pb-7 sm:px-8 lg:flex lg:min-h-[700px] lg:flex-col lg:justify-end lg:pb-10 lg:pt-24 xl:min-h-[760px]">
-        <div className="relative -mt-5 max-w-xl pb-10 lg:mt-0 lg:pb-20">
+        <div className="relative mt-7 max-w-xl pb-10 lg:mt-0 lg:max-w-[40%] lg:pb-20">
           <p className="mb-5 flex items-center gap-3 text-[10px] font-bold tracking-[0.25em] text-gold sm:text-xs">
             <span className="h-px w-9 bg-gold/65" /> {slide.eyebrow}
           </p>
@@ -153,10 +139,7 @@ export default function HeroSlider() {
               <button type="button" onClick={() => goTo(index + 1)} aria-label="다음 슬라이드" className="grid h-9 w-9 place-items-center rounded-full border border-white/15 text-zinc-300 hover:border-gold hover:text-gold"><ChevronRight size={16} /></button>
             </div>
           </div>
-          <div className="hidden pb-2 text-right lg:block" aria-hidden="true">
-            <p className="text-[10px] tracking-[0.24em] text-gold/90">{slide.champion}</p>
-            <p className="mt-2 text-xs text-zinc-400">{slide.championKo}</p>
-          </div>
+
         </div>
       </div>
     </section>

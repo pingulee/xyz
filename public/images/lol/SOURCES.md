@@ -8,3 +8,7 @@ Original champion splash art served by Riot Games Data Dragon; converted to WebP
 
 Source documentation: https://developer.riotgames.com/docs/lol#data-dragon_champion-splash-assets
 Retrieved: 2026-09-18. No generative edits, recoloring, or invented game elements. Cropping and dark overlays are responsive CSS in the site.
+
+## XYZ branded derivatives
+
+`boosting-branded.webp`, `duo-branded.webp`, and `account-branded.webp` are image_gen edits of the corresponding source artwork, adding Korean service typography, XYZ watermark, dark gradients, and gold framing. These are branded edited compositions, not unmodified official artwork. No Riot endorsement is implied. Original source files above remain available for provenance.
