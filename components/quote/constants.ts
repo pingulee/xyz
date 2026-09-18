@@ -78,17 +78,6 @@ export const LP_DISCOUNTS = [0, 0.2, 0.4, 0.6, 0.8];
 
 export const SERVICES = [
   {
-    key: "hourly",
-    label: "시간제",
-    category: "대리",
-    unit: "시간",
-    min: 1,
-    max: 100,
-    step: 1,
-    initial: 10,
-    needsTarget: true,
-  },
-  {
     key: "low-win",
     label: "저티어 티어 보장제",
     category: "대리",

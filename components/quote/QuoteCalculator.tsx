@@ -35,8 +35,8 @@ import { rankScore, won } from "@/components/quote/utils";
 import RankPicker from "@/components/quote/RankPicker";
 
 export default function QuoteCalculator() {
-  const [serviceKey, setServiceKey] = useState<ServiceKey>("hourly");
-  const [quantity, setQuantity] = useState(10);
+  const [serviceKey, setServiceKey] = useState<ServiceKey>("low-win");
+  const [quantity, setQuantity] = useState<number>(SERVICES[0].initial);
   const serviceSliderRef = useRef<HTMLDivElement>(null);
   const [currentTier, setCurrentTier] = useState(2);
   const [currentDivision, setCurrentDivision] = useState(4);
@@ -127,14 +127,8 @@ export default function QuoteCalculator() {
     placementOnly && serviceKey === "placement"
       ? remainingPlacementGames
       : service.max;
-  const needsTargetRank = service.needsTarget && serviceKey !== "hourly";
-  const soloOptionAvailable = !(
-    serviceKey === "hourly" &&
-    (currentTier >= 7 || (currentTier === 6 && currentDivision === -1))
-  );
-  const visibleAddons = ADDONS.filter(
-    (item) => item.key !== "solo" || soloOptionAvailable,
-  );
+  const needsTargetRank = service.needsTarget;
+  const visibleAddons = ADDONS;
   const serviceRankValid =
     serviceKey === "low-win"
       ? currentTier <= 6
@@ -158,23 +152,7 @@ export default function QuoteCalculator() {
         optionItems: [] as { label: string; amount: number }[],
       };
     let base = 0;
-    if (serviceKey === "hourly") {
-      const hourlyRates = [
-        12000, 12000, 12000, 14000, 16000, 18000, 20000, 26000, 32000, 40000,
-      ];
-      const masterLpSurcharge =
-        currentTier === 7 ? Math.floor(currentDivision / 200) * 2000 : 0;
-      // 다이아몬드: 4~3 20,000원 · 2~1 24,000원 · 듀오 불가 26,000원 (1시간당)
-      const hourlyRate =
-        currentTier === 6
-          ? currentDivision === -1
-            ? 26000
-            : currentDivision >= 3
-              ? 20000
-              : 24000
-          : hourlyRates[currentTier] + masterLpSurcharge;
-      base = hourlyRate * quantity;
-    } else if (serviceKey === "low-win") {
+    if (serviceKey === "low-win") {
       // 신청 수량 없이 현재 → 목표 구간 수로 자동 계산 (구간당 티어별 단가)
       for (let score = currentScore; score < targetScore; score++) {
         base += TIERS[Math.floor(score / 4)].divisionPrice;
@@ -196,11 +174,7 @@ export default function QuoteCalculator() {
         base * 0.2,
         TIERS[currentTier].divisionPrice * LP_DISCOUNTS[currentLp],
       );
-    const selectedAddons = ADDONS.filter(
-      (item) =>
-        addons.includes(item.key) &&
-        (item.key !== "solo" || soloOptionAvailable),
-    );
+    const selectedAddons = ADDONS.filter((item) => addons.includes(item.key));
     const addonRate = selectedAddons.reduce((sum, item) => sum + item.rate, 0);
     const championRate = addons.includes("champion")
       ? selectedChampions.length === 1
@@ -235,7 +209,6 @@ export default function QuoteCalculator() {
     };
   }, [
     addons,
-    currentDivision,
     currentLp,
     currentTier,
     needsTargetRank,
@@ -245,7 +218,6 @@ export default function QuoteCalculator() {
     targetScore,
     currentScore,
     validTarget,
-    soloOptionAvailable,
   ]);
 
   const filteredChampions = useMemo(() => {
@@ -260,9 +232,6 @@ export default function QuoteCalculator() {
     const next = SERVICES.find((item) => item.key === key) ?? SERVICES[0];
     setServiceKey(key);
     setQuantity(next.initial);
-    if (key === "hourly" && currentTier >= 7) {
-      setAddons((items) => items.filter((item) => item !== "solo"));
-    }
     if (key === "high-score" && currentTier < 6) {
       setCurrentTier(6);
       setCurrentDivision(4);
@@ -293,7 +262,6 @@ export default function QuoteCalculator() {
   };
 
   const serviceIcon = (key: ServiceKey) => {
-    if (key === "hourly") return Clock3;
     if (key === "low-win") return Trophy;
     if (key === "high-score") return TrendingUp;
     if (key === "placement") return ClipboardCheck;
@@ -369,39 +337,13 @@ export default function QuoteCalculator() {
   // 없앴다. 수량 입력이 필요한 서비스만 이 단계를 노출한다(저티어 보장제는 없음).
   const needsQuantity = serviceKey !== "low-win";
   const quantityTitle =
-    serviceKey === "hourly"
-      ? "신청 시간"
-      : serviceKey === "high-score"
-        ? "상승 점수"
-        : "신청 게임 수";
+    serviceKey === "high-score" ? "상승 점수" : "신청 게임 수";
   const estimatedDays =
     serviceKey === "high-score"
       ? Math.max(1, Math.ceil(quantity / 100))
       : serviceKey === "low-win"
         ? Math.max(1, Math.ceil(quote.steps / 2))
         : Math.max(1, Math.ceil(quantity / 10));
-  const guaranteeRate =
-    currentTier <= 2
-      ? 90
-      : currentTier === 3
-        ? 85
-        : currentTier === 4
-          ? 80
-          : currentTier === 5
-            ? 75
-            : currentTier === 6
-              ? currentDivision === -1
-                ? 60
-                : currentDivision >= 3
-                  ? 70
-                  : 65
-              : currentTier === 7
-                ? 60
-                : null;
-  const guaranteeLabel =
-    guaranteeRate === null ? "별도 상담" : `${guaranteeRate}% 보장`;
-  const priceConsultRequired = serviceKey === "hourly" && currentTier >= 8;
-
   const wizardSteps = [
     { key: "account", label: "롤 닉네임" },
     { key: "service", label: "서비스" },
@@ -442,16 +384,16 @@ export default function QuoteCalculator() {
     setCurrentDivision(division);
     const bucket = lp <= 20 ? 0 : lp <= 40 ? 1 : lp <= 60 ? 2 : lp <= 80 ? 3 : 4;
     setCurrentLp(bucket);
-    // 새 티어에서 안 보이는 서비스가 선택돼 있으면 기본(시간제)으로 되돌린다.
+    // 새 티어에서 안 보이는 서비스가 선택돼 있으면 현재 티어에 맞는 보장제로 전환한다.
     if (
       (serviceKey === "low-win" && tierIndex > 6) ||
       (serviceKey === "high-score" && tierIndex < 6)
     ) {
-      setServiceKey("hourly");
-      setQuantity(SERVICES[0].initial);
-    }
-    if (serviceKey === "hourly" && tierIndex >= 7) {
-      setAddons((items) => items.filter((item) => item !== "solo"));
+      const next = SERVICES.find(
+        (item) => item.key === (tierIndex > 6 ? "high-score" : "low-win"),
+      )!;
+      setServiceKey(next.key);
+      setQuantity(next.initial);
     }
     if (
       rankScore(targetTier, targetDivision) <= rankScore(tierIndex, division)
@@ -518,8 +460,10 @@ export default function QuoteCalculator() {
           previousTier,
         });
         if (serviceKey === "placement") {
-          setServiceKey("hourly");
-          setQuantity(SERVICES[0].initial);
+          const defaultKey = data.tierIndex > 6 ? "high-score" : "low-win";
+          const next = SERVICES.find((item) => item.key === defaultKey)!;
+          setServiceKey(next.key);
+          setQuantity(next.initial);
         }
         setTierMsg(null);
       } else {
@@ -1146,42 +1090,25 @@ export default function QuoteCalculator() {
             <div className="flex justify-between">
               <span className="text-zinc-500">기본 금액</span>
               <b className="text-zinc-200">
-                {priceConsultRequired
-                  ? "별도 상담"
-                  : validTarget
-                    ? won(quote.base)
-                    : "-"}
+                {validTarget ? won(quote.base) : "-"}
               </b>
             </div>
-            {!priceConsultRequired &&
-              quote.optionItems.map((item) => (
-                <div key={item.label} className="flex justify-between gap-3">
-                  <span className="text-zinc-500">{item.label}</span>
-                  <b className="shrink-0 text-red-400">+{won(item.amount)}</b>
-                </div>
-              ))}
-            {!priceConsultRequired && quote.optionItems.length === 0 && (
+            {quote.optionItems.map((item) => (
+              <div key={item.label} className="flex justify-between gap-3">
+                <span className="text-zinc-500">{item.label}</span>
+                <b className="shrink-0 text-red-400">+{won(item.amount)}</b>
+              </div>
+            ))}
+            {quote.optionItems.length === 0 && (
               <div className="flex justify-between">
                 <span className="text-zinc-500">추가 옵션</span>
                 <b className="text-zinc-400">0원</b>
               </div>
             )}
-            {!priceConsultRequired && quote.discount > 0 && (
+            {quote.discount > 0 && (
               <div className="flex justify-between">
                 <span className="text-zinc-500">라인 미지정 할인</span>
                 <b className="text-emerald-400">-{won(quote.discount)}</b>
-              </div>
-            )}
-            {serviceKey === "hourly" && (
-              <div className="flex justify-between gap-3">
-                <span className="text-zinc-500">승률 보장</span>
-                <b
-                  className={`shrink-0 ${quantity >= 10 ? "text-gold" : "text-zinc-400"}`}
-                >
-                  {quantity >= 10
-                    ? guaranteeLabel
-                    : `${10 - quantity}시간 더 필요`}
-                </b>
               </div>
             )}
             <div className="flex justify-between">
@@ -1195,11 +1122,7 @@ export default function QuoteCalculator() {
           <div className="mt-5">
             <p className="text-xs font-bold text-zinc-500">총 예상 금액</p>
             <p className="mt-1 text-3xl font-black tracking-tight text-white">
-              {priceConsultRequired
-                ? "별도 상담"
-                : validTarget
-                  ? won(quote.total)
-                  : "계산 불가"}
+              {validTarget ? won(quote.total) : "계산 불가"}
             </p>
             <p className="mt-2 text-[11px] leading-5 text-zinc-600">
               계정 상태와 요청 조건에 따라 최종 금액이 달라질 수 있습니다.

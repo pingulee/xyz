@@ -78,29 +78,6 @@ const T = {
 export type PriceRow = { icons: string[]; cells: string[] };
 
 export const boostingPrices = {
-  hourly: {
-    title: "시간제 대리 랭크",
-    rows: [
-      {
-        icons: [T.iron, T.bronze, T.silver],
-        cells: ["아이언 · 브론즈 · 실버", "90% 보장", "12,000원"],
-      },
-      { icons: [T.gold], cells: ["골드", "85% 보장", "14,000원"] },
-      { icons: [T.platinum], cells: ["플래티넘", "80% 보장", "16,000원"] },
-      { icons: [T.emerald], cells: ["에메랄드", "75% 보장", "18,000원"] },
-      {
-        icons: [T.diamond],
-        cells: ["다이아몬드 4~3", "70% 보장", "20,000원"],
-      },
-      { icons: [T.diamond], cells: ["다이아몬드 2~1", "65% 보장", "24,000원"] },
-      { icons: [T.diamond], cells: ["듀오 불가", "60% 보장", "26,000원"] },
-      { icons: [T.master], cells: ["마스터 0~199 LP", "60% 보장", "26,000원"] },
-      { icons: [T.master], cells: ["200 LP 당", "60% 보장", "+2,000원"] },
-      { icons: [T.grandmaster], cells: ["그랜드마스터↑", "50%", "상담"] },
-    ] as PriceRow[],
-    cols: ["구간", "승률 보장", "금액"] as const,
-    note: "· 승률 보장 서비스는 10시간 이상 신청 시 적용됩니다.\n· 기사가 캐리했음에 불구하고 발생한 패배는 승리로 인정하여 승률을 산정합니다.",
-  },
   score: {
     title: "저티어 승리 보장제 대리 랭크",
     rows: [
@@ -134,25 +111,6 @@ export const boostingPrices = {
 };
 
 export const duoPrices = {
-  hourly: {
-    title: "시간제 듀오 랭크",
-    rows: [
-      {
-        icons: [T.iron, T.bronze, T.silver],
-        cells: ["아이언 · 브론즈 · 실버", "90% 보장", "14,000원"],
-      },
-      { icons: [T.gold], cells: ["골드", "85% 보장", "16,000원"] },
-      { icons: [T.platinum], cells: ["플래티넘", "80% 보장", "18,000원"] },
-      { icons: [T.emerald], cells: ["에메랄드", "75% 보장", "20,000원"] },
-      {
-        icons: [T.diamond],
-        cells: ["다이아몬드 4~3", "70% 보장", "22,000원"],
-      },
-      { icons: [T.diamond], cells: ["다이아몬드 2~1", "65% 보장", "24,000원"] },
-    ] as PriceRow[],
-    cols: ["구간", "승률 보장", "금액"] as const,
-    note: "· 승률 보장 서비스는 10시간 이상 신청 시 적용됩니다.\n· 기사가 캐리했음에 불구하고 발생한 패배는 승리로 인정하여 승률을 산정합니다.",
-  },
   score: {
     title: "승리 보장제 듀오 랭크",
     rows: [
