@@ -22,3 +22,14 @@ Retrieved: 2026-09-18. No generative edits, recoloring, or invented game element
 ## Centered typography correction (current)
 
 The four `*-centered.webp` banners preserve the same artwork and use Noto Sans KR at weight 700. All titles are 112px, centered at x=768 with baseline y=828; all subtitles are 44px with baseline y=909. Flat gold lettering replaces the per-glyph gradient, and a single centered ornament replaces the right-hand box. There are no XYZ watermarks. Editable sources are `design/service-banners/*-centered.svg`.
+
+## Gameplay/client banners (2026-09-18)
+
+These are illustrative official Riot client/gameplay scenes, not customer results or inventory offered for sale. Riot retains copyright; no claim of unrestricted licensing. Original client UI can differ from the current version.
+
+- `boosting-game-source.webp`: cropped end-of-game progression / LP screen from https://www.leagueoflegends.com/en-us/news/game-updates/challenges-walkthrough/ — https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/3053469b76c5e0fb8fb90359a47a5c82a5d351bc-1280x720.jpg
+- `duo-game-source.webp`: two-player lobby from the same article — https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/e1b8a10ba7da77df007d1b76a1a03497e2ca2816-1280x720.jpg
+- `account-game-source.webp`: identity customization screen from the same article — https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/49b17fb90474ad499c911be4b4bb77f1b9b56456-1280x720.jpg
+- `leveling-game-source.webp`: frame at 3 seconds of official jungle gameplay from https://www.leagueoflegends.com/en-us/how-to-play/ — https://cmsassets.rgpub.io/sanity/files/dsfx7636/news/8d49feeb42c45ac59b1d6cc1cae71d64ce0089f7.webm
+
+`*-gameplay.webp` and `design/service-banners/*-gameplay.svg` use the existing shared outlined Noto Sans KR 700 template. Titles: 112px, baseline 828, center 768. Subtitles: 44px, baseline 909. Source screenshots are cropped to their relevant content and fitted above the text without altering the game UI or reported results.

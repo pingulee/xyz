@@ -23,10 +23,10 @@ def lettering(text, size, x, baseline):
     return f'<g transform="translate({x},{baseline}) scale({size/UNITS},{-size/UNITS})">'+''.join(paths)+'</g>'
 
 cards = [
-    ('boosting','pantheon','롤 대리','목표 티어까지'),
-    ('duo','leona','롤 듀오','함께하는 플레이'),
-    ('account','ahri','롤 계정','취향에 맞는 계정'),
-    ('leveling','ezreal','롤 육성','매크로 없는 수동 육성'),
+    ('boosting','boosting-game','롤 대리','목표 티어까지'),
+    ('duo','duo-game','롤 듀오','함께하는 플레이'),
+    ('account','account-game','롤 계정','취향에 맞는 계정'),
+    ('leveling','leveling-game','롤 육성','매크로 없는 수동 육성'),
 ]
 for i,(name,art,title,subtitle) in enumerate(cards,1):
     png = subprocess.check_output(['node','-e',"require('sharp')(process.argv[1]).png().toBuffer().then(b=>process.stdout.write(b))",str(ASSETS/f'{art}-source.webp')],cwd=ROOT)
@@ -37,8 +37,9 @@ for i,(name,art,title,subtitle) in enumerate(cards,1):
 <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1"><stop offset=".25" stop-color="#0b0b0d" stop-opacity="0"/><stop offset=".7" stop-color="#0b0b0d" stop-opacity=".75"/><stop offset="1" stop-color="#0b0b0d" stop-opacity=".98"/></linearGradient>
 <linearGradient id="edge"><stop stop-color="#08080a" stop-opacity=".35"/><stop offset=".65" stop-color="#08080a" stop-opacity="0"/></linearGradient>
 </defs>
-<image href="data:image/png;base64,{image}" width="1280" height="800" preserveAspectRatio="xMidYMid slice"/>
-<rect width="1280" height="800" fill="url(#shade)"/>
+<rect width="1280" height="800" fill="#0b0b0d"/>
+<image href="data:image/png;base64,{image}" width="1280" height="530" preserveAspectRatio="xMidYMid slice"/>
+<rect y="400" width="1280" height="130" fill="url(#shade)"/>
 <rect width="1280" height="800" fill="url(#edge)"/>
 <rect x="64" y="56" width="78" height="54" rx="27" fill="#0b0b0d" fill-opacity=".7" stroke="#d8b970" stroke-opacity=".7"/>
 <g fill="#ecd39b">{lettering(f'{i:02}',27,84,93)}</g>
@@ -47,7 +48,7 @@ for i,(name,art,title,subtitle) in enumerate(cards,1):
 <g fill="#dfc790">{lettering(subtitle,44,88,714)}</g>
 <path d="M64 758H1216" stroke="#d8b970" stroke-opacity=".35"/>
 </svg>'''
-    vector = VECTORS/f'{name}-card.svg'
+    vector = VECTORS/f'{name}-gameplay-card.svg'
     vector.write_text(svg)
-    subprocess.run(['node','-e',"require('sharp')(process.argv[1]).webp({quality:90,effort:6}).toFile(process.argv[2])",str(vector),str(ASSETS/f'{name}-card.webp')],cwd=ROOT,check=True)
+    subprocess.run(['node','-e',"require('sharp')(process.argv[1]).webp({quality:90,effort:6}).toFile(process.argv[2])",str(vector),str(ASSETS/f'{name}-gameplay-card.webp')],cwd=ROOT,check=True)
     print(name, 'Gmarket Sans Medium; title 104px x88 baseline638; subtitle 44px x88 baseline714')

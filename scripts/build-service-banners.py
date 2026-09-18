@@ -33,10 +33,10 @@ def lettering(text, size, baseline):
     return f'<g transform="translate({left},{baseline}) scale({scale},{-scale})">'+''.join(paths)+'</g>'
 
 banners = [
-    ('boosting','azir.webp','롤 대리','1:1 전담 배정'),
-    ('duo','xayah-rakan.webp','롤 듀오','함께하는 승리'),
-    ('account','elementalist-lux.webp','롤 계정','나만의 맞춤 계정'),
-    ('leveling','garen.webp','롤 육성','100% 수동 육성'),
+    ('boosting','boosting-game-source.webp','롤 대리','1:1 전담 배정'),
+    ('duo','duo-game-source.webp','롤 듀오','함께하는 승리'),
+    ('account','account-game-source.webp','롤 계정','나만의 맞춤 계정'),
+    ('leveling','leveling-game-source.webp','롤 육성','100% 수동 육성'),
 ]
 for name, artwork, title, subtitle in banners:
     png = subprocess.check_output(['node', '-e', "require('sharp')(process.argv[1]).png().toBuffer().then(b=>process.stdout.write(b))", str(ASSETS/artwork)], cwd=ROOT)
@@ -48,16 +48,17 @@ for name, artwork, title, subtitle in banners:
 <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff1bc"/><stop offset=".55" stop-color="#ebc365"/><stop offset="1" stop-color="#b48935"/></linearGradient>
 <radialGradient id="vignette"><stop offset=".4" stop-opacity="0"/><stop offset="1" stop-color="#080806" stop-opacity=".5"/></radialGradient>
 </defs>
-<image href="data:image/png;base64,{image}" width="1536" height="1024" preserveAspectRatio="xMidYMid slice"/>
-<rect width="1536" height="1024" fill="url(#vignette)"/>
-<rect width="1536" height="1024" fill="url(#shade)"/>
+<rect width="1536" height="1024" fill="#080c10"/>
+<image href="data:image/png;base64,{image}" x="48" y="48" width="1440" height="620" preserveAspectRatio="xMidYMid meet"/>
+
+
 <rect x="22" y="22" width="1492" height="980" fill="none" stroke="#dabb70" stroke-width="2"/>
 <path d="M38 70V38H70 M1466 38H1498V70 M38 954V986H70 M1466 986H1498V954" fill="none" stroke="#dabb70" stroke-width="3"/>
 <path d="M488 691H752 M784 691H1048 M768 685L774 691L768 697L762 691Z" fill="none" stroke="#dabb70" stroke-width="2"/>
 <g fill="#f5dfa1">{lettering(title,TITLE_SIZE,TITLE_BASELINE)}</g>
 <g fill="#f5dfa1">{lettering(subtitle,SUBTITLE_SIZE,SUBTITLE_BASELINE)}</g>
 </svg>'''
-    vector = VECTORS/f'{name}-centered.svg'
+    vector = VECTORS/f'{name}-gameplay.svg'
     vector.write_text(svg)
-    subprocess.run(['node', '-e', "require('sharp')(process.argv[1]).webp({quality:90,effort:6}).toFile(process.argv[2])", str(vector), str(ASSETS/f'{name}-centered.webp')], cwd=ROOT, check=True)
+    subprocess.run(['node', '-e', "require('sharp')(process.argv[1]).webp({quality:90,effort:6}).toFile(process.argv[2])", str(vector), str(ASSETS/f'{name}-gameplay.webp')], cwd=ROOT, check=True)
     print(f'{name}: title={TITLE_SIZE}px baseline={TITLE_BASELINE}, subtitle={SUBTITLE_SIZE}px baseline={SUBTITLE_BASELINE}, center={CENTER_X}, Noto Sans KR 700')
