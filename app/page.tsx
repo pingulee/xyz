@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -7,6 +6,9 @@ import {
   Clock,
   MessageCircle,
   ShieldCheck,
+  ScanSearch,
+  UsersRound,
+  Swords,
   Sparkles,
   Star,
   Trophy,
@@ -50,27 +52,27 @@ const stats = [
 const process = [
   {
     title: "상담 접수",
-    image: "/images/process/01.webp",
+    icon: MessageCircle,
     desc: "카카오톡으로 현재 티어와 목표를 전달합니다.",
   },
   {
     title: "계정 분석",
-    image: "/images/process/02.webp",
+    icon: ScanSearch,
     desc: "현재 티어와 MMR을 확인해 진행 방식을 정합니다.",
   },
   {
     title: "기사 배정",
-    image: "/images/process/03.webp",
+    icon: UsersRound,
     desc: "조건에 맞는 검증 기사를 1:1로 배정합니다.",
   },
   {
     title: "작업 진행",
-    image: "/images/process/04.webp",
+    icon: Swords,
     desc: "100% 수동 진행, 상황을 실시간 공유합니다.",
   },
   {
     title: "작업 완료",
-    image: "/images/process/05.webp",
+    icon: Trophy,
     desc: "목표 달성 후 승률·KDA 기록을 남깁니다.",
   },
 ];
@@ -444,19 +446,13 @@ export default async function Home() {
           <Reveal delay={0.12}>
             {/* 모바일·태블릿: 세로 균일 카드(가로 레이아웃), lg: 5열 카드 — 고아 카드/오버사이즈 없음 */}
             <ol className="mt-10 grid grid-cols-1 gap-3 lg:grid-cols-5 lg:gap-4">
-              {process.map(({ title, image, desc }, i) => (
+              {process.map(({ title, icon: Icon, desc }, i) => (
                 <li
                   key={title}
                   className="group flex items-center gap-4 rounded-3xl border border-gold/12 bg-white/3.5 p-4 transition hover:border-gold/30 hover:bg-white/5 lg:flex-col lg:items-center lg:gap-3 lg:p-6 lg:text-center"
                 >
-                  <span className="flex h-20 w-20 shrink-0 items-center justify-center lg:h-24 lg:w-24">
-                    <Image
-                      src={image}
-                      alt=""
-                      width={112}
-                      height={112}
-                      className="h-full w-full object-contain"
-                    />
+                  <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-gold/25 bg-gold/7 text-gold shadow-[inset_0_1px_0_rgba(255,222,155,0.08)] lg:h-20 lg:w-20">
+                    <Icon size={30} strokeWidth={1.4} aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
                     <span className="text-[11px] font-black tracking-[0.18em] text-gold/80">

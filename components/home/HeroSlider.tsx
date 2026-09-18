@@ -2,250 +2,163 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { services } from "@/lib/site";
 
 const slides = [
   {
     eyebrow: "PREMIUM BOOSTING",
-    title: "프리미엄 롤 대리",
-    titlePrefix: "프리미엄 ",
-    titleHighlight: "롤 대리",
-    desc: "현재 시즌 기준 챌린저 티어 기사가 목표 티어까지 직접 달성해드립니다. 일부 업체처럼 무작위로 저티어 기사를 배정하는 방식이 아닌, 전담 1:1 기사 배정 시스템을 운영하여 더욱 안전하고 빠른 롤 대리 서비스를 제공합니다.",
-    image: "/images/slider/01.webp",
-    alt: "롤 대리 서비스를 상징하는 프리미엄 게임 이미지",
-    secondary: "롤 대리 가격 확인",
-    secondaryHref: "/boosting",
-    cardEyebrow: "BOOSTING PLAN",
-    cardTitle: "목표 티어까지 전담 관리",
-    cardDesc: "계정 상태와 일정에 맞춰 무리 없는 진행 루트를 잡습니다.",
-    cardTags: ["1:1 배정", "상황 공유"],
+    title: "목표를 높이고,",
+    highlight: "티어를 바꾸다.",
+    service: "롤 대리",
+    desc: "현재 티어부터 목표 티어까지. 상위 티어 기사와 1:1 전담 배정으로, 나에게 맞는 진행을 시작하세요.",
+    image: services[0].image,
+    alt: services[0].imageAlt,
+    champion: "AZIR",
+    championKo: "아지르 · 사막의 황제",
+    position: "68% 35%",
+    href: "/boosting",
+    tags: ["1:1 전담 배정", "진행 상황 공유"],
   },
   {
     eyebrow: "PREMIUM DUO",
-    title: "프리미엄 롤 듀오",
-    titlePrefix: "프리미엄 ",
-    titleHighlight: "롤 듀오",
-    desc: "현재 시즌 기준 챌린저 티어 기사와 함께 플레이하며 승률 향상은 물론, 라인전 운영과 오브젝트 판단, 실시간 피드백까지 제공합니다. 일부 업체처럼 무작위로 저티어 기사를 배정하는 방식이 아닌, 전담 1:1 기사 배정 시스템으로 더욱 만족도 높은 롤 듀오 서비스를 제공합니다.",
-    image: "/images/slider/02.webp",
-    alt: "롤 듀오 서비스를 상징하는 프리미엄 게임 이미지",
-    secondary: "롤 듀오 가격 확인",
-    secondaryHref: "/duo",
-    cardEyebrow: "DUO SESSION",
-    cardTitle: "같이 뛰면서 바로 피드백",
-    cardDesc: "라인전, 합류 타이밍, 오브젝트 판단을 실시간으로 맞춥니다.",
-    cardTags: ["실시간 피드백", "승률 케어"],
+    title: "함께하는 플레이,",
+    highlight: "달라지는 결과.",
+    service: "롤 듀오",
+    desc: "혼자보다 함께, 라인전부터 한타까지. 상위 티어 기사와 호흡을 맞추며 실전 피드백을 받아보세요.",
+    image: services[1].image,
+    alt: services[1].imageAlt,
+    champion: "XAYAH & RAKAN",
+    championKo: "자야 & 라칸 · 함께할 때 더 강하게",
+    position: "52% 30%",
+    href: "/duo",
+    tags: ["듀오 플레이", "실시간 피드백"],
   },
   {
     eyebrow: "CUSTOM ACCOUNT",
-    title: "맞춤형 롤 계정",
-    titlePrefix: "맞춤형 ",
-    titleHighlight: "롤 계정",
-    desc: "일부 업체처럼 준비된 계정만 판매하지 않습니다. 원하는 티어, 서버, 챔피언, 스킨, 명의 여부 등 다양한 조건에 맞춰 검수된 맞춤형 롤 계정을 안전하게 공수해드립니다.",
-    image: "/images/slider/03.webp",
-    alt: "롤 계정 서비스를 상징하는 프리미엄 게임 이미지",
-    secondary: "롤 계정 가격 확인",
-    secondaryHref: "/account",
-    cardEyebrow: "ACCOUNT MATCH",
-    cardTitle: "원하는 조건만 골라 추천",
-    cardDesc: "티어, 서버, 챔피언, 스킨 조건을 기준으로 계정을 검수합니다.",
-    cardTags: ["조건 검수", "맞춤 추천"],
+    title: "나의 취향으로,",
+    highlight: "새로운 시작.",
+    service: "롤 계정",
+    desc: "원하는 티어, 챔피언, 스킨까지. 다양한 조건을 확인하고 나에게 맞는 계정을 상담해보세요.",
+    image: services[2].image,
+    alt: services[2].imageAlt,
+    champion: "ELEMENTALIST LUX",
+    championKo: "원소술사 럭스 · 다채로운 가능성",
+    position: "58% 32%",
+    href: "/account",
+    tags: ["조건별 상담", "맞춤 계정 추천"],
   },
 ];
-
-const AUTOPLAY_MS = 5200;
-const SWIPE_THRESHOLD = 70;
 
 export default function HeroSlider() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  // 첫 렌더(SSR)는 애니메이션 없이 즉시 표시 → LCP 렌더 지연 제거.
-  // 슬라이드가 한 번이라도 바뀌면 그때부터 텍스트 진입 애니메이션 적용.
-  const [animate, setAnimate] = useState(false);
-  const pointerStartX = useRef<number | null>(null);
-
+  const [interacting, setInteracting] = useState(false);
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
   const slide = slides[index];
-  const count = slides.length;
-  // 페이지당 h1 1개: 첫 슬라이드(주력 키워드 "롤 대리")만 h1, 나머지는 h2.
-  // SSR 초기 렌더가 항상 index 0이라 크롤러는 h1 "프리미엄 롤 대리"를 본다.
-  const TitleTag = index === 0 ? ("h1" as const) : ("h2" as const);
-
-  const goTo = (nextIndex: number) => {
-    setAnimate(true);
-    setIndex((nextIndex + count) % count);
-  };
-
-  const next = () => goTo(index + 1);
-  const prev = () => goTo(index - 1);
+  const goTo = (next: number) => setIndex((next + slides.length) % slides.length);
 
   useEffect(() => {
-    if (paused) return;
-    const timer = window.setInterval(() => {
-      setAnimate(true);
-      setIndex((current) => (current + 1) % count);
-    }, AUTOPLAY_MS);
-
-    return () => window.clearInterval(timer);
-  }, [count, paused]);
-
-  const onPointerDown = (event: React.PointerEvent) => {
-    pointerStartX.current = event.clientX;
-  };
-
-  const onPointerUp = (event: React.PointerEvent) => {
-    if (pointerStartX.current === null) return;
-    const dx = event.clientX - pointerStartX.current;
-    pointerStartX.current = null;
-    if (dx < -SWIPE_THRESHOLD) next();
-    else if (dx > SWIPE_THRESHOLD) prev();
-  };
-
-  const progressLabel = `${String(index + 1).padStart(2, "0")} / ${String(
-    count,
-  ).padStart(2, "0")}`;
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const update = () => {
+      clearInterval(timer);
+      if (!paused && !interacting && !motion.matches) {
+        timer = setInterval(() => setIndex((value) => (value + 1) % slides.length), 6500);
+      }
+    };
+    update();
+    motion.addEventListener("change", update);
+    return () => {
+      clearInterval(timer);
+      motion.removeEventListener("change", update);
+    };
+  }, [paused, interacting]);
 
   return (
     <section
-      className="noise relative h-155 overflow-hidden bg-background sm:h-170 lg:h-[calc(100svh-80px)] lg:min-h-180"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      aria-label="XYZ 리그 오브 레전드 서비스"
+      aria-roledescription="슬라이드 쇼"
+      className="relative isolate overflow-hidden border-b border-gold/15 bg-[#0c0b08]"
+      onMouseEnter={() => setInteracting(true)}
+      onMouseLeave={() => setInteracting(false)}
+      onFocusCapture={() => setInteracting(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false);
+      }}
     >
-      <div className="absolute inset-0 bg-black/30" />
-      <div className="absolute left-[12%] top-20 h-72 w-72 rounded-full bg-gold/18 blur-[110px]" />
-      <div className="absolute bottom-8 right-[10%] h-96 w-96 rounded-full bg-gold-soft/12 blur-[130px]" />
-
-      <div className="relative mx-auto grid h-full max-w-7xl items-center gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:gap-10 lg:px-8 lg:py-14">
-        <div className="relative z-10 flex h-full max-w-3xl flex-col justify-center">
-          <div className="flex h-92 flex-col sm:h-100 lg:h-108">
-            <div
-              key={index}
-              className={`flex min-h-0 w-full flex-1 flex-col ${
-                animate ? "animate-hero-in" : ""
-              }`}
-            >
-              <div className="flex flex-1 flex-col justify-center py-5">
-                {/* 영문 eyebrow 키커 (라인 액센트) */}
-                <p className="mb-5 inline-flex w-fit items-center gap-2.5 text-[11px] font-black uppercase tracking-[0.26em] text-gold">
-                  <span className="h-px w-7 bg-gold/60" />
-                  {slide.eyebrow}
-                </p>
-                <TitleTag className="text-4xl font-black leading-[1.14] tracking-[-0.03em] text-zinc-50 [text-shadow:0_0_28px_rgba(255,255,255,0.16)] sm:text-5xl lg:text-6xl">
-                  {slide.titlePrefix}
-                  <span className="relative inline-block">
-                    {/* 단어 뒤 골드 글로우 (밑줄 대신) */}
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 scale-125 rounded-full bg-gold/25 blur-2xl"
-                    />
-                    <span className="gold-text relative [text-shadow:0_0_30px_rgba(222,176,67,0.45)]">
-                      {slide.titleHighlight}
-                    </span>
-                  </span>
-                </TitleTag>
-                <p className="mt-6 h-24 max-w-xl text-base font-medium leading-8 text-pretty text-zinc-100/95 [text-shadow:0_0_18px_rgba(222,176,67,0.14)] sm:h-28 sm:text-lg">
-                  {slide.desc}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-7 flex">
-            <Link
-              href={slide.secondaryHref}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/12 bg-white/5 px-6 py-3.5 font-bold text-zinc-100 transition hover:border-gold/45 hover:text-white"
-            >
-              {slide.secondary}
-              <ArrowRight size={18} />
-            </Link>
-          </div>
-
-          <div className="mt-8 flex items-center gap-5">
-            <div className="flex items-center gap-2">
-              {slides.map((item, i) => (
-                <button
-                  key={item.title}
-                  type="button"
-                  onClick={() => goTo(i)}
-                  className="group flex h-6 items-center px-2"
-                  aria-label={`${i + 1}번째 슬라이드 보기`}
-                  aria-current={i === index}
-                >
-                  <span
-                    className={`h-2 rounded-full transition-all ${
-                      i === index
-                        ? "w-9 bg-gold"
-                        : "w-2 bg-white/25 group-hover:bg-white/50"
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
-            <span className="text-xs font-black tracking-[0.24em] text-zinc-500">
-              {progressLabel}
-            </span>
-          </div>
-        </div>
-
-        <div
-          className="absolute inset-0 z-0 mx-auto w-full touch-pan-y lg:relative lg:inset-auto lg:z-auto lg:max-w-150"
-          onPointerDown={onPointerDown}
-          onPointerUp={onPointerUp}
-        >
-          <div className="absolute inset-8 hidden rounded-full bg-gold/25 blur-[90px] lg:block" />
-          <div className="card-premium contents lg:relative lg:block lg:overflow-hidden lg:rounded-[44px] lg:p-4">
-            <div className="absolute inset-0 overflow-hidden bg-black lg:relative lg:inset-auto lg:h-140 lg:rounded-[34px]">
-              {/* 뷰포트와 관계없이 단일 priority 이미지 요청만 생성 */}
-              <Image
-                key={slide.image}
-                src={slide.image}
-                alt={slide.alt}
-                fill
-                priority
-                fetchPriority="high"
-                sizes="(max-width: 1023px) 100vw, 48vw"
-                className="object-cover opacity-50 lg:opacity-95"
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-black via-black/55 to-black/30 lg:from-black/85 lg:via-black/15 lg:to-transparent" />
-              <div className="absolute bottom-5 left-5 right-5 hidden rounded-[26px] border border-gold/20 bg-black/58 p-5 backdrop-blur-xl lg:block">
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-gold">
-                  {slide.cardEyebrow}
-                </p>
-                <h2 className="mt-2 text-2xl font-black text-white [text-shadow:0_0_22px_rgba(222,176,67,0.28)]">
-                  {slide.cardTitle}
-                </h2>
-                <p className="mt-2 leading-6 text-zinc-300">{slide.cardDesc}</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {slide.cardTags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-xs font-bold text-gold-soft"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+      <div
+        className="relative h-72 touch-pan-y overflow-hidden sm:h-100 lg:absolute lg:inset-y-0 lg:right-0 lg:h-full lg:w-[72%]"
+        onPointerDown={(event) => { pointerStart.current = { x: event.clientX, y: event.clientY }; }}
+        onPointerCancel={() => { pointerStart.current = null; }}
+        onPointerUp={(event) => {
+          const start = pointerStart.current;
+          pointerStart.current = null;
+          if (!start) return;
+          const dx = event.clientX - start.x;
+          if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(event.clientY - start.y)) goTo(index + (dx < 0 ? 1 : -1));
+        }}
+      >
+        <Image
+          key={slide.image}
+          src={slide.image}
+          alt={slide.alt}
+          fill
+          priority={index === 0}
+          sizes="(min-width: 1024px) 72vw, 100vw"
+          className="object-cover"
+          style={{ objectPosition: slide.position }}
+        />
+        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-[#0c0b08] via-transparent to-black/10" />
+        <div className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(90deg,#0c0b08_0%,rgba(12,11,8,0.94)_12%,rgba(12,11,8,0.6)_35%,transparent_68%)] lg:block" />
+        <div className="absolute right-6 top-6 flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] text-white/80 sm:right-10">
+          <span className="h-1 w-1 rounded-full bg-gold" /> LEAGUE OF LEGENDS
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={prev}
-        className="absolute left-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/20 bg-black/35 text-white backdrop-blur transition hover:border-gold hover:text-gold cursor-pointer sm:left-8 lg:left-10"
-        aria-label="이전 슬라이드"
-      >
-        <ChevronLeft />
-      </button>
-      <button
-        type="button"
-        onClick={next}
-        className="absolute right-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-gold/20 bg-black/35 text-white backdrop-blur transition hover:border-gold hover:text-gold cursor-pointer sm:right-8 lg:right-10"
-        aria-label="다음 슬라이드"
-      >
-        <ChevronRight />
-      </button>
+      <div className="relative mx-auto max-w-7xl px-5 pb-7 sm:px-8 lg:flex lg:min-h-[700px] lg:flex-col lg:justify-end lg:pb-10 lg:pt-24 xl:min-h-[760px]">
+        <div className="relative -mt-5 max-w-xl pb-10 lg:mt-0 lg:pb-20">
+          <p className="mb-5 flex items-center gap-3 text-[10px] font-bold tracking-[0.25em] text-gold sm:text-xs">
+            <span className="h-px w-9 bg-gold/65" /> {slide.eyebrow}
+          </p>
+          <h1 className="text-[clamp(2rem,4.3vw,4rem)] font-black leading-[1.22] tracking-[-0.055em] text-white">
+            <span className="mb-3 block text-sm font-semibold tracking-[0.08em] text-zinc-300">XYZ {slide.service}</span>
+            {slide.title}<br />
+            <span className="gold-text">{slide.highlight}</span>
+          </h1>
+          <p className="mt-5 min-h-21 max-w-md text-sm leading-7 text-zinc-300 sm:text-base sm:leading-8">{slide.desc}</p>
+          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2">
+            {slide.tags.map((tag) => (
+              <span key={tag} className="flex items-center gap-2 text-xs text-zinc-400"><span className="h-1 w-1 rotate-45 bg-gold/70" />{tag}</span>
+            ))}
+          </div>
+          <Link href={slide.href} className="mt-8 inline-flex min-h-12 items-center gap-8 rounded-full bg-gold-gradient px-7 py-3.5 text-sm font-black text-black transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold">
+            {slide.service} 가격 보기 <ArrowRight size={18} />
+          </Link>
+        </div>
+
+        <div className="relative flex items-end justify-between gap-4 border-t border-white/15 pt-5">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-8">
+            <div className="flex gap-1" aria-label="서비스 선택">
+              {slides.map((item, i) => (
+                <button key={item.service} type="button" onClick={() => goTo(i)} aria-label={`${i + 1}번째 슬라이드 보기: ${item.service}`} aria-current={index === i ? "true" : undefined} className={`flex min-h-11 items-center gap-2 border-b px-2 text-xs transition sm:px-3 ${index === i ? "border-gold text-gold" : "border-transparent text-zinc-500 hover:text-white"}`}>
+                  <span className="text-[10px] tabular-nums">0{i + 1}</span><span className="font-bold">{item.service}</span>
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-1">
+              <button type="button" onClick={() => goTo(index - 1)} aria-label="이전 슬라이드" className="grid h-9 w-9 place-items-center rounded-full border border-white/15 text-zinc-300 hover:border-gold hover:text-gold"><ChevronLeft size={16} /></button>
+              <button type="button" onClick={() => setPaused(!paused)} aria-label={paused ? "슬라이드 자동 재생" : "슬라이드 일시 정지"} aria-pressed={paused} className="grid h-9 w-9 place-items-center rounded-full text-zinc-300 hover:text-gold">{paused ? <Play size={13} /> : <Pause size={13} />}</button>
+              <button type="button" onClick={() => goTo(index + 1)} aria-label="다음 슬라이드" className="grid h-9 w-9 place-items-center rounded-full border border-white/15 text-zinc-300 hover:border-gold hover:text-gold"><ChevronRight size={16} /></button>
+            </div>
+          </div>
+          <div className="hidden pb-2 text-right lg:block" aria-hidden="true">
+            <p className="text-[10px] tracking-[0.24em] text-gold/90">{slide.champion}</p>
+            <p className="mt-2 text-xs text-zinc-400">{slide.championKo}</p>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

@@ -20,8 +20,7 @@ export const navItems = [
   { label: "메인", href: "/" },
   { label: "공지사항", href: "/notice" },
   { label: "기사 소개", href: "/booster" },
-  { label: "가격표", href: "#price" },
-  { label: "결제 안내", href: "/#payment" },
+  { label: "가격표", href: "/boosting" },
   { label: "작업 후기", href: "/review" },
   { label: "문의하기", href: "/inquiry" },
 ];
@@ -33,8 +32,8 @@ export const services = [
     eyebrow: "boosting",
     description:
       "현재 티어와 목표 티어를 기준으로 검증된 기사가 안정적으로 진행합니다.",
-    image: "/images/service/boosting.webp",
-    imageAlt: "롤 대리 기사 배정과 티어 상승 과정을 표현한 서비스 이미지",
+    image: "/images/lol/azir.webp",
+    imageAlt: "리그 오브 레전드 아지르 스플래시 아트",
   },
   {
     title: "롤 듀오",
@@ -42,16 +41,16 @@ export const services = [
     eyebrow: "duo queue",
     description:
       "상위 티어 기사와 함께 플레이하며 승률과 피드백을 동시에 챙깁니다.",
-    image: "/images/service/duo.webp",
-    imageAlt: "두 플레이어가 함께 목표를 향해 진행하는 롤 듀오 서비스 이미지",
+    image: "/images/lol/xayah-rakan.webp",
+    imageAlt: "리그 오브 레전드 자야와 라칸 스플래시 아트",
   },
   {
     title: "롤 계정",
     href: "/account",
     eyebrow: "account",
     description: "원하는 티어, 챔피언, 일정 조건에 맞춘 계정을 구해드립니다.",
-    image: "/images/service/account.webp",
-    imageAlt: "티어와 보유 조건별 롤 계정을 비교하고 검수하는 서비스 이미지",
+    image: "/images/lol/elementalist-lux.webp",
+    imageAlt: "리그 오브 레전드 원소술사 럭스 스플래시 아트",
   },
 ];
 
@@ -130,3 +129,5 @@ export const duoPrices = {
     note: "· 점수는 10단위 반올림을 적용합니다. (예: 92점 상승, 106점 상승 → 100점으로 계산)\n· 고객님이 고의로 패배한 경우 승률 보장 서비스가 적용되지 않습니다.",
   },
 };
+
+export const levelingPrice = { fromLevel: 0, toLevel: 30, price: 80000, currency: "KRW" } as const;

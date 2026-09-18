@@ -20,24 +20,24 @@ export default function ServiceCard({
   return (
     <Link
       href={href}
-      className="group card-premium relative flex h-full flex-col overflow-hidden rounded-4xl p-6 transition duration-300 hover:border-gold/45"
+      className="group card-premium relative flex h-full flex-col overflow-hidden rounded-3xl transition duration-300 hover:border-gold/45"
     >
       <div className="absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100">
         <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-gold/10 blur-3xl" />
       </div>
 
-      <div className="relative mb-7 aspect-16/10 overflow-hidden rounded-3xl border border-gold/10 bg-void">
+      <div className="relative aspect-16/10 overflow-hidden border-b border-gold/15 bg-void">
         <Image
           src={image}
           alt={imageAlt ?? `${title} 서비스 이미지`}
           fill
-          sizes="(max-width: 639px) calc(100vw - 88px), (max-width: 1023px) calc(100vw - 96px), 380px"
+          sizes="(max-width: 639px) calc(100vw - 40px), (max-width: 1023px) calc(100vw - 48px), 380px"
           className="object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100"
         />
         <div className="absolute inset-0 bg-linear-to-t from-black/65 via-transparent to-transparent" />
       </div>
 
-      <div className="relative">
+      <div className="relative p-6 sm:p-7">
         <p className="text-xs font-black uppercase tracking-[0.24em] text-gold">
           {eyebrow}
         </p>

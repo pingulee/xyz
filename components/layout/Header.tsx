@@ -21,7 +21,7 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = navItems.map((item) =>
-  item.href === "#price"
+  item.label === "가격표"
     ? {
         ...item,
         children: priceMenuItems,
@@ -70,7 +70,7 @@ export default function Header() {
   };
 
   const isActive = (href: string) => {
-    if (href === "#price")
+    if (href === "/boosting")
       return ["/boosting", "/duo", "/account", "/leveling"].some((p) =>
         pathname.startsWith(p),
       );
@@ -123,7 +123,7 @@ export default function Header() {
                     />
                   </button>
 
-                  <div className="invisible absolute left-1/2 top-8 w-48 -translate-x-1/2 rounded-2xl border border-gold/10 bg-[#090806]/95 p-2 opacity-0 shadow-2xl backdrop-blur-xl transition-all duration-200 group-hover:visible group-hover:top-10 group-hover:opacity-100">
+                  <div className="invisible absolute left-1/2 top-8 w-48 -translate-x-1/2 rounded-2xl border border-gold/10 bg-[#090806]/95 p-2 opacity-0 shadow-2xl backdrop-blur-xl transition-all duration-200 group-hover:visible group-hover:top-10 group-hover:opacity-100 group-focus-within:visible group-focus-within:top-10 group-focus-within:opacity-100">
                     {item.children.map((child) => (
                       <Link
                         key={child.href}
