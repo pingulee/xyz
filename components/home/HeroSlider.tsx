@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { levelingPrice, services } from "@/lib/site";
+import { levelingDuration, levelingPrice, services } from "@/lib/site";
 
 const slides = [
   {
@@ -42,14 +42,14 @@ const slides = [
   },
   {
     eyebrow: "MANUAL LEVELING",
-    title: "처음부터 차근차근,",
+    title: "100% 수동 육성,",
     highlight: "30레벨까지.",
     service: "롤 육성",
     desc: `${levelingPrice.fromLevel}레벨부터 ${levelingPrice.toLevel}레벨까지 ${levelingPrice.price.toLocaleString("ko-KR")}원. 매크로·봇 없이 모든 과정을 100% 수동으로 진행합니다.`,
     image: "/images/lol/leveling-centered.webp",
     alt: "XYZ 롤 육성 · 100% 수동 육성 — 가렌을 활용한 브랜드 배너",
     href: "/leveling",
-    tags: ["100% 수동 육성", "매크로·봇 미사용"],
+    tags: [levelingDuration, "매크로·봇 미사용"],
   },
 ];
 

@@ -5,11 +5,11 @@ import FaqItem from "@/components/ui/FaqItem";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { serializeJsonLd } from "@/lib/jsonld";
-import { site, levelingPrice } from "@/lib/site";
+import { site, levelingPrice, levelingDuration } from "@/lib/site";
 
 const priceLabel = `${levelingPrice.price.toLocaleString("ko-KR")}원`;
 const levelLabel = `${levelingPrice.fromLevel}레벨부터 ${levelingPrice.toLevel}레벨까지`;
-const description = `XYZ 롤 육성 ${levelLabel} ${priceLabel}. 매크로·봇 없이 기사가 직접 플레이하는 100% 수동 육성입니다.`;
+const description = `XYZ 롤 육성 ${levelLabel} ${priceLabel}. 매크로·봇 없이 기사가 직접 플레이하는 100% 수동 육성입니다. ${levelingDuration}.`;
 
 export const metadata: Metadata = {
   title: "롤 육성 가격 | 소환사 레벨 맞춤 육성 안내",
@@ -57,8 +57,8 @@ const faqs = [
     "카카오톡 상담을 통해 현재 레벨과 진행 상황을 확인할 수 있습니다.",
   ],
   [
-    "완료 일정은 지정할 수 있나요?",
-    "희망 일정을 말씀해 주시면 가능한 기사 일정과 예상 플레이 시간을 확인해 안내합니다. 촉박한 일정은 추가 상담이 필요할 수 있습니다.",
+    "육성은 얼마나 걸리나요?",
+    `${levelingDuration}됩니다. 희망 완료 일정이 있다면 상담 시 알려주세요. 기사 일정과 진행 상황에 따라 완료 시점이 달라질 수 있습니다.`,
   ],
   [
     "환불이 가능한가요?",
@@ -114,7 +114,7 @@ export default function LevelingPage() {
         featureTitle="자동화 없이, 사람이 직접"
         points={[
           "100% 수동 플레이",
-          "희망 완료 일정 상담",
+          levelingDuration,
           "매크로·봇 사용 없음",
           "실시간 진행 상황 안내",
         ]}
@@ -128,7 +128,7 @@ export default function LevelingPage() {
               <div>
                 <p className="text-xs font-bold tracking-[0.2em] text-gold">100% MANUAL PLAY</p>
                 <h2 id="leveling-price-title" className="mt-4 text-2xl font-black text-white sm:text-3xl">{levelLabel}</h2>
-                <p className="mt-3 text-sm leading-7 text-zinc-300">매크로·봇 없이 기사가 직접 플레이합니다.<br />처음부터 30레벨까지, 전 과정 수동 육성.</p>
+                <p className="mt-3 text-sm leading-7 text-zinc-300">매크로·봇 없이 기사가 직접 플레이합니다.<br />전 과정 수동 육성 · {levelingDuration}.</p>
               </div>
               <div className="shrink-0 sm:text-right">
                 <p className="text-xs text-zinc-400">0 → 30레벨 전체 비용</p>

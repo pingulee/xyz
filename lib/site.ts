@@ -130,4 +130,6 @@ export const duoPrices = {
   },
 };
 
+export const levelingDuration = "보통 3~4일 소요";
+
 export const levelingPrice = { fromLevel: 0, toLevel: 30, price: 80000, currency: "KRW" } as const;
