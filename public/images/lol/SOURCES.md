@@ -33,3 +33,12 @@ These are illustrative official Riot client/gameplay scenes, not customer result
 - `leveling-game-source.webp`: frame at 3 seconds of official jungle gameplay from https://www.leagueoflegends.com/en-us/how-to-play/ — https://cmsassets.rgpub.io/sanity/files/dsfx7636/news/8d49feeb42c45ac59b1d6cc1cae71d64ce0089f7.webm
 
 `*-gameplay.webp` and `design/service-banners/*-gameplay.svg` use the existing shared outlined Noto Sans KR 700 template. Titles: 112px, baseline 828, center 768. Subtitles: 44px, baseline 909. Source screenshots are cropped to their relevant content and fitted above the text without altering the game UI or reported results.
+
+## Gold frames and Challenger promotion (2026-09-18)
+
+All four gameplay banners now use a shared warm gold SVG background and glow. Game pixels, rank emblems, player names, and UI text are preserved; no generative game imagery is used.
+
+- `challenger-promotion-source.webp`: Tyler1's actual Challenger promotion screenshot, reproduced in ONE Esports: https://www.oneesports.gg/league-of-legends/tyler1-challenger-all-roles/
+- Original image: https://cdn.oneesports.gg/wp-content/uploads/2022/02/LeagueofLegends_ChallengerRankTyler1Mid.webp
+- The boosting banner uses an SVG viewport to show only the game screenshot. This is an illustrative historical client screen, not an XYZ customer result. Source attribution: Tyler1 / ONE Esports; game artwork belongs to Riot Games.
+- `boosting-game-source.webp` is retained as the previous source. Service card artwork is unchanged.

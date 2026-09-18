@@ -39,7 +39,7 @@ export const services = [
     image: "/images/lol/boosting-gameplay.webp",
     cardImage: "/images/services/boosting-gameplay-card.webp",
     cardImageAlt: "실제 롤 승리 전적 화면을 활용한 대리 서비스",
-    imageAlt: "실제 롤 경기 종료 후 랭크 점수 화면을 활용한 롤 대리 안내",
+    imageAlt: "실제 롤 챌린저 승급 화면과 황금색 프레임의 롤 대리 안내",
   },
   {
     title: "롤 듀오",

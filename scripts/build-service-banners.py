@@ -33,7 +33,7 @@ def lettering(text, size, baseline):
     return f'<g transform="translate({left},{baseline}) scale({scale},{-scale})">'+''.join(paths)+'</g>'
 
 banners = [
-    ('boosting','boosting-game-source.webp','롤 대리','1:1 전담 배정'),
+    ('boosting','challenger-promotion-source.webp','롤 대리','1:1 전담 배정'),
     ('duo','duo-game-source.webp','롤 듀오','함께하는 승리'),
     ('account','account-game-source.webp','롤 계정','나만의 맞춤 계정'),
     ('leveling','leveling-game-source.webp','롤 육성','100% 수동 육성'),
@@ -41,15 +41,22 @@ banners = [
 for name, artwork, title, subtitle in banners:
     png = subprocess.check_output(['node', '-e', "require('sharp')(process.argv[1]).png().toBuffer().then(b=>process.stdout.write(b))", str(ASSETS/artwork)], cwd=ROOT)
     image = base64.b64encode(png).decode()
+    artwork_svg = f'<image href="data:image/png;base64,{image}" x="48" y="48" width="1440" height="620" preserveAspectRatio="xMidYMid meet"/>'
+    if name == 'boosting':
+        artwork_svg = f'<g clip-path="url(#promotionCrop)"><svg x="207" y="48" width="1122" height="620" viewBox="351 207 941 520" preserveAspectRatio="xMidYMid meet" overflow="hidden"><image href="data:image/png;base64,{image}" width="1643" height="924"/></svg></g>'
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="1024" viewBox="0 0 1536 1024" role="img" aria-label="{title} · {subtitle}">
 <title>{title} · {subtitle}</title>
 <defs>
 <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0.3" stop-color="#080806" stop-opacity="0"/><stop offset=".65" stop-color="#080806" stop-opacity=".6"/><stop offset="1" stop-color="#080806" stop-opacity=".96"/></linearGradient>
 <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff1bc"/><stop offset=".55" stop-color="#ebc365"/><stop offset="1" stop-color="#b48935"/></linearGradient>
 <radialGradient id="vignette"><stop offset=".4" stop-opacity="0"/><stop offset="1" stop-color="#080806" stop-opacity=".5"/></radialGradient>
+<linearGradient id="goldBase" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#5c3d12"/><stop offset=".38" stop-color="#191207"/><stop offset=".72" stop-color="#30200a"/><stop offset="1" stop-color="#745019"/></linearGradient>
+<radialGradient id="goldGlow" cx="50%" cy="80%" r="65%"><stop stop-color="#e9b949" stop-opacity=".28"/><stop offset="1" stop-color="#e9b949" stop-opacity="0"/></radialGradient>
+<clipPath id="promotionCrop"><rect x="207" y="48" width="1122" height="620" rx="36"/></clipPath>
 </defs>
-<rect width="1536" height="1024" fill="#080c10"/>
-<image href="data:image/png;base64,{image}" x="48" y="48" width="1440" height="620" preserveAspectRatio="xMidYMid meet"/>
+<rect width="1536" height="1024" fill="url(#goldBase)"/>
+<rect width="1536" height="1024" fill="url(#goldGlow)"/>
+{artwork_svg}
 
 
 <rect x="22" y="22" width="1492" height="980" fill="none" stroke="#dabb70" stroke-width="2"/>
