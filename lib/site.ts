@@ -100,10 +100,10 @@ export const boostingPrices: CnyPriceGroup[] = [
     title: "판수제 대리 랭크",
     unit: "1판 기준",
     rows: [
-      { label: "마스터 미만", icons: [T.diamond], cny: 40 },
-      { label: "마스터 0~399 LP", icons: [T.master], cny: 60 },
-      { label: "마스터 400~799 LP", icons: [T.master], cny: 70 },
-      { label: "마스터 800~1,200 LP", icons: [T.master], cny: 80 },
+      { label: "다이아 이하", icons: [T.diamond], cny: 40 },
+      { label: "마스터", icons: [T.master], cny: 70 },
+      { label: "그랜드마스터", icons: [T.grandmaster], cny: 100 },
+      { label: "챌린저", icons: [T.challenger], cny: 130 },
     ],
   },
   {

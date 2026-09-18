@@ -24,10 +24,10 @@ test("accept latest reference date, including weekends, and reject unusable prov
 
 test("all 23 quoted CNY prices retain the requested tier boundaries and amounts", () => {
   assert.deepEqual(boostingPrices.map(g => g.rows.map(r => r.cny)), [
-    [40, 60, 70, 80], [20, 25, 30, 35, 50, 70],
+    [40, 70, 100, 130], [20, 25, 30, 35, 50, 70],
     [800, 850, 950, 1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450],
   ]);
-  assert.equal(boostingPrices[0].rows[3].label, "마스터 800~1,200 LP");
+  assert.deepEqual(boostingPrices[0].rows.map(row => row.label), ["다이아 이하", "마스터", "그랜드마스터", "챌린저"]);
   assert.equal(boostingPrices[2].rows[12].label, "마스터 1,200~1,299 LP");
   assert.match(boostingPrices[1].note, /6승 1패 = 순승 5승/);
 });
