@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { services } from "@/lib/site";
+import { levelingPrice, services } from "@/lib/site";
 
 const slides = [
   {
@@ -20,7 +20,7 @@ const slides = [
   },
   {
     eyebrow: "PREMIUM DUO",
-    title: "함께하는 플레이,",
+    title: "함께 플레이하고,",
     highlight: "달라지는 결과.",
     service: "롤 듀오",
     desc: "혼자보다 함께, 라인전부터 한타까지. 상위 티어 기사와 호흡을 맞추며 실전 피드백을 받아보세요.",
@@ -39,6 +39,17 @@ const slides = [
     alt: services[2].imageAlt,
     href: "/account",
     tags: ["조건별 상담", "맞춤 계정 추천"],
+  },
+  {
+    eyebrow: "MANUAL LEVELING",
+    title: "처음부터 차근차근,",
+    highlight: "30레벨까지.",
+    service: "롤 육성",
+    desc: `${levelingPrice.fromLevel}레벨부터 ${levelingPrice.toLevel}레벨까지 ${levelingPrice.price.toLocaleString("ko-KR")}원. 매크로·봇 없이 모든 과정을 100% 수동으로 진행합니다.`,
+    image: "/images/lol/leveling-uniform.webp",
+    alt: "XYZ 롤 육성 · 100% 수동 육성 — 가렌을 활용한 브랜드 배너",
+    href: "/leveling",
+    tags: ["100% 수동 육성", "매크로·봇 미사용"],
   },
 ];
 
@@ -108,12 +119,12 @@ export default function HeroSlider() {
           <p className="mb-5 flex items-center gap-3 text-[10px] font-bold tracking-[0.25em] text-gold sm:text-xs">
             <span className="h-px w-9 bg-gold/65" /> {slide.eyebrow}
           </p>
-          <h1 className="text-[clamp(2rem,4.3vw,4rem)] font-black leading-[1.22] tracking-[-0.055em] text-white">
+          <h1 className="text-[clamp(1.8rem,3.3vw,3.35rem)] font-black leading-[1.22] tracking-[-0.055em] text-white">
             <span className="mb-3 block text-sm font-semibold tracking-[0.08em] text-zinc-300">XYZ {slide.service}</span>
-            {slide.title}<br />
-            <span className="gold-text">{slide.highlight}</span>
+            <span className="block whitespace-nowrap">{slide.title}</span>
+            <span className="gold-text block whitespace-nowrap">{slide.highlight}</span>
           </h1>
-          <p className="mt-5 min-h-21 max-w-md text-sm leading-7 text-zinc-300 sm:text-base sm:leading-8">{slide.desc}</p>
+          <p className="mt-5 min-h-24 max-w-md text-sm leading-7 text-zinc-300 sm:text-base sm:leading-8">{slide.desc}</p>
           <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2">
             {slide.tags.map((tag) => (
               <span key={tag} className="flex items-center gap-2 text-xs text-zinc-400"><span className="h-1 w-1 rotate-45 bg-gold/70" />{tag}</span>
@@ -126,9 +137,9 @@ export default function HeroSlider() {
 
         <div className="relative flex items-end justify-between gap-4 border-t border-white/15 pt-5">
           <div className="flex flex-wrap items-center gap-4 sm:gap-8">
-            <div className="flex gap-1" aria-label="서비스 선택">
+            <div className="grid grid-cols-4 gap-1" aria-label="서비스 선택">
               {slides.map((item, i) => (
-                <button key={item.service} type="button" onClick={() => goTo(i)} aria-label={`${i + 1}번째 슬라이드 보기: ${item.service}`} aria-current={index === i ? "true" : undefined} className={`flex min-h-11 items-center gap-2 border-b px-2 text-xs transition sm:px-3 ${index === i ? "border-gold text-gold" : "border-transparent text-zinc-500 hover:text-white"}`}>
+                <button key={item.service} type="button" onClick={() => goTo(i)} aria-label={`${i + 1}번째 슬라이드 보기: ${item.service}`} aria-current={index === i ? "true" : undefined} className={`flex min-h-11 items-center gap-1.5 whitespace-nowrap border-b px-1.5 text-xs transition sm:px-3 ${index === i ? "border-gold text-gold" : "border-transparent text-zinc-500 hover:text-white"}`}>
                   <span className="text-[10px] tabular-nums">0{i + 1}</span><span className="font-bold">{item.service}</span>
                 </button>
               ))}
