@@ -403,13 +403,13 @@ export default async function Home() {
             <SectionTitle
               eyebrow="services"
               title="XYZ가 제공하는 서비스"
-              desc="롤 대리, 롤 듀오, 롤 계정까지 목적에 맞는 서비스를 빠르게 선택할 수 있습니다."
+              desc="롤 대리, 롤 듀오, 롤 계정, 롤 육성까지 목적에 맞는 서비스를 선택하세요."
             />
           </Reveal>
-          <div className="grid items-stretch gap-6 lg:grid-cols-3">
+          <div className="grid items-stretch gap-6 md:grid-cols-2 lg:grid-cols-4">
             {services.map((service, i) => (
               <Reveal key={service.href} delay={i * 0.08} className="h-full">
-                <ServiceCard {...service} />
+                <ServiceCard {...service} image={service.cardImage} imageAlt={service.cardImageAlt} />
               </Reveal>
             ))}
           </div>

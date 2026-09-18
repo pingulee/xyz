@@ -25,6 +25,10 @@ export const navItems = [
   { label: "문의하기", href: "/inquiry" },
 ];
 
+export const levelingDuration = "보통 3~4일 소요";
+
+export const levelingPrice = { fromLevel: 0, toLevel: 30, price: 80000, currency: "KRW" } as const;
+
 export const services = [
   {
     title: "롤 대리",
@@ -33,6 +37,8 @@ export const services = [
     description:
       "현재 티어와 목표 티어를 기준으로 검증된 기사가 안정적으로 진행합니다.",
     image: "/images/lol/boosting-centered.webp",
+    cardImage: "/images/services/boosting-card.webp",
+    cardImageAlt: "판테온 일러스트와 서비스 안내를 담은 카드",
     imageAlt: "XYZ 롤 대리 · 1:1 전담 배정 — 아지르를 활용한 브랜드 배너",
   },
   {
@@ -42,6 +48,8 @@ export const services = [
     description:
       "상위 티어 기사와 함께 플레이하며 승률과 피드백을 동시에 챙깁니다.",
     image: "/images/lol/duo-centered.webp",
+    cardImage: "/images/services/duo-card.webp",
+    cardImageAlt: "레오나 일러스트와 서비스 안내를 담은 카드",
     imageAlt: "XYZ 롤 듀오 · 함께하는 승리 — 자야와 라칸을 활용한 브랜드 배너",
   },
   {
@@ -50,16 +58,24 @@ export const services = [
     eyebrow: "account",
     description: "원하는 티어, 챔피언, 일정 조건에 맞춘 계정을 구해드립니다.",
     image: "/images/lol/account-centered.webp",
+    cardImage: "/images/services/account-card.webp",
+    cardImageAlt: "아리 일러스트와 서비스 안내를 담은 카드",
     imageAlt: "XYZ 롤 계정 · 나만의 맞춤 계정 — 원소술사 럭스를 활용한 브랜드 배너",
+  },
+  {
+    title: "롤 육성",
+    href: "/leveling",
+    eyebrow: "leveling",
+    description: `${levelingPrice.fromLevel}→${levelingPrice.toLevel}레벨 ${levelingPrice.price.toLocaleString("ko-KR")}원. 100% 수동 육성으로 ${levelingDuration}됩니다.`,
+    image: "/images/lol/leveling-centered.webp",
+    imageAlt: "XYZ 롤 육성 · 100% 수동 육성 — 가렌을 활용한 브랜드 배너",
+    cardImage: "/images/services/leveling-card.webp",
+    cardImageAlt: "이즈리얼 일러스트와 수동 육성 안내를 담은 카드",
   },
 ];
 
-// 헤더 가격표 드롭다운. 홈 서비스 카드 목록(services)과 분리해 메뉴 전용
-// 서비스도 기존 홈 레이아웃을 바꾸지 않고 추가할 수 있게 한다.
-export const priceMenuItems = [
-  ...services.map(({ title, href }) => ({ label: title, href })),
-  { label: "롤 육성", href: "/leveling" },
-];
+// 제공 서비스와 가격표 메뉴가 같은 페이지 목록을 사용한다.
+export const priceMenuItems = services.map(({ title, href }) => ({ label: title, href }));
 
 const T = {
   iron: "/images/tier/1-iron.png",
@@ -129,7 +145,3 @@ export const duoPrices = {
     note: "· 점수는 10단위 반올림을 적용합니다. (예: 92점 상승, 106점 상승 → 100점으로 계산)\n· 고객님이 고의로 패배한 경우 승률 보장 서비스가 적용되지 않습니다.",
   },
 };
-
-export const levelingDuration = "보통 3~4일 소요";
-
-export const levelingPrice = { fromLevel: 0, toLevel: 30, price: 80000, currency: "KRW" } as const;
