@@ -42,3 +42,30 @@ All four gameplay banners now use a shared warm gold SVG background and glow. Ga
 - Original image: https://cdn.oneesports.gg/wp-content/uploads/2022/02/LeagueofLegends_ChallengerRankTyler1Mid.webp
 - The boosting banner uses an SVG viewport to show only the game screenshot. This is an illustrative historical client screen, not an XYZ customer result. Source attribution: Tyler1 / ONE Esports; game artwork belongs to Riot Games.
 - `boosting-game-source.webp` is retained as the previous source. Service card artwork is unchanged.
+
+## Shared metallic typography (2026-09-18)
+
+The four gameplay banners use the existing game screenshots above, with `duo-branded.webp` as a visual reference for dimensional gold lettering.
+
+All four use Noto Serif KR at weight 900, title size 112px / baseline 828, subtitle size 44px / baseline 909, horizontally centered at x=768 on a 1536×1024 canvas. Font size, glyph scale, extrusion depth (5px), gold gradient, highlight, and shadow are shared in `scripts/build-service-banners.py`; wording retains its natural width without stretching characters. Outlined text avoids runtime font substitution.
+
+Font source (SIL Open Font License): https://github.com/google/fonts/tree/main/ofl/notoserifkr — set `FONT_PATH` to `NotoSerifKR[wght].ttf` when rebuilding. These screenshot sources have not been replaced with 2026 gameplay footage.
+
+## Full-image backgrounds (previous)
+
+All four screenshots fill the entire 1536×1024 canvas using centered aspect-ratio-preserving cropping. The gold background, glow, border, and ornaments are removed. A neutral black gradient behind the lower text keeps it readable. The shared metallic lettering and its positions remain unchanged.
+
+## Service-specific framed banners (current)
+
+The four full-canvas banners now use these sources, with a shared double-line chamfered frame, corner details, title ornament and metallic lettering. There is no gold background fill and no generative image content.
+
+- Boosting: `challenger-modern-source.webp`, frame at 7.8 seconds of the actual Challenger promotion animation posted on 2024-02-22: https://tenor.com/view/challenger-league-of-legends-league-of-legends-gif-8876787300999394864 — source video https://media.tenor.com/ezCvBN7EdjAAAAPo/challenger-league.mp4 . This is an illustrative Flex-ranked promotion, not an XYZ customer result or verified 2026 capture.
+- Duo: `xayah-rakan.webp`, official Riot Rakan splash artwork listed above, showing the champion pair together.
+- Account: `../services/account-game-source.webp`, official Riot skin/loading-screen example, with provenance in `../services/SOURCES.md`.
+- Leveling: `leveling-mid-source.webp`, actual five-champion mid-lane turret push, from Malavida's League of Legends screenshot gallery: https://www.malavida.com/en/soft/league-of-legends/ — source image https://imag.malavida.com/mvimgbig/download-fs/league-of-legends-9945-1.jpg . This is an illustrative gameplay scene, not an XYZ order or verified 2026 capture.
+
+Common typography: Noto Serif KR 700, title 136px at baseline 842, subtitle 44px at baseline 920, both centered at x=768; shared 4px extrusion and metallic highlights. All exports are 1536×1024. The template remains `scripts/build-service-banners.py`; original screenshots and official artwork retain their rights and do not imply endorsement.
+
+## Golden leveling tone and unobscured artwork (2026-09-19)
+
+The leveling banner applies a warm gold color grade to the existing gameplay image through the shared SVG template. All four banners replace the full-canvas black gradient and edge vignette with a compact feathered ellipse behind the text (center 768,828; radii 440,150; maximum black opacity 28%, fading to transparent). Small glyph shadows remain. Frame, ornaments, text positions, sizes, and font are unchanged. Original source images remain intact.
