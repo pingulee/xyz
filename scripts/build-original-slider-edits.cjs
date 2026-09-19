@@ -6,6 +6,7 @@ const sharp = require("sharp");
 const root = path.resolve(__dirname, "..");
 const width = 1536;
 const height = 1024;
+const renderScale = 2;
 
 const asset = (relativePath) => path.join(root, "public", "images", relativePath);
 const dataUri = (relativePath) => {
@@ -65,10 +66,15 @@ const configs = [
   },
   {
     output: "slider/04-edited.webp",
-    background: "lol/leveling-game-source.webp",
+    background: "lol/leveling-game-upscaled.png",
     title: "롤 육성",
     subtitle: "매크로 없는 100% 수동 육성",
     frame: true,
+    zoom: 1.16,
+    titleSize: 156,
+    subtitleSize: 54,
+    titleY: 842,
+    subtitleY: 936,
   },
 ];
 
@@ -114,8 +120,13 @@ async function build(config) {
   const frame = config.frame
     ? `<rect x="34" y="34" width="1468" height="956" rx="18" fill="none" stroke="#c8943f" stroke-width="3" stroke-opacity=".82"/>`
     : "";
+  const titleSize = config.titleSize || 136;
+  const subtitleSize = config.subtitleSize || 48;
+  const titleY = config.titleY || 836;
+  const subtitleY = config.subtitleY || 926;
+  const ornamentY = subtitleY - 18;
   const overlay = Buffer.from(`
-  <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <svg xmlns="http://www.w3.org/2000/svg" width="${width * renderScale}" height="${height * renderScale}" viewBox="0 0 ${width} ${height}">
     <defs>
       <linearGradient id="lowerShade" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#050504" stop-opacity="0"/>
@@ -123,34 +134,55 @@ async function build(config) {
         <stop offset="1" stop-color="#050504" stop-opacity=".9"/>
       </linearGradient>
       <linearGradient id="goldText" x1="0" y1="0" x2="0" y2="1">
-        <stop stop-color="#fff5c8"/>
-        <stop offset=".35" stop-color="#f4d47f"/>
-        <stop offset=".6" stop-color="#c18b31"/>
-        <stop offset="1" stop-color="#f0c866"/>
+        <stop stop-color="#fff9d9"/>
+        <stop offset=".22" stop-color="#ffe59a"/>
+        <stop offset=".48" stop-color="#d7a746"/>
+        <stop offset=".72" stop-color="#9c651d"/>
+        <stop offset="1" stop-color="#f1c660"/>
       </linearGradient>
       <filter id="shadow" x="-20%" y="-40%" width="140%" height="200%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="5"/>
-        <feOffset dy="6"/>
-        <feComponentTransfer><feFuncA type="linear" slope=".85"/></feComponentTransfer>
+        <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+        <feOffset dy="7"/>
+        <feComponentTransfer><feFuncA type="linear" slope=".78"/></feComponentTransfer>
         <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
     ${inserts}
     ${ranks}
-    <rect y="610" width="${width}" height="414" fill="url(#lowerShade)"/>
+    <rect y="570" width="${width}" height="454" fill="url(#lowerShade)"/>
     ${frame}
-    <g text-anchor="middle" font-family="Noto Sans KR, Malgun Gothic, sans-serif" filter="url(#shadow)">
-      <text x="768" y="828" font-size="112" font-weight="700" letter-spacing="-5" fill="url(#goldText)" stroke="#6f4c13" stroke-width="2">${config.title}</text>
-      <text x="768" y="909" font-size="44" font-weight="700" letter-spacing="-1" fill="#f2d68b">${config.subtitle}</text>
+    <g text-anchor="middle" font-family="Gmarket Sans TTF, Gmarket Sans, Noto Sans KR, Malgun Gothic, sans-serif" font-weight="700" filter="url(#shadow)">
+      <text x="768" y="${titleY}" font-size="${titleSize}" letter-spacing="-2" fill="url(#goldText)" stroke="#8b5d1e" stroke-width="2.5" stroke-linejoin="round" paint-order="stroke fill">${config.title}</text>
+      <path d="M250 ${ornamentY} H476" stroke="#c9963e" stroke-width="2" stroke-linecap="round" opacity=".72"/>
+      <path d="M1060 ${ornamentY} H1286" stroke="#c9963e" stroke-width="2" stroke-linecap="round" opacity=".72"/>
+      <circle cx="498" cy="${ornamentY}" r="4" fill="#f4d681"/>
+      <circle cx="1038" cy="${ornamentY}" r="4" fill="#f4d681"/>
+      <text x="768" y="${subtitleY}" font-size="${subtitleSize}" letter-spacing="0" fill="#fff0b8" stroke="#4a2e0e" stroke-width="1.25" paint-order="stroke fill">${config.subtitle}</text>
     </g>
   </svg>`);
 
-  const resizedBackground = await sharp(asset(config.background))
-    .resize(width, height, { fit: "cover", position: "center" })
+  const zoom = config.zoom || 1;
+  const zoomedWidth = Math.round(width * renderScale * zoom);
+  const zoomedHeight = Math.round(height * renderScale * zoom);
+  let background = sharp(asset(config.background))
+    .resize(zoomedWidth, zoomedHeight, { fit: "cover", position: "center" });
+  if (zoom > 1) {
+    background = background.extract({
+      left: Math.round((zoomedWidth - width * renderScale) / 2),
+      top: Math.round((zoomedHeight - height * renderScale) / 2),
+      width: width * renderScale,
+      height: height * renderScale,
+    });
+  }
+  const resizedBackground = await background.toBuffer();
+
+  const rendered = await sharp(resizedBackground)
+    .composite([{ input: overlay }])
+    .png()
     .toBuffer();
 
-  await sharp(resizedBackground)
-    .composite([{ input: overlay }])
+  await sharp(rendered)
+    .resize(width, height, { kernel: sharp.kernel.lanczos3 })
     .webp({ quality: 90, effort: 6 })
     .toFile(asset(config.output));
   console.log(config.output);
