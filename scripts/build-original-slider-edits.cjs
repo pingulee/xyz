@@ -112,8 +112,8 @@ async function build(config) {
     ))
     : null;
   const ranks = config.accountRanks ? accountRankMarkup(rankData) : "";
-  const titleSize = 156;
-  const titleY = 574;
+  const titleSize = 148;
+  const titleY = 568;
   const overlay = Buffer.from(`
   <svg xmlns="http://www.w3.org/2000/svg" width="${width * renderScale}" height="${height * renderScale}" viewBox="0 0 ${width} ${height}">
     <defs>
@@ -125,8 +125,13 @@ async function build(config) {
       </linearGradient>
       <linearGradient id="panelBand" x1="0" y1="0" x2="1" y2="0">
         <stop stop-color="#140600" stop-opacity="0"/>
-        <stop offset=".5" stop-color="#3b1300" stop-opacity=".6"/>
+        <stop offset=".5" stop-color="#4b1c04" stop-opacity=".32"/>
         <stop offset="1" stop-color="#140600" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="glassPanel" x1="0" y1="0" x2="0" y2="1">
+        <stop stop-color="#030303" stop-opacity=".66"/>
+        <stop offset=".48" stop-color="#050504" stop-opacity=".46"/>
+        <stop offset="1" stop-color="#030303" stop-opacity=".62"/>
       </linearGradient>
       <filter id="shadow" x="-20%" y="-30%" width="140%" height="180%">
         <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
@@ -138,20 +143,20 @@ async function build(config) {
     ${inserts}
     ${ranks}
     <g>
-      <rect x="211" y="307" width="1114" height="411" rx="23" fill="#040504" fill-opacity=".97" stroke="#bd852e" stroke-width="5"/>
-      <rect x="225" y="323" width="1086" height="379" rx="17" fill="none" stroke="#c99438" stroke-width="2"/>
-      <rect x="226" y="466" width="1084" height="94" fill="url(#panelBand)"/>
+      <rect x="270" y="365" width="996" height="294" rx="25" fill="url(#glassPanel)" stroke="#bd852e" stroke-width="4"/>
+      <rect x="284" y="379" width="968" height="266" rx="18" fill="none" stroke="#d0a34c" stroke-width="1.8" stroke-opacity=".9"/>
+      <rect x="285" y="465" width="966" height="96" fill="url(#panelBand)"/>
       <g fill="none" stroke="#c99438" stroke-width="2.2" stroke-linecap="round">
-        <path d="M250 343 H427"/>
-        <path d="M1109 343 H1286"/>
-        <path d="M250 682 H427"/>
-        <path d="M1109 682 H1286"/>
+        <path d="M309 398 H440"/>
+        <path d="M1096 398 H1227"/>
+        <path d="M309 626 H440"/>
+        <path d="M1096 626 H1227"/>
       </g>
-      <g fill="#040504" stroke="#c99438" stroke-width="2.2">
-        <circle cx="242" cy="343" r="7"/>
-        <circle cx="1294" cy="343" r="7"/>
-        <circle cx="242" cy="682" r="7"/>
-        <circle cx="1294" cy="682" r="7"/>
+      <g fill="#070604" fill-opacity=".7" stroke="#d4a64c" stroke-width="2.2">
+        <circle cx="300" cy="398" r="6"/>
+        <circle cx="1236" cy="398" r="6"/>
+        <circle cx="300" cy="626" r="6"/>
+        <circle cx="1236" cy="626" r="6"/>
       </g>
     </g>
     <g text-anchor="middle" font-family="Gmarket Sans TTF, Gmarket Sans, Noto Sans KR, Malgun Gothic, sans-serif" font-weight="700" filter="url(#shadow)">
