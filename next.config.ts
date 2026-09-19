@@ -45,6 +45,10 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  // 정적 이미지 URL에 버전 쿼리를 붙여 교체된 배너의 CDN/최적화 캐시를 갱신한다.
+  images: {
+    localPatterns: [{ pathname: "/images/**" }],
+  },
   // 서버 버전·프레임워크를 노출하는 X-Powered-By 제거.
   poweredByHeader: false,
   // 소규모 CSS 번들을 HTML에 인라인 → 렌더 차단 <link> 요청 제거 (LCP/FCP 개선)
