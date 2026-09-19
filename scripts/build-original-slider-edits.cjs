@@ -113,69 +113,49 @@ async function build(config) {
     : null;
   const ranks = config.accountRanks ? accountRankMarkup(rankData) : "";
   const titleSize = 156;
-  const subtitleSize = 54;
-  const titleY = 535;
-  const subtitleY = 628;
+  const titleY = 574;
   const overlay = Buffer.from(`
   <svg xmlns="http://www.w3.org/2000/svg" width="${width * renderScale}" height="${height * renderScale}" viewBox="0 0 ${width} ${height}">
     <defs>
-      <linearGradient id="lowerShade" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#050504" stop-opacity="0"/>
-        <stop offset=".42" stop-color="#050504" stop-opacity=".08"/>
-        <stop offset="1" stop-color="#050504" stop-opacity=".48"/>
-      </linearGradient>
       <linearGradient id="goldText" x1="0" y1="0" x2="0" y2="1">
-        <stop stop-color="#fffbe8"/>
-        <stop offset=".18" stop-color="#ffe8a1"/>
-        <stop offset=".43" stop-color="#d9a33e"/>
-        <stop offset=".63" stop-color="#8f5916"/>
-        <stop offset=".82" stop-color="#dcae4f"/>
-        <stop offset="1" stop-color="#fff0ad"/>
+        <stop stop-color="#fff0a6"/>
+        <stop offset=".38" stop-color="#f2c35e"/>
+        <stop offset=".68" stop-color="#d99a32"/>
+        <stop offset="1" stop-color="#b46a11"/>
       </linearGradient>
-      <linearGradient id="panelStroke" x1="0" y1="0" x2="1" y2="0">
-        <stop stop-color="#b67b27" stop-opacity="0"/>
-        <stop offset=".2" stop-color="#e9c56b" stop-opacity=".72"/>
-        <stop offset=".5" stop-color="#fff0a4"/>
-        <stop offset=".8" stop-color="#e9c56b" stop-opacity=".72"/>
-        <stop offset="1" stop-color="#b67b27" stop-opacity="0"/>
+      <linearGradient id="panelBand" x1="0" y1="0" x2="1" y2="0">
+        <stop stop-color="#140600" stop-opacity="0"/>
+        <stop offset=".5" stop-color="#3b1300" stop-opacity=".6"/>
+        <stop offset="1" stop-color="#140600" stop-opacity="0"/>
       </linearGradient>
-      <radialGradient id="textVignette">
-        <stop offset="0" stop-color="#030303" stop-opacity=".82"/>
-        <stop offset=".58" stop-color="#030303" stop-opacity=".55"/>
-        <stop offset="1" stop-color="#030303" stop-opacity="0"/>
-      </radialGradient>
-      <filter id="shadow" x="-25%" y="-50%" width="150%" height="220%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="5"/>
-        <feOffset dy="8"/>
-        <feComponentTransfer><feFuncA type="linear" slope=".88"/></feComponentTransfer>
-        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-      <filter id="goldGlow" x="-30%" y="-80%" width="160%" height="260%">
-        <feGaussianBlur stdDeviation="8" result="blur"/>
-        <feFlood flood-color="#dca642" flood-opacity=".48"/>
-        <feComposite in2="blur" operator="in"/>
+      <filter id="shadow" x="-20%" y="-30%" width="140%" height="180%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+        <feOffset dy="6"/>
+        <feComponentTransfer><feFuncA type="linear" slope=".8"/></feComponentTransfer>
         <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
     ${inserts}
     ${ranks}
-    <rect y="0" width="${width}" height="${height}" fill="url(#lowerShade)"/>
-    <ellipse cx="768" cy="512" rx="650" ry="300" fill="url(#textVignette)"/>
-    <g text-anchor="middle" font-family="Gmarket Sans TTF, Gmarket Sans, Noto Sans KR, Malgun Gothic, sans-serif">
-      <g fill="none" stroke="url(#panelStroke)" stroke-linecap="round">
-        <path d="M350 365 H674" stroke-width="2"/>
-        <path d="M862 365 H1186" stroke-width="2"/>
-        <path d="M350 674 H1186" stroke-width="2" opacity=".72"/>
+    <g>
+      <rect x="211" y="307" width="1114" height="411" rx="23" fill="#040504" fill-opacity=".97" stroke="#bd852e" stroke-width="5"/>
+      <rect x="225" y="323" width="1086" height="379" rx="17" fill="none" stroke="#c99438" stroke-width="2"/>
+      <rect x="226" y="466" width="1084" height="94" fill="url(#panelBand)"/>
+      <g fill="none" stroke="#c99438" stroke-width="2.2" stroke-linecap="round">
+        <path d="M250 343 H427"/>
+        <path d="M1109 343 H1286"/>
+        <path d="M250 682 H427"/>
+        <path d="M1109 682 H1286"/>
       </g>
-      <path d="M768 351 l14 14 -14 14 -14 -14z" fill="#d7a644" stroke="#fff0a4" stroke-width="1.5"/>
-      <text x="768" y="372" font-size="22" font-weight="700" letter-spacing="8" fill="#f4d887">XYZ PREMIUM SERVICE</text>
-      <g font-weight="700" filter="url(#shadow)">
-        <text x="768" y="${titleY}" font-size="${titleSize}" letter-spacing="-3" fill="url(#goldText)" stroke="#5b350d" stroke-width="6" stroke-linejoin="round" paint-order="stroke fill" filter="url(#goldGlow)">${config.title}</text>
-        <text x="768" y="${titleY - 3}" font-size="${titleSize}" letter-spacing="-3" fill="none" stroke="#fff5c6" stroke-width="1.25" stroke-opacity=".74">${config.title}</text>
-        <text x="768" y="${subtitleY}" font-size="${subtitleSize}" letter-spacing="1" fill="#fff4cb" stroke="#3b230b" stroke-width="2" paint-order="stroke fill">${config.subtitle}</text>
+      <g fill="#040504" stroke="#c99438" stroke-width="2.2">
+        <circle cx="242" cy="343" r="7"/>
+        <circle cx="1294" cy="343" r="7"/>
+        <circle cx="242" cy="682" r="7"/>
+        <circle cx="1294" cy="682" r="7"/>
       </g>
-      <circle cx="350" cy="674" r="4" fill="#efd27b"/>
-      <circle cx="1186" cy="674" r="4" fill="#efd27b"/>
+    </g>
+    <g text-anchor="middle" font-family="Gmarket Sans TTF, Gmarket Sans, Noto Sans KR, Malgun Gothic, sans-serif" font-weight="700" filter="url(#shadow)">
+      <text x="768" y="${titleY}" font-size="${titleSize}" letter-spacing="-3" fill="url(#goldText)">${config.title}</text>
     </g>
   </svg>`);
 
