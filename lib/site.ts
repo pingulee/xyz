@@ -119,6 +119,7 @@ export const boostingPrices: CnyPriceGroup[] = [
       { label: "다이아몬드 3", icons: [T.diamond], cny: 60 },
       { label: "다이아몬드 2", icons: [T.diamond], cny: 70 },
       { label: "다이아몬드 1", icons: [T.diamond], cny: 80 },
+      { label: "듀오 막힘", icons: [T.master], cny: 130 },
     ],
   },
   {
