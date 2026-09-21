@@ -56,7 +56,8 @@ export const services = [
     title: "롤 계정",
     href: "/account",
     eyebrow: "account",
-    description: "원하는 티어, 챔피언, 일정 조건에 맞춘 계정을 구해드립니다.",
+    description:
+      "원하는 티어·챔피언·스킨 조건의 계정 판매와 보유 계정 매입을 함께 진행합니다.",
     image: "/images/slider/03-edited.webp?v=20260919-6",
     cardImage: "/images/slider/03-edited.webp?v=20260919-6",
     cardImageAlt: "기존 검정·골드 이미지에 실제 롤 계정 화면과 문구를 적용한 서비스 이미지",

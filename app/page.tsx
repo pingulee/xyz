@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -6,9 +7,6 @@ import {
   Clock,
   MessageCircle,
   ShieldCheck,
-  ScanSearch,
-  UsersRound,
-  Swords,
   Sparkles,
   Star,
   Trophy,
@@ -52,27 +50,27 @@ const stats = [
 const process = [
   {
     title: "상담 접수",
-    icon: MessageCircle,
+    image: "/images/process/01.webp",
     desc: "카카오톡으로 현재 티어와 목표를 전달합니다.",
   },
   {
     title: "계정 분석",
-    icon: ScanSearch,
+    image: "/images/process/02.webp",
     desc: "현재 티어와 MMR을 확인해 진행 방식을 정합니다.",
   },
   {
     title: "기사 배정",
-    icon: UsersRound,
+    image: "/images/process/03.webp",
     desc: "조건에 맞는 검증 기사를 1:1로 배정합니다.",
   },
   {
     title: "작업 진행",
-    icon: Swords,
+    image: "/images/process/04.webp",
     desc: "100% 수동 진행, 상황을 실시간 공유합니다.",
   },
   {
     title: "작업 완료",
-    icon: Trophy,
+    image: "/images/process/05.webp",
     desc: "목표 달성 후 승률·KDA 기록을 남깁니다.",
   },
 ];
@@ -203,9 +201,9 @@ const faqCategories: HomeFaqCategory[] = [
   {
     id: "account",
     label: "롤 계정",
-    title: "롤 계정 맞춤 상담",
+    title: "롤 계정 판매·매입 상담",
     description:
-      "원하는 계정 조건과 예산을 정리하고, 구매 전 확인할 내용을 상담하는 방법을 안내합니다.",
+      "원하는 계정 조건과 예산을 정리하고, 구매 전 확인할 내용과 보유 계정 매입 기준까지 안내합니다.",
     detailHref: "/account",
     detailLabel: "롤 계정 상담 항목 보기",
     items: [
@@ -238,6 +236,16 @@ const faqCategories: HomeFaqCategory[] = [
         question: "계정 구매 후 문제가 생기면 어떻게 하나요?",
         answer:
           "구매 전 확인 항목과 보상 기준을 상담에서 안내합니다. 조건과 상황에 따라 대응이 달라질 수 있어 구매 전에 반드시 확인하시길 권장합니다.",
+      },
+      {
+        question: "쓰지 않는 롤 계정을 팔 수도 있나요?",
+        answer:
+          "계정 판매와 매입을 모두 진행합니다. 티어와 보유 챔피언·스킨, 정지 이력, 인증 정보를 알려주시면 매입 가능 여부와 시세를 안내합니다.",
+      },
+      {
+        question: "롤 계정 매입 가격은 어떻게 정해지나요?",
+        answer:
+          "티어와 보유 챔피언·스킨, 명예 등급과 제재 이력을 확인한 뒤 매입 가격을 안내합니다. 조건 확인 후 상담에서 최종 금액을 확정합니다.",
       },
     ],
   },
@@ -446,13 +454,19 @@ export default async function Home() {
           <Reveal delay={0.12}>
             {/* 모바일·태블릿: 세로 균일 카드(가로 레이아웃), lg: 5열 카드 — 고아 카드/오버사이즈 없음 */}
             <ol className="mt-10 grid grid-cols-1 gap-3 lg:grid-cols-5 lg:gap-4">
-              {process.map(({ title, icon: Icon, desc }, i) => (
+              {process.map(({ title, image, desc }, i) => (
                 <li
                   key={title}
                   className="group flex items-center gap-4 rounded-3xl border border-gold/12 bg-white/3.5 p-4 transition hover:border-gold/30 hover:bg-white/5 lg:flex-col lg:items-center lg:gap-3 lg:p-6 lg:text-center"
                 >
-                  <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-gold/25 bg-gold/7 text-gold shadow-[inset_0_1px_0_rgba(255,222,155,0.08)] lg:h-20 lg:w-20">
-                    <Icon size={30} strokeWidth={1.4} aria-hidden="true" />
+                  <span className="flex h-20 w-20 shrink-0 items-center justify-center lg:h-24 lg:w-24">
+                    <Image
+                      src={image}
+                      alt=""
+                      width={112}
+                      height={112}
+                      className="h-full w-full object-contain"
+                    />
                   </span>
                   <div className="min-w-0">
                     <span className="text-[11px] font-black tracking-[0.18em] text-gold/80">
