@@ -43,7 +43,7 @@ export default function JsonLd() {
         description: site.description,
         areaServed: "KR",
         inLanguage: "ko-KR",
-        serviceType: ["롤 대리", "롤 듀오", "롤 계정", "롤 업디"],
+        serviceType: ["롤 대리", "롤 듀오", "롤 계정", "롤 계정 매입", "롤 업디"],
         provider: { "@id": `${site.url}/#organization` },
         // 사이트 가격표에 공개된 실제 범위 (저티어 1승 5,000원 ~ 고티어 점수 보장 180,000원)
         offers: {
