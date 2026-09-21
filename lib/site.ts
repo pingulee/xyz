@@ -113,10 +113,12 @@ export const boostingPrices: CnyPriceGroup[] = [
     rows: [
       { label: "아이언 · 브론즈 · 실버", icons: [T.iron, T.bronze, T.silver], cny: 20 },
       { label: "골드", icons: [T.gold], cny: 25 },
-      { label: "플래티넘", icons: [T.platinum], cny: 30 },
-      { label: "에메랄드", icons: [T.emerald], cny: 35 },
-      { label: "다이아몬드 4~3", icons: [T.diamond], cny: 50 },
-      { label: "다이아몬드 2~1", icons: [T.diamond], cny: 70 },
+      { label: "플래티넘", icons: [T.platinum], cny: 35 },
+      { label: "에메랄드", icons: [T.emerald], cny: 40 },
+      { label: "다이아몬드 4", icons: [T.diamond], cny: 50 },
+      { label: "다이아몬드 3", icons: [T.diamond], cny: 60 },
+      { label: "다이아몬드 2", icons: [T.diamond], cny: 70 },
+      { label: "다이아몬드 1", icons: [T.diamond], cny: 80 },
     ],
   },
   {
