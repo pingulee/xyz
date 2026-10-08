@@ -36,9 +36,6 @@ export default function FloatingContact() {
             <Send size={16} />
             카카오톡 문의하기
           </a>
-          <p className="mt-3 text-center text-xs font-bold text-zinc-400">
-            카카오톡 ID : <span className="text-gold">{site.kakaoId}</span>
-          </p>
         </div>
       )}
       <button
