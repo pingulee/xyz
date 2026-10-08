@@ -12,6 +12,7 @@ export const site = {
     "롤 대리, 롤 듀오, 롤 계정 전문 XYZ. 상위 티어 검증 기사가 100% 수동으로 진행하고, 기사별 승률·전적·실제 작업 후기를 모두 공개합니다. 구간별 승률 보장, 24시간 위챗 상담.",
   contactUrl: "/inquiry",
   wechatId: "xyzhanfu",
+  contactEmail: "lolxyzteam@gmail.com",
   ogImage: "/images/profile.webp",
   logo: "/images/logo.webp",
 };

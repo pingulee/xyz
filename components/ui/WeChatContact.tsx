@@ -19,7 +19,7 @@ export default function WeChatContact() {
       <MessageCircle size={36} className="mb-5 text-gold" aria-hidden="true" />
       <p className="text-sm font-bold text-zinc-400">WeChat · 위챗 ID</p>
       <p className="mt-2 break-all text-4xl font-black text-gold">{site.wechatId}</p>
-      <p className="mt-5 leading-7 text-zinc-300">위챗 ID를 친구 추가해 문의해 주세요. 모든 상담 및 문의는 위챗으로만 접수합니다.</p>
+      <p className="mt-5 leading-7 text-zinc-300">위챗 ID를 친구 추가해 문의해 주세요.</p>
       <button type="button" onClick={copyId} className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-full bg-gold-gradient px-6 py-3 font-black text-black">
         <Copy size={18} aria-hidden="true" /> 위챗 ID 복사
       </button>
@@ -29,6 +29,10 @@ export default function WeChatContact() {
         <li>ID <strong className="text-white">{site.wechatId}</strong>를 검색하고 친구 요청을 보냅니다.</li>
         <li>현재 티어, 목표 티어, 원하는 서비스를 메시지로 알려주세요.</li>
       </ol>
+      <div className="mt-8 border-t border-gold/15 pt-6">
+        <p className="text-sm leading-7 text-zinc-300">위챗이 없다면 아래 이메일로 문의를 남겨주세요.</p>
+        <a href={`mailto:${site.contactEmail}`} className="mt-2 inline-flex min-h-11 items-center break-all text-base font-bold text-gold underline underline-offset-4">{site.contactEmail}</a>
+      </div>
     </div>
   );
 }

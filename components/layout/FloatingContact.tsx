@@ -21,7 +21,7 @@ export default function FloatingContact() {
             </div>
           </div>
           <p className="mt-4 text-sm leading-6 text-zinc-300">
-            위챗 ID <strong className="text-gold">{site.wechatId}</strong>를 친구 추가해 문의해 주세요. 문의는 위챗으로만 접수합니다.
+            위챗 ID <strong className="text-gold">{site.wechatId}</strong>를 친구 추가해 문의해 주세요.
           </p>
           <div className="mt-4 flex items-center gap-2 rounded-2xl bg-white/4 px-4 py-3 text-xs text-zinc-400">
             <Clock size={15} className="text-gold" />
@@ -36,6 +36,8 @@ export default function FloatingContact() {
             <Send size={16} />
             위챗 문의하기
           </a>
+          <p className="mt-4 text-xs leading-6 text-zinc-300">위챗이 없다면 이메일로 문의를 남겨주세요.</p>
+          <a href={`mailto:${site.contactEmail}`} className="inline-flex min-h-6 break-all text-xs font-bold text-gold underline underline-offset-4">{site.contactEmail}</a>
         </div>
       )}
       <button

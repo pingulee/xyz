@@ -95,7 +95,8 @@ export default function Footer() {
           <p className="mt-4 break-words text-sm font-bold text-zinc-300">
             위챗 ID: <span className="text-gold">{site.wechatId}</span>
           </p>
-          <p className="mt-2 text-xs leading-6 text-zinc-400">친구 추가 후 문의해 주세요. 문의는 위챗으로만 접수합니다.</p>
+          <p className="mt-2 text-xs leading-6 text-zinc-400">친구 추가 후 문의해 주세요. 위챗이 없다면 이메일로 문의를 남겨주세요.</p>
+          <a href={`mailto:${site.contactEmail}`} className="mt-2 inline-flex min-h-6 break-all text-sm text-gold underline underline-offset-4">{site.contactEmail}</a>
         </div>
       </Container>
       <div className="border-t border-gold/10 py-6 text-center text-xs text-zinc-400">
