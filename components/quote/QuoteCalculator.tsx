@@ -1129,7 +1129,7 @@ export default function QuoteCalculator() {
             </p>
           </div>
           <a
-            href={site.kakaoUrl}
+            href={site.contactUrl}
             target="_blank"
             rel="noopener noreferrer"
             className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-4 text-sm font-black transition ${formValid ? "bg-gold-gradient text-black hover:brightness-110" : "pointer-events-none bg-white/5 text-zinc-600"}`}

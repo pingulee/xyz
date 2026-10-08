@@ -23,7 +23,8 @@ export default function JsonLd() {
         contactPoint: {
           "@type": "ContactPoint",
           contactType: "customer service",
-          url: site.kakaoUrl,
+          url: `${site.url}${site.contactUrl}`,
+          description: `위챗 ID ${site.wechatId}를 친구 추가해 문의해 주세요. 문의는 위챗으로만 접수합니다.`,
           availableLanguage: ["ko"],
         },
       },

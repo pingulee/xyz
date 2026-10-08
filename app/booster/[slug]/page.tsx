@@ -192,7 +192,7 @@ export default async function BoosterDetailPage({ params }: Props) {
                 </div>
 
                 <a
-                  href={site.kakaoUrl}
+                  href={site.contactUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="mx-auto inline-flex shrink-0 items-center gap-2 rounded-full bg-gold-gradient px-6 py-3 text-sm font-black text-black transition hover:brightness-110 md:mx-0"

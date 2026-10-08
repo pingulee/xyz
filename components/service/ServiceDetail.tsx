@@ -67,7 +67,7 @@ export default function ServiceDetail(props: ServiceDetailProps) {
               )}
               <div className="mt-6 flex justify-end">
                 <a
-                  href={site.kakaoUrl}
+                  href={site.contactUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-6 py-4 font-black text-black transition hover:brightness-110"

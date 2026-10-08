@@ -51,7 +51,7 @@ const process = [
   {
     title: "상담 접수",
     image: "/images/process/01.webp",
-    desc: "카카오톡으로 현재 티어와 목표를 전달합니다.",
+    desc: "위챗으로 현재 티어와 목표를 전달합니다.",
   },
   {
     title: "계정 분석",
@@ -118,7 +118,7 @@ const faqCategories: HomeFaqCategory[] = [
       {
         question: "롤 대리는 어떤 방식으로 진행되나요?",
         answer:
-          "카카오톡 상담에서 현재 티어와 목표 티어, 희망 일정, 라인·챔피언 요청을 확인합니다. 조건에 맞는 기사를 배정하고 결제 확인 후 기사가 계정에 접속해 작업을 진행합니다.",
+          "위챗 상담에서 현재 티어와 목표 티어, 희망 일정, 라인·챔피언 요청을 확인합니다. 조건에 맞는 기사를 배정하고 결제 확인 후 기사가 계정에 접속해 작업을 진행합니다.",
       },
       {
         question: "롤 대리도 라인과 챔피언을 지정할 수 있나요?",
@@ -128,7 +128,7 @@ const faqCategories: HomeFaqCategory[] = [
       {
         question: "롤 대리 진행 현황은 어떻게 확인하나요?",
         answer:
-          "진행 중인 대리 작업의 현재 상황은 카카오톡 상담 채널로 문의해 확인할 수 있습니다.",
+          "진행 중인 대리 작업의 현재 상황은 위챗 상담 채널로 문의해 확인할 수 있습니다.",
       },
       {
         question: "계정이 정지될 위험은 없나요?",
@@ -261,7 +261,7 @@ const faqCategories: HomeFaqCategory[] = [
       {
         question: "상담은 어떻게 신청하나요?",
         answer:
-          "카카오톡 상담에서 현재 티어와 원하는 서비스, 희망 시간대를 알려주시면 견적과 진행 가능 여부를 안내합니다.",
+          "위챗 상담에서 현재 티어와 원하는 서비스, 희망 시간대를 알려주시면 견적과 진행 가능 여부를 안내합니다.",
       },
       {
         question: "롤 대리·듀오 가격은 어떻게 정해지나요?",
@@ -286,7 +286,7 @@ const faqCategories: HomeFaqCategory[] = [
       {
         question: "상담은 몇 시까지 가능한가요?",
         answer:
-          "카카오톡 상담은 24시간 접수하며, 접수 순서와 기사 일정에 따라 순차적으로 답변드립니다.",
+          "위챗 상담은 24시간 접수하며, 접수 순서와 기사 일정에 따라 순차적으로 답변드립니다.",
       },
     ],
   },
@@ -314,7 +314,7 @@ const howToJsonLd = {
   step: [
     {
       name: "상담 접수",
-      text: "카카오톡으로 현재 티어, 목표 티어, 희망 일정을 알려주세요.",
+      text: "위챗으로 현재 티어, 목표 티어, 희망 일정을 알려주세요.",
     },
     {
       name: "계정 분석",
@@ -326,7 +326,7 @@ const howToJsonLd = {
     },
     {
       name: "작업 진행",
-      text: "100% 수동으로 진행하며 카카오톡으로 실시간 상황을 공유합니다.",
+      text: "100% 수동으로 진행하며 위챗으로 실시간 상황을 공유합니다.",
     },
     {
       name: "작업 완료",
@@ -678,13 +678,13 @@ export default async function Home() {
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <a
-                  href={site.kakaoUrl}
+                  href={site.contactUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-full bg-black px-7 py-4 font-black text-white transition hover:bg-zinc-900"
                 >
                   <MessageCircle size={18} />
-                  카카오톡 상담하기
+                  위챗 상담하기
                 </a>
                 <a
                   href="/boosting"

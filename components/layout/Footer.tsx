@@ -83,15 +83,19 @@ export default function Footer() {
           </p>
           <div className="mt-5">
             <a
-              href={site.kakaoUrl}
+              href={site.contactUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-slate-800 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-700"
             >
               <MessageCircle size={17} />
-              카카오톡 상담
+              위챗 친구 추가 안내
             </a>
           </div>
+          <p className="mt-4 break-words text-sm font-bold text-zinc-300">
+            위챗 ID: <span className="text-gold">{site.wechatId}</span>
+          </p>
+          <p className="mt-2 text-xs leading-6 text-zinc-400">친구 추가 후 문의해 주세요. 문의는 위챗으로만 접수합니다.</p>
         </div>
       </Container>
       <div className="border-t border-gold/10 py-6 text-center text-xs text-zinc-400">

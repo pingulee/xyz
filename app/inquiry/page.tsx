@@ -1,40 +1,29 @@
 import type { Metadata } from "next";
 import Container from "@/components/layout/Container";
-import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
-import InquiryBoard from "@/components/inquiry/InquiryBoard";
-import { getInquiryList } from "@/lib/inquiry";
+import WeChatContact from "@/components/ui/WeChatContact";
+import { site } from "@/lib/site";
 
-// 세션(회원/비회원)에 따라 폼이 달라지고 실시간 목록이 필요해 동적으로 둔다.
-export const dynamic = "force-dynamic";
-
-const description =
-  "XYZ 롤 대리·듀오·계정 서비스 문의하기. 비회원도 비밀번호로 문의를 남기고 답변을 확인할 수 있습니다.";
+const description = `XYZ 문의는 위챗으로만 접수합니다. 위챗 ID ${site.wechatId}를 친구 추가해 상담해 주세요.`;
 
 // 문의 제목엔 개인정보가 담길 수 있어 목록·상세 모두 색인하지 않는다(프라이버시).
 export const metadata: Metadata = {
-  title: "문의하기",
+  title: "위챗 문의 안내",
   description,
   robots: { index: false, follow: false },
 };
 
-export default async function InquiryPage() {
-  const inquiries = await getInquiryList();
-
+export default function InquiryPage() {
   return (
     <section className="py-20">
       <Container>
-        <Reveal>
-          <SectionTitle
-            eyebrow="contact"
-            title="문의하기"
-            desc="궁금한 점을 남겨주세요. 비회원도 비밀번호로 문의·확인할 수 있습니다."
-            as="h1"
-          />
-        </Reveal>
-        <Reveal>
-          <InquiryBoard initialInquiries={inquiries} />
-        </Reveal>
+        <SectionTitle
+          eyebrow="WeChat contact"
+          title="위챗으로 문의해 주세요"
+          desc="사이트 문의 게시판은 신규 접수를 받지 않습니다. 위챗에서 친구 추가 후 상담을 요청해 주세요."
+          as="h1"
+        />
+        <WeChatContact />
       </Container>
     </section>
   );

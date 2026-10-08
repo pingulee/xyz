@@ -170,7 +170,7 @@ export default function Header() {
 
         <div className="hidden items-center gap-3 lg:flex">
           <a
-            href={site.kakaoUrl}
+            href={site.contactUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-full bg-gold-gradient px-6 py-3 text-sm font-black text-black transition hover:brightness-110"
@@ -264,7 +264,7 @@ export default function Header() {
 
           <AuthControls className="mt-4" />
           <a
-            href={site.kakaoUrl}
+            href={site.contactUrl}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => {

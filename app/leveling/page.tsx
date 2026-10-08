@@ -54,7 +54,7 @@ const faqs = [
   ],
   [
     "진행 상황을 확인할 수 있나요?",
-    "카카오톡 상담을 통해 현재 레벨과 진행 상황을 확인할 수 있습니다.",
+    "위챗 상담을 통해 현재 레벨과 진행 상황을 확인할 수 있습니다.",
   ],
   [
     "육성은 얼마나 걸리나요?",
@@ -133,7 +133,7 @@ export default function LevelingPage() {
               <div className="shrink-0 sm:text-right">
                 <p className="text-xs text-zinc-400">0 → 30레벨 전체 비용</p>
                 <p className="mt-2 text-4xl font-black tracking-tight text-gold sm:text-5xl">{priceLabel}</p>
-                <a href={site.kakaoUrl} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex min-h-12 items-center justify-center rounded-full bg-gold-gradient px-7 py-3 text-sm font-black text-black transition hover:brightness-110">수동 육성 상담하기</a>
+                <a href={site.contactUrl} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex min-h-12 items-center justify-center rounded-full bg-gold-gradient px-7 py-3 text-sm font-black text-black transition hover:brightness-110">수동 육성 상담하기</a>
               </div>
             </div>
           </div>

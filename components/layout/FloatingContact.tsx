@@ -16,25 +16,25 @@ export default function FloatingContact() {
               <MessageCircle size={20} />
             </span>
             <div>
-              <p className="font-black">빠른 상담</p>
+              <p className="font-black">위챗 상담</p>
               <p className="text-xs text-zinc-400">평균 응답 시간 1~5분</p>
             </div>
           </div>
           <p className="mt-4 text-sm leading-6 text-zinc-300">
-            현재 티어, 목표 티어, 원하는 서비스를 알려주시면 견적을 안내해드립니다.
+            위챗 ID <strong className="text-gold">{site.wechatId}</strong>를 친구 추가해 문의해 주세요. 문의는 위챗으로만 접수합니다.
           </p>
           <div className="mt-4 flex items-center gap-2 rounded-2xl bg-white/4 px-4 py-3 text-xs text-zinc-400">
             <Clock size={15} className="text-gold" />
             24시간 상담 접수
           </div>
           <a
-            href={site.kakaoUrl}
+            href={site.contactUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gold-gradient px-4 py-3 text-sm font-black text-black"
           >
             <Send size={16} />
-            카카오톡 문의하기
+            위챗 문의하기
           </a>
         </div>
       )}
