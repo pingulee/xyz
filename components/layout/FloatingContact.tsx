@@ -16,7 +16,7 @@ export default function FloatingContact() {
               <MessageCircle size={20} />
             </span>
             <div>
-              <p className="font-black">디스코드 · 텔레그램 상담</p>
+              <p className="font-black">상담</p>
               <p className="text-xs text-zinc-400">평균 응답 시간 1~5분</p>
             </div>
           </div>
@@ -46,7 +46,7 @@ export default function FloatingContact() {
         className="grid h-16 w-16 place-items-center rounded-full bg-gold-gradient text-black transition hover:scale-105"
         aria-label="상담 버튼"
       >
-        {open ? <X size={28} /> : <MessageCircle size={28} />}
+        {open ? <X size={28} /> : <span className="text-sm font-black">상담</span>}
       </button>
     </div>
   );
