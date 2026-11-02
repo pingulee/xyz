@@ -16,7 +16,7 @@ export const paymentGuideSteps = [
   {
     title: "금액과 최신 QR 확인",
     description:
-      "위챗 상담에서 최종 금액을 확인하고 해당 주문용 Alipay+ QR을 전달받습니다.",
+      "디스코드·텔레그램 상담에서 최종 금액을 확인하고 해당 주문용 Alipay+ QR을 전달받습니다.",
     icon: MessageCircle,
   },
   {

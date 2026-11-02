@@ -6,19 +6,21 @@ for(const file of ['app','components','lib'].flatMap(files).filter(file=>/\.(tsx
   assert.ok(!/open\.kakao\.com|kakaoUrl|\bxyzteam\b|카카오톡/.test(fs.readFileSync(file,'utf8')),file);
 }
 const site=fs.readFileSync('lib/site.ts','utf8');
-assert.ok(site.includes('wechatId: "xyzhanfu"'));
+assert.ok(site.includes('discordUsername: "supremeteam"'));
+assert.ok(site.includes('telegramUsername: "supremeteam11"'));
+assert.ok(site.includes('https://www.discord.com/users/1555261040894279790'));
+assert.ok(site.includes('https://t.me/KRsupremeteam'));
 assert.ok(site.includes('contactUrl: "/inquiry"'));
-assert.ok(site.includes('contactEmail: "lolxyzteam@gmail.com"'));
-const contact=fs.readFileSync('components/ui/WeChatContact.tsx','utf8');
-assert.ok(contact.includes('navigator.clipboard.writeText(site.wechatId)'));
-for (const file of ['components/ui/WeChatContact.tsx', 'components/layout/Footer.tsx', 'components/layout/FloatingContact.tsx']) {
+const contact=fs.readFileSync('components/ui/ContactChannels.tsx','utf8');
+assert.ok(contact.includes('site.discordUrl') && contact.includes('site.telegramUrl'));
+for (const file of ['components/ui/ContactChannels.tsx', 'components/layout/Footer.tsx', 'components/layout/FloatingContact.tsx']) {
   const source = fs.readFileSync(file, 'utf8');
-  assert.ok(source.includes('위챗이 없다면'), file);
-  assert.ok(source.includes('mailto:${site.contactEmail}'), file);
-  assert.ok(!source.includes('위챗으로만'), file);
+  assert.ok(source.includes('site.discordUrl'), file);
+  assert.ok(source.includes('site.telegramUrl'), file);
+  assert.ok(!source.includes('위챗'), file);
 }
 const inquiry=fs.readFileSync('app/inquiry/page.tsx','utf8');
-assert.ok(inquiry.includes('<WeChatContact />'));
+assert.ok(inquiry.includes('<ContactChannels />'));
 assert.ok(!inquiry.includes('InquiryBoard'));
 const api=fs.readFileSync('app/api/inquiry/route.ts','utf8');
 assert.ok(api.includes('status: 410'));
@@ -27,4 +29,4 @@ assert.ok(api.includes('getInquiryList'));
 const payment=fs.readFileSync('components/home/HomePaymentGuide.tsx','utf8');
 assert.ok(payment.includes('카카오페이'));
 assert.ok(payment.includes('https://contents.kakaopay.com/contents/1040'));
-console.log('PASS: WeChat contact with email fallback, correct copy ID, closed new inquiries, preserved records and payment methods.');
+console.log('PASS: Discord and Telegram-only contact with exact destination URLs, closed new inquiries, preserved records and payment methods.');

@@ -16,12 +16,12 @@ export default function FloatingContact() {
               <MessageCircle size={20} />
             </span>
             <div>
-              <p className="font-black">위챗 상담</p>
+              <p className="font-black">디스코드 · 텔레그램 상담</p>
               <p className="text-xs text-zinc-400">평균 응답 시간 1~5분</p>
             </div>
           </div>
           <p className="mt-4 text-sm leading-6 text-zinc-300">
-            위챗 ID <strong className="text-gold">{site.wechatId}</strong>를 친구 추가해 문의해 주세요.
+            디스코드 <strong className="text-gold">@{site.discordUsername}</strong><br />텔레그램 <strong className="text-gold">@{site.telegramUsername}</strong>
           </p>
           <div className="mt-4 flex items-center gap-2 rounded-2xl bg-white/4 px-4 py-3 text-xs text-zinc-400">
             <Clock size={15} className="text-gold" />
@@ -34,10 +34,10 @@ export default function FloatingContact() {
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gold-gradient px-4 py-3 text-sm font-black text-black"
           >
             <Send size={16} />
-            위챗 문의하기
+            상담 채널 선택
           </a>
-          <p className="mt-4 text-xs leading-6 text-zinc-300">위챗이 없다면 이메일로 문의를 남겨주세요.</p>
-          <a href={`mailto:${site.contactEmail}`} className="inline-flex min-h-6 break-all text-xs font-bold text-gold underline underline-offset-4">{site.contactEmail}</a>
+          <a href={site.telegramUrl} target="_blank" rel="noopener noreferrer" className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-[#167fac] px-4 text-sm font-bold text-white">텔레그램 바로가기 ↗</a>
+          <a href={site.discordUrl} target="_blank" rel="noopener noreferrer" className="mt-2 flex min-h-11 items-center justify-center rounded-xl bg-[#5865f2] px-4 text-sm font-bold text-white">디스코드 바로가기 ↗</a>
         </div>
       )}
       <button

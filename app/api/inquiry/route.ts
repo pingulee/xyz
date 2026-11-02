@@ -12,7 +12,7 @@ export async function GET() {
 
 export async function POST() {
   return NextResponse.json(
-    { message: `위챗 ID ${site.wechatId}를 친구 추가해 주세요. 위챗이 없다면 ${site.contactEmail}으로 문의를 남겨주세요.` },
+    { message: `디스코드 @${site.discordUsername} 또는 텔레그램 @${site.telegramUsername}으로 문의해 주세요.` },
     { status: 410 },
   );
 }
