@@ -89,13 +89,14 @@ export default function Footer() {
               className="inline-flex items-center gap-2 rounded-full bg-slate-800 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-700"
             >
               <MessageCircle size={17} />
-              디스코드 · 텔레그램 문의
+              위챗 친구 추가 안내
             </a>
           </div>
           <p className="mt-4 break-words text-sm font-bold text-zinc-300">
-            디스코드: <a href={site.discordUrl} target="_blank" rel="noopener noreferrer" className="text-gold">@{site.discordUsername}</a>
+            위챗 ID: <span className="text-gold">{site.wechatId}</span>
           </p>
-          <p className="mt-2 text-sm leading-6 text-zinc-300">텔레그램: <a href={site.telegramUrl} target="_blank" rel="noopener noreferrer" className="text-gold">@{site.telegramUsername}</a></p>
+          <p className="mt-2 text-xs leading-6 text-zinc-400">친구 추가 후 문의해 주세요. 위챗이 없다면 이메일로 문의를 남겨주세요.</p>
+          <a href={`mailto:${site.contactEmail}`} className="mt-2 inline-flex min-h-6 break-all text-sm text-gold underline underline-offset-4">{site.contactEmail}</a>
         </div>
       </Container>
       <div className="border-t border-gold/10 py-6 text-center text-xs text-zinc-400">
